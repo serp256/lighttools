@@ -2,7 +2,7 @@
 <s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
 					   xmlns:s="library://ns.adobe.com/flex/spark" 
 					   xmlns:mx="library://ns.adobe.com/flex/mx"
-					   applicationComplete="init()">
+					   applicationComplete="init()" width="560" height="530">
 	<fx:Declarations>
 		<!-- Разместить невизуальные элементы (например, службы или объекты значений) -->
 		<s:RadioButtonGroup id="resolutionRG" change="changeResolution(event)"/>
@@ -224,7 +224,7 @@
 			}
 			
 			private function changeSetNameOption(event:Event = null):void {
-				tiFileName.visible = rbChangeName.selected;				
+				//tiFileName.visible = rbChangeName.selected;				
 			}
 			
 			private function changeResolution(event:Event = null):void {
@@ -315,7 +315,7 @@
 			}
 		]]>
 	</fx:Script>
-	<s:VGroup>
+	<s:VGroup height="510" y="10" x="10">
 		<s:HGroup>
 	    	<s:RadioButton id="resDefault" groupName="resolutionRG" label="По умолчанию" selected="true"/>
 			<s:RadioButton id="res320" groupName="resolutionRG" label="320x480"/>
@@ -324,20 +324,19 @@
 			<s:RadioButton id="resYouLike" groupName="resolutionRG" label="Что душе угодно"/>
 			<s:TextInput id="tiWidth" text="100" visible="false" widthInChars="3" restrict="0-9" keyDown="setSizes(event)"/>
 			<s:TextInput id="tiHeight" text="100" visible="false" widthInChars="3" restrict="0-9" keyDown="setSizes(event)"/>
-			<s:HGroup paddingLeft="190">
-				<mx:VRule height="20" strokeColor="0x000000" strokeWidth="2"/>
-				<s:TextInput id="tiFileName" text="Background" keyDown="setBackground(event)" visible="false"/>
-				<s:RadioButton id="rbChangeName" groupName="changeNameRG" label="Сменить название"/>
-				<s:RadioButton id="rbNoChangeName" groupName="changeNameRG" label="Сохранить под исходным" selected="true"/>
-				<s:Button id="btLoadSWF" click="reload()" label="Load swf(L)"/>
-			</s:HGroup>
+		</s:HGroup>
+		<s:HGroup width="538">
+			<s:TextInput id="tiFileName" text="Background" keyDown="setBackground(event)" enabled="true"/>
+			<s:RadioButton id="rbChangeName" groupName="changeNameRG" label="Сменить название"/>
+			<s:RadioButton id="rbNoChangeName" groupName="changeNameRG" label="Сохранить под исходным" selected="true"/>
+			<s:Button id="btLoadSWF" click="reload()" label="Load swf(L)"/>
 		</s:HGroup>
 		<mx:HRule strokeWidth="2" width="100%" strokeColor="0x000000"/>
 		<mx:Canvas id="canva" width="100%" height="100%"/>
-		<s:VGroup paddingTop="750" paddingLeft="1000" width="100%">
-			<mx:HRule strokeWidth="2" width="100%" height="2" strokeColor="0x000000"/>
+		<mx:HRule strokeWidth="2" width="100%" height="2" strokeColor="0x000000"/>
+		<s:VGroup width="100%" height="132">
 			<s:Label text="Размеры SWF:"/>
-			<s:HGroup>
+			<s:HGroup height="100%">
 				<s:VGroup>
 					<s:TextInput id="tiSWFWidth" text="" keyDown="reloadSWF(event)" widthInChars="3" restrict="0-9"/>
 					<s:TextInput id="tiSWFHeight" text="" keyDown="reloadSWF(event)" widthInChars="3" restrict="0-9"/>
