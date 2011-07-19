@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					   xmlns:s="library://ns.adobe.com/flex/spark" 
+					   xmlns:mx="library://ns.adobe.com/flex/mx"
+					   applicationComplete="init()">
+	<fx:Declarations>
+		<!-- Разместить невизуальные элементы (например, службы или объекты значений) -->
+		<s:RadioButtonGroup id="resolutionRG" change="changeResolution(event)"/>
+		<s:RadioButtonGroup id="changeNameRG" change="changeSetNameOption(event)"/>
+		<s:RadioButtonGroup id="cheatRG"/>
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.graphics.codec.PNGEncoder;
+			
+			import org.osmf.utils.URL;
+			
+			private var loader:Loader;
+			public var cutClip:MovieClip;
+			public var cutSprite:Sprite;
+			public var f:File = new File();
+			public var fs:FileStream = new FileStream();
+			public var bitmaps:Array = [];
+			public var framesData:Array = [];
+			public var mainBitmapData:BitmapData;
+			public var almostPng:Bitmap;
+			public var png:PNGEncoder = new PNGEncoder();
+			public var mainPartPath:String;
+			public var sizes:Array = [128,256,512,1024,2048];
+			public var desWidth: int = -1;
+			public var desHeight: int = -1;
+			public var matScaleX: Number = 1;
+			public var matScaleY: Number = 1;
+			public var swfName: String;
+			public var isLink:Boolean = false;
+			public var clipWidth: Number;
+			public var clipHeight: Number;
+			
+			public function init():void {
+				stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
+				isLink = chbLink.selected;
+			}
+			
+			private function onKeyDown(event:KeyboardEvent):void {
+				if (event.keyCode == Keyboard.F) {
+					stage.displayState = (stage.displayState == StageDisplayState.NORMAL) ? StageDisplayState.FULL_SCREEN : StageDisplayState.NORMAL;
+				} else if (event.keyCode == Keyboard.L) {
+					reload();
+				}
+			}
+			
+			private function onSelect(event:Event = null):void {
+				loader = new Loader();
+				loader.contentLoaderInfo.addEventListener(Event.COMPLETE, onLoadComplete);
+				loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
+				f.removeEventListener(Event.SELECT, onSelect);
+				try {
+					if (event) {
+						swfName = (event.currentTarget as File).url;
+						changeResolution(null);
+					} 
+					loader.load(new URLRequest(swfName)) 
+				} catch (e:Error) {
+					trace('dont loaded', e);
+				}
+			}
+			
+			private function onLoadComplete(event:Event):void {
+				cutClip = (loader.content as MovieClip);
+				if (rbCheat2.selected && cutClip is MovieClip || rbCheat1.selected && cutClip.getChildAt(0) is MovieClip) {				
+					if (rbCheat2.selected) cutClip = (cutClip as MovieClip)
+					else cutClip = (cutClip.getChildAt(0) as MovieClip);
+					
+					if (desWidth != -1) {
+						matScaleX = desWidth / cutClip.width;
+						matScaleY = desHeight / cutClip.height;
+						cutClip.scaleX = desWidth / cutClip.width;
+						cutClip.scaleY = desHeight / cutClip.height;
+					} else {
+						matScaleX = 1;
+						matScaleY = 1;
+					}
+					for (acs=0; acs < cutClip.currentLabels.length; acs++) {
+						trace(cutClip.currentLabels[acs].name);
+					}
+					trace("tsugi");
+					tiSWFWidth.text = String(clipWidth = cutClip.width);
+					tiSWFHeight.text = String(clipHeight = cutClip.height);
+					cutClip.stop();
+					clearLoader();
+					
+					var duration:int = -1;
+					var oldBmd:BitmapData = null;
+					var label:String ="";
+					bitmaps.length = 0;
+					for (var acs:int = 1; acs <= cutClip.totalFrames; acs++) {
+						cutClip.gotoAndStop(acs);
+						if (label == "") label = cutClip.currentLabel;
+						var bmd:BitmapData = new BitmapData(cutClip.width, cutClip.height, true, 0);
+						var rect:Rectangle = cutClip.getBounds(cutClip);
+						var mat:Matrix = new Matrix();
+						mat.translate(-rect.x, -rect.y);
+						mat.scale(matScaleX, matScaleY);
+						bmd.draw(cutClip, mat);
+						if (!oldBmd || bmd.compare(oldBmd) == 0) {
+							duration++;
+						} else {
+							bitmaps.push(new Bitmap(oldBmd));
+							trace(label);
+							framesData.push({duration:duration, posX:rect.x, posY:rect.y, label:label});
+							label = cutClip.currentLabel;
+							duration = 0;
+						}
+						oldBmd = bmd;
+					}				
+					bitmaps.push(new Bitmap(oldBmd));
+					if (cutClip.totalFrames == 1) duration++;
+					framesData.push({duration:duration, posX:rect.x, posY:rect.y, label:label});
+				} // end if this is a MovieClip
+				else if (rbCheat1.selected && cutClip.getChildAt(0) is Sprite || rbCheat2.selected && cutClip is Sprite) {
+					if (rbCheat1.selected) cutSprite = cutClip.getChildAt(0) as Sprite
+					else cutSprite = cutClip as Sprite;
+						
+					if (desWidth != -1) {
+						bmd = new BitmapData(desWidth, desHeight, true, 0);
+					} else {
+						bmd = new BitmapData(cutSprite.width, cutSprite.height, true, 0);
+					}
+					mat = new Matrix();
+					if (desWidth != -1) {
+						mat.scale(desWidth / cutSprite.width, desHeight / cutSprite.height);
+						cutSprite.scaleX = desWidth / cutSprite.width;
+						cutSprite.scaleY = desHeight / cutSprite.height;
+					}
+					tiSWFWidth.text = String(clipWidth = cutSprite.width);
+					tiSWFHeight.text = String(clipHeight = cutSprite.height);					
+					rect = cutSprite.getBounds(cutSprite);
+					mat.translate(-rect.x, -rect.y);
+					bmd.draw(cutSprite, mat);
+					bitmaps.push(new Bitmap(bmd));
+					framesData.push({duration:1, posX:rect.x, posY:rect.y, label:cutSprite.name});
+				} else {
+					trace('Это поебень какая-то');
+					return;
+				}
+					
+				for each(var size:int in sizes) {
+					var maxHeight:int = 0;
+					var flag:Boolean = true;
+					var nextX:int = 0;
+					var nextY:int = 0;
+					for each(var bmp:Bitmap in bitmaps) {
+						if (bmp.width + nextX > size) {
+							nextX = 0;
+							nextY += maxHeight;
+						}
+						if (bmp.height + nextY > size) {
+							trace(acs, 'Пока хорош');
+							flag = false;
+							break;
+						}
+						bmp.x += nextX;
+						bmp.y += nextY;
+						nextX += bmp.width;
+						if (bmp.height > maxHeight) {
+							maxHeight = bmp.height;
+						}
+					}
+					if (flag) {
+						break 
+					} else {
+						for each (bmp in bitmaps) {
+							bmp.x = 0;
+							bmp.y = 0;
+						}
+					}
+				}
+				mainBitmapData = new BitmapData(size,size,true,0);
+				trace('Size', size);
+				for each(bmp in bitmaps) {
+					mat = new Matrix();
+					mat.translate(bmp.x, bmp.y);
+					mainBitmapData.draw(bmp,mat);
+				}
+				almostPng = new Bitmap(mainBitmapData, "auto", true);
+				canva.rawChildren.addChild(almostPng);
+				
+				var imgByteArray:ByteArray = png.encode(mainBitmapData);
+				if (f.nativePath.indexOf('.swf') != -1)
+					mainPartPath = f.nativePath.substring(0, f.nativePath.indexOf('.swf'))
+				else
+					mainPartPath = f.nativePath;
+				if (rbChangeName.selected) mainPartPath = mainPartPath.substring(0,mainPartPath.lastIndexOf('\\')) + '\\' + tiFileName.text;
+				trace(mainPartPath);
+				f = new File(mainPartPath);
+				f.createDirectory();
+				mainPartPath += '\\' + mainPartPath.substring(mainPartPath.lastIndexOf('\\') + 1);
+				trace(mainPartPath);
+				fs.open(new File(mainPartPath + '.png'), FileMode.WRITE);
+				fs.writeBytes(imgByteArray);
+				fs.close();
+				xmlCreate();
+			}
+			
+			public function xmlCreate():void {
+				fs.open(new File(mainPartPath + '.xml'), FileMode.WRITE);
+				fs.writeUTFBytes('<MovieClip>\n');
+				fs.writeUTFBytes('\t<Textures>\n');
+				fs.writeUTFBytes('\t\t<Texture path="' + mainPartPath.substring(mainPartPath.lastIndexOf('\\') + 1) + '.png"/>\n');
+				fs.writeUTFBytes('\t</Textures>\n');
+				fs.writeUTFBytes('\t<Frames>\n');
+				for (var acs:int = 0; acs < bitmaps.length; acs++) {
+					var s:String = '\t\t<Frame textureID="' + 0 + '" x="' + bitmaps[acs].x + '" y="' + bitmaps[acs].y
+					  + '" width="' + bitmaps[acs].width + '" height="' + bitmaps[acs].height + '" posX="'
+					  + framesData[acs].posX + '" posY="' + framesData[acs].posY; 
+					s += (framesData[acs].duration == 0) ? '' : '" duration="' + framesData[acs].duration; 
+					s += '" label="' + framesData[acs].label + '"/>';
+					fs.writeUTFBytes(s + '\n');
+				}
+				fs.writeUTFBytes('\t</Frames>\n');
+				fs.writeUTFBytes('</MovieClip>\n');
+				fs.close();
+			}
+			
+			private function changeSetNameOption(event:Event = null):void {
+				tiFileName.visible = rbChangeName.selected;				
+			}
+			
+			private function changeResolution(event:Event = null):void {
+				tiWidth.visible = tiHeight.visible = resYouLike.selected;
+				if (resDefault.selected) { 
+					desWidth = desHeight = -1
+				} else if (res320.selected) {
+					desWidth = 320;
+					desHeight = 480; 
+				} else if (res640.selected) {
+					desWidth = 640;
+					desHeight = 960;
+				} else if (res1024.selected) {
+					desWidth = 768;
+					desHeight = 1024;
+				} else {
+					desWidth = int(tiWidth.text);
+					desHeight = int(tiHeight.text);
+				}
+			}
+			
+			private function setSizes(event:KeyboardEvent):void {
+				if (event.keyCode == Keyboard.ENTER) {
+					desWidth = int(tiWidth.text);
+					desHeight = int(tiHeight.text);
+				}
+			}
+			
+			private function setBackground(event:KeyboardEvent):void {
+				if (event.keyCode == Keyboard.ENTER) {
+					focusManager.setFocus(focusManager.getNextFocusManagerComponent());
+				}
+				event.stopImmediatePropagation();
+			}
+			
+			private function onIOError(event:IOErrorEvent):void {
+				trace(event);
+				clearLoader();
+			}
+			
+			public function clearLoader():void {
+				loader.unload();
+				loader.contentLoaderInfo.removeEventListener(Event.COMPLETE, onLoadComplete);
+				loader.contentLoaderInfo.removeEventListener(IOErrorEvent.IO_ERROR, onIOError);
+			}
+			
+			public function reloadSWF(event:KeyboardEvent):void {
+				if (event.keyCode == Keyboard.ENTER) {
+					if (tiSWFWidth.text == '' || tiSWFWidth.text == '0' || tiSWFHeight.text == '' || tiSWFHeight.text == '0') {
+						trace('Долбаеб что ли?');
+						return;
+					}
+					desWidth = int(tiSWFWidth.text);
+					desHeight = int(tiSWFHeight.text);
+					if (isLink) {
+						if (event.currentTarget == tiSWFWidth) {
+							desHeight *= desWidth / clipWidth;
+							desHeight = int(desHeight);
+							tiSWFHeight.text = String(desHeight);
+						 } else if (event.currentTarget == tiSWFHeight) {
+							 desWidth *= desHeight / clipHeight;
+							 desWidth = int(desWidth);
+							 tiSWFWidth.text = String(desWidth);
+						 }
+					}
+					reload(true);
+				}
+				event.stopImmediatePropagation();
+			}
+			
+			public function reload(withoutSelect:Boolean = false):void {
+				if (almostPng) {
+					canva.rawChildren.removeChild(almostPng);
+					almostPng = null;
+					mainBitmapData.dispose();
+					for each (var bmps:Bitmap in bitmaps) {
+						bmps.bitmapData.dispose();
+						bmps = null;
+					}
+					bitmaps.splice(0,bitmaps.length);
+					framesData.splice(0,framesData.length);
+				}
+				f.addEventListener(Event.SELECT, onSelect);
+				if (!withoutSelect)
+					f.browseForOpen('СВФ', [new FileFilter('SWF-файлы', "*.swf")]);
+				else
+					onSelect();
+			}
+		]]>
+	</fx:Script>
+	<s:VGroup>
+		<s:HGroup>
+	    	<s:RadioButton id="resDefault" groupName="resolutionRG" label="По умолчанию" selected="true"/>
+			<s:RadioButton id="res320" groupName="resolutionRG" label="320x480"/>
+			<s:RadioButton id="res640" groupName="resolutionRG" label="640x960"/>
+			<s:RadioButton id="res1024" groupName="resolutionRG" label="1024x768"/>
+			<s:RadioButton id="resYouLike" groupName="resolutionRG" label="Что душе угодно"/>
+			<s:TextInput id="tiWidth" text="100" visible="false" widthInChars="3" restrict="0-9" keyDown="setSizes(event)"/>
+			<s:TextInput id="tiHeight" text="100" visible="false" widthInChars="3" restrict="0-9" keyDown="setSizes(event)"/>
+			<s:HGroup paddingLeft="190">
+				<mx:VRule height="20" strokeColor="0x000000" strokeWidth="2"/>
+				<s:TextInput id="tiFileName" text="Background" keyDown="setBackground(event)" visible="false"/>
+				<s:RadioButton id="rbChangeName" groupName="changeNameRG" label="Сменить название"/>
+				<s:RadioButton id="rbNoChangeName" groupName="changeNameRG" label="Сохранить под исходным" selected="true"/>
+				<s:Button id="btLoadSWF" click="reload()" label="Load swf(L)"/>
+			</s:HGroup>
+		</s:HGroup>
+		<mx:HRule strokeWidth="2" width="100%" strokeColor="0x000000"/>
+		<mx:Canvas id="canva" width="100%" height="100%"/>
+		<s:VGroup paddingTop="750" paddingLeft="1000" width="100%">
+			<mx:HRule strokeWidth="2" width="100%" height="2" strokeColor="0x000000"/>
+			<s:Label text="Размеры SWF:"/>
+			<s:HGroup>
+				<s:VGroup>
+					<s:TextInput id="tiSWFWidth" text="" keyDown="reloadSWF(event)" widthInChars="3" restrict="0-9"/>
+					<s:TextInput id="tiSWFHeight" text="" keyDown="reloadSWF(event)" widthInChars="3" restrict="0-9"/>
+					<s:RadioButton id="rbCheat1" label="Версия_1" groupName="cheatRG" selected="true"/>
+					<s:RadioButton id="rbCheat2" label="Версия_2" groupName="cheatRG"/>
+				</s:VGroup>
+				<s:VGroup paddingTop="15">
+					<s:CheckBox id="chbLink" click="isLink = !isLink" label="Сохранить пропорции" selected="true"/>
+				</s:VGroup>
+			</s:HGroup>
+		</s:VGroup>
+	</s:VGroup>		
+	
+</s:WindowedApplication>
