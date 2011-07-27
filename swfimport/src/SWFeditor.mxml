@@ -12,6 +12,7 @@
 	
 	<fx:Script>
 		<![CDATA[
+			import mx.controls.Alert;
 			import mx.graphics.codec.PNGEncoder;
 			
 			import org.osmf.utils.URL;
@@ -58,6 +59,7 @@
 				try {
 					if (event) {
 						swfName = (event.currentTarget as File).url;
+						title = 'SWFeditor - '+ swfName;
 						changeResolution(null);
 					} 
 					loader.load(new URLRequest(swfName)) 
@@ -66,7 +68,9 @@
 				}
 			}
 			
+			// swf загружена
 			private function onLoadComplete(event:Event):void {
+							
 				cutClip = (loader.content as MovieClip);
 				if (rbCheat2.selected && cutClip is MovieClip || rbCheat1.selected && cutClip.getChildAt(0) is MovieClip) {				
 					if (rbCheat2.selected) cutClip = (cutClip as MovieClip)
@@ -141,7 +145,7 @@
 					bitmaps.push(new Bitmap(bmd));
 					framesData.push({duration:1, posX:rect.x, posY:rect.y, label:cutSprite.name});
 				} else {
-					trace('Это поебень какая-то');
+					Alert.show('Это поебень какая-то', 'Ошибка');
 					return;
 				}
 					
@@ -186,21 +190,6 @@
 				almostPng = new Bitmap(mainBitmapData, "auto", true);
 				canva.rawChildren.addChild(almostPng);
 				
-				var imgByteArray:ByteArray = png.encode(mainBitmapData);
-				if (f.nativePath.indexOf('.swf') != -1)
-					mainPartPath = f.nativePath.substring(0, f.nativePath.indexOf('.swf'))
-				else
-					mainPartPath = f.nativePath;
-				if (rbChangeName.selected) mainPartPath = mainPartPath.substring(0,mainPartPath.lastIndexOf('\\')) + '\\' + tiFileName.text;
-				trace(mainPartPath);
-				f = new File(mainPartPath);
-				f.createDirectory();
-				mainPartPath += '\\' + mainPartPath.substring(mainPartPath.lastIndexOf('\\') + 1);
-				trace(mainPartPath);
-				fs.open(new File(mainPartPath + '.png'), FileMode.WRITE);
-				fs.writeBytes(imgByteArray);
-				fs.close();
-				xmlCreate();
 			}
 			
 			public function xmlCreate():void {
@@ -274,7 +263,7 @@
 			public function reloadSWF(event:KeyboardEvent):void {
 				if (event.keyCode == Keyboard.ENTER) {
 					if (tiSWFWidth.text == '' || tiSWFWidth.text == '0' || tiSWFHeight.text == '' || tiSWFHeight.text == '0') {
-						trace('Долбаеб что ли?');
+						Alert.show('Долбаеб что ли?', 'Ошибка');
 						return;
 					}
 					desWidth = int(tiSWFWidth.text);
@@ -309,10 +298,50 @@
 				}
 				f.addEventListener(Event.SELECT, onSelect);
 				if (!withoutSelect)
-					f.browseForOpen('СВФ', [new FileFilter('SWF-файлы', "*.swf")]);
+					f.browseForOpen('Выберите swf', [new FileFilter('SWF-файлы', "*.swf")]);
 				else
 					onSelect();
 			}
+			
+			// вызов диалога сохранения файла
+			protected function btSave_clickHandler(event:MouseEvent):void
+			{
+				if (f.nativePath.indexOf('.swf') != -1)
+					mainPartPath = f.nativePath.substring(0, f.nativePath.indexOf('.swf'))
+				else
+					mainPartPath = f.nativePath;
+				
+				var file:File = new File(mainPartPath);
+				file.addEventListener(Event.SELECT, onSavePng);
+				//file.browseForSave('Выберите папку для сохранения');
+				file.browseForDirectory('Выберите папку для сохранения');
+			}
+			
+			// сохранение
+			private function onSavePng(event:Event):void {
+				var imgByteArray:ByteArray = png.encode(mainBitmapData);
+				
+			/*	if (rbChangeName.selected) mainPartPath = mainPartPath.substring(0,mainPartPath.lastIndexOf('\\')) + '\\' + tiFileName.text;
+				trace(mainPartPath);
+				f = new File(mainPartPath);
+				f.createDirectory();
+				mainPartPath += '\\' + mainPartPath.substring(mainPartPath.lastIndexOf('\\') + 1);
+				trace(mainPartPath);
+				fs.open(new File(mainPartPath + '.png'), FileMode.WRITE);*/
+				
+				var file:File = event.target as File;
+				if (!file.exists)
+					file.createDirectory();
+				
+				mainPartPath = file.url;
+				mainPartPath += '/' + file.url.substring(mainPartPath.lastIndexOf('/')+1);
+				
+				fs.open(new File(mainPartPath + '.png'), FileMode.WRITE);
+				fs.writeBytes(imgByteArray);
+				fs.close();
+				xmlCreate();
+			}
+
 		]]>
 	</fx:Script>
 	<s:VGroup height="510" y="10" x="10">
@@ -325,23 +354,24 @@
 			<s:TextInput id="tiWidth" text="100" visible="false" widthInChars="3" restrict="0-9" keyDown="setSizes(event)"/>
 			<s:TextInput id="tiHeight" text="100" visible="false" widthInChars="3" restrict="0-9" keyDown="setSizes(event)"/>
 		</s:HGroup>
-		<s:HGroup width="538">
-			<s:TextInput id="tiFileName" text="Background" keyDown="setBackground(event)" enabled="true"/>
-			<s:RadioButton id="rbChangeName" groupName="changeNameRG" label="Сменить название"/>
-			<s:RadioButton id="rbNoChangeName" groupName="changeNameRG" label="Сохранить под исходным" selected="true"/>
-			<s:Button id="btLoadSWF" click="reload()" label="Load swf(L)"/>
+		<mx:HRule strokeWidth="2" width="100%" strokeColor="0x000000"/>
+		<s:HGroup width="538" height="55">
+			<s:VGroup>
+				<s:RadioButton id="rbCheat1" label="Вложенный клип" groupName="cheatRG" selected="true"/>
+				<s:RadioButton id="rbCheat2" label="Не вложенный" groupName="cheatRG"/>
+			</s:VGroup>
+			<s:Button id="btLoadSWF" label="Загрузить swf" click="reload()"/>
+			<s:Button label="Сохранить png" click="btSave_clickHandler(event)" id="btSave"/>
 		</s:HGroup>
 		<mx:HRule strokeWidth="2" width="100%" strokeColor="0x000000"/>
-		<mx:Canvas id="canva" width="100%" height="100%"/>
+		<mx:Canvas id="canva" width="100%" height="282"/>
 		<mx:HRule strokeWidth="2" width="100%" height="2" strokeColor="0x000000"/>
 		<s:VGroup width="100%" height="132">
 			<s:Label text="Размеры SWF:"/>
-			<s:HGroup height="100%">
+			<s:HGroup height="75">
 				<s:VGroup>
 					<s:TextInput id="tiSWFWidth" text="" keyDown="reloadSWF(event)" widthInChars="3" restrict="0-9"/>
 					<s:TextInput id="tiSWFHeight" text="" keyDown="reloadSWF(event)" widthInChars="3" restrict="0-9"/>
-					<s:RadioButton id="rbCheat1" label="Версия_1" groupName="cheatRG" selected="true"/>
-					<s:RadioButton id="rbCheat2" label="Версия_2" groupName="cheatRG"/>
 				</s:VGroup>
 				<s:VGroup paddingTop="15">
 					<s:CheckBox id="chbLink" click="isLink = !isLink" label="Сохранить пропорции" selected="true"/>
