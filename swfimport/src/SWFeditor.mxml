@@ -104,7 +104,8 @@
 					bitmaps.length = 0;
 					for (var acs:int = 1; acs <= cutClip.totalFrames; acs++) { // по кадрам мувика
 						cutClip.gotoAndStop(acs);
-						if (label == "") label = cutClip.currentLabel;
+						if (label == "") label = cutClip.currentFrameLabel;
+						//trace(108, label);
 						if (cutClip.width == 0 || cutClip.height == 0) continue;
 					
 						var bmd:BitmapData = new BitmapData(cutClip.width, cutClip.height, true, 0);// картинка кадра
@@ -117,8 +118,10 @@
 							duration++;
 						} else {
 							bitmaps.push(new Bitmap(oldBmd));
+							//framesData.push({duration:duration, posX:rect.x, posY:rect.y, label:cutClip.currentLabel});
 							framesData.push({duration:duration, posX:rect.x, posY:rect.y, label:label});
-							label = cutClip.currentLabel;
+							label = cutClip.currentFrameLabel;
+							//trace(122, label);
 							duration = 0;
 						}
 						oldBmd = bmd;
@@ -127,6 +130,7 @@
 					
 					trace('bitmaps');
 					if (cutClip.totalFrames == 1) duration++;
+					//framesData.push({duration:duration, posX:rect.x, posY:rect.y, label:cutClip.currentLabel});
 					framesData.push({duration:duration, posX:rect.x, posY:rect.y, label:label});
 				} // if this is a Sprite
 				/*else if (rbCheat1.selected && cutClip.getChildAt(0) is Sprite || rbCheat2.selected && cutClip is Sprite) {
@@ -231,9 +235,15 @@
 				for (var acs:int = 0; acs < bitmaps.length; acs++) {
 					var s:String = '\t\t<Frame textureID="' + framesData[acs].textureID + '" x="' + bitmaps[acs].x + '" y="' + bitmaps[acs].y
 					  + '" width="' + bitmaps[acs].width + '" height="' + bitmaps[acs].height + '" posX="'
-					  + framesData[acs].posX + '" posY="' + framesData[acs].posY; 
-					s += (framesData[acs].duration == 0) ? '' : '" duration="' + framesData[acs].duration; 
-					s += '" label="' + framesData[acs].label + '"/>';
+					  + framesData[acs].posX + '" posY="' + framesData[acs].posY + '"'; 
+					
+					if (framesData[acs].duration > 0) {
+						s += ' duration="' + framesData[acs].duration + '"';
+					}
+					if (framesData[acs].label != null) {
+						s += ' label="' + framesData[acs].label +'"';
+					}
+					s += '/>';
 					fs.writeUTFBytes(s + '\n');
 				}
 				fs.writeUTFBytes('\t</Frames>\n');
