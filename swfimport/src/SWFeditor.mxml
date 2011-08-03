@@ -5,7 +5,6 @@
 					   applicationComplete="init()" width="560" height="530">
 	<fx:Declarations>
 		<!-- Разместить невизуальные элементы (например, службы или объекты значений) -->
-		<s:RadioButtonGroup id="resolutionRG" change="changeResolution(event)"/>
 		<s:RadioButtonGroup id="cheatRG"/>
 	</fx:Declarations>
 	
@@ -63,7 +62,7 @@
 					if (event) {
 						swfName = (event.currentTarget as File).url;
 						title = 'SWFeditor - '+ swfName;
-						changeResolution(null);
+				//		changeResolution(null);
 					} 
 					loader.load(new URLRequest(swfName)) 
 				} catch (e:Error) {
@@ -100,16 +99,18 @@
 					
 					var duration:int = -1;
 					var oldBmd:BitmapData = null;
+					var oldRect:Rectangle;
 					var label:String ="";
 					bitmaps.length = 0;
 					for (var acs:int = 1; acs <= cutClip.totalFrames; acs++) { // по кадрам мувика
 						cutClip.gotoAndStop(acs);
 						if (label == "") label = cutClip.currentFrameLabel;
-						//trace(108, label);
-						if (cutClip.width == 0 || cutClip.height == 0) continue;
+					
+						if (cutClip.width == 0 || cutClip.height == 0) continue; // пустые кадры пропускаем
 					
 						var bmd:BitmapData = new BitmapData(cutClip.width, cutClip.height, true, 0);// картинка кадра
 						var rect:Rectangle = cutClip.getBounds(cutClip);
+												
 						var mat:Matrix = new Matrix();
 						mat.translate(-rect.x, -rect.y);
 						mat.scale(matScaleX, matScaleY);
@@ -117,45 +118,51 @@
 						if (!oldBmd || bmd.compare(oldBmd) == 0) { // картинка такая же, как предыдущая
 							duration++;
 						} else {
-							bitmaps.push(new Bitmap(oldBmd));
-							//framesData.push({duration:duration, posX:rect.x, posY:rect.y, label:cutClip.currentLabel});
-							framesData.push({duration:duration, posX:rect.x, posY:rect.y, label:label});
+							var bitmap:Bitmap = new Bitmap(oldBmd);
+							
+							var r:Rectangle = bitmap.bitmapData.getColorBoundsRect(0xFFFFFF00, 0x00000000, false);
+							if (r.width != bitmap.width || r.height != bitmap.height) {
+								if (r.width == 0)
+									r.width = bitmap.bitmapData.width;
+								if (r.height == 0)
+									r.height = bitmap.bitmapData.height;
+								var bmdata:BitmapData = new BitmapData(r.width, r.height, true, 0x000000);
+								bmdata.copyPixels(bitmap.bitmapData, r, new Point(0,0));
+								bitmap = new Bitmap(bmdata);
+							}
+							bitmaps.push(bitmap);
+							
+							//trace(acs, 'r', r.x, r.y, '-- oldRect --', oldRect.x * matScaleX, oldRect.y * matScaleY);
+							
+							framesData.push({duration:duration, posX:oldRect.x * matScaleX + r.x, posY:oldRect.y * matScaleY + r.y, label:label});
 							label = cutClip.currentFrameLabel;
 							//trace(122, label);
 							duration = 0;
 						}
 						oldBmd = bmd;
-					}		
-					bitmaps.push(new Bitmap(oldBmd));
+						oldRect = rect;
+					}
+					bitmap = new Bitmap(oldBmd);
+										
+					r = bitmap.bitmapData.getColorBoundsRect(0xFFFFFF00, 0x00000000, false);
+					if (r.width != bitmap.width || r.height != bitmap.height) {
+						if (r.width == 0)
+							r.width = bitmap.bitmapData.width;
+						if (r.height == 0)
+							r.height = bitmap.bitmapData.height;
+						bmdata = new BitmapData(r.width, r.height, true, 0x000000);
+						bmdata.copyPixels(bitmap.bitmapData, r, new Point(0,0));
+						bitmap = new Bitmap(bmdata);
+					}
+					bitmaps.push(bitmap);
+				
+					//bitmaps.push(new Bitmap(oldBmd));
 					
 					trace('bitmaps');
 					if (cutClip.totalFrames == 1) duration++;
 					//framesData.push({duration:duration, posX:rect.x, posY:rect.y, label:cutClip.currentLabel});
-					framesData.push({duration:duration, posX:rect.x, posY:rect.y, label:label});
-				} // if this is a Sprite
-				/*else if (rbCheat1.selected && cutClip.getChildAt(0) is Sprite || rbCheat2.selected && cutClip is Sprite) {
-					if (rbCheat1.selected) cutSprite = cutClip.getChildAt(0) as Sprite
-					else cutSprite = cutClip as Sprite;
-						
-					if (desWidth != -1) {
-						bmd = new BitmapData(desWidth, desHeight, true, 0);
-					} else {
-						bmd = new BitmapData(cutSprite.width, cutSprite.height, true, 0);
-					}
-					mat = new Matrix();
-					if (desWidth != -1) {
-						mat.scale(desWidth / cutSprite.width, desHeight / cutSprite.height);
-						cutSprite.scaleX = desWidth / cutSprite.width;
-						cutSprite.scaleY = desHeight / cutSprite.height;
-					}
-					tiSWFWidth.text = String(clipWidth = cutSprite.width);
-					tiSWFHeight.text = String(clipHeight = cutSprite.height);
-					rect = cutSprite.getBounds(cutSprite);
-					mat.translate(-rect.x, -rect.y);
-					bmd.draw(cutSprite, mat);
-					bitmaps.push(new Bitmap(bmd));
-					framesData.push({duration:1, posX:rect.x, posY:rect.y, label:cutSprite.name});
-				}*/ else {
+					framesData.push({duration:duration, posX:oldRect.x * matScaleX + r.x, posY:oldRect.y * matScaleY + r.y, label:label});
+				} else {
 					Alert.show('Это поебень какая-то', 'Ошибка');
 					return;
 				}
@@ -174,7 +181,7 @@
 							
 							if (bmp.width + nextX > size) {
 								nextX = 0;
-								nextY += maxHeight;
+								nextY += maxHeight + 2;
 							}
 							if (bmp.height + nextY > size) {
 								trace('не влезло', size);
@@ -183,7 +190,7 @@
 							}
 							bmp.x += nextX;
 							bmp.y += nextY;
-							nextX += bmp.width;
+							nextX += bmp.width + 2;
 							if (bmp.height > maxHeight) {
 								maxHeight = bmp.height;
 							}
@@ -195,6 +202,7 @@
 					
 					// формируем BitmapData для очередной png
 					var bdata:BitmapData = new BitmapData(size,size,true,0);
+					
 					for (var j:uint=ind; j<i; j++) {
 						bmp = bitmaps[j];
 						mat = new Matrix();
@@ -219,6 +227,50 @@
 				canva.rawChildren.addChild(almostPng); 
 				
 				status = 'загрузка завершена';
+			}
+			
+			private function cutImage(bitmap:Bitmap):Rectangle {
+				
+				var r:Rectangle = bitmap.bitmapData.getColorBoundsRect(0xFFFFFF00, 0x00000000, false);
+				if (r.width != bitmap.width || r.height != bitmap.height) {
+					var bmdata:BitmapData = new BitmapData(r.width, r.height, true, 0x000000);
+					bmdata.copyPixels(bitmap.bitmapData, r, new Point(0,0));
+				}
+				/*var bd:BitmapData = bitmap.bitmapData;
+				if (bd && bd.width > 0 && bd.height > 0) {
+					var left:uint = bd.width;
+					var right:uint;
+					var top:int = bd.height;
+					var bottom:uint;
+					var maxAlpha:uint = 0;
+					for (var j:int = bd.height - 1; j >= 0; j--) {
+						for (var i:int = bd.width - 1; i >= 0; i--) {
+							var alpha:uint = (bd.getPixel32(i, j) >> 24) & 0xFF; 
+							if (alpha > maxAlpha) {
+								//trace(alpha, i, j);
+								if (i < left) {
+									left = i;
+								}
+								if (i > right) {
+									right = i;
+								}
+								if (j < top) {
+									top = j;
+								}
+								if (j > bottom) {
+									bottom = j; 
+								}
+							}
+						}
+					}
+					
+					if (left < right && top < bottom && (left != 0 || right != bitmap.width - 1 || top != 0 || bottom != bitmap.height - 1)) {
+						var bmdata:BitmapData = new BitmapData(right - left, bottom - top, true, 0);
+						bmdata.copyPixels(bd, new Rectangle(left, top, bmdata.width, bmdata.height), new Point());
+					}
+				}*/
+				bitmap = new Bitmap(bmdata);
+				return r;
 			}
 			
 			public function xmlCreate():void {
@@ -255,7 +307,7 @@
 				//tiFileName.visible = rbChangeName.selected;				
 			}
 			
-			private function changeResolution(event:Event = null):void {
+		/*	private function changeResolution(event:Event = null):void {
 				tiWidth.visible = tiHeight.visible = resYouLike.selected;
 				if (resDefault.selected) { 
 					desWidth = desHeight = -1
@@ -272,14 +324,14 @@
 					desWidth = int(tiWidth.text);
 					desHeight = int(tiHeight.text);
 				}
-			}
+			}*/
 			
-			private function setSizes(event:KeyboardEvent):void {
+		/*	private function setSizes(event:KeyboardEvent):void {
 				if (event.keyCode == Keyboard.ENTER) {
 					desWidth = int(tiWidth.text);
 					desHeight = int(tiHeight.text);
 				}
-			}
+			}*/
 			
 			private function setBackground(event:KeyboardEvent):void {
 				if (event.keyCode == Keyboard.ENTER) {
@@ -310,11 +362,9 @@
 					if (isLink) {
 						if (event.currentTarget == tiSWFWidth) {
 							desHeight *= desWidth / clipWidth;
-							desHeight = int(desHeight);
 							tiSWFHeight.text = String(desHeight);
 						 } else if (event.currentTarget == tiSWFHeight) {
 							 desWidth *= desHeight / clipHeight;
-							 desWidth = int(desWidth);
 							 tiSWFWidth.text = String(desWidth);
 						 }
 					}
@@ -331,7 +381,8 @@
 					//mainBitmapData.dispose();
 					bdatas.length = 0;
 					for each (var bmps:Bitmap in bitmaps) {
-						bmps.bitmapData.dispose();
+						if (bmps.bitmapData != null)
+							bmps.bitmapData.dispose();
 						bmps = null;
 					}
 					bitmaps.splice(0,bitmaps.length);
@@ -394,16 +445,6 @@
 		]]>
 	</fx:Script>
 	<s:VGroup height="100%" y="10" x="10" width="100%">
-		<s:HGroup>
-	    	<s:RadioButton id="resDefault" groupName="resolutionRG" label="По умолчанию" selected="true"/>
-			<s:RadioButton id="res320" groupName="resolutionRG" label="320x480"/>
-			<s:RadioButton id="res640" groupName="resolutionRG" label="640x960"/>
-			<s:RadioButton id="res1024" groupName="resolutionRG" label="1024x768"/>
-			<s:RadioButton id="resYouLike" groupName="resolutionRG" label="Что душе угодно"/>
-			<s:TextInput id="tiWidth" text="100" visible="false" widthInChars="3" restrict="0-9" keyDown="setSizes(event)"/>
-			<s:TextInput id="tiHeight" text="100" visible="false" widthInChars="3" restrict="0-9" keyDown="setSizes(event)"/>
-		</s:HGroup>
-		<mx:HRule strokeWidth="2" width="100%" strokeColor="0x000000"/>
 		<s:HGroup width="538" height="55">
 			<s:VGroup>
 				<s:RadioButton id="rbCheat1" label="Вложенный клип" groupName="cheatRG" selected="false"/>
