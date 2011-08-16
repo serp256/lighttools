@@ -10,6 +10,8 @@
 	
 	<fx:Script>
 		<![CDATA[
+			import flash.filters.BitmapFilter;
+			
 			import mx.controls.Alert;
 			import mx.graphics.codec.PNGEncoder;
 			
@@ -107,10 +109,13 @@
 						if (label == "") label = cutClip.currentFrameLabel;
 					
 						if (cutClip.width == 0 || cutClip.height == 0) continue; // пустые кадры пропускаем
-					
-						var bmd:BitmapData = new BitmapData(cutClip.width, cutClip.height, true, 0);// картинка кадра
+						
+					//	var rect2:Rectangle = processDisplayObjectContainer(cutClip);
 						var rect:Rectangle = cutClip.getBounds(cutClip);
-												
+						var bmd:BitmapData = new BitmapData(Math.ceil(cutClip.width) + 100, Math.ceil(cutClip.height) + 100, true, 0);// картинка кадра
+						//var bmd:BitmapData = new BitmapData(Math.ceil(cutClip.width), Math.ceil(cutClip.height), true, 0);// картинка кадра		
+					//	trace(acs, rect.x, rect.y, rect.width, rect.height, rect2.x, rect2.y, rect2.width, rect2.height);
+						
 						var mat:Matrix = new Matrix();
 						mat.translate(-rect.x, -rect.y);
 						mat.scale(matScaleX, matScaleY);
@@ -131,6 +136,7 @@
 								bitmap = new Bitmap(bmdata);
 							}
 							bitmaps.push(bitmap);
+							trace(bitmap.width, bitmap.height);
 							
 							//trace(acs, 'r', r.x, r.y, '-- oldRect --', oldRect.x * matScaleX, oldRect.y * matScaleY);
 							
@@ -145,6 +151,8 @@
 					bitmap = new Bitmap(oldBmd);
 										
 					r = bitmap.bitmapData.getColorBoundsRect(0xFFFFFF00, 0x00000000, false);
+				//	r = bitmap.bitmapData.getColorBoundsRect(0xFF000000, 0x00000000);
+					
 					if (r.width != bitmap.width || r.height != bitmap.height) {
 						if (r.width == 0)
 							r.width = bitmap.bitmapData.width;
@@ -155,6 +163,8 @@
 						bitmap = new Bitmap(bmdata);
 					}
 					bitmaps.push(bitmap);
+				
+					
 				
 					//bitmaps.push(new Bitmap(oldBmd));
 					
@@ -180,11 +190,16 @@
 							bmp.x = bmp.y = 0; // сбрасываем прошлую позицию
 							
 							if (bmp.width + nextX > size) {
+								if (nextX == 0){
+									trace('не влезло по Х', size, bmp.width + nextX, bmp.width, nextX);
+									flag = false;
+									break;
+								}
 								nextX = 0;
 								nextY += maxHeight + 2;
 							}
 							if (bmp.height + nextY > size) {
-								trace('не влезло', size);
+								trace('не влезло по Y', size, bmp.height + nextY, bmp.height, nextY);
 								flag = false;
 								break;
 							}
@@ -227,6 +242,94 @@
 				canva.rawChildren.addChild(almostPng); 
 				
 				status = 'загрузка завершена';
+			}
+			
+		/*	private function getDisplayObjectRectangle(container:DisplayObjectContainer, processFilters:Boolean):Rectangle { 
+				var final_rectangle:Rectangle = processDisplayObjectContainer(container, processFilters); 
+				// translate to local 
+				var local_point:Point = container.globalToLocal(new Point(final_rectangle.x, final_rectangle.y)); 
+				final_rectangle = new Rectangle(local_point.x, local_point.y, final_rectangle.width, final_rectangle.height); 
+				return final_rectangle; 
+			}*/
+			
+		/*	private function processDisplayObjectContainer(container:DisplayObjectContainer, processFilters:Boolean):Rectangle { 
+				var result_rectangle:Rectangle = null; 
+				
+					var index:int = 0; 
+					var displayObject:DisplayObject;
+					
+					// по потомкам
+					for(var childIndex:int = 0; childIndex < container.numChildren; childIndex++){
+						displayObject = container.getChildAt(childIndex);
+			
+						//если у потомка есть потомки
+						if (displayObject is DisplayObjectContainer) {
+							
+							// получаем размер потомков
+							var displayObject_rectangle:Rectangle = processDisplayObjectContainer(displayObject as DisplayObjectContainer, processFilters); 
+							
+							if (result_rectangle == null) {  
+								result_rectangle = displayObject_rectangle.clone();  
+							} else { 
+								result_rectangle = result_rectangle.union(displayObject_rectangle); 
+							} 
+						} 
+					}
+					
+					// получаем размер самого объекта
+					var container_rectangle:Rectangle = container.getBounds(container.stage); 
+					if (result_rectangle == null) {  
+						result_rectangle = container_rectangle.clone();  
+					} else { 
+						result_rectangle = result_rectangle.union(container_rectangle); 
+					} 
+					
+					// Include all filters if requested and they exist 
+					if ((processFilters == true) && (container.filters.length > 0)) { 
+						var filterGenerater_rectangle:Rectangle = new Rectangle(0,0,result_rectangle.width, result_rectangle.height); 
+						var bmd:BitmapData = new BitmapData(result_rectangle.width, result_rectangle.height, true, 0x00000000); 
+						var filter_minimumX:Number = 0; 
+						var filter_minimumY:Number = 0; 
+						var filtersLength:int = container.filters.length; 
+						
+						// по фильтрам
+						for (var filtersIndex:int = 0; filtersIndex < filtersLength; filtersIndex++) { 
+							var filter:BitmapFilter = container.filters[filtersIndex]; 
+							var filter_rectangle:Rectangle = bmd.generateFilterRect(filterGenerater_rectangle, filter); 
+							filter_minimumX += filter_rectangle.x; 
+							filter_minimumY += filter_rectangle.y; 
+							filterGenerater_rectangle = filter_rectangle.clone(); 
+							filterGenerater_rectangle.x = 0;
+							filterGenerater_rectangle.y = 0;
+							bmd = new BitmapData(filterGenerater_rectangle.width, filterGenerater_rectangle.height, true, 0x00000000); 
+						}
+						// Reposition filter_rectangle back to global coordinates 
+						filter_rectangle.x = result_rectangle.x + filter_minimumX; 
+						filter_rectangle.y = result_rectangle.y + filter_minimumY; 
+						result_rectangle = filter_rectangle.clone(); 
+					}
+				return result_rectangle; 
+			} */
+			
+			private function processDisplayObjectContainer(object:DisplayObject):Rectangle { 
+				var obj_rect:Rectangle = object.getBounds(object);
+				var result_rect:Rectangle = object.getBounds(object); 
+				
+				for each (var filter:BitmapFilter in object.filters) {
+					var bmd:BitmapData = new BitmapData(object.width +50, object.height +50);
+				
+					var rect:Rectangle = bmd.generateFilterRect(obj_rect, filter);
+					result_rect = result_rect.union(rect);
+				}
+				
+				if (object as DisplayObjectContainer) {
+					var container:DisplayObjectContainer = object as DisplayObjectContainer;
+					for (var i:uint=0; i<container.numChildren; i++) {
+						result_rect = result_rect.union(processDisplayObjectContainer(container.getChildAt(i)));
+					}
+				}
+				
+				return result_rect;
 			}
 			
 			private function cutImage(bitmap:Bitmap):Rectangle {
