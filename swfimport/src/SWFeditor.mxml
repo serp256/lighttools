@@ -128,9 +128,9 @@
 							var r:Rectangle = bitmap.bitmapData.getColorBoundsRect(0xFFFFFF00, 0x00000000, false);
 							if (r.width != bitmap.width || r.height != bitmap.height) {
 								if (r.width == 0)
-									r.width = bitmap.bitmapData.width;
+									r.width = bitmap.bitmapData.width - 100;
 								if (r.height == 0)
-									r.height = bitmap.bitmapData.height;
+									r.height = bitmap.bitmapData.height - 100;
 								var bmdata:BitmapData = new BitmapData(r.width, r.height, true, 0x000000);
 								bmdata.copyPixels(bitmap.bitmapData, r, new Point(0,0));
 								bitmap = new Bitmap(bmdata);
@@ -382,8 +382,11 @@
 				fs.writeUTFBytes('\t<Textures>\n');
 				
 				for (var i:uint=0; i<bdatas.length; i++) {
-					fs.writeUTFBytes('\t\t<Texture path="' + mainPartPath +'_' + i + '.png"/>\n');
+					var dir_name:String = mainPartPath.substring(mainPartPath.lastIndexOf('/') + 1);
+					fs.writeUTFBytes('\t\t<Texture path="' + dir_name+'/'+dir_name +'_' + i + '.png"/>\n');
 				}
+				
+				
 				//fs.writeUTFBytes('\t\t<Texture path="' + mainPartPath.substring(mainPartPath.lastIndexOf('\\') + 1) + '.png"/>\n');
 				fs.writeUTFBytes('\t</Textures>\n');
 				fs.writeUTFBytes('\t<Frames>\n');
