@@ -393,7 +393,7 @@
 				for (var acs:int = 0; acs < bitmaps.length; acs++) {
 					var s:String = '\t\t<Frame textureID="' + framesData[acs].textureID + '" x="' + bitmaps[acs].x + '" y="' + bitmaps[acs].y
 					  + '" width="' + bitmaps[acs].width + '" height="' + bitmaps[acs].height + '" posX="'
-					  + framesData[acs].posX + '" posY="' + framesData[acs].posY + '"'; 
+					  + (framesData[acs].posX + Number(tiPosX.text)) + '" posY="' + (framesData[acs].posY + Number(tiPosY.text)) + '"'; 
 					
 					if (framesData[acs].duration > 0) {
 						s += ' duration="' + framesData[acs].duration + '"';
@@ -493,6 +493,8 @@
 					}
 					bitmaps.splice(0,bitmaps.length);
 					framesData.splice(0,framesData.length);
+					tiPosX.text = '';
+					tiPosY.text = '';
 				}
 				f.addEventListener(Event.SELECT, onSelect);
 				if (!withoutSelect)
@@ -548,6 +550,12 @@
 				status = 'сохранено';
 			}
 
+			// сдвиг кадров
+			protected function tiPosX_keyDownHandler(event:KeyboardEvent):void
+			{
+				// TODO Auto-generated method stub
+			}
+
 		]]>
 	</fx:Script>
 	<s:VGroup height="100%" y="10" x="10" width="100%">
@@ -562,18 +570,28 @@
 		<mx:HRule strokeWidth="2" width="100%" strokeColor="0x000000"/>
 		<mx:Canvas id="canva" width="100%" height="100%"/>
 		<mx:HRule strokeWidth="2" width="100%" height="2" strokeColor="0x000000"/>
-		<s:VGroup width="100%" height="117">
+		<s:HGroup gap="190">
 			<s:Label text="Размеры SWF:"/>
-			<s:HGroup height="75">
-				<s:VGroup>
-					<s:TextInput id="tiSWFWidth" text="" keyDown="reloadSWF(event)" widthInChars="3" restrict="0-9"/>
-					<s:TextInput id="tiSWFHeight" text="" keyDown="reloadSWF(event)" widthInChars="3" restrict="0-9"/>
-				</s:VGroup>
-				<s:VGroup paddingTop="15">
-					<s:CheckBox id="chbLink" click="isLink = !isLink" label="Сохранить пропорции" selected="true"/>
-				</s:VGroup>
-			</s:HGroup>
-		</s:VGroup>
+			<s:Label text="Смещение кадров:"/>
+		</s:HGroup>
+			<s:HGroup gap="60">
+				<s:HGroup height="75" width="215">
+					<s:VGroup>
+						<s:TextInput id="tiSWFWidth" text="" keyDown="reloadSWF(event)" widthInChars="3" restrict="0-9"/>
+						<s:TextInput id="tiSWFHeight" text="" keyDown="reloadSWF(event)" widthInChars="3" restrict="0-9"/>
+					</s:VGroup>
+					<s:VGroup paddingTop="15">
+						<s:CheckBox id="chbLink" click="isLink = !isLink" label="Сохранить пропорции" selected="true"/>
+					</s:VGroup>
+					
+				</s:HGroup>
+				<s:HGroup height="75" width="237">
+					<s:VGroup>
+						<s:TextInput id="tiPosX" text="" keyDown="tiPosX_keyDownHandler(event)" widthInChars="5" restrict="0-9\,\.\-"/>
+						<s:TextInput id="tiPosY" text="" keyDown="tiPosX_keyDownHandler(event)" widthInChars="5" restrict="0-9\,\.\-"/>
+					</s:VGroup>
+				</s:HGroup>
+			</s:HGroup>	
 	</s:VGroup>		
 	
 </s:WindowedApplication>
