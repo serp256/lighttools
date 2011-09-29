@@ -14,24 +14,49 @@
 			import flash.utils.getDefinitionByName;
 			
 			import mx.controls.Alert;
+			import mx.graphics.codec.PNGEncoder;
 			
 			private var loader:Loader = new Loader();
 			private var li:LoaderInfo;
 			private var settings:Object = new Object();
+			private var settPath:String;
+			private var png:PNGEncoder = new PNGEncoder();
 			
 			private function init():void {
 				title = 'LibToPng';
-				
+				addEventListener(Event.CLOSING, onClosing);
 				loader.contentLoaderInfo.addEventListener(Event.COMPLETE, onLoadComplete);
-				var np:String = File.applicationStorageDirectory.nativePath + '/settings.json';
-				trace(np);
-				var f:File = new File(np);
+				
+				settPath = File.applicationStorageDirectory.nativePath + '/settings.json';
+				var f:File = new File(settPath);
 				if (f.exists) {
-					settings = getJSON(np);
+					settings = getJSON(settPath);
 				}
 				if (settings.exportPath != null) {
 					tiExportDir.text = settings.exportPath;
 				}
+				
+			/*	var mc:MovieClip = new MovieClip();
+				var sp:Sprite = new Sprite();
+				mc.addChild(sp);
+				
+				var sp1:Sprite = new Sprite();
+				mc.addChild(sp1);
+				
+				trace(mc.totalFrames, mc.numChildren); */
+			}
+			
+			// закрытие приложения. сохраняем настройки
+			private function onClosing(event:Event):void {
+				
+				if (tiExportDir.text != '') {
+					settings.exportPath = tiExportDir.text;
+				}
+				
+				var fs:FileStream = new FileStream(); 
+				fs.open(new File(settPath), FileMode.WRITE);
+				fs.writeUTFBytes(JSON.encode(settings,true));
+				fs.close();
 			}
 			
 			// получение данных из json-файла
@@ -70,14 +95,103 @@
 				
 				try {
 					var cls:Class = li.applicationDomain.getDefinition(tiClassName.text) as Class;
-					trace(cls);
 				}catch(error:Error){
 					Alert.show('Нет такого класса', 'Ошибка');
 					return;
 				}
 				
 				var content:DisplayObject = new cls();
-				trace(content);
+				parse(content, tiExportDir.text);
+				status = "готово";
+			}
+			
+			private function parse(content:DisplayObject, path:String):void {
+				var meta:Object = new Object();
+				var fs:FileStream = new FileStream();
+				
+				if (content is MovieClip) {
+					meta.type = "clip";
+					trace("clip ", path);
+					var frames:Array = [];
+					meta.frames = frames;
+					
+					var clip:MovieClip = content as MovieClip;
+					for (var i:uint = 0; i<clip.totalFrames; i++) { // по кадрам
+						//trace('frame '+i);
+						clip.gotoAndStop(i);
+						
+						if (clip.numChildren > 0) { // кадр не пустой, создаем элемент в массиве кадров
+							var children:Array = [];
+							frames.push({label:"", children: children});
+						}
+						
+						for (var j:uint = 0; j<clip.numChildren; j++) { // по потомкам кадра
+							//trace('child '+ j);
+							
+							child = clip.getChildAt(j);
+							var cap:String = i+'_'+j;
+							// только потомок может быть Shape, пишем сразу
+							if (child is Shape){
+								children.push({type:"image", file:cap+'.png', x:child.x, y:child.y});
+								trace("image", path+'/'+cap+'.png');
+								
+								// записываем png!!!
+								writePng(child, path+'/'+cap+'.png');
+								
+							} else {
+								children.push({type:(child is MovieClip) ? "clip" : "sprite", dir:cap, x:child.x, y:child.y});
+								parse(child, path+'/'+ cap);
+							}
+						}
+					}
+				} else
+				if (content is Sprite){
+					meta.type = "sprite";
+					trace("sprite ", path);
+					
+					var container:Sprite = content as Sprite;
+					
+					if (container.numChildren > 0) {
+						children = [];
+						meta.children = children;
+					}
+					for (i = 0; i<container.numChildren; i++) { // по потомкам
+						var child:DisplayObject = container.getChildAt(i);
+						
+						// только потомок может быть Shape, пишем сразу
+						if (child is Shape){
+							children.push({type:"image", file:i+'.png', x:child.x, y:child.y});
+							// записываем png!!!
+							writePng(child, path+'/'+i+'.png');
+						} else {
+							children.push({type:(child is MovieClip) ? "clip" : "sprite", dir:i, x:child.x, y:child.y});
+							parse(child, path+'/'+i);
+						}
+					}
+					
+				} else {
+					Alert.show('Объект не является MovieClip, Sprite или Shape: '+content +'\n'+ path, 'Ошибка');
+					return;
+				}
+				
+				
+				// сохраняем метафайл
+				fs.open(new File(path+'/meta.json'), FileMode.WRITE);
+				fs.writeUTFBytes(JSON.encode(meta, true));
+				fs.close();
+				
+			}
+			
+			// создание png
+			private function writePng(source:DisplayObject, url:String):void {
+				var bd:BitmapData = new BitmapData(source.width, source.height);
+				bd.draw(source);
+				var ba:ByteArray = png.encode(bd);
+				
+				var fs:FileStream = new FileStream();
+				fs.open(new File(url), FileMode.WRITE);
+				fs.writeBytes(ba);
+				fs.close();
 			}
 			
 			// выбор swf
