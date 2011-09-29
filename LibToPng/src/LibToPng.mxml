@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					   xmlns:s="library://ns.adobe.com/flex/spark" 
+					   xmlns:mx="library://ns.adobe.com/flex/mx" width="538" height="400"
+					   applicationComplete="init()">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.maccherone.json.JSON;
+			
+			import flash.utils.getDefinitionByName;
+			
+			import mx.controls.Alert;
+			
+			private var loader:Loader = new Loader();
+			private var li:LoaderInfo;
+			private var settings:Object = new Object();
+			
+			private function init():void {
+				title = 'LibToPng';
+				
+				loader.contentLoaderInfo.addEventListener(Event.COMPLETE, onLoadComplete);
+				var np:String = File.applicationStorageDirectory.nativePath + '/settings.json';
+				trace(np);
+				var f:File = new File(np);
+				if (f.exists) {
+					settings = getJSON(np);
+				}
+				if (settings.exportPath != null) {
+					tiExportDir.text = settings.exportPath;
+				}
+			}
+			
+			// получение данных из json-файла
+			private function getJSON(url:String):Object {
+				var fs:FileStream = new FileStream();
+				fs.open(new File(url), FileMode.READ);
+				var str:String = fs.readUTFBytes(fs.bytesAvailable);
+				fs.close();
+				
+				var obj:Object;
+				try {
+					obj = JSON.decode(str);
+					if (obj is String) {
+						Alert.show('Не разобрался JSON: ' + url, 'Ошибка');
+						obj = null;
+					}
+				} catch (error:Error) {
+					Alert.show('Не разобрался JSON: ' + url, 'Ошибка');
+				}
+				
+				return obj;
+			}
+			
+			
+			// сделать экспорт
+			protected function button1_clickHandler(event:MouseEvent):void
+			{
+				if (tiClassName.text == '') {
+					Alert.show('Введите имя класса', 'Ошибка');
+					return;
+				}
+				if (tiExportDir.text == '') {
+					Alert.show('Выберите папку экспорта', 'Ошибка');
+					return;
+				}
+				
+				try {
+					var cls:Class = li.applicationDomain.getDefinition(tiClassName.text) as Class;
+					trace(cls);
+				}catch(error:Error){
+					Alert.show('Нет такого класса', 'Ошибка');
+					return;
+				}
+				
+				var content:DisplayObject = new cls();
+				trace(content);
+			}
+			
+			// выбор swf
+			protected function btSelectSwf_clickHandler(event:MouseEvent):void
+			{
+				var f:File = new File();
+				f.addEventListener(Event.SELECT, onSelectSwf);
+				f.browseForOpen('Выберите swf', [new FileFilter('SWF-файлы', "*.swf")]);
+			}
+			
+			// выбрана swf
+			private function onSelectSwf(event:Event):void {
+				status = 'загрузка...';
+				var f:File = event.currentTarget as File;
+				f.removeEventListener(Event.SELECT, onSelectSwf);
+				
+				loader.load(new URLRequest(f.url));
+				tiSwfName.text = f.url;
+			}
+			
+			// выбор папки экспорта
+			private function btSelectDir_clickHandler(event:MouseEvent):void {
+				var f:File = new File();
+				f.addEventListener(Event.SELECT, onSelectDir);
+				f.browseForDirectory('Выберите папку');
+			}
+			
+			// выбрана папка экспорта
+			private function onSelectDir(event:Event):void {
+				var f:File = event.currentTarget as File;
+				f.removeEventListener(Event.SELECT, onSelectDir);
+				tiExportDir.text = f.url;
+			}
+			
+			
+			// swf загружена
+			private function onLoadComplete(event:Event):void {
+				status = "загрузка завершена";
+				btExport.enabled = true;
+				li = event.target as LoaderInfo;
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Разместить невизуальные элементы (например, службы или объекты значений) -->
+	</fx:Declarations>
+	<s:VGroup x="0" y="50" width="100%" height="240" paddingLeft="50" paddingRight="50">
+		<s:Label text="SWF"/>
+		<s:HGroup width="100%">
+			<s:TextInput width="100%" id="tiSwfName"/>
+			<s:Button label="..." width="30" id="btSelectSwf" click="btSelectSwf_clickHandler(event)"/>
+		</s:HGroup>
+		<s:Label text="Имя класса"/>
+		<s:TextInput id="tiClassName" width="326"/>
+		<s:Label text="Папка экспорта"/>
+		<s:HGroup width="100%">
+			<s:TextInput width="100%" id="tiExportDir"/>
+			<s:Button label="..." width="30" id="btSelectDir" click="btSelectDir_clickHandler(event)"/>
+		</s:HGroup>
+		<s:Button label="Экспорт" click="button1_clickHandler(event)" enabled="false" id="btExport"/>
+	</s:VGroup>
+</s:WindowedApplication>
