@@ -110,7 +110,7 @@
 				var fs:FileStream = new FileStream();
 				
 				if (content is MovieClip) {
-					trace("clip ", path);
+					//trace("clip ", path, content.name);
 					var frames:Array = [];
 					var clip:MovieClip = content as MovieClip;
 										
@@ -134,14 +134,14 @@
 								var cap:String = i+'_'+j;
 								// только потомок может быть Shape, пишем сразу
 								if (child is Shape){
-									children.push({type:"image", file:cap+'.png', x:child.x, y:child.y});
-									trace("image", path+'/'+cap+'.png');
+									children.push({type:"image", file:cap+'.png', x:child.x, y:child.y, name:child.name});
+									//trace("image", path+'/'+cap+'.png', child.name);
 									
 									// записываем png!!!
 									writePng(child, path+'/'+cap+'.png');
 									
 								} else {
-									children.push({type:(child is MovieClip) ? "clip" : "sprite", dir:cap, x:child.x, y:child.y});
+									children.push({type:(child is MovieClip) ? "clip" : "sprite", dir:cap, x:child.x, y:child.y, name:child.name});
 									parse(child, path+'/'+ cap);
 								}
 							}
@@ -159,7 +159,7 @@
 				} else
 				if (content is Sprite){
 					meta.type = "sprite";
-					trace("sprite ", path);
+					//trace("sprite ", path, content.name);
 					
 					var container:Sprite = content as Sprite;
 					
@@ -172,11 +172,11 @@
 						
 						// только потомок может быть Shape, пишем сразу
 						if (child is Shape){
-							children.push({type:"image", file:i+'.png', x:child.x, y:child.y});
+							children.push({type:"image", file:i+'.png', x:child.x, y:child.y, name:child.name});
 							// записываем png!!!
 							writePng(child, path+'/'+i+'.png');
 						} else {
-							children.push({type:(child is MovieClip) ? "clip" : "sprite", dir:i, x:child.x, y:child.y});
+							children.push({type:(child is MovieClip) ? "clip" : "sprite", dir:String(i), x:child.x, y:child.y, name:child.name});
 							parse(child, path+'/'+i);
 						}
 					}
@@ -196,7 +196,7 @@
 			
 			// создание png
 			private function writePng(source:DisplayObject, url:String):void {
-				var bd:BitmapData = new BitmapData(source.width, source.height);
+				var bd:BitmapData = new BitmapData(source.width, source.height, true, 0x000000);
 				bd.draw(source);
 				var ba:ByteArray = png.encode(bd);
 				
