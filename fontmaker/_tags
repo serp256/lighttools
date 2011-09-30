@@ -1,0 +1,4 @@
+<*.ml>: package(camlp4),syntax(camlp4r),package(camlimages.core)
+<fontmaker.{ml,byte,native}>: package(camlimages.png),package(camlimages.freetype),package(extlib),package(xmlm)
+true: debug
+
