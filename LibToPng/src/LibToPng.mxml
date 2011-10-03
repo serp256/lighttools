@@ -104,32 +104,50 @@
 				}
 				
 				var content:DisplayObject = new cls();
-				parse(content, tiExportDir.text + '/'+tiClassName.text);
+				try {
+					parse(content, tiExportDir.text, tiClassName.text);
+				}catch(error:Error) {
+					Alert.show('Какая-то бага', 'Ошибка');
+				}
 				status = "готово";
 			}
 			
-			private function parse(content:DisplayObject, path:String):void {
+			private function parse(content:DisplayObject, path:String, cap:String):Object {
 			
 				//trace(content.filters.length, path);
 				
 				if (content is MovieClip) {
-					parseMC(content, path);
+					return parseMC(content, path, cap);
 				} else
+					
 				if (content is Sprite){
-					parseSprite(content, path);
+					return parseSprite(content, path, cap);
 				} else {
-					Alert.show('Объект не является MovieClip, Sprite или Shape: '+content +'\n'+ path, 'Ошибка');
-					return;
+					
+				if (content is Shape) {
+					return parseShape(content, path, cap);
+					
+				} else
+					Alert.show('Объект не является MovieClip, Sprite или Shape: '+content +'\n'+ path +'/'+ cap, 'Ошибка');
+					return null;
 				}
+				//return {type:(content is MovieClip) ? "clip" : "sprite", dir:cap, x:content.x, y:content.y, name:content.name};
 			}
 			
-			private function parseMC(content:DisplayObject, path:String):void {
+			//========= сохранение Shape =============
+			private function parseShape(content:DisplayObject, path:String, cap:String):Object {
+				var p:Object = writePng(content, path+'/'+cap+'.png');
+				return {type:"image", file:cap+'.png', x:content.x + p.x, y:content.y + p.y, name:content.name};
+			}
+			
+			//========= разбор MovieClip ==============
+			private function parseMC(content:DisplayObject, path:String, cap:String):Object {
 				var clip:MovieClip = content as MovieClip;
 				if (clip.totalFrames == 1){
-					parseSprite(content, path);
-					return;
-				}
+					return parseSprite(content, path, cap);
+				} 
 				
+				path += '/'+cap;
 				var frames:Array = [];
 				var meta:Object = {type: "clip", frames:frames};
 												
@@ -147,66 +165,59 @@
 					}
 					
 					for (var j:uint = 0; j<clip.numChildren; j++) { // по потомкам кадра
-						child.alpha *= clip.alpha;
-						trace(content.alpha);
-						
 						var child:DisplayObject = clip.getChildAt(j);
-						var cap:String = i+'_'+j;
-						
-						if (child is Shape){// записываем png!!!
-							
-							//trace("image", path+'/'+cap+'.png', child.name);
-							var p:Object = writePng(child, path+'/'+cap+'.png');
-							children.push({type:"image", file:cap+'.png', x:child.x + p.x, y:child.y + p.y, name:child.name});
-						} else {
-							children.push({type:(child is MovieClip) ? "clip" : "sprite", dir:cap, x:child.x, y:child.y, name:child.name});
-							parse(child, path+'/'+ cap);
-						}
+						child.alpha *= clip.alpha;
+					
+						children.push(parse(child, path, i+'_'+j));
 					}
 				}
 				
 				saveMeta(meta, path);
+				return {type:"clip", dir:cap, x:content.x, y:content.y, name:content.name};
 			}
 			
-			// разбор спрайта
-			private function parseSprite(content:DisplayObject, path:String):void {
+			//====== разбор потомка ================
+		/*	private function parseChild(child:DisplayObject, path:String, cap:String):Object {
+				if (child is Shape){// записываем png!!!
+					return parseShape(child, path, cap);
+				} else {
+					parse(child, path+'/'+ cap);
+					return {type:(child is MovieClip) ? "clip" : "sprite", dir:cap, x:child.x, y:child.y, name:child.name};
+				}
+			} */
+			
+			//====== разбор спрайта ==============
+			private function parseSprite(content:DisplayObject, path:String, cap:String):Object {
 				var container:Sprite = content as Sprite;
 				if (container.numChildren == 0) {
 					
 					if (container.width > 0 && container.height > 0) {
 						trace('container.numChildren == 0', container.width, container.height);
 					}
-					return;
+					return {type:"sprite", dir:cap, x:content.x, y:content.y, name:content.name};
 				}
+				if (container.numChildren == 1) {
+					var child:DisplayObject = container.getChildAt(0);
+					child.alpha *= container.alpha;
+					return parse(child, path, cap);
+					//return parseShape(content, path, cap);
+				}
+				path += '/'+cap;
 				var children:Array = [];
 				var meta:Object = {type: "sprite", children: children};
 				
 				//trace("sprite ", path, content.name);
 				
-			/*	if (container.numChildren == 1) {
-					var p:Object = writePng(container, path+'/'+i+'.png');
-					
-				}*/
-				
 				for (var i:uint = 0; i<container.numChildren; i++) { // по потомкам
-					var child:DisplayObject = container.getChildAt(i);	
+					child = container.getChildAt(i);	
 					child.alpha *= content.alpha;
-					trace(content.alpha, child.alpha, path);
-					
-					// только потомок может быть Shape, пишем сразу
-					if (child is Shape){
-						// записываем png!!!
-						var p:Object = writePng(child, path+'/'+i+'.png');
-						children.push({type:"image", file:i+'.png', x:child.x + p.x, y:child.y + p.y, name:child.name});
-					} else {
-						children.push({type:(child is MovieClip) ? "clip" : "sprite", dir:String(i), x:child.x, y:child.y, name:child.name});
-						parse(child, path+'/'+i);
-					}
+					children.push(parse(child, path, String(i)));
 				}
 				saveMeta(meta, path);
+				return {type:"sprite", dir:cap, x:content.x, y:content.y, name:content.name};
 			}
 			
-			// сохранение метафайла
+			//====== сохранение метафайла ========
 			private function saveMeta(data:Object, path:String):void {
 				
 				var fs:FileStream = new FileStream();
@@ -215,7 +226,7 @@
 				fs.close();
 			}
 			
-			// создание png
+			//======= создание png ===============
 			private function writePng(source:DisplayObject, url:String):Object {
 				trace('writePng', source.alpha);
 				
@@ -252,7 +263,7 @@
 				return {x: r.x - 50, y:r.y - 50};
 			}
 			
-			// выбор swf
+			//========= выбор swf ============
 			protected function btSelectSwf_clickHandler(event:MouseEvent):void
 			{
 				var f:File = new File();
@@ -260,7 +271,7 @@
 				f.browseForOpen('Выберите swf', [new FileFilter('SWF-файлы', "*.swf")]);
 			}
 			
-			// выбрана swf
+			//========= выбрана swf =========
 			private function onSelectSwf(event:Event):void {
 				status = 'загрузка...';
 				var f:File = event.currentTarget as File;
