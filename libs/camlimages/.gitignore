@@ -1,0 +1,11 @@
+OMakefile.omc
+*.cmx
+*.cmo
+*.cmi
+*.o
+*.a
+*.cmxa
+*.cma
+*.so
+*.opt
+*.run

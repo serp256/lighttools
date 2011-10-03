@@ -1,0 +1,38 @@
+deficon.cmo: 
+deficon.cmx: 
+mylazy.cmo: mylazy.cmi 
+mylazy.cmx: mylazy.cmi 
+cache.cmo: cache.cmi 
+cache.cmx: cache.cmi 
+livmisc.cmo: 
+livmisc.cmx: 
+gui.cmo: 
+gui.cmx: 
+jWidget.cmo: gui.cmo 
+jWidget.cmx: gui.cmx 
+seq.cmo: 
+seq.cmx: 
+tout.cmo: livmisc.cmo 
+tout.cmx: livmisc.cmx 
+enhance.cmo: 
+enhance.cmx: 
+viewer.cmo: gui.cmo 
+viewer.cmx: gui.cmx 
+edge.cmo: 
+edge.cmx: 
+pathfind.cmo: 
+pathfind.cmx: 
+iconcap.cmo: pathfind.cmo livmisc.cmo 
+iconcap.cmx: pathfind.cmx livmisc.cmx 
+livshtype.cmo: livmisc.cmo livshtype.cmi 
+livshtype.cmx: livmisc.cmx livshtype.cmi 
+icon.cmo: pathfind.cmo livshtype.cmi iconcap.cmo gui.cmo 
+icon.cmx: pathfind.cmx livshtype.cmx iconcap.cmx gui.cmx 
+livsh.cmo: seq.cmo pathfind.cmo mylazy.cmi livshtype.cmi livmisc.cmo \
+    jWidget.cmo icon.cmo gui.cmo deficon.cmo 
+livsh.cmx: seq.cmx pathfind.cmx mylazy.cmx livshtype.cmx livmisc.cmx \
+    jWidget.cmx icon.cmx gui.cmx deficon.cmx 
+scandir.cmo: 
+scandir.cmx: 
+jpf.cmo: 
+jpf.cmx: 
