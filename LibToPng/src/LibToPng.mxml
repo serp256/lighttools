@@ -37,13 +37,16 @@
 				}
 				
 			/*	var mc:MovieClip = new MovieClip();
+				mc.alpha = 0.5;
+				
 				var sp:Sprite = new Sprite();
+			//	sp.alpha = 1;
 				mc.addChild(sp);
 				
 				var sp1:Sprite = new Sprite();
-				mc.addChild(sp1);
+				//mc.addChild(sp1);
 				
-				trace(mc.totalFrames, mc.numChildren); */
+				trace(mc.alpha, sp.alpha); */
 			}
 			
 			// закрытие приложения. сохраняем настройки
@@ -106,104 +109,147 @@
 			}
 			
 			private function parse(content:DisplayObject, path:String):void {
-				var meta:Object = new Object();
-				var fs:FileStream = new FileStream();
+			
+				//trace(content.filters.length, path);
 				
 				if (content is MovieClip) {
-					//trace("clip ", path, content.name);
-					var frames:Array = [];
-					var clip:MovieClip = content as MovieClip;
-										
-						for (var i:uint = 0; i<clip.totalFrames; i++) { // по кадрам
-							//trace('frame '+i);
-							clip.gotoAndStop(i);
-							
-							if (clip.numChildren > 0) { // кадр не пустой, создаем элемент в массиве кадров
-								var children:Array = [];
-								var data:Object = {children: children};
-								if (clip.currentLabel != null) {
-									data.label = clip.currentLabel;
-								}
-								frames.push(data);
-							}
-							
-							for (var j:uint = 0; j<clip.numChildren; j++) { // по потомкам кадра
-								//trace('child '+ j);
-								
-								child = clip.getChildAt(j);
-								var cap:String = i+'_'+j;
-								// только потомок может быть Shape, пишем сразу
-								if (child is Shape){
-									children.push({type:"image", file:cap+'.png', x:child.x, y:child.y, name:child.name});
-									//trace("image", path+'/'+cap+'.png', child.name);
-									
-									// записываем png!!!
-									writePng(child, path+'/'+cap+'.png');
-									
-								} else {
-									children.push({type:(child is MovieClip) ? "clip" : "sprite", dir:cap, x:child.x, y:child.y, name:child.name});
-									parse(child, path+'/'+ cap);
-								}
-							}
-						}
-						
-						
-						if (clip.totalFrames < 2){
-							meta.type = "sprite";
-							meta.children = (frames.length > 0) ? frames[0].children : [];
-						} else {
-							meta.type = "clip";
-							meta.frames = frames;
-						}
-			
+					parseMC(content, path);
 				} else
 				if (content is Sprite){
-					meta.type = "sprite";
-					//trace("sprite ", path, content.name);
-					
-					var container:Sprite = content as Sprite;
-					
-					if (container.numChildren > 0) {
-						children = [];
-						meta.children = children;
-					}
-					for (i = 0; i<container.numChildren; i++) { // по потомкам
-						var child:DisplayObject = container.getChildAt(i);
-						
-						// только потомок может быть Shape, пишем сразу
-						if (child is Shape){
-							children.push({type:"image", file:i+'.png', x:child.x, y:child.y, name:child.name});
-							// записываем png!!!
-							writePng(child, path+'/'+i+'.png');
-						} else {
-							children.push({type:(child is MovieClip) ? "clip" : "sprite", dir:String(i), x:child.x, y:child.y, name:child.name});
-							parse(child, path+'/'+i);
-						}
-					}
-					
+					parseSprite(content, path);
 				} else {
 					Alert.show('Объект не является MovieClip, Sprite или Shape: '+content +'\n'+ path, 'Ошибка');
 					return;
 				}
+			}
+			
+			private function parseMC(content:DisplayObject, path:String):void {
+				var clip:MovieClip = content as MovieClip;
+				if (clip.totalFrames == 1){
+					parseSprite(content, path);
+					return;
+				}
 				
+				var frames:Array = [];
+				var meta:Object = {type: "clip", frames:frames};
+												
+				for (var i:uint = 0; i<clip.totalFrames; i++) { // по кадрам
+					//trace('frame '+i);
+					clip.gotoAndStop(i);
+					
+					if (clip.numChildren > 0) { // кадр не пустой, создаем элемент в массиве кадров
+						var children:Array = [];
+						var data:Object = {children: children};
+						if (clip.currentLabel != null) {
+							data.label = clip.currentLabel;
+						}
+						frames.push(data);
+					}
+					
+					for (var j:uint = 0; j<clip.numChildren; j++) { // по потомкам кадра
+						child.alpha *= clip.alpha;
+						trace(content.alpha);
+						
+						var child:DisplayObject = clip.getChildAt(j);
+						var cap:String = i+'_'+j;
+						
+						if (child is Shape){// записываем png!!!
+							
+							//trace("image", path+'/'+cap+'.png', child.name);
+							var p:Object = writePng(child, path+'/'+cap+'.png');
+							children.push({type:"image", file:cap+'.png', x:child.x + p.x, y:child.y + p.y, name:child.name});
+						} else {
+							children.push({type:(child is MovieClip) ? "clip" : "sprite", dir:cap, x:child.x, y:child.y, name:child.name});
+							parse(child, path+'/'+ cap);
+						}
+					}
+				}
 				
-				// сохраняем метафайл
+				saveMeta(meta, path);
+			}
+			
+			// разбор спрайта
+			private function parseSprite(content:DisplayObject, path:String):void {
+				var container:Sprite = content as Sprite;
+				if (container.numChildren == 0) {
+					
+					if (container.width > 0 && container.height > 0) {
+						trace('container.numChildren == 0', container.width, container.height);
+					}
+					return;
+				}
+				var children:Array = [];
+				var meta:Object = {type: "sprite", children: children};
+				
+				//trace("sprite ", path, content.name);
+				
+			/*	if (container.numChildren == 1) {
+					var p:Object = writePng(container, path+'/'+i+'.png');
+					
+				}*/
+				
+				for (var i:uint = 0; i<container.numChildren; i++) { // по потомкам
+					var child:DisplayObject = container.getChildAt(i);	
+					child.alpha *= content.alpha;
+					trace(content.alpha, child.alpha, path);
+					
+					// только потомок может быть Shape, пишем сразу
+					if (child is Shape){
+						// записываем png!!!
+						var p:Object = writePng(child, path+'/'+i+'.png');
+						children.push({type:"image", file:i+'.png', x:child.x + p.x, y:child.y + p.y, name:child.name});
+					} else {
+						children.push({type:(child is MovieClip) ? "clip" : "sprite", dir:String(i), x:child.x, y:child.y, name:child.name});
+						parse(child, path+'/'+i);
+					}
+				}
+				saveMeta(meta, path);
+			}
+			
+			// сохранение метафайла
+			private function saveMeta(data:Object, path:String):void {
+				
+				var fs:FileStream = new FileStream();
 				fs.open(new File(path+'/meta.json'), FileMode.WRITE);
-				fs.writeUTFBytes(JSON.encode(meta, true));
+				fs.writeUTFBytes(JSON.encode(data, true));
 				fs.close();
-				
 			}
 			
 			// создание png
-			private function writePng(source:DisplayObject, url:String):void {
+			private function writePng(source:DisplayObject, url:String):Object {
+				trace('writePng', source.alpha);
+				
+				var m:Matrix = new Matrix();
+				m.translate(50,50);
+								
+				var bd:BitmapData = new BitmapData(source.width + 100, source.height + 100, true, 0x000000);
+				bd.draw(source, m, new ColorTransform(1,1,1, source.alpha));
+							
+				var r:Rectangle = bd.getColorBoundsRect(0xFFFFFF00, 0x00000000, false);
+				
+				//trace('rect', r.x, r.y, source.x, source.y, r.width, r.height, source.width, source.height);
+				
+				if (r.width == 0)
+					r.width = bd.width - 100;
+				if (r.height == 0)
+					r.height = bd.height - 100;
+				
+				var bmdata:BitmapData = new BitmapData(r.width, r.height, true, 0x000000);
+				bmdata.copyPixels(bd, r, new Point(0,0));
+				
+				var ba:ByteArray = png.encode(bmdata); 
+				
+			/*	var r:Rectangle = new Rectangle(50, 50);
 				var bd:BitmapData = new BitmapData(source.width, source.height, true, 0x000000);
-				bd.draw(source);
-				var ba:ByteArray = png.encode(bd);
+				bd.draw(source, null, new ColorTransform(1,1,1, source.alpha));
+				var ba:ByteArray = png.encode(bd); */
 				
 				var fs:FileStream = new FileStream();
 				fs.open(new File(url), FileMode.WRITE);
 				fs.writeBytes(ba);
 				fs.close();
+				
+				return {x: r.x - 50, y:r.y - 50};
 			}
 			
 			// выбор swf
