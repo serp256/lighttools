@@ -49,6 +49,34 @@
 				trace(mc.alpha, sp.alpha); */
 			}
 			
+			private function findMask(content:DisplayObject):void {
+				trace(content.name, content.width, content.height);
+				
+				if (content.mask != null) {
+					Alert.show('has mask')
+				}
+				if (!(content is DisplayObjectContainer)) {
+					return;
+				}
+				if (content is MovieClip) {
+					var clip:MovieClip = content as MovieClip;
+					for (var i:uint = 0; i<clip.totalFrames; i++) {
+						clip.gotoAndStop(i);
+						for (var j:uint = 0; j<clip.numChildren; j++) {
+							findMask(clip.getChildAt(j));
+						}
+					}
+				} else
+				if (content is Sprite) {
+					var sp:Sprite = content as Sprite;
+					for (j = 0; j<sp.numChildren; j++) {
+						findMask(sp.getChildAt(j));
+					}
+				} else {
+					Alert.show('левый объект');
+				}
+			}
+			
 			// закрытие приложения. сохраняем настройки
 			private function onClosing(event:Event):void {
 				
@@ -104,17 +132,68 @@
 				}
 				
 				var content:DisplayObject = new cls();
+				
+			/*	var mc:MovieClip = new MovieClip();
+				mc.graphics.beginFill(0x00FF00, 1);
+				mc.graphics.drawRect(100,100,60,60);
+				mc.graphics.endFill();
+				
+				var mc2:MovieClip = new MovieClip();
+				var sp:Sprite = new Sprite();
+				sp.graphics.beginFill(0xFF0000, 0.3);
+				sp.graphics.drawRect(100,100,50,50);
+				sp.graphics.endFill();
+				mc2.addChild(sp);
+				mc.mask = mc2;
+				
+				findMask(content);*/
+				
+				//test(content as MovieClip);
+				//return;
+				
+				addEventListener(Event.ENTER_FRAME, onEnterFrame);
+				
 				try {
 					parse(content, tiExportDir.text, tiClassName.text);
 				}catch(error:Error) {
 					Alert.show('Какая-то бага', 'Ошибка');
-				}
-				status = "готово";
+				} 
+				
+				status = "готово"; 
 			}
+			
+			private function onEnterFrame(event:Event):void {
+				
+			}
+			
+			private function test(clip:MovieClip):void {
+				for (var i:uint = 1; i<=clip.totalFrames; i++) {
+					clip.gotoAndStop(i);
+					var child:MovieClip = clip.getChildAt(0) as MovieClip; 
+					
+					//child.alpha = 1;
+						
+					trace(child.filters[0]);
+					
+				/*	var rect:Rectangle = child.getBounds(child);
+					var bmd:BitmapData = new BitmapData(Math.ceil(child.width), Math.ceil(child.height), true, 0);
+					
+					var mat:Matrix = new Matrix();
+					mat.translate(-rect.x, -rect.y);
+					bmd.draw(child, mat);
+					
+					var bmp:Bitmap = new Bitmap(bmd);
+					bmp.x = i*60;
+					canva.rawChildren.addChild(bmp); */
+				}
+			}
+		
 			
 			private function parse(content:DisplayObject, path:String, cap:String):Object {
 			
-				//trace(content.filters.length, path);
+				//if (content.filters.length > 0 )
+				//	trace('parse', content, content.filters[0], content.name, content.filters.length, path + cap);
+				trace('parse', content);
 				
 				if (content is MovieClip) {
 					return parseMC(content, path, cap);
@@ -136,25 +215,40 @@
 			
 			//========= сохранение Shape =============
 			private function parseShape(content:DisplayObject, path:String, cap:String):Object {
+				//trace('parseShape', content.name);
+				
 				var p:Object = writePng(content, path+'/'+cap+'.png');
 				return {type:"image", file:cap+'.png', x:content.x + p.x, y:content.y + p.y, name:content.name};
 			}
 			
 			//========= разбор MovieClip ==============
 			private function parseMC(content:DisplayObject, path:String, cap:String):Object {
+				//trace('parseMC', content.name);
+				
 				var clip:MovieClip = content as MovieClip;
 				if (clip.totalFrames == 1){
 					return parseSprite(content, path, cap);
 				} 
-				
+		
 				path += '/'+cap;
 				var frames:Array = [];
 				var meta:Object = {type: "clip", frames:frames};
+				
 												
-				for (var i:uint = 0; i<clip.totalFrames; i++) { // по кадрам
-					//trace('frame '+i);
-					clip.gotoAndStop(i);
+				for (var i:uint = 1; i<=clip.totalFrames; i++) { // по кадрам
+												
+					clip.gotoAndStop(i);	
 					
+				/*	var rect:Rectangle = clip.getBounds(clip);
+					var mat:Matrix = new Matrix();
+					mat.translate(-rect.x, -rect.y);
+					var bm:BitmapData = new BitmapData(50,50);//(clip.width, clip.height, true, 0x000000);
+					bm.draw(clip,mat);
+					
+					var bmp:Bitmap = new Bitmap(bm);
+					bmp.x = i*60;
+					canva.rawChildren.addChild(bmp); */
+																			
 					if (clip.numChildren > 0) { // кадр не пустой, создаем элемент в массиве кадров
 						var children:Array = [];
 						var data:Object = {children: children};
@@ -165,30 +259,30 @@
 					}
 					
 					for (var j:uint = 0; j<clip.numChildren; j++) { // по потомкам кадра
+												
 						var child:DisplayObject = clip.getChildAt(j);
-						child.alpha *= clip.alpha;
-					
+						//child.alpha *= clip.alpha;
+						
+					//	trace(clip.currentFrame, child.alpha, clip.alpha, child.name, child.filters[0]);
 						children.push(parse(child, path, i+'_'+j));
 					}
+					
+					
 				}
+				
+				//canva.rawChildren.addChild(clip);
 				
 				saveMeta(meta, path);
 				return {type:"clip", dir:cap, x:content.x, y:content.y, name:content.name};
 			}
 			
-			//====== разбор потомка ================
-		/*	private function parseChild(child:DisplayObject, path:String, cap:String):Object {
-				if (child is Shape){// записываем png!!!
-					return parseShape(child, path, cap);
-				} else {
-					parse(child, path+'/'+ cap);
-					return {type:(child is MovieClip) ? "clip" : "sprite", dir:cap, x:child.x, y:child.y, name:child.name};
-				}
-			} */
-			
 			//====== разбор спрайта ==============
 			private function parseSprite(content:DisplayObject, path:String, cap:String):Object {
+				//trace('parseSprite', content.name);				
+				
+				
 				var container:Sprite = content as Sprite;
+								
 				if (container.numChildren == 0) {
 					
 					if (container.width > 0 && container.height > 0) {
@@ -199,8 +293,9 @@
 				if (container.numChildren == 1) {
 					var child:DisplayObject = container.getChildAt(0);
 					child.alpha *= container.alpha;
+					child.filters = container.filters;
+					
 					return parse(child, path, cap);
-					//return parseShape(content, path, cap);
 				}
 				path += '/'+cap;
 				var children:Array = [];
@@ -228,7 +323,7 @@
 			
 			//======= создание png ===============
 			private function writePng(source:DisplayObject, url:String):Object {
-				trace('writePng', source.alpha);
+				//trace('writePng', url, source.width, source.height);
 				
 				var m:Matrix = new Matrix();
 				m.translate(50,50);
@@ -309,7 +404,7 @@
 	<fx:Declarations>
 		<!-- Разместить невизуальные элементы (например, службы или объекты значений) -->
 	</fx:Declarations>
-	<s:VGroup x="0" y="50" width="100%" height="240" paddingLeft="50" paddingRight="50">
+	<s:VGroup x="0" y="50" width="100%" height="327" paddingLeft="50" paddingRight="50">
 		<s:Label text="SWF"/>
 		<s:HGroup width="100%">
 			<s:TextInput width="100%" id="tiSwfName"/>
@@ -323,5 +418,7 @@
 			<s:Button label="..." width="30" id="btSelectDir" click="btSelectDir_clickHandler(event)"/>
 		</s:HGroup>
 		<s:Button label="Экспорт" click="button1_clickHandler(event)" enabled="false" id="btExport"/>
+		
+		<mx:Canvas id="canva" width="100%" height="100%"/>
 	</s:VGroup>
 </s:WindowedApplication>
