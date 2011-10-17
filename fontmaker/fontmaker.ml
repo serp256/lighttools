@@ -63,13 +63,15 @@ value parse_sizes str =
   with [ _ -> failwith "Failure parse sizes" ];
 
 value read_chars fname = pattern.val := String.strip (Std.input_file fname);
+value output = ref None;
 
 (* use xmlm for writing xml *)
 Arg.parse 
   [
     ("-c",Arg.Set_string pattern,"chars");
     ("-s",Arg.String parse_sizes,"sizes");
-    ("-cf",Arg.String read_chars,"chars from file")
+    ("-cf",Arg.String read_chars,"chars from file");
+    ("-o",Arg.String (fun s -> output.val := Some s),"output dir")
   ] 
   (fun f -> fontFile.val := f) "Usage msg";
 
@@ -87,7 +89,8 @@ let t = Freetype.init () in
 let (face,face_info) = Freetype.new_face t !fontFile 0 in
 let chars = Hashtbl.create 1 in
 let fname = Filename.chop_extension !fontFile in
-let xmlfname = fname ^ ".fnt" in
+let xmlfname =  fname ^ ".fnt" in
+let xmlfname = match !output with [ None -> xmlfname | Some dir -> Filename.concat dir xmlfname ] in
 let out = open_out xmlfname in
 let xmlout = Xmlm.make_output (`Channel (open_out xmlfname)) in
 (
@@ -139,27 +142,29 @@ let xmlout = Xmlm.make_output (`Channel (open_out xmlfname)) in
     (
       Freetype.set_char_size face (float size) 0. !dpi 0;
       let sizeInfo = Freetype.get_size_metrics face in
-      Xmlm.output xmlout (`El_start (("","Chars"),[ "size" =*= size ; "lineHeight" =.= sizeInfo.Freetype.height; "baseLine" =.= sizeInfo.Freetype.ascender ]));
-      UTF8.iter begin fun uchar ->
-        let code = UChar.code uchar in
-        let info = Hashtbl.find chars (code,size) in
-        let attribs = 
-          [ "id" =*= code
-          ; "xadvance" =.= info.xadvance
-          ; "xoffset" =*= info.xoffset
-          ; "yoffset" =*= info.yoffset
-          ; "x" =*= info.x
-          ; "y" =*= info.y
-          ; "width" =*= info.width
-          ; "height" =*= info.height
-          ; "page" =*= info.page
-          ]
-        in
-        (
-          Xmlm.output xmlout (`El_start (("","char"),attribs));
-          Xmlm.output xmlout `El_end;
-        )
-      end !pattern;
+      (
+        Xmlm.output xmlout (`El_start (("","Chars"),[ "size" =*= size ; "lineHeight" =.= sizeInfo.Freetype.height; "baseLine" =.= sizeInfo.Freetype.ascender ]));
+        UTF8.iter begin fun uchar ->
+          let code = UChar.code uchar in
+          let info = Hashtbl.find chars (code,size) in
+          let attribs = 
+            [ "id" =*= code
+            ; "xadvance" =.= info.xadvance
+            ; "xoffset" =*= info.xoffset
+            ; "yoffset" =*= (truncate (sizeInfo.Freetype.height -. (float info.yoffset)))
+            ; "x" =*= info.x
+            ; "y" =*= info.y
+            ; "width" =*= info.width
+            ; "height" =*= info.height
+            ; "page" =*= info.page
+            ]
+          in
+          (
+            Xmlm.output xmlout (`El_start (("","char"),attribs));
+            Xmlm.output xmlout `El_end;
+          )
+        end !pattern;
+      );
       Xmlm.output xmlout `El_end;
     )
   end !sizes;
