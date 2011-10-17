@@ -110,7 +110,7 @@ value rec process_children dirname children =
     let id = 
       match string (List.assoc "type" child) with
       [ "image" -> add_image dirname child
-      | "clip" -> process_dir (dirname // (string (List.assoc "dir" child)))
+      | "clip" | "sprite" -> process_dir (dirname // (string (List.assoc "dir" child)))
       | _ -> assert False
       ]
     in
