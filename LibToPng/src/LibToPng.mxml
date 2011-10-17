@@ -279,17 +279,12 @@
 			//====== разбор спрайта ==============
 			private function parseSprite(content:DisplayObject, path:String, cap:String):Object {
 				//trace('parseSprite', content.name);				
-				
+				if (content.name == "value_box") {
+					trace(123);
+				}
 				
 				var container:Sprite = content as Sprite;
-								
-				if (container.numChildren == 0) {
-					
-					if (container.width > 0 && container.height > 0) {
-						trace('container.numChildren == 0', container.width, container.height);
-					}
-					return {type:"sprite", dir:cap, x:content.x, y:content.y, name:content.name};
-				}
+						
 				if (container.numChildren == 1) {
 					var child:DisplayObject = container.getChildAt(0);
 					child.alpha *= container.alpha;
@@ -300,6 +295,15 @@
 				path += '/'+cap;
 				var children:Array = [];
 				var meta:Object = {type: "sprite", children: children};
+				
+				if (container.numChildren == 0) {
+					if (container.width > 0 && container.height > 0) {
+						trace('container.numChildren == 0', container.width, container.height);
+					}
+					saveMeta(meta, path);
+					return {type:"sprite", dir:cap, x:content.x, y:content.y, name:content.name};
+				}
+				
 				
 				//trace("sprite ", path, content.name);
 				
