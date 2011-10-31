@@ -38,8 +38,26 @@ type iteminfo = [= `image of texinfo | `sprite of children | `clip of list frame
 
 value items : DynArray.t iteminfo = DynArray.create ();
 
-(* value compare_img img1 img2 =  *)
-  (* возвращает либо что полностью идентичны, либо что отличаюца только по альфе *)
+exception Not_equal;
+
+value compare_images img1 img2 = 
+  match img1 with
+  [ Images.Rgba32 i1 ->
+    match img2 with
+    [ Images.Rgba32 i2 when i1.Rgba32.height = i2.Rgba32.height && i1.Rgba32.width = i2.Rgba32.width ->
+      try
+        for i = 0 to i1.Rgba32.height - 1 do
+          match Rgba32.get_scanline i1 i = Rgba32.get_scanline i2 i with
+          [ True -> ()
+          | False -> raise Not_equal
+          ]
+        done;
+        True
+      with [ Not_equal -> False ]
+    | _ -> False
+    ]
+  | _ -> False
+  ];
 
 value push_item item =
   try
@@ -61,7 +79,7 @@ value images = RefList.empty ();
 value add_image dirname mobj = 
   let img = Images.load (dirname // (Json_type.Browse.string (List.assoc "file" mobj))) [] in
   try
-    let (id,_) = RefList.find (fun (id,img') -> img = img') images in
+    let (id,_) = RefList.find (fun (id,img') -> compare_images img img') images in
     id
   with 
   [ Not_found ->
@@ -92,7 +110,7 @@ value rec process_children dirname children =
     let id = 
       match string (List.assoc "type" child) with
       [ "image" -> add_image dirname child
-      | "clip" -> process_dir (dirname // (string (List.assoc "dir" child)))
+      | "clip" | "sprite" -> process_dir (dirname // (string (List.assoc "dir" child)))
       | _ -> assert False
       ]
     in
