@@ -10,12 +10,12 @@
 	<fx:Script>
 		<![CDATA[
 			import com.maccherone.json.JSON;
-			
 			import flash.utils.getDefinitionByName;
-			
+			import mx.collections.ArrayCollection;
+			import mx.collections.Sort;
 			import mx.controls.Alert;
 			import mx.graphics.codec.PNGEncoder;
-			
+					
 			private var loader:Loader = new Loader();
 			private var li:LoaderInfo;
 			private var settings:Object = new Object();
@@ -115,23 +115,38 @@
 			// сделать экспорт
 			protected function button1_clickHandler(event:MouseEvent):void
 			{
-				if (tiClassName.text == '') {
-					Alert.show('Введите имя класса', 'Ошибка');
-					return;
-				}
 				if (tiExportDir.text == '') {
 					Alert.show('Выберите папку экспорта', 'Ошибка');
 					return;
 				}
 				
-				try {
-					var cls:Class = li.applicationDomain.getDefinition(tiClassName.text) as Class;
-				}catch(error:Error){
-					Alert.show('Нет такого класса', 'Ошибка');
-					return;
+				if (listClasses.textInput.text != '') {
+					try {
+						var cls:Class = li.applicationDomain.getDefinition(listClasses.textInput.text) as Class;
+					}catch(error:Error){
+						Alert.show('Нет такого класса', 'Ошибка');
+						return;
+					}
+					
+					var content:DisplayObject = new cls();
+					try {
+						parse(content, tiExportDir.text, listClasses.textInput.text);
+					}catch(error:Error) {
+						Alert.show('Какая-то бага', 'Ошибка');
+					} 
+				} else {
+					for each (var clsName:String in listClasses.dataProvider) {
+						cls = li.applicationDomain.getDefinition(clsName) as Class;
+						content = new cls();
+						try {
+							parse(content, tiExportDir.text, clsName);
+						}catch(error:Error) {
+							Alert.show('Какая-то бага', 'Ошибка');
+						} 
+					}
 				}
 				
-				var content:DisplayObject = new cls();
+				
 				
 			/*	var mc:MovieClip = new MovieClip();
 				mc.graphics.beginFill(0x00FF00, 1);
@@ -148,23 +163,12 @@
 				
 				findMask(content);*/
 				
-				//test(content as MovieClip);
-				//return;
 				
-				addEventListener(Event.ENTER_FRAME, onEnterFrame);
 				
-				try {
-					parse(content, tiExportDir.text, tiClassName.text);
-				}catch(error:Error) {
-					Alert.show('Какая-то бага', 'Ошибка');
-				} 
 				
 				status = "готово"; 
 			}
 			
-			private function onEnterFrame(event:Event):void {
-				
-			}
 			
 			private function test(clip:MovieClip):void {
 				for (var i:uint = 1; i<=clip.totalFrames; i++) {
@@ -283,14 +287,22 @@
 					trace(123);
 				}
 				
+				
 				var container:Sprite = content as Sprite;
+				//trace(container.name, container.name.indexOf('instance'));
 						
-				if (container.numChildren == 1) {
+				if (container.numChildren == 1 && (container.name.indexOf('instance') == 0)) {
 					var child:DisplayObject = container.getChildAt(0);
 					child.alpha *= container.alpha;
 					child.filters = container.filters;
-					
-					return parse(child, path, cap);
+					child.x += container.x;
+					child.y += container.y;
+										
+					var data:Object = parse(child, path, cap);
+					if (child is Shape) {
+						saveMeta(data, path);
+					}
+					return data;
 				}
 				path += '/'+cap;
 				var children:Array = [];
@@ -339,11 +351,14 @@
 				
 				//trace('rect', r.x, r.y, source.x, source.y, r.width, r.height, source.width, source.height);
 				
-				if (r.width == 0)
+				if (r.width == 0) {
 					r.width = bd.width - 100;
-				if (r.height == 0)
+					r.x += 50;
+				}
+				if (r.height == 0) {
 					r.height = bd.height - 100;
-				
+					r.y += 50;
+				}
 				var bmdata:BitmapData = new BitmapData(r.width, r.height, true, 0x000000);
 				bmdata.copyPixels(bd, r, new Point(0,0));
 				
@@ -400,6 +415,11 @@
 				status = "загрузка завершена";
 				btExport.enabled = true;
 				li = event.target as LoaderInfo;
+				
+				listClasses.dataProvider = new ArrayCollection(getDefinitionNames(li));
+				(listClasses.dataProvider as ArrayCollection).sort = new Sort();
+				(listClasses.dataProvider as ArrayCollection).refresh();
+				listClasses.selectedIndex = 0;
 			}
 			
 		]]>
@@ -415,7 +435,7 @@
 			<s:Button label="..." width="30" id="btSelectSwf" click="btSelectSwf_clickHandler(event)"/>
 		</s:HGroup>
 		<s:Label text="Имя класса"/>
-		<s:TextInput id="tiClassName" width="326"/>
+		<s:ComboBox width="325" id="listClasses"/>
 		<s:Label text="Папка экспорта"/>
 		<s:HGroup width="100%">
 			<s:TextInput width="100%" id="tiExportDir"/>
