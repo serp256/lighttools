@@ -92,7 +92,7 @@ let fname = Filename.chop_extension (Filename.basename !fontFile) in
 let xmlfname =  fname ^ ".fnt" in
 let xmlfname = match !output with [ None -> xmlfname | Some dir -> Filename.concat dir xmlfname ] in
 let out = open_out xmlfname in
-let xmlout = Xmlm.make_output (`Channel (open_out xmlfname)) in
+let xmlout = Xmlm.make_output ~nl:True ~indent:(Some 4) (`Channel (open_out xmlfname)) in
 (
   Xmlm.output xmlout (`Dtd None);
   print_face_info face_info;
@@ -142,9 +142,11 @@ let xmlout = Xmlm.make_output (`Channel (open_out xmlfname)) in
   List.iter begin fun size ->
     (
       Freetype.set_char_size face (float size) 0. !dpi 0;
+      let spaceIndex = Freetype.get_char_index face (UChar.code (UChar.of_char ' ')) in
+      let (spaceXAdv, spaceYAdv) = Freetype.render_glyph face spaceIndex [] Freetype.Render_Normal in
       let sizeInfo = Freetype.get_size_metrics face in
       (
-        Xmlm.output xmlout (`El_start (("","Chars"),[ "size" =*= size ; "lineHeight" =.= sizeInfo.Freetype.height; "baseLine" =.= sizeInfo.Freetype.ascender ]));
+        Xmlm.output xmlout (`El_start (("","Chars"),[ "space" =.= spaceXAdv; "size" =*= size ; "lineHeight" =.= sizeInfo.Freetype.height; "baseLine" =.= sizeInfo.Freetype.ascender ]));
         UTF8.iter begin fun uchar ->
           let code = UChar.code uchar in
           let info = Hashtbl.find chars (code,size) in
