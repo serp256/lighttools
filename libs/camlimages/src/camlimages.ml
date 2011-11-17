@@ -17,17 +17,17 @@
 let version = "4.0.0";;
 
 (* Supported libraries *)
-let lib_gif = true;;
+let lib_gif = false;;
 let lib_png = true;;
 let lib_jpeg = true;;
 let lib_tiff = true;;
 let lib_freetype = true;;
-let lib_ps = true;;
-let lib_xpm = true;;
+let lib_ps = false;;
+let lib_xpm = false;;
 
 (* External files *)
 let path_rgb_txt = "";;
-let path_gs = "/opt/local/bin/gs";;
+let path_gs = "";;
 
 (* They are written in ML, so always supported *)
 let lib_ppm = true;;

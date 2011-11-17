@@ -207,4 +207,4 @@ section:
   VERSION=$(PACKAGE_VERSION)
   ConfReplaceConfigH(config.h)
 
-.SUBDIRS: src test examples
+.SUBDIRS: src

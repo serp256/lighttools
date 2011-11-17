@@ -76,8 +76,8 @@ value push_item item =
 value images = RefList.empty ();
 
 
-value add_image dirname mobj = 
-  let img = Images.load (dirname // (Json_type.Browse.string (List.assoc "file" mobj))) [] in
+value add_image path = 
+  let img = Images.load path [] in
   try
     let (id,_) = RefList.find (fun (id,img') -> compare_images img img') images in
     id
@@ -92,6 +92,11 @@ value add_image dirname mobj =
         id
       )
   ];
+
+
+value add_child_image  dirname mobj = 
+  let path = dirname // (Json_type.Browse.string (List.assoc "file" mobj)) in
+  add_image path;
 
 value getpos jsinfo = let open Json_type.Browse in (number (List.assoc "x" jsinfo),number (List.assoc "y" jsinfo));
 
@@ -109,7 +114,7 @@ value rec process_children dirname children =
     let pos = getpos child in
     let id = 
       match string (List.assoc "type" child) with
-      [ "image" -> add_image dirname child
+      [ "image" -> add_child_image dirname child
       | "clip" | "sprite" -> process_dir (dirname // (string (List.assoc "dir" child)))
       | _ -> assert False
       ]
@@ -122,7 +127,7 @@ and process_dir dirname = (* найти мету в этой директори�
   let open Json_type.Browse in
   let mobj = objekt meta in
   match string (List.assoc "type" mobj) with
-  [ "image" -> add_image dirname mobj
+  [ "image" -> add_child_image dirname mobj
   | "sprite" -> 
       let children = process_children dirname (List.assoc "children" mobj) in
       push_item (`sprite children)
@@ -160,11 +165,14 @@ value do_work indir =
   (
     Array.iter begin fun fl ->
       let dirname = indir // fl in
-      if Sys.is_directory dirname
-      then
-        let item_id = process_dir dirname in
-        RefList.push exports (fl,item_id)
-      else ()
+      let (name,item_id) = 
+        if Sys.is_directory dirname
+        then (fl,process_dir dirname)
+        else 
+          let item_id = add_image dirname in
+          (Filename.chop_extension fl,item_id)
+      in
+      RefList.push exports (name,item_id)
     end (Sys.readdir indir);
     let outdir = !outdir // (Filename.basename indir) in
     let () = printf "output to %s\n%!" outdir in
