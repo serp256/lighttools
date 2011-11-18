@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
 					   xmlns:s="library://ns.adobe.com/flex/spark" 
-					   xmlns:mx="library://ns.adobe.com/flex/mx" width="538" height="400"
+					   xmlns:mx="library://ns.adobe.com/flex/mx" width="538" height="650"
 					   applicationComplete="init()">
 	<s:layout>
 		<s:BasicLayout/>
@@ -10,23 +10,31 @@
 	<fx:Script>
 		<![CDATA[
 			import com.maccherone.json.JSON;
+			
 			import flash.utils.getDefinitionByName;
+			
 			import mx.collections.ArrayCollection;
 			import mx.collections.Sort;
 			import mx.controls.Alert;
 			import mx.graphics.codec.PNGEncoder;
+			import mx.utils.ObjectProxy;
+			
+			import spark.events.IndexChangeEvent;
 					
-			private var loader:Loader = new Loader();
-			private var li:LoaderInfo;
+		//	private var loader:Loader = new Loader();
 			private var settings:Object = new Object();
 			private var settPath:String;
 			private var png:PNGEncoder = new PNGEncoder();
-			
+			private var swfsUrl:String;
+			private var classes:Array;  // списки классов swf-ок
+			private var urls:Array;		// пути swf-файлов
+			private var index:uint = 0;
+			private var liArray:Array; // of LoaderInfo каждой swf
+						
 			private function init():void {
 				title = 'LibToPng';
 				addEventListener(Event.CLOSING, onClosing);
-				loader.contentLoaderInfo.addEventListener(Event.COMPLETE, onLoadComplete);
-				
+								
 				settPath = File.applicationStorageDirectory.nativePath + '/settings.json';
 				var f:File = new File(settPath);
 				if (f.exists) {
@@ -120,7 +128,23 @@
 					return;
 				}
 				
-				if (listClasses.textInput.text != '') {
+				for (var swfName:String in liArray) { // по swf-кам
+					var li:LoaderInfo = liArray[swfName];
+					var arr:Array = classes[swfName] 
+					for each (var obj:ObjectProxy in arr) { // по классам swf-ки
+						if (!obj.isSelect) continue;
+						var clsName:String = obj.swfName;
+						var Cls:Class = li.applicationDomain.getDefinition(clsName) as Class;
+						var content:DisplayObject = new Cls();
+						try {
+							parse(content, tiExportDir.text+'/'+swfName.substr(0,swfName.indexOf('.swf')), clsName);
+						}catch(error:Error) {
+							Alert.show('Какая-то бага при парсинге\n'+swfName+' - '+clsName, 'Ошибка');
+						} 
+					}
+				}
+				
+			/*	if (listClasses.textInput.text != '') {
 					try {
 						var cls:Class = li.applicationDomain.getDefinition(listClasses.textInput.text) as Class;
 					}catch(error:Error){
@@ -148,7 +172,7 @@
 					}
 				}
 				
-				
+				*/
 				
 			/*	var mc:MovieClip = new MovieClip();
 				mc.graphics.beginFill(0x00FF00, 1);
@@ -268,7 +292,6 @@
 												
 						var child:DisplayObject = clip.getChildAt(j);
 						//child.alpha *= clip.alpha;
-						
 					//	trace(clip.currentFrame, child.alpha, clip.alpha, child.name, child.filters[0]);
 						children.push(parse(child, path, i+'_'+j));
 					}
@@ -371,36 +394,53 @@
 				bd.draw(source, null, new ColorTransform(1,1,1, source.alpha));
 				var ba:ByteArray = png.encode(bd); */
 				
-				var fs:FileStream = new FileStream();
-				fs.open(new File(url), FileMode.WRITE);
-				fs.writeBytes(ba);
-				fs.close();
-				
+				try {
+					var fs:FileStream = new FileStream();
+					fs.open(new File(url), FileMode.WRITE);
+					fs.writeBytes(ba);
+					fs.close();
+				} catch (error:Error){
+					Alert.show('Ошибка записи файла\n'+url, 'Ошибка');
+				}
 				return {x: r.x - 50, y:r.y - 50};
 			}
 			
-			//========= выбор swf ============
+			//========= выбор swf в проводнике ============
 			protected function btSelectSwf_clickHandler(event:MouseEvent):void
 			{
 				var f:File = new File();
-				f.addEventListener(Event.SELECT, onSelectSwf);
-				f.browseForOpen('Выберите swf', [new FileFilter('SWF-файлы', "*.swf")]);
+				f.addEventListener(FileListEvent.SELECT_MULTIPLE, onSelectSwf);
+				f.browseForOpenMultiple('Выберите папку', [new FileFilter('SWF-файлы', '*.swf')]);
 			}
 			
-			//========= выбрана swf =========
-			private function onSelectSwf(event:Event):void {
+			//========= выбраны swf =========
+			private function onSelectSwf(event:FileListEvent):void {
 				status = 'загрузка...';
 				var f:File = event.currentTarget as File;
-				f.removeEventListener(Event.SELECT, onSelectSwf);
+		
+				f.removeEventListener(FileListEvent.SELECT_MULTIPLE, onSelectSwf);
 				
-				loader.load(new URLRequest(f.url));
-				tiSwfName.text = f.url;
+				classes = [];
+				liArray = [];
+				index = 0;
+				swfsUrl = (event.files[0].parent as File).url;
+				tiSwfName.text = swfsUrl; 
+				var swfs:Array = [];
+				urls = [];
+				for each (f in event.files) {
+					swfs.push(f.name);
+					urls.push(f.url);
+				}
+				listSwfs.dataProvider = new ArrayCollection(swfs); // выводим имена swf-ок
+				
+				loadSwf();
 			}
 			
 			// выбор папки экспорта
 			private function btSelectDir_clickHandler(event:MouseEvent):void {
 				var f:File = new File();
 				f.addEventListener(Event.SELECT, onSelectDir);
+				
 				f.browseForDirectory('Выберите папку');
 			}
 			
@@ -414,37 +454,87 @@
 			
 			// swf загружена
 			private function onLoadComplete(event:Event):void {
-				status = "загрузка завершена";
-				btExport.enabled = true;
-				li = event.target as LoaderInfo;
 				
-				listClasses.dataProvider = new ArrayCollection(getDefinitionNames(li));
-				(listClasses.dataProvider as ArrayCollection).sort = new Sort();
-				(listClasses.dataProvider as ArrayCollection).refresh();
-				listClasses.selectedIndex = 0;
+				//trace('onLoadComplete', index, urls[index]);
+				
+				// сохраняем имена классов swf-ки
+				var swfName:String = (listSwfs.dataProvider as ArrayCollection).getItemAt(index) as String;
+				var li:LoaderInfo = event.target as LoaderInfo;
+				liArray[swfName] = li;
+				var names:Array = getDefinitionNames(li); 
+				names.sort();
+				classes[swfName] = [];
+				for each (var cap:String in names) {
+					var obj:ObjectProxy = new ObjectProxy({swfName:cap, isSelect:true})
+					classes[swfName].push(obj);
+				}
+					
+				index++;
+				if (index < urls.length) {
+					loadSwf();
+				} else {
+					status = "загрузка завершена";
+					btExport.enabled = true;
+				}
 			}
 			
+			private function loadSwf():void {
+				var loader:Loader = new Loader();
+				loader.contentLoaderInfo.addEventListener(Event.COMPLETE, onLoadComplete);
+				loader.load(new URLRequest(urls[index]));
+			}
+			
+			
+			// клик по swf в списке
+			protected function listSwfs_changeHandler(event:IndexChangeEvent):void
+			{
+				listSwfs.validateNow();
+				listClasses.dataProvider = new ArrayCollection(classes[listSwfs.selectedItem]);
+				(listClasses.dataProvider as ArrayCollection).refresh();
+			}
+
+			// выбрать все классы
+			protected function chbSelectAll_changeHandler(event:Event):void
+			{
+				for each (var obj:ObjectProxy in classes[listSwfs.selectedItem]) {
+					obj.isSelect = chbSelectAll.selected;
+				}
+				listClasses.validateNow();
+			}
+
 		]]>
 	</fx:Script>
 	
 	<fx:Declarations>
+		<s:RadioButtonGroup id="isSwfRG"/>
 		<!-- Разместить невизуальные элементы (например, службы или объекты значений) -->
 	</fx:Declarations>
-	<s:VGroup x="0" y="50" width="100%" height="327" paddingLeft="50" paddingRight="50">
-		<s:Label text="SWF"/>
+	<s:VGroup x="0" y="50" width="100%" height="100%" paddingLeft="50" paddingRight="50">
+		<s:Label x="66" y="50" text="swfs" id="lbSwf"/>
 		<s:HGroup width="100%">
 			<s:TextInput width="100%" id="tiSwfName"/>
 			<s:Button label="..." width="30" id="btSelectSwf" click="btSelectSwf_clickHandler(event)"/>
 		</s:HGroup>
-		<s:Label text="Имя класса"/>
-		<s:ComboBox width="325" id="listClasses"/>
 		<s:Label text="Папка экспорта"/>
 		<s:HGroup width="100%">
 			<s:TextInput width="100%" id="tiExportDir"/>
 			<s:Button label="..." width="30" id="btSelectDir" click="btSelectDir_clickHandler(event)"/>
 		</s:HGroup>
+		<s:HGroup width="100%" height="100%">
+			<s:VGroup width="100%" height="100%">
+				<s:Label text="swf-файлы"/>
+				<s:List width="100%" id="listSwfs" change="listSwfs_changeHandler(event)" height="100%"></s:List>
+			</s:VGroup>
+			<s:VGroup width="100%" height="100%">
+				<s:Label text="Список классов"/>
+				<s:List width="100%" id="listClasses" height="100%" itemRenderer="ListItemRenderer"></s:List>
+				<s:CheckBox label="Выбрать все" id="chbSelectAll" selected="true" change="chbSelectAll_changeHandler(event)"/>
+			</s:VGroup>
+		</s:HGroup>
+		
 		<s:Button label="Экспорт" click="button1_clickHandler(event)" enabled="false" id="btExport"/>
 		
-		<mx:Canvas id="canva" width="100%" height="100%"/>
+		<mx:Canvas id="canva" width="100%" height="100"/>
 	</s:VGroup>
+	
 </s:WindowedApplication>
