@@ -291,7 +291,7 @@
 						
 				if (container.numChildren == 1 && (container.name.indexOf('instance') == 0)) {
 					var child:DisplayObject = container.getChildAt(0);
-					//var child1:Shape = Shape(container);
+			
 					if (changesInstances.indexOf(child.name) == -1) {
 						child.alpha *= container.alpha;
 						child.filters = container.filters;
