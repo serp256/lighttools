@@ -30,6 +30,7 @@
 			private var urls:Array;		// пути swf-файлов
 			private var index:uint = 0;
 			private var liArray:Array; // of LoaderInfo каждой swf
+			private var changesInstances:Vector.<String>;
 						
 			private function init():void {
 				title = 'LibToPng';
@@ -144,35 +145,7 @@
 					}
 				}
 				
-			/*	if (listClasses.textInput.text != '') {
-					try {
-						var cls:Class = li.applicationDomain.getDefinition(listClasses.textInput.text) as Class;
-					}catch(error:Error){
-						Alert.show('Нет такого класса', 'Ошибка');
-						return;
-					}
-					
-					var content:DisplayObject = new cls();
-					try {
-						parse(content, tiExportDir.text, listClasses.textInput.text);
-					}catch(error:Error) {
-						Alert.show('Какая-то бага', 'Ошибка');
-					} 
-				} else {
-					for each (var clsName:String in listClasses.dataProvider) {
-						if (clsName.indexOf('ESkins') != 0) continue;
-						
-						cls = li.applicationDomain.getDefinition(clsName) as Class;
-						content = new cls();
-						try {
-							parse(content, tiExportDir.text, clsName);
-						}catch(error:Error) {
-							Alert.show('Какая-то бага', 'Ошибка');
-						} 
-					}
-				}
-				
-				*/
+			
 				
 			/*	var mc:MovieClip = new MovieClip();
 				mc.graphics.beginFill(0x00FF00, 1);
@@ -185,9 +158,9 @@
 				sp.graphics.drawRect(100,100,50,50);
 				sp.graphics.endFill();
 				mc2.addChild(sp);
-				mc.mask = mc2;
+				mc.mask = mc2;*/
 				
-				findMask(content);*/
+				//findMask(content);
 				
 				
 				
@@ -203,7 +176,7 @@
 					
 					//child.alpha = 1;
 						
-					trace(child.filters[0]);
+					
 					
 				/*	var rect:Rectangle = child.getBounds(child);
 					var bmd:BitmapData = new BitmapData(Math.ceil(child.width), Math.ceil(child.height), true, 0);
@@ -223,7 +196,7 @@
 			
 				//if (content.filters.length > 0 )
 				//	trace('parse', content, content.filters[0], content.name, content.filters.length, path + cap);
-				trace('parse', content);
+				//trace('parse', content);
 				
 				if (content is MovieClip) {
 					return parseMC(content, path, cap);
@@ -308,9 +281,9 @@
 			//====== разбор спрайта ==============
 			private function parseSprite(content:DisplayObject, path:String, cap:String):Object {
 				//trace('parseSprite', content.name);				
-				if (content.name == "value_box") {
-					trace(123);
-				}
+				//if (content.name == "value_box") {
+				//	trace(123);
+				//}
 				
 				
 				var container:Sprite = content as Sprite;
@@ -318,11 +291,16 @@
 						
 				if (container.numChildren == 1 && (container.name.indexOf('instance') == 0)) {
 					var child:DisplayObject = container.getChildAt(0);
-					child.alpha *= container.alpha;
-					child.filters = container.filters;
-					child.x += container.x;
-					child.y += container.y;
-										
+					//var child1:Shape = Shape(container);
+					if (changesInstances.indexOf(child.name) == -1) {
+						child.alpha *= container.alpha;
+						child.filters = container.filters;
+						child.x += container.x;
+						child.y += container.y;
+						child.scaleX *= container.scaleX;
+						child.scaleY *= container.scaleY;
+						changesInstances.push(child.name);
+					}					
 					var data:Object = parse(child, path, cap);
 					if (child is Shape) {
 						saveMeta(data, path);
@@ -367,12 +345,13 @@
 				//trace('writePng', url, source.width, source.height);
 				
 				var m:Matrix = new Matrix();
+				m.scale(source.scaleX, source.scaleY);
 				m.translate(50,50);
-								
+												
 				var bd:BitmapData = new BitmapData(source.width + 100, source.height + 100, true, 0x000000);
 				bd.draw(source, m, new ColorTransform(1,1,1, source.alpha));
 							
-				var r:Rectangle = bd.getColorBoundsRect(0xFFFFFF00, 0x00000000, false);
+				var r:Rectangle = bd.getColorBoundsRect(0xFF000000, 0x00000000, false);//(0xFFFFFF00, 0x00000000, false);
 				
 				//trace('rect', r.x, r.y, source.x, source.y, r.width, r.height, source.width, source.height);
 				
@@ -425,6 +404,7 @@
 				index = 0;
 				swfsUrl = (event.files[0].parent as File).url;
 				tiSwfName.text = swfsUrl; 
+				changesInstances = new Vector.<String>();
 				var swfs:Array = [];
 				urls = [];
 				for each (f in event.files) {
