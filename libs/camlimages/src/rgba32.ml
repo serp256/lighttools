@@ -92,7 +92,50 @@ let set = IMAGE.set;;
 let destroy = IMAGE.destroy;;
 let copy = IMAGE.copy;;
 let sub = IMAGE.sub;;
-let blit = IMAGE.blit;;
+(* let blit = IMAGE.blit;; *)
+(* quick hack for enable alpha blending here *)
+let blit ?(alphaBlend=false) src sx sy dst dx dy w h =
+  match alphaBlend with
+  | false -> IMAGE.blit src sx sy dst dx dy w h
+  | true ->
+    Region.check src.width src.height sx sy;
+    Region.check src.width src.height (sx + w - 1) (sy + h - 1);
+    Region.check dst.width dst.height dx dy;
+    Region.check dst.width dst.height (dx + w - 1) (dy + h - 1);
+    for i = 0 to h - 1 do
+      let src = get_strip src sx (sy + i) w in
+      (
+        begin 
+          let dst = get_strip dst dx (dy + i) w in
+          for k = 0 to w - 1 do
+            let offset = k * 4 in
+            let srca = (float (int_of_char src.[offset + 3])) /. 255.
+            and dsta = (float (int_of_char dst.[offset + 3])) /. 255.  in
+            let one_minus_src_alpha = 1. -. srca in
+            let outa = srca +. dsta *. one_minus_src_alpha in
+            match outa with
+            | 0. -> String.unsafe_blit "\000\000\000\0000" 0 src offset 4
+            | 1. -> 
+                let blend_color offset = truncate ((float (int_of_char src.[offset])) *. srca +. (float (int_of_char dst.[offset])) *. one_minus_src_alpha)  in
+                for o = offset to offset + 2 do
+                  src.[o] <- char_of_int (blend_color o)
+                done;
+                src.[offset + 3 ] <- '\255'
+            | _ ->
+                let blend_color offset = truncate (((float (int_of_char src.[offset])) *. srca +. (float (int_of_char dst.[offset])) *. dsta *. one_minus_src_alpha) /. outa) in
+                for o = offset to offset + 2 do
+                  src.[o] <- char_of_int (blend_color o)
+                done;
+                src.[offset + 3 ] <- (char_of_int (truncate (outa *. 255.)));
+          done;
+        end;
+        (* blend here *)
+        set_strip dst dx (dy + i) w src
+      )
+    done;;
+
+
+
 let map = IMAGE.map;;
 let blocks = IMAGE.blocks;;
 let dump_block = IMAGE.dump_block;;

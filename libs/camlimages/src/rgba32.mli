@@ -47,7 +47,7 @@ val unsafe_set : t -> int -> int -> elt -> unit;;
 val get : t -> int -> int -> elt;;
 val set : t -> int -> int -> elt -> unit;;
 val destroy : t -> unit;;
-val blit : t -> int -> int -> t -> int -> int -> int -> int -> unit;;
+val blit : ?alphaBlend:bool -> t -> int -> int -> t -> int -> int -> int -> int -> unit;;
 val map : (elt -> elt -> elt) ->
   t -> int -> int -> t -> int -> int -> int -> int -> unit;;
 val blocks : t -> int * int
