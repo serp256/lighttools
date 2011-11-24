@@ -334,6 +334,7 @@ value string_of_address (id,el) =
 value merge_images () = 
   let alredySeen = HSet.create 1 in
   (* проще выписать как-то все пересекающиеся области нахуй *)
+  let removed_img = Hashtbl.create 0 in
   let rec mergeChildren makeAddr (children:children)  = 
     let i = ref 0 in
     while !i < DynArray.length children - 1 do
@@ -426,8 +427,14 @@ value merge_images () =
                     Array.init (maxOffset + 1) begin fun offset -> 
                       let (id,_,pos) = DynArray.get children (!i + offset) in
                       let () = Printf.printf "get image: %d\n%!" id in
-                      let img = Hashtbl.find images id in
+                      let img =
+                        try
+                          Hashtbl.find images id 
+                        with
+                          [ Not_found -> Hashtbl.find removed_img id ]
+                      in
                       (
+                        Hashtbl.add removed_img id img;
                         Hashtbl.remove images id;
                         (id,img,pos)
                       )
@@ -446,17 +453,20 @@ value merge_images () =
                         )
                       )
                     end imgs;
-                    let gwidth = truncate (rect.(2) -. rect.(0))
-                    and gheight = truncate (rect.(3) -. rect.(1)) in
+                    let () = Printf.printf "rect: %f %f %f %f\n%!" rect.(0) rect.(1) rect.(2) rect.(3) in
+                    let gwidth = truncate (rect.(2) -. rect.(0) +. 0.5)
+                    and gheight = truncate (rect.(3) -. rect.(1) +. 0.5) in
                     let gimg = Rgba32.make gwidth gheight bgcolor in
+                    let () = Printf.printf "gw: %d; wh: %d\n%!" gwidth gheight in
 (*                     let debug_dir = Printf.sprintf "/tmp/respacker/%d" id1 in *)
                     (
 (*                       Unix.mkdir debug_dir 0o755; *)
                       Array.iter begin fun (id,img,pos) ->
 (*                         let () = Images.save (debug_dir // (Printf.sprintf "%d.png" id)) (Some Images.Png) [] img in *)
-                        let x = truncate (pos.x -. rect.(0))
+                        let x = truncate (pos.x -. rect.(0) )
                         and y = truncate (pos.y -. rect.(1)) 
                         and img = match img with [ Images.Rgba32 img -> img | _ -> assert False ] in
+                        let () = Printf.printf "blit x: %d; y: %d; w: %d; h:%d\n%!" x y img.Rgba32.width img.Rgba32.height in
                         Rgba32.blit ~alphaBlend:True img 0 0 gimg x y img.Rgba32.width img.Rgba32.height
                       end imgs;
 (*                       Images.save (debug_dir // "result.png") (Some Images.Png) [] (Images.Rgba32 gimg); *)
