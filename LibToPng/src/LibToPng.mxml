@@ -31,6 +31,10 @@
 			private var index:uint = 0;
 			private var liArray:Array; // of LoaderInfo каждой swf
 			private var changesInstances:Vector.<String>;
+			private var childs:Array;
+			private var allChilds:Array;
+			private var arrMC:Array;
+			private var allMC:Array;
 						
 			private function init():void {
 				title = 'LibToPng';
@@ -58,8 +62,156 @@
 				trace(mc.alpha, sp.alpha); */
 			}
 			
+			private function isRepeatMC(newArr:Array):Boolean {
+				for each (var arr:Array in allMC) {
+					if (arr.length != newArr.length)
+						continue;
+					var cnt:uint = 0;
+					for (var i:uint = 0; i<arr.length; i++) {
+						if (arr[i].mc == newArr[i].mc && arr[i].frame == newArr[i].frame)
+							cnt++
+						else
+							continue;
+					}
+					if (cnt == arr.length){
+						return true;
+					}
+				}
+				allMC.push(newArr);
+				return false;
+			}
+			
+			private function parseNew(content:DisplayObject, path:String):void {
+				allChilds = [];
+				allMC = [];
+				arrMC = [];
+				
+				
+				while (!isRepeatMC(arrMC)){ trace('===========================', allMC.length);
+					childs = [];
+					
+					arrMC = [];
+					var m:Matrix = new Matrix();
+					m.identity();
+					parseTree(content, m, 1);
+					
+					allChilds.push(childs);
+				}
+				
+				for (var j:uint = 0; j<allChilds.length; j++) {
+					childs = allChilds[j];
+					var container:Sprite = new Sprite();
+					for (var i:uint = 0; i<childs.length; i++) {
+						var img:DisplayObject = childs[i].img;
+												
+						var oldMatrix:Matrix = img.transform.matrix;
+						var oldAlpha:Number = img.alpha;
+						img.transform.matrix = childs[i].matrix;
+						img.alpha = childs[i].alpha;
+						
+					/*	var newMatrix:Matrix = img.transform.matrix;
+						newMatrix.concat(m);
+						img.transform.matrix = newMatrix;
+						img.alpha *= childs[i].alpha;*/
+						
+						container.addChild(img);
+						
+						trace(j, img, img.name, img.width, img.height, img.scaleX, img.scaleY, img.rotation);
+						
+						//writePng(img, path+'/'+j+'_'+i+'.png'/*, m childs[i].alpha*/);
+						
+						img.transform.matrix = oldMatrix;
+						img.alpha = oldAlpha;
+					}
+					writePng(container, path+'/'+j+'.png');
+				}
+								
+				
+			}
+			
+			private function parseTree(content:DisplayObject, matrix:Matrix, alpha:Number):void {
+				
+				//trace(content.name);
+				
+				content.mask = null;
+				
+				var newMatrix:Matrix = content.transform.matrix;
+				newMatrix.concat(matrix);
+				matrix = newMatrix;
+				alpha *= content.alpha;
+				
+				var container:DisplayObjectContainer = content as DisplayObjectContainer;
+				if (container != null) { // есть потомки
+					
+					var num:uint = container.numChildren;
+					for (var i:uint = 0; i<num; i++) {
+						var child:DisplayObject = container.getChildAt(i);
+						
+						//trace(child, child.name, child.width, child.height, container, container.name);
+						
+					/*	var newMatrix:Matrix = child.transform.matrix;
+						newMatrix.concat(container.transform.matrix);
+						child.transform.matrix = newMatrix;
+						child.alpha *= container.alpha; */
+						
+						parseTree(child, matrix, alpha);
+					}
+					var mc:MovieClip = (container as MovieClip); 
+					if (mc != null && mc.totalFrames > 1){ //trace(mc.name, mc.currentFrame);
+						arrMC.push({mc:mc.name, frame:mc.currentFrame});
+						mc.nextFrame();
+					}
+				} else { 
+					childs.push({img:content, matrix:matrix, alpha:alpha});
+				}
+			}
+			
+			private function changeParent(content:DisplayObject):void {
+								
+				var container:DisplayObjectContainer = content as DisplayObjectContainer;
+				trace(content, content.name, content.width, content.height, content.parent, content.x, content.y);
+				
+				if (container != null) { // есть потомки
+					var j:uint = 0;
+					while (j< container.numChildren) {
+						var child:DisplayObject = container.getChildAt(j);
+						
+						var num:uint = container.numChildren;
+						changeParent(child);
+						
+						//if (container.numChildren == num) {
+						if (container.contains(child)) { //trace('jjjjjjjjjjjj', j);
+							j++;
+						}
+					}
+				} else { // поднимаем на уровень выше
+					var par:DisplayObjectContainer = content.parent;
+					if (par == null) return;
+									
+					var prev_par:DisplayObjectContainer = par.parent;
+					if (prev_par == null) return;
+					
+					var newMatrix:Matrix=content.transform.matrix;
+					newMatrix.concat(par.transform.matrix);
+					content.transform.matrix = newMatrix;
+					content.alpha *= par.alpha;
+					
+					var index:uint = prev_par.getChildIndex(par) + par.getChildIndex(content);
+					//prev_par.addChildAt(content, (content.width == 4) ? prev_par.numChildren-1 : 0);
+					prev_par.addChildAt(content, index);
+					
+					trace(content, prev_par, (content.width == 4) ? prev_par.numChildren-1 : 0, content.x, content.y);
+					
+					// предок остался без потомков - удаляем его
+				//	if (/*par.name.indexOf('instance') > -1 &&*/ par.numChildren == 0) { trace('remove');
+				//		prev_par.removeChild(par);
+				//		par = null;
+				//	}
+				}
+			}
+						
 			private function findMask(content:DisplayObject):void {
-				trace(content.name, content.width, content.height);
+				trace(content.name, content.width, content.height, content.mask);
 				
 				if (content.mask != null) {
 					Alert.show('has mask')
@@ -137,17 +289,21 @@
 						var clsName:String = obj.swfName;
 						var Cls:Class = li.applicationDomain.getDefinition(clsName) as Class;
 						var content:DisplayObject = new Cls();
-						try {
-							parse(content, tiExportDir.text+'/'+swfName.substr(0,swfName.indexOf('.swf')), clsName);
-						}catch(error:Error) {
-							Alert.show('Какая-то бага при парсинге\n'+swfName+' - '+clsName, 'Ошибка');
-						} 
+						//try {
+							//parse(content, tiExportDir.text+'/'+swfName.substr(0,swfName.indexOf('.swf')), clsName);
+							
+						//	changeParent(content);
+						parseNew(content, tiExportDir.text+'/'+swfName.substr(0,swfName.indexOf('.swf'))+'/'+ clsName);
+							//writePng(, tiExportDir.text+'/'+swfName.substr(0,swfName.indexOf('.swf'))+'/'+ clsName+'.png');
+						//}catch(error:Error) {
+						//	Alert.show('Какая-то бага при парсинге\n'+swfName+' - '+clsName, 'Ошибка');
+						//} 
 					}
 				}
 				
 			
-				
-			/*	var mc:MovieClip = new MovieClip();
+			/*	
+				var mc:MovieClip = new MovieClip();
 				mc.graphics.beginFill(0x00FF00, 1);
 				mc.graphics.drawRect(100,100,60,60);
 				mc.graphics.endFill();
@@ -341,27 +497,36 @@
 			}
 			
 			//======= создание png ===============
-			private function writePng(source:DisplayObject, url:String):Object {
+			private function writePng(source:DisplayObject, url:String, matrix:Matrix = null, alpha:Number = 1):Object {
 				//trace('writePng', url, source.width, source.height);
 				
-				var m:Matrix = new Matrix();
-				m.scale(source.scaleX, source.scaleY);
-				m.translate(50,50);
+				var shift:uint = 150;
+				//var m:Matrix = new Matrix();
+				//m.scale(source.scaleX, source.scaleY);
+				if (matrix == null) {
+					matrix = new Matrix();
+				}
+				matrix.translate(shift,shift);
+										
+				if (alpha == 1) {
+					alpha = source.alpha;
+				}
 												
-				var bd:BitmapData = new BitmapData(source.width + 100, source.height + 100, true, 0x000000);
-				bd.draw(source, m, new ColorTransform(1,1,1, source.alpha));
+				var bd:BitmapData = new BitmapData(source.width + shift*2, source.height + shift*2, true, 0x000000);
+				bd.draw(source, matrix, new ColorTransform(1,1,1, alpha/*source.alpha*/));
 							
-				var r:Rectangle = bd.getColorBoundsRect(0xFF000000, 0x00000000, false);//(0xFFFFFF00, 0x00000000, false);
+				var r:Rectangle = bd.getColorBoundsRect(0xFF000000, 0x00000000, false);
+				//var r:Rectangle = bd.getColorBoundsRect(0xFFFFFF00, 0x00000000, false);
 				
 				//trace('rect', r.x, r.y, source.x, source.y, r.width, r.height, source.width, source.height);
 				
 				if (r.width == 0) {
-					r.width = bd.width - 100;
-					r.x += 50;
+					r.width = bd.width - shift*2;
+					r.x += shift;
 				}
 				if (r.height == 0) {
-					r.height = bd.height - 100;
-					r.y += 50;
+					r.height = bd.height - shift*2;
+					r.y += shift;
 				}
 				var bmdata:BitmapData = new BitmapData(r.width, r.height, true, 0x000000);
 				bmdata.copyPixels(bd, r, new Point(0,0));
