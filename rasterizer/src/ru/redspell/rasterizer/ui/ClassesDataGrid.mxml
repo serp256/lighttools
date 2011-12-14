@@ -15,7 +15,7 @@
 				return;
 			}
 
-			al.source.forEach(function (elem:*, index:uint, arr:Array) {
+			al.source.forEach(function (elem:*, index:uint, arr:Array):void {
 				(elem as ClassesGridItemData).export = check;
 			});
 		}

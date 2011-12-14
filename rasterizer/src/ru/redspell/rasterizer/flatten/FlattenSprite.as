@@ -1,4 +1,5 @@
 package ru.redspell.rasterizer.flatten {
+	import flash.display.Bitmap;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
 	import flash.display.Shape;
@@ -48,9 +49,6 @@ package ru.redspell.rasterizer.flatten {
 
             var lt:Point = new Point(Number.MAX_VALUE, Number.MAX_VALUE);
             var rb:Point = new Point(-Number.MAX_VALUE, -Number.MAX_VALUE);
-
-			trace(lt + ' ' + rb);
-			trace(Number.MIN_VALUE);
 
             for each (var pnt:Point in pnts) {
                 lt.x = Math.min(lt.x, pnt.x);
@@ -182,6 +180,19 @@ package ru.redspell.rasterizer.flatten {
 		public function dispose():void {
 			for each (var child:FlattenImage in _childs) {
 				child.dispose();
+			}
+		}
+
+		public function render():void {
+			while (numChildren) {
+				removeChildAt(0);
+			}
+
+			for each (var img:FlattenImage in childs) {
+				var bmp:Bitmap = new Bitmap(img);
+
+				bmp.transform.matrix = img.matrix;
+				addChild(bmp);
 			}
 		}
 	}

@@ -17,7 +17,6 @@ package ru.redspell.rasterizer.flatten {
 				throw new Error('Expected obj as MovieClip');
 			}
 
-            _curFrame = -1;
 			MovieClipExt.recStop(clip);
 
 			for (var i:uint = 0; i < clip.totalFrames; i++) {
@@ -25,44 +24,40 @@ package ru.redspell.rasterizer.flatten {
 				MovieClipExt.recNextFrame(clip);
 			}
 
+			_curFrame = 0;
+
 			return this;
-        }
-
-        protected function refresh():void {
-            while (numChildren) {
-                removeChildAt(0);
-            }
-
-            for each (var layer:FlattenImage in _frames[_curFrame].childs) {
-                var bmp:Bitmap = new Bitmap(layer);
-
-                bmp.transform.matrix = layer.matrix;
-                addChild(bmp);
-            }
         }
 
         public function nextFrame():void {
             _curFrame = ++_curFrame % _frames.length;
-            refresh();
+            render();
         }
 
         public function prevFrame():void {
             _curFrame = (_curFrame > 0 ? _curFrame : _frames.length) - 1;
-            refresh();
+            render();
         }
 
         public function get frames():Vector.<FlattenSprite> {
             return _frames;
         }
 
-		public function getMeta():Object {
-			return null;
-		}
-
 		public function dispose():void {
 			for each (var frame:FlattenSprite in _frames) {
 				frame.dispose();
 			}
+		}
+
+		public function render():void {
+			while (numChildren) {
+				removeChildAt(0);
+			}
+
+			var frame:FlattenSprite = _frames[_curFrame];
+
+			frame.render();
+			addChild(frame);
 		}
 	}
 }

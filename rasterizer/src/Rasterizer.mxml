@@ -1,13 +1,14 @@
 <?xml version="1.0"?>
-<s:WindowedApplication xmlns:ui="ru.redspell.rasterizer.ui.*" xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" width="500" height="350" title="Rasterizer">
+<s:WindowedApplication xmlns:ui="ru.redspell.rasterizer.ui.*" xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" width="650" height="350" title="Rasterizer">
 	<fx:Script><![CDATA[
 		import mx.collections.ArrayList;
+		import mx.controls.Alert;
 
 		import ru.etcs.utils.getDefinitionNames;
+		import ru.redspell.rasterizer.export.Exporter;
 		import ru.redspell.rasterizer.flatten.FlattenMovieClip;
 		import ru.redspell.rasterizer.flatten.FlattenSprite;
 		import ru.redspell.rasterizer.flatten.IFlatten;
-		import ru.redspell.rasterizer.export.Exporter;
 		import ru.redspell.rasterizer.utils.ClassExportItem;
 		import ru.redspell.rasterizer.utils.ClassesGridItemData;
 
@@ -30,6 +31,8 @@
 			filesListDp = [];
 			srcSwfs = {};
 			loadedSwfs = 0;
+			filesList.dataProvider = null;
+			classesGrid.dataProvider = null;
 
 			var files:Array = event.files;
 			totalSwfs = files.length;
@@ -103,7 +106,17 @@
 			var item:ClassExportItem = exportData[0];
 			var flatten:IFlatten = item.src is MovieClip ? new FlattenMovieClip() : new FlattenSprite();
 
-			(new Exporter(exportDir)).export(flatten.fromDisplayObject(item.src), item.className);
+			try {
+				(new Exporter(exportDir)).export(flatten.fromDisplayObject(item.src), item.className);
+			} catch (e:Error) {
+				var errorText:String = e.errorID + ': ' + e.message;
+
+				setLock(false, errorText);
+				Alert.show(errorText, 'Error');
+
+				return;
+			}
+
 			exportData.splice(0, 1);
 			exportNext();
 		}
@@ -157,13 +170,14 @@
 			<s:Button label="export" id="exportBtn" width="60" click="export()"/>
 		</s:HGroup>
 		<s:HGroup width="100%" height="75%">
-			<s:List id="filesList" change="fileList_changeHandler(event)" width="50%" height="100%"/>
+			<s:List id="filesList" change="fileList_changeHandler(event)" width="40%" height="100%"/>
 			<s:HGroup width="15"/>
-			<ui:ClassesDataGrid id="classesGrid" width="50%" height="100%">
+			<ui:ClassesDataGrid id="classesGrid" width="60%" height="100%">
 				<ui:columns>
 					<s:ArrayList>
 						<s:GridColumn headerText="" width="30" dataField="export" resizable="false" headerRenderer="ru.redspell.rasterizer.ui.renderers.ExportColumnHeaderItemRenderer" itemRenderer="ru.redspell.rasterizer.ui.renderers.ExportColumnItemRenderer"/>
 						<s:GridColumn headerText="Class" dataField="name"/>
+						<s:GridColumn headerText="" width="80" itemRenderer="ru.redspell.rasterizer.ui.renderers.PreviewColumnRenderer"/>
 					</s:ArrayList>
 				</ui:columns>
 			</ui:ClassesDataGrid>

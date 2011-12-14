@@ -3,5 +3,7 @@ package ru.redspell.rasterizer.flatten {
 
 	public interface IFlatten {
 		function fromDisplayObject(obj:DisplayObject):IFlatten;
+		function render():void;
+		function dispose():void;
 	}
 }

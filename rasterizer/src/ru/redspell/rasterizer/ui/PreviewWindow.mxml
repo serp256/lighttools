@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx" title="Preview" width="500" height="300" close="closeHandler()" initialize="init()">
+	<fx:Script><![CDATA[
+		import mx.managers.PopUpManager;
+
+		import ru.redspell.rasterizer.flatten.FlattenMovieClip;
+		import ru.redspell.rasterizer.flatten.IFlatten;
+
+		protected var _obj:IFlatten;
+		protected var _timer:Timer = new Timer(40);
+
+		protected function init():void {
+			_timer.addEventListener(TimerEvent.TIMER, timerHandler);
+		}
+
+		protected function timerHandler(event:TimerEvent):void {
+			(_obj as FlattenMovieClip).nextFrame();
+		}
+
+		protected function closeHandler():void {
+			PopUpManager.removePopUp(this);
+			_obj.dispose();
+			_timer.stop();
+		}
+
+		public function preview(obj:IFlatten):void {
+			_obj = obj;
+			_obj.render();
+			container.addChild(_obj as DisplayObject);
+
+			var rect:Rectangle = container.getBounds(this);
+
+			if (rect.width > width) {
+				container.scaleX = container.scaleY = width / rect.width;
+				rect = container.getBounds(this);
+			}
+
+			if (rect.height > height) {
+				container.scaleX = container.scaleY = height / rect.height;
+				rect = container.getBounds(this);
+			}
+
+			container.x = (width  - rect.width) / 2 - rect.x;
+			container.y = (height - rect.height) / 2 - rect.y;
+
+			if (_obj is FlattenMovieClip) {
+				_timer.start();
+			}
+		}
+	]]></fx:Script>
+
+	<s:SpriteVisualElement id="container"/>
+</s:TitleWindow>

@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<s:GridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx">
+
+	<fx:Script><![CDATA[
+		import mx.core.FlexGlobals;
+		import mx.managers.PopUpManager;
+
+		import ru.redspell.rasterizer.flatten.FlattenMovieClip;
+		import ru.redspell.rasterizer.flatten.FlattenSprite;
+
+		import ru.redspell.rasterizer.flatten.IFlatten;
+
+		import ru.redspell.rasterizer.ui.PreviewWindow;
+		import ru.redspell.rasterizer.utils.ClassesGridItemData;
+
+		import spark.components.WindowedApplication;
+
+		protected function showPreview():void {
+			var previewWin:PreviewWindow = new PreviewWindow();
+			var src:DisplayObject = new (data as ClassesGridItemData).cls();
+			var flatten:IFlatten = src is MovieClip ? new FlattenMovieClip() : new FlattenSprite();
+
+			PopUpManager.addPopUp(previewWin, (FlexGlobals.topLevelApplication as WindowedApplication), true);
+			PopUpManager.centerPopUp(previewWin);
+			previewWin.preview(flatten.fromDisplayObject(src));
+		}
+		]]></fx:Script>
+
+	<s:VGroup verticalAlign="middle" horizontalAlign="center" width="100%" height="100%">
+		<s:Label text="preview" buttonMode="true" textDecoration="underline" click="showPreview()"/>
+	</s:VGroup>
+</s:GridItemRenderer>
