@@ -1,0 +1,174 @@
+<?xml version="1.0"?>
+<s:WindowedApplication xmlns:ui="ru.redspell.rasterizer.ui.*" xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" width="500" height="350" title="Rasterizer">
+	<fx:Script><![CDATA[
+		import mx.collections.ArrayList;
+
+		import ru.etcs.utils.getDefinitionNames;
+		import ru.redspell.rasterizer.display.FlattenMovieClip;
+		import ru.redspell.rasterizer.display.FlattenSprite;
+		import ru.redspell.rasterizer.display.IFlatten;
+		import ru.redspell.rasterizer.export.Exporter;
+		import ru.redspell.rasterizer.utils.ClassExportItem;
+		import ru.redspell.rasterizer.utils.ClassesGridItemData;
+
+		import spark.events.IndexChangeEvent;
+
+		protected var filesListDp:Array = []
+		protected var srcSwfs:Object = {};
+		protected var totalSwfs:uint = 0;
+		protected var loadedSwfs:uint = 0;
+		protected var exportData:Array = [];
+		protected var exportDir:File;
+
+		protected function browseForSource():void {
+			var source:File = new File();
+			source.addEventListener(FileListEvent.SELECT_MULTIPLE, source_selectMultipleHandler);
+			source.browseForOpenMultiple('Select source swf', [new FileFilter('swfs', '.swf')]);
+		}
+
+		protected function source_selectMultipleHandler(event:FileListEvent):void {
+			filesListDp = [];
+			srcSwfs = {};
+			loadedSwfs = 0;
+
+			var files:Array = event.files;
+			totalSwfs = files.length;
+
+			setLock(true, 'Loading swfs(0/' + totalSwfs + ')...');
+
+			for each (var file:File in files) {
+				var swfLoader:Loader = new Loader();
+
+				swfLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, swfLoader_completeHandler);
+				swfLoader.load(new URLRequest('file://' + file.nativePath));
+			}
+		}
+
+		protected function swfLoader_completeHandler(event:Event):void {
+			var info:LoaderInfo = event.target as LoaderInfo;
+			var swf:MovieClip = info.content as MovieClip;
+
+			filesListDp.push(info.url);
+			filesList.dataProvider = new ArrayList(filesListDp);
+
+			var classNames:Array = getDefinitionNames(event.target as LoaderInfo);
+			var classes:Array = [];
+			var appDomain:ApplicationDomain = info.applicationDomain;
+
+			for each (var className:String in classNames) {
+				classes.push(new ClassesGridItemData(appDomain.getDefinition(className) as Class, className));
+			}
+
+			srcSwfs[info.url] = classes;
+
+			if (totalSwfs == ++loadedSwfs) {
+				setLock(false, 'Swfs loaded');
+			} else {
+				setStatus('Loading swfs(' + loadedSwfs + '/' + totalSwfs + ')...');
+			}
+		}
+
+		protected function browseForOut():void {
+			var out:File = new File();
+			out.addEventListener(Event.SELECT, out_selectHandler);
+			out.browseForDirectory('Select out directory');
+		}
+
+		protected function out_selectHandler(event:Event):void {
+			outDir.text = (event.target as File).nativePath;
+		}
+
+		protected function setStatus(message:String, hide:Boolean = false):void {
+			status = message;
+
+			if (hide) {
+				setTimeout(function () {
+					setStatus('');
+				}, 3000);
+			}
+		}
+
+		protected function setLock(lock:Boolean, message:String = ''):void {
+			rootContainer.enabled = !lock;
+			setStatus(message, !lock);
+		}
+
+		protected function fileList_changeHandler(event:IndexChangeEvent):void {
+			var filename:String = String((event.target as List).selectedItem);
+			classesGrid.dataProvider = new ArrayList(srcSwfs[filename]);
+			classesGrid.itemChecked();
+		}
+
+		protected function exportHeadItem():void {
+			var item:ClassExportItem = exportData[0];
+			var flatten:IFlatten = item.src is MovieClip ? new FlattenMovieClip() : new FlattenSprite();
+
+			(new Exporter(exportDir)).export(flatten.fromDisplayObject(item.src), item.className);
+			exportData.splice(0, 1);
+			exportNext();
+		}
+
+		protected function exportNext():void {
+			if (exportData.length == 0) {
+				setLock(false, 'Export complete');
+				return;
+			}
+
+			var item:ClassExportItem = exportData[0];
+
+			setStatus('Exporting ' + item.className + ' from ' + item.swfName + ' (' + exportData.length + ' left)...');
+			setTimeout(exportHeadItem, 500);
+		}
+
+		protected function export():void {
+			if (outDir.text == '') {
+				return;
+			}
+
+			exportData = [];
+			exportDir = new File(outDir.text);
+
+			if (!exportDir.exists) {
+				exportDir.createDirectory();
+			}
+
+			setLock(true, '');
+
+			for (var swfUrl:String in srcSwfs) {
+				var swfClasses:Array = srcSwfs[swfUrl];
+				var swfName:String = (new File(swfUrl.replace('file://', ''))).name;
+
+				for each (var classData:ClassesGridItemData in swfClasses) {
+					if (classData.export) {
+						exportData.push(new ClassExportItem(swfName, classData.name.replace('::', '.'), new classData.cls()));
+					}
+				}
+			}
+
+			exportNext();
+		}
+		]]></fx:Script>
+	<s:VGroup width="100%" height="100%" paddingLeft="10" paddingTop="10" paddingRight="10" id="rootContainer">
+		<s:HGroup width="100%" verticalAlign="middle"><s:Label text="Source:" width="50"/><s:Button label="browse..." click="browseForSource()"/></s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Out:" width="50"/>
+			<s:TextInput width="100%" id="outDir"/>
+			<s:Button label="browse..." click="browseForOut()"/>
+			<s:Button label="export" id="exportBtn" width="60" click="export()"/>
+		</s:HGroup>
+		<s:HGroup width="100%" height="75%">
+			<s:List id="filesList" change="fileList_changeHandler(event)" width="50%" height="100%"/>
+			<s:HGroup width="15"/>
+			<ui:ClassesDataGrid id="classesGrid" width="50%" height="100%">
+				<ui:columns>
+					<s:ArrayList>
+						<s:GridColumn headerText="" width="30" dataField="export" resizable="false" headerRenderer="ru.redspell.rasterizer.ui.renderers.ExportColumnHeaderItemRenderer" itemRenderer="ru.redspell.rasterizer.ui.renderers.ExportColumnItemRenderer"/>
+						<s:GridColumn headerText="Class" dataField="name"/>
+					</s:ArrayList>
+				</ui:columns>
+			</ui:ClassesDataGrid>
+		</s:HGroup>
+	</s:VGroup>
+	<s:SpriteVisualElement id="preview"/>
+	<s:SpriteVisualElement id="clipContainer"/>
+</s:WindowedApplication>
