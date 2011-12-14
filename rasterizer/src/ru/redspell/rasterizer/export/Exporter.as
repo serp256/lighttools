@@ -11,7 +11,7 @@ package ru.redspell.rasterizer.export {
 	import ru.redspell.rasterizer.flatten.FlattenImage;
 	import ru.redspell.rasterizer.flatten.FlattenMovieClip;
 
-	import ru.redspell.rasterizer.flatten.FlattenSprite;
+	import ru.redspell.rasterizer.display.FlattenSprite;
 
 	public class Exporter {
 		protected var _dir:File;
