@@ -170,14 +170,34 @@ value createAtlas () =
         let () = Printf.eprintf "Canvas: %dx%d\n%!" w h in
         let canvas  = Images.Rgba32 rgba in 
         (
-          List.iter begin fun (id, (x,y,img)) -> 
+          List.iter begin fun (id, (x,y,isRotate,img)) -> 
             let img = match img with 
             [ Images.Rgba32 i -> img
             | Images.Rgb24 i -> Images.Rgba32 (Rgb24.to_rgba32 i)
             | _ -> assert False
             ] in
             let (w, h) = Images.size img in
-            let subTextureElt = Printf.sprintf "\t<SubTexture name='%s' x='%d' y='%d' height='%f' width='%f'/>\n" id x y (float_of_int h) (float_of_int w) in
+            let () = Printf.printf "Images.blit x=%d; y=%d; w=%d; h=%d; isRotate=%b \n%!" x y w h isRotate in
+            let (img,w,h) = 
+              match isRotate with
+              [ True ->
+                  match img with
+                  [ Images.Rgba32 img ->
+                      let img' = Rgba32.create h w in
+                        (
+                          for i = 0 to (h-1) do
+                            for j = 0 to (w-1) do
+                              Rgba32.set img' i j (Rgba32.get img j i)
+                            done
+                          done;
+                          (Images.Rgba32 img', h, w)
+                        )
+                  | _ -> assert False
+                  ]
+              | _ -> (img,w,h)
+              ]
+            in
+            let subTextureElt = Printf.sprintf "\t<SubTexture name='%s' x='%d' y='%d' height='%f' width='%f' isRotate='%b'/>\n" id x y (float_of_int h) (float_of_int w) isRotate in
               (
                 xml.val := !xml ^ subTextureElt;
                 Images.blit img 0 0 canvas x y w h  
@@ -213,7 +233,7 @@ value () =
         ("-o",Arg.Set_string out_file,"output file");
         ("-nc", Arg.Set_string nocrop, "files that are not supposed to be cropped");
         ("-sqr",Arg.Unit (fun sq -> sqr.val := True )  ,"square texture");
-        ("-t",Arg.String (fun s -> let t = match s with [ "vert" -> `vert | "hor" -> `hor | "rand" -> `rand | _ -> failwith "unknown type rect" ] in type_rect.val := t),"type rect for insert images");
+        ("-t",Arg.String (fun s -> let t = match s with [ "vert" -> `vert | "hor" -> `hor | "rand" -> `rand | "maxrect" -> `maxrect |  _ -> failwith "unknown type rect" ] in type_rect.val := t),"type rect for insert images");
         ("-p",Arg.Set gen_pvr,"generate pvr file")
       ]
       (fun dn -> match !dirname with [ None -> dirname.val := Some dn | Some _ -> failwith "You must specify only one directory" ])
