@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<s:DataGrid xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx">
+
+	<fx:Script><![CDATA[
+		import mx.collections.ArrayList;
+
+		import ru.redspell.rasterizer.ui.renderers.ExportColumnHeaderItemRenderer;
+		import ru.redspell.rasterizer.utils.ClassesGridItemData;
+
+		public function checkAll(check:Boolean):void {
+			var al:ArrayList = dataProvider as ArrayList;
+
+			if (!al) {
+				return;
+			}
+
+			al.source.forEach(function (elem:*, index:uint, arr:Array):void {
+				(elem as ClassesGridItemData).export = check;
+			});
+		}
+
+		public function itemChecked():void {
+			var render:ExportColumnHeaderItemRenderer = columnHeaderGroup.getHeaderRendererAt(0) as ExportColumnHeaderItemRenderer;
+
+			for each (var data:ClassesGridItemData in (dataProvider as ArrayList).source) {
+				if (!data.export) {
+					render.checkAll.selected = false;
+					return;
+				}
+			}
+
+			render.checkAll.selected = true;
+		}
+		]]></fx:Script>
+</s:DataGrid>

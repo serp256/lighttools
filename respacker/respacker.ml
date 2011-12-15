@@ -136,6 +136,7 @@ value images = Hashtbl.create 11;
 
 exception Finded of int;
 value add_image path = 
+  let () = Printf.fprintf stdout "%s\n" path in
   let img = Images.load path [] in
   try
     Hashtbl.iter begin fun id img' ->
