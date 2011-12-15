@@ -1,13 +1,14 @@
 package ru.redspell.rasterizer.flatten {
 	import flash.display.Bitmap;
+	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
-	import flash.display.Shape;
 	import flash.display.Sprite;
 	import flash.filters.BitmapFilter;
 	import flash.geom.ColorTransform;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
+	import flash.geom.Rectangle;
 	import flash.geom.Rectangle;
 	import flash.utils.Dictionary;
 
@@ -21,6 +22,7 @@ package ru.redspell.rasterizer.flatten {
         protected function applyFilters(obj:FlattenImage, fltrs:Array):FlattenImage {
             var finalRect:Rectangle = new Rectangle(0, 0, obj.width, obj.height);
             var m:Matrix = obj.matrix;
+			var name:String = obj.name;
 
             for each (var fltr:BitmapFilter in fltrs) {
                 var srcRect:Rectangle = new Rectangle(0, 0, obj.width, obj.height);
@@ -28,13 +30,14 @@ package ru.redspell.rasterizer.flatten {
                 var fltrLayer:FlattenImage = new FlattenImage(fltrRect.width, fltrRect.height, true, 0x00000000);
 
                 finalRect = finalRect.union(fltrRect);
-                fltrLayer.applyFilter(obj, srcRect, new Point(0, 0), fltr);
+                fltrLayer.applyFilter(obj, srcRect, new Point(-fltrRect.x, -fltrRect.y), fltr);
                 obj.dispose();
                 obj = fltrLayer;
             }
 
-            //m.translate(finalRect.x, finalRect.y);
+            m.translate(finalRect.x, finalRect.y);
             obj.matrix = m;
+			obj.name = name;
 
             return obj;
         }
@@ -73,8 +76,11 @@ package ru.redspell.rasterizer.flatten {
         }
 
         protected function applyMatrix(obj:DisplayObject, mtx:Matrix, color:ColorTransform):FlattenImage {
+			trace('before: ' + obj.getRect(obj))
             var rect:Rectangle = getTransformedBounds(obj.getRect(obj), mtx);
-            var objBmpData:FlattenImage = new FlattenImage(Math.ceil(rect.width) + BMP_SMOOTHING_MISTAKE, Math.ceil(rect.height) + BMP_SMOOTHING_MISTAKE, true, 0x00000000);
+			trace('after: ' + rect);
+
+            var objBmpData:FlattenImage = new FlattenImage(Math.ceil(rect.width), Math.ceil(rect.height), true, 0x00000000);
             var m:Matrix = mtx.clone();
 
             m.translate(-rect.x, -rect.y);
@@ -90,9 +96,18 @@ package ru.redspell.rasterizer.flatten {
                 var masked:FlattenImage = m as FlattenImage;
                 var mask:FlattenImage = _masks[_masked[masked]];
 
-                var maskedRect:Rectangle = new Rectangle(masked.matrix.tx, masked.matrix.ty, masked.width, masked.height);
-                var maskRect:Rectangle = new Rectangle(mask.matrix.tx, mask.matrix.ty, mask.width, mask.height);
+                var maskedRect:Rectangle = new Rectangle(Math.round(masked.matrix.tx), Math.round(masked.matrix.ty), masked.width, masked.height);
+                var maskRect:Rectangle = new Rectangle(Math.round(mask.matrix.tx), Math.round(mask.matrix.ty), mask.width, mask.height);
                 var intersect:Rectangle = maskedRect.intersection(maskRect);
+
+				if (intersect.isEmpty()) {
+					_childs.splice(_childs.indexOf(mask), 1);
+					_childs.splice(_childs.indexOf(masked), 1);
+					mask.dispose();
+					masked.dispose();
+
+					continue;
+				}
 
                 var srcRect:Rectangle = new Rectangle(intersect.x - maskRect.x, intersect.y - maskRect.y, intersect.width, intersect.height);
                 var dstPnt:Point = new Point(intersect.x - maskedRect.x, intersect.y - maskedRect.y);
@@ -103,7 +118,7 @@ package ru.redspell.rasterizer.flatten {
 
                 maskedFinal.copyPixels(masked, new Rectangle(dstPnt.x, dstPnt.y, intersect.width, intersect.height), new Point(0, 0));
 
-                _childs.splice(_childs.indexOf(mask), 1);
+				_childs.splice(_childs.indexOf(mask), 1);
 				_childs.splice(_childs.indexOf(masked), 1, maskedFinal);
                 mask.dispose();
                 masked.dispose();
@@ -149,6 +164,7 @@ package ru.redspell.rasterizer.flatten {
                 mtx.concat(obj.transform.matrix);
 
                 var layer:FlattenImage = applyFilters(applyMatrix(obj, mtx, clr), filters);
+				//var layer:FlattenImage = applyMatrix(obj, mtx, clr);
                 _childs.push(layer);
 
                 var matches:Array = obj.parent.name.match(/^(masked|mask)([\d]+)$/);
@@ -165,10 +181,32 @@ package ru.redspell.rasterizer.flatten {
             }
         }
 
+		protected function cropTransparency():void {
+			for (var i:uint = 0; i < _childs.length; i++) {
+				var img:FlattenImage = _childs[i];
+				var rect:Rectangle = img.getColorBoundsRect(0xff000000, 0x00000000, false);
+
+				if (rect.isEmpty()) {
+					continue;
+				}
+
+				var cropped:FlattenImage = new FlattenImage(rect.width, rect.height, true, 0x00000000);
+
+				cropped.copyPixels(img, rect, new Point(0, 0));
+				cropped.matrix = img.matrix.clone();
+				cropped.matrix.translate(rect.x, rect.y);
+				cropped.name = img.name;
+
+				_childs.splice(i, 1, cropped);
+				img.dispose();
+			}
+		}
+
         public function fromDisplayObject(obj:DisplayObject):IFlatten {
             cleanMasks();
             flatten(obj);
             applyMasks();
+			cropTransparency();
 
             return this;
         }
