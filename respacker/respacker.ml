@@ -454,11 +454,9 @@ value merge_images () =
                         )
                       )
                     end imgs;
-                    let () = Printf.printf "rect: %f %f %f %f\n%!" rect.(0) rect.(1) rect.(2) rect.(3) in
                     let gwidth = truncate (rect.(2) -. rect.(0) +. 0.5)
                     and gheight = truncate (rect.(3) -. rect.(1) +. 0.5) in
                     let gimg = Rgba32.make gwidth gheight bgcolor in
-                    let () = Printf.printf "gw: %d; wh: %d\n%!" gwidth gheight in
 (*                     let debug_dir = Printf.sprintf "/tmp/respacker/%d" id1 in *)
                     (
 (*                       Unix.mkdir debug_dir 0o755; *)
@@ -467,7 +465,6 @@ value merge_images () =
                         let x = truncate (pos.x -. rect.(0) )
                         and y = truncate (pos.y -. rect.(1)) 
                         and img = match img with [ Images.Rgba32 img -> img | _ -> assert False ] in
-                        let () = Printf.printf "blit x: %d; y: %d; w: %d; h:%d\n%!" x y img.Rgba32.width img.Rgba32.height in
                         Rgba32.blit ~alphaBlend:True img 0 0 gimg x y img.Rgba32.width img.Rgba32.height
                       end imgs;
 (*                       Images.save (debug_dir // "result.png") (Some Images.Png) [] (Images.Rgba32 gimg); *)
@@ -558,7 +555,7 @@ value do_work indir =
         Xmlm.output xmlout (`El_start (("","lib"),[]));
         Xmlm.output xmlout (`El_start (("","textures"),[])); (* write textures {{{*)
         let images = Hashtbl.fold (fun id img res -> [ (id,img) :: res ]) images [] in
-        let pages = TextureLayout.layout images in
+        let pages = TextureLayout.layout ~type_rects:`rand images in
         List.iteri begin fun i (w,h,imgs) ->
           let texture = Rgba32.make w h bgcolor in
           (
