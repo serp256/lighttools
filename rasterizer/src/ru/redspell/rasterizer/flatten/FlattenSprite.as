@@ -15,6 +15,8 @@ package ru.redspell.rasterizer.flatten {
 	public class FlattenSprite extends Sprite implements IFlatten {
         public static const BMP_SMOOTHING_MISTAKE:Number = 0;
 
+		public var label:String = '';
+
 		protected var _childs:Vector.<FlattenImage> = new Vector.<FlattenImage>();
         protected var _masks:Object = {};
         protected var _masked:Dictionary = new Dictionary();
@@ -76,10 +78,7 @@ package ru.redspell.rasterizer.flatten {
         }
 
         protected function applyMatrix(obj:DisplayObject, mtx:Matrix, color:ColorTransform):FlattenImage {
-			trace('before: ' + obj.getRect(obj))
             var rect:Rectangle = getTransformedBounds(obj.getRect(obj), mtx);
-			trace('after: ' + rect);
-
             var objBmpData:FlattenImage = new FlattenImage(Math.ceil(rect.width), Math.ceil(rect.height), true, 0x00000000);
             var m:Matrix = mtx.clone();
 
@@ -164,7 +163,6 @@ package ru.redspell.rasterizer.flatten {
                 mtx.concat(obj.transform.matrix);
 
                 var layer:FlattenImage = applyFilters(applyMatrix(obj, mtx, clr), filters);
-				//var layer:FlattenImage = applyMatrix(obj, mtx, clr);
                 _childs.push(layer);
 
                 var matches:Array = obj.parent.name.match(/^(masked|mask)([\d]+)$/);

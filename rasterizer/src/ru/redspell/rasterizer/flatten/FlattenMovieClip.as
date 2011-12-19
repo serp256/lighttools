@@ -20,8 +20,10 @@ package ru.redspell.rasterizer.flatten {
 			MovieClipExt.recStop(clip);
 
 			for (var i:uint = 1; i <= clip.totalFrames; i++) {
-				trace('!!!!!!!!!!!!!!!_______' + i + '__________');
-				_frames.push((new FlattenSprite()).fromDisplayObject(obj));
+				var frame:FlattenSprite = (new FlattenSprite()).fromDisplayObject(obj) as FlattenSprite;
+
+				frame.label = clip.currentLabel;
+				_frames.push(frame);
 				MovieClipExt.recNextFrame(clip);
 			}
 

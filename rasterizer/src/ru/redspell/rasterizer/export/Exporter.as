@@ -83,6 +83,10 @@ package ru.redspell.rasterizer.export {
 
 			meta.children = imgs;
 
+			if (obj.label != '') {
+				meta.label = obj.label;
+			}
+
 			if (write) {
 				writeMeta(dir, meta);
 			}
