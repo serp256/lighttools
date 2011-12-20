@@ -559,7 +559,7 @@ value do_work indir =
         List.iteri begin fun i (w,h,imgs) ->
           let texture = Rgba32.make w h bgcolor in
           (
-            List.iter begin fun (key,(x,y,img)) ->
+            List.iter begin fun (key,(x,y,_,img)) ->
             (
               let img = match img with [ Images.Rgba32 img -> img | _ -> assert False ] in
               Rgba32.blit img 0 0 texture x y img.Rgba32.width img.Rgba32.height;

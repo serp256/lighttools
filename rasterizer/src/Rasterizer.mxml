@@ -58,6 +58,8 @@
 			var classes:Array = [];
 			var appDomain:ApplicationDomain = info.applicationDomain;
 
+			classNames.sort();
+
 			for each (var className:String in classNames) {
 				classes.push(new ClassesGridItemData(appDomain.getDefinition(className) as Class, className));
 			}

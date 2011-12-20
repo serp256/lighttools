@@ -3,21 +3,14 @@ package ru.redspell.rasterizer.export {
 	import com.adobe.images.PNGEncoder;
 	import com.adobe.serialization.json.JSON;
 
-	import flash.display.DisplayObject;
-
 	import flash.filesystem.File;
 	import flash.filesystem.FileMode;
 	import flash.filesystem.FileStream;
 	import flash.utils.ByteArray;
 
-	import mx.core.FlexGlobals;
-
 	import ru.redspell.rasterizer.flatten.FlattenImage;
 	import ru.redspell.rasterizer.flatten.FlattenMovieClip;
-
 	import ru.redspell.rasterizer.flatten.FlattenSprite;
-
-	import spark.components.WindowedApplication;
 
 	public class Exporter {
 		protected var _dir:File;
@@ -73,7 +66,7 @@ package ru.redspell.rasterizer.export {
 				}
 
 				imgs.push({
-					name:img.name,
+					//name:img.name,
 					x:img.matrix.tx,
 					y:img.matrix.ty,
 					type:'image',

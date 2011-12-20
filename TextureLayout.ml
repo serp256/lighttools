@@ -75,7 +75,7 @@ value rec maxrects rects placed empty unfit =
   match rects with
   [ [] -> (placed, unfit)    (* все разместили *)
   | [ ((info, img) as r) :: rects']  -> 
-      let () = Printf.printf "maxrect %s \n%!" info in
+      (* let () = Printf.printf "maxrect %s \n%!" info in *)
       match empty with 
       [ []  -> (placed, (List.append rects unfit))
       | _   -> 

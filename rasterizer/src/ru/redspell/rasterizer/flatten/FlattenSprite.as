@@ -1,6 +1,5 @@
 package ru.redspell.rasterizer.flatten {
 	import flash.display.Bitmap;
-	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
@@ -8,7 +7,6 @@ package ru.redspell.rasterizer.flatten {
 	import flash.geom.ColorTransform;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
-	import flash.geom.Rectangle;
 	import flash.geom.Rectangle;
 	import flash.utils.Dictionary;
 
