@@ -555,7 +555,7 @@ value do_work indir =
         Xmlm.output xmlout (`El_start (("","lib"),[]));
         Xmlm.output xmlout (`El_start (("","textures"),[])); (* write textures {{{*)
         let images = Hashtbl.fold (fun id img res -> [ (id,img) :: res ]) images [] in
-        let pages = TextureLayout.layout ~type_rects:`rand images in
+        let pages = TextureLayout.layout ~type_rects:`maxrect ~sqr:False images in
         List.iteri begin fun i (w,h,imgs) ->
           let texture = Rgba32.make w h bgcolor in
           (
