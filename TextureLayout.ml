@@ -30,8 +30,6 @@ value rect_in_rect rect2 rect1 =
   point_in_rect (rect2.x + rect2.w) (rect2.y + rect2.h) rect1;
 
 value calc_subrect rect bound result =
- let () = Printf.printf "rect: x: %d; y: %d; w:%d; h : %d\n%!" rect.x rect.y rect.w rect.h in
- let () = Printf.printf "bound: x: %d; y: %d; w:%d; h : %d\n%!" bound.x bound.y bound.w bound.h in
   match is_crossing_rect rect bound with
   [ True ->
       let rects =  
@@ -75,15 +73,12 @@ value rec maxrects rects placed empty unfit =
   match rects with
   [ [] -> (placed, unfit)    (* все разместили *)
   | [ ((info, img) as r) :: rects']  -> 
-      let () = Printf.printf "maxrect %s \n%!" info in
       match empty with 
       [ []  -> (placed, (List.append rects unfit))
       | _   -> 
           let (rw,rh) = Images.size img in
-          let () = Printf.printf "Image size: %d %d \n%!" rw rh in
           let (rect, containers) = 
             List.fold_left begin fun (res, containers) c ->
-              let () = Printf.printf "rect: x: %d; y: %d; w:%d; h : %d\n%!" c.x c.y c.w c.h in
               let container = 
                 match rw > c.w || rh > c.h with
                 [ True -> 
@@ -91,31 +86,40 @@ value rec maxrects rects placed empty unfit =
                     [ True -> None
                     | _ -> Some {(c) with isRotate = True}
                     ]
-                | _ -> 
+                | _ ->  Some {(c) with isRotate=False}
+                    (*
                     match rw < rh with
                     [ True -> 
-                      (*  Some c *)
                         match rw > c.h || rh > c.w with 
-                        [ True -> Some c
+                        [ True -> Some {(c) with isRotate= False}
                         | _ -> Some {(c) with isRotate = True}
                         ]
-                    | _  -> Some c
-                    ]
+                    | _  -> Some {(c) with isRotate=False}
+                    ] 
+                *)
                 ]
               in
               match container with
               [ None -> (res, [c :: containers ]) 
-              | Some c ->
+              | Some container ->
                   match res with
                   [ Some res -> 
-                      let restop = res.y
-                      and ctop = c.y 
+                      let restop =
+                        match res.isRotate with
+                        [ True -> res.y + rw 
+                        | _ -> res.y + rh
+                        ]
+                      and ctop = 
+                        match container.isRotate with
+                        [ True -> container.y + rw
+                        | _ -> container.y + rh
+                        ]
                       in
-                      match restop > ctop || ((restop = ctop) && c.x < res.x) with
-                      [ True -> (Some c, [ res :: containers ])
-                      | _ -> (Some res, [ c :: containers])
+                      match restop > ctop || ((restop = ctop) && container.x < res.x) with
+                      [ True -> (Some container, [ res :: containers ])
+                      | _ -> (Some res, [ container :: containers])
                       ]
-                  | _ -> (Some c, containers)
+                  | _ -> (Some container, containers)
                   ]
               ]
             end (None,[]) empty
@@ -123,7 +127,6 @@ value rec maxrects rects placed empty unfit =
           match rect with
           [ None -> maxrects rects' placed empty [ r :: unfit] 
           | Some c ->
-              let () = Printf.printf "Find rect %d %d %d %d \n%!" c.x c.y c.w c.h in
               let (rh,rw) =
                 match c.isRotate with
                 [ True -> (rw,rh)
@@ -155,7 +158,6 @@ value rec maxrects rects placed empty unfit =
                 match rect1 with
                 [ Some rect -> 
                     (
-                      Printf.printf "recct1 : %d %d %d %d\n%!" rect.x rect.y rect.w rect.h;
                       [ rect :: containers ] 
                     )
                 | _ -> containers
@@ -165,13 +167,11 @@ value rec maxrects rects placed empty unfit =
                 match rect2 with
                 [ Some rect ->
                     (
-                      Printf.printf "recct2 : %d %d %d %d\n%!" rect.x rect.y rect.w rect.h;
                       [ rect :: containers ] 
                     )
                 | _ -> containers
                 ]
               in
-              let () = List.iter (fun c ->  Printf.printf "new rect: x: %d; y: %d; w:%d; h : %d\n%!" c.x c.y c.w c.h) containers in
               let rec filter_rects rects i res = 
                 match rects with
                 [ [] -> res
@@ -179,7 +179,7 @@ value rec maxrects rects placed empty unfit =
                     let inRect =
                       try 
                         (
-                          ignore(ExtList.List.findi (fun j rect -> (i <> j) && rect_in_rect r rect) containers);
+                          ignore(BatList.findi (fun j rect -> (i <> j) && rect_in_rect r rect) containers);
                           True
                         )
                       with
@@ -189,6 +189,65 @@ value rec maxrects rects placed empty unfit =
                     [ True -> filter_rects rects (i + 1) res
                     | _ -> filter_rects rects (i + 1) [ r :: res ]
                     ]
+                ]
+              in
+              let img =
+                match c.isRotate with
+                [ True ->
+                    let (w,h) = Images.size img in
+                    match img with
+                    [ Images.Rgba32 img -> 
+                        let image = Rgba32.create h w in
+                          (
+                            for i = 0 to (h-1) do
+                              for j = 0 to (w-1) do
+                                Rgba32.set image i j (Rgba32.get img j i)
+                              done
+                            done;
+                            Images.Rgba32 image
+                          )
+                    | Images.Index8 img -> 
+                        let image = Index8.create h w in
+                          (
+                            for i = 0 to (h-1) do
+                              for j = 0 to (w-1) do
+                                Index8.set image i j (Index8.get img j i)
+                              done
+                            done;
+                            Images.Index8 image
+                          )
+                    | Images.Index16 img -> 
+                        let image = Index16.create h w in
+                          (
+                            for i = 0 to (h-1) do
+                              for j = 0 to (w-1) do
+                                Index16.set image i j (Index16.get img j i)
+                              done
+                            done;
+                            Images.Index16 image
+                          )
+                    | Images.Rgb24 img -> 
+                        let image = Rgb24.create h w in
+                          (
+                            for i = 0 to (h-1) do
+                              for j = 0 to (w-1) do
+                                Rgb24.set image i j (Rgb24.get img j i)
+                              done
+                            done;
+                            Images.Rgb24 image
+                          )
+                    | Images.Cmyk32 img -> 
+                        let image = Cmyk32.create h w in
+                          (
+                            for i = 0 to (h-1) do
+                              for j = 0 to (w-1) do
+                                Cmyk32.set image i j (Cmyk32.get img j i)
+                              done
+                            done;
+                            Images.Cmyk32 image
+                          )
+                    ]
+                | _ -> img
                 ]
               in
               maxrects rects' [ (info, (c.x, c.y, c.isRotate, img)) :: placed ] (filter_rects containers 0 []) unfit
@@ -318,8 +377,7 @@ value rec layout_multipage ~type_rects ~sqr rects pages =
 (* 
  возвращает список страниц. каждая страница не больше 2048x2048
 *)
-value layout ?(type_rects=`maxrect) ?(sqr=False) rects =
+value layout ?(type_rects=`maxrect) ?(sqr=True) rects =
   (
-    Random.self_init ();
     layout_multipage ~type_rects ~sqr rects [];
   );
