@@ -10,7 +10,6 @@ package ru.redspell.rasterizer.export {
 
 	import ru.redspell.rasterizer.flatten.FlattenImage;
 	import ru.redspell.rasterizer.flatten.FlattenMovieClip;
-
 	import ru.redspell.rasterizer.flatten.FlattenSprite;
 
 	public class Exporter {
@@ -67,7 +66,7 @@ package ru.redspell.rasterizer.export {
 				}
 
 				imgs.push({
-					name:img.name,
+					//name:img.name,
 					x:img.matrix.tx,
 					y:img.matrix.ty,
 					type:'image',
@@ -76,6 +75,10 @@ package ru.redspell.rasterizer.export {
 			}
 
 			meta.children = imgs;
+
+			if (obj.label != '') {
+				meta.label = obj.label;
+			}
 
 			if (write) {
 				writeMeta(dir, meta);

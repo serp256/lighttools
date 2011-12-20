@@ -264,8 +264,8 @@ value rec usageFrom address id = (* сделать енум *)
     match addr with
     [ `sprite children cNum -> 
       try 
-        let (cNum,pos) = findInChildren children (cNum + 1) in
-        ((elid,`sprite children cNum),pos)
+        let (cNum,pos) = findInChildren children cNum in
+        ((elid,`sprite children (cNum + 1)),pos)
       with [ Next -> nextElement elid ]
     | `clip frames fNum cNum ->
         let numFrames = DynArray.length frames in
@@ -275,11 +275,11 @@ value rec usageFrom address id = (* сделать енум *)
             let frame = DynArray.get frames fi in
             try 
               let (cNum,pos) = findInChildren frame.children si in
-              ((elid,`clip frames fi cNum),pos)
+              ((elid,`clip frames fi (cNum + 1)),pos)
             with [ Next -> findInFrame (fi + 1) 0 ]
           else nextElement elid
         in
-        findInFrame fNum (cNum + 1)
+        findInFrame fNum cNum 
     ] (*}}}*)
   and nextElement (elid:int) = (*{{{*)
     let nid = elid + 1 in
@@ -559,7 +559,7 @@ value do_work indir =
         List.iteri begin fun i (w,h,imgs) ->
           let texture = Rgba32.make w h bgcolor in
           (
-            List.iter begin fun (key,(x,y,img)) ->
+            List.iter begin fun (key,(x,y,_,img)) ->
             (
               let img = match img with [ Images.Rgba32 img -> img | _ -> assert False ] in
               Rgba32.blit img 0 0 texture x y img.Rgba32.width img.Rgba32.height;

@@ -10,7 +10,7 @@ package ru.redspell.rasterizer.utils {
     public class MovieClipExt {
 		public static function recStop(clip:MovieClip, reset:Boolean = true):MovieClip {
 			if (reset) {
-                clip.gotoAndStop(0);
+                clip.gotoAndStop(1);
             } else {
                 clip.stop();
             }

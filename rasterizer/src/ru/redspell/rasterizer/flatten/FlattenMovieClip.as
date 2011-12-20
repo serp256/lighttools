@@ -1,5 +1,4 @@
 package ru.redspell.rasterizer.flatten {
-	import flash.display.Bitmap;
 	import flash.display.DisplayObject;
 	import flash.display.MovieClip;
 	import flash.display.Sprite;
@@ -11,6 +10,8 @@ package ru.redspell.rasterizer.flatten {
         protected var _curFrame:int = 0;
 
         public function fromDisplayObject(obj:DisplayObject):IFlatten {
+			trace('fromDisplayObject call');
+
 			var clip:MovieClip = obj as MovieClip;
 
 			if (!clip) {
@@ -19,9 +20,20 @@ package ru.redspell.rasterizer.flatten {
 
 			MovieClipExt.recStop(clip);
 
-			for (var i:uint = 0; i < clip.totalFrames; i++) {
-				_frames.push((new FlattenSprite()).fromDisplayObject(obj));
+			for (var i:uint = 1; i <= clip.totalFrames; i++) {
+				var frame:FlattenSprite = (new FlattenSprite()).fromDisplayObject(obj) as FlattenSprite;
+
+				frame.label = clip.currentLabel;
+				_frames.push(frame);
 				MovieClipExt.recNextFrame(clip);
+			}
+
+			for each (var frame:FlattenSprite in _frames) {
+				trace(frame);
+
+				for each (var img:FlattenImage in frame.childs) {
+					trace('\t' + img.name);
+				}
 			}
 
 			_curFrame = 0;
