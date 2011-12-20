@@ -535,7 +535,7 @@ value do_work indir =
       in
       RefList.push exports (name,item_id)
     end (Sys.readdir indir);
-(*     merge_images(); *)
+    merge_images();
     let outdir = !outdir // (Filename.basename indir) in
     let () = printf "output to %s\n%!" outdir in
     (
