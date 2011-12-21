@@ -10,9 +10,6 @@ value (=*=) k v = k =|= string_of_int v;
 
 value bgcolor = {Color.color = {Color.r = 0; g = 0; b = 0}; alpha = 0};
 
-(* схлопним хуйню *)
-
-
 
 module Rectangle = struct
 
@@ -53,8 +50,10 @@ end;
 
 type pos = {x:float;y:float};
 type texinfo = {page:mutable int; tx:mutable int;ty:mutable int; width: int;height:int};
-type children = DynArray.t (int * option string * pos);
-type frame = {children:children; label: option string; duration: mutable int};
+type child = (int * option string * pos);
+type children = DynArray.t child;
+type clipcmd = [ ClpPlace of (int * child) | ClpClear of (int*int) | ClpChange of (int * list [= `posX of float | `posY of float | `move of int]) ];
+type frame = {children:children; commands: mutable option (DynArray.t clipcmd); label: option string; duration: mutable int};
 type item = [= `image of texinfo | `sprite of children | `clip of DynArray.t frame ];
 type iteminfo = (int * item);
 
@@ -201,7 +200,7 @@ and process_dir dirname = (* найти мету в этой директори�
           let frame = objekt frame in 
           let label = try Some (string (List.assoc "label" frame)) with [ Not_found -> None ] in
           let children = process_children dirname (List.assoc "children" frame) in
-          {label;children;duration=1}
+          {label;commands=None;children;duration=1}
         end (List.assoc "frames" mobj)
       in
       (* вычислим duration *)
@@ -546,12 +545,56 @@ value merge_images () =
 
 (*}}}*)
 
+value make_clip_commands () =
+(
+  for i = 0 to DynArray.length items - 1 do
+    match DynArray.get items i with
+    [ (id,`clip frames) -> 
+      (
+        let fframe = DynArray.get frames 0 in
+        let pchildren = ref (DynArray.copy fframe.children) in
+        for f = 1 to DynArray.length frames - 1 do
+          let frame = DynArray.get frames f in
+          let commands = DynArray.create () in
+          let len = DynArray.length frame.children in 
+          (
+            for c = 0 to len - 1 do
+              let ((id,_,pos) as child) = DynArray.get frame.children c in
+              try
+                let pidx = DynArray.index_of (fun (id',_,pos) -> id' = id) !pchildren  in
+                let (_,_,pos') = DynArray.get !pchildren pidx in
+                let changes = if pidx <> 0 then [ `move c ] else [] in
+                let changes = if pos.x <> pos'.x then [ `posX pos.x :: changes ] else changes in
+                let changes = if pos.y <> pos'.y then [ `posY pos.y :: changes ] else changes in
+                (
+                  DynArray.delete !pchildren pidx;
+                  match changes with
+                  [ [] -> ()
+                  | changes -> DynArray.add commands (ClpChange (pidx + c,changes)) 
+                  ]
+                )
+              with [ Not_found -> DynArray.add commands (ClpPlace (c,child)) ];
+            done;
+            (* еще удалить надо *)
+            let clen = DynArray.length !pchildren in
+            if clen > 0 
+            then
+              DynArray.add commands (ClpClear len clen)
+            else ();
+            frame.commands := Some commands;
+            pchildren.val := DynArray.copy frame.children;
+          )
+        done;
+      )
+    | _ -> ()
+    ]
+  done;
+);
 
-value optimize_clips () = ();
 
 value outdir = ref "output";
 
-value do_work indir =
+value do_work isXml indir =
   let exports = RefList.empty () in
   (
     Array.iter begin fun fl ->
@@ -566,6 +609,7 @@ value do_work indir =
       RefList.push exports (name,item_id)
     end (Sys.readdir indir);
     merge_images();
+    make_clip_commands ();
     let outdir = !outdir // (Filename.basename indir) in
     let () = printf "output to %s\n%!" outdir in
     (
@@ -577,16 +621,11 @@ value do_work indir =
         ]
       else ();
       Unix.mkdir outdir 0o755;
-      (* Теперича сохранить xml и усе *)
-      let out = open_out (outdir // "lib.xml") in
-      let xmlout = Xmlm.make_output ~indent:(Some 2) (`Channel out) in
-      (
-        Xmlm.output xmlout (`Dtd None);
-        Xmlm.output xmlout (`El_start (("","lib"),[]));
-        Xmlm.output xmlout (`El_start (("","textures"),[])); (* write textures {{{*)
-        let images = Hashtbl.fold (fun id img res -> [ (id,img) :: res ]) images [] in
-        let pages = TextureLayout.layout ~type_rects:`maxrect ~sqr:False images in
-        List.iteri begin fun i (w,h,imgs) ->
+      let imgs = Hashtbl.fold (fun id img res -> [ (id,img) :: res ]) images [] in
+      let () = TextureLayout.rotate.val := False in
+      let pages = TextureLayout.layout ~type_rects:`maxrect ~sqr:False imgs in
+      let textures = 
+        List.mapi begin fun i (w,h,imgs) ->
           let texture = Rgba32.make w h bgcolor in
           (
             List.iter begin fun (key,(x,y,_,img)) ->
@@ -602,88 +641,246 @@ value do_work indir =
             let imgname = Printf.sprintf "%d.png" i in
             (
               Images.save (outdir // imgname) (Some Images.Png) [] (Images.Rgba32 texture);
-              Xmlm.output xmlout (`El_start (("","texture"),["file" =|= imgname]));
-              Xmlm.output xmlout `El_end;
+              imgname;
             )
           )
-        end pages;
-        Xmlm.output xmlout `El_end;(*}}}*)
-        Xmlm.output xmlout (`El_start (("","items"),[]));(* write items {{{ *)
-        let write_children : children -> unit = 
-          DynArray.iter begin fun (id,name,pos) ->
+        end pages
+      in
+      match isXml with
+      [ True -> (*{{{*)
+        (* Теперича сохранить xml и усе *)
+        let out = open_out (outdir // "lib.xml") in
+        let xmlout = Xmlm.make_output ~indent:(Some 2) (`Channel out) in
+        (
+          Xmlm.output xmlout (`Dtd None);
+          Xmlm.output xmlout (`El_start (("","lib"),[]));
+          Xmlm.output xmlout (`El_start (("","textures"),[])); 
+          List.iter (fun imgname -> Xmlm.output xmlout (`El_start (("","texture"),["file" =|= imgname]))) textures;
+          Xmlm.output xmlout `El_end;
+          Xmlm.output xmlout (`El_start (("","items"),[]));(* write items {{{ *)
+          let rec write_children = 
+            DynArray.iter begin fun (id,name,pos) ->
+              (
+                let attrs = [ "id" =*= id; "posX" =.= pos.x; "posY" =.= pos.y ] in
+                let attrs = match name with [ Some n -> [ "name" =|= n :: attrs ] | None -> attrs ] in
+                Xmlm.output xmlout (`El_start (("","child"),attrs));
+                Xmlm.output xmlout `El_end;
+              )
+            end 
+          in
+          DynArray.iter begin fun (id,item) -> (*{{{*)
+              match item with
+              [ `image info when Hashtbl.mem images id -> 
+                (
+                  let attributes = 
+                    [
+                      "type" =|= "image";
+                      "texture" =*= info.page;
+                      "x" =*= info.tx;
+                      "y" =*= info.ty;
+                      "width" =*= info.width;
+                      "height" =*= info.height
+                    ]
+                  in
+                  Xmlm.output xmlout (`El_start (("","item"),[ "id" =*= id :: attributes ]));
+                  Xmlm.output xmlout `El_end;
+                )
+              | `sprite children ->
+                (
+                  Xmlm.output xmlout (`El_start (("","item"),[ "id" =*= id ; "type" =|= "sprite" ]));
+                  write_children children;
+                  Xmlm.output xmlout `El_end;
+                )
+              | `clip frames ->
+                (
+                  Xmlm.output xmlout (`El_start (("","item"),[ "id" =*= id ; "type" =|= "clip" ]));
+                  DynArray.iter begin fun frame ->
+                    (
+                      let attrs = [ "duration" =*= frame.duration ] in 
+                      let attrs = match frame.label with [ Some l -> [ "label" =|= l :: attrs ] | None -> attrs ] in
+                      Xmlm.output xmlout (`El_start (("","frame"),attrs));
+                      Xmlm.output xmlout (`El_start (("","children"),[]));
+                      write_children frame.children;
+                      Xmlm.output xmlout `El_end;
+                      match frame.commands with
+                      [ Some commands ->
+                        (
+                          Xmlm.output xmlout (`El_start (("","commands"),[]));
+                          DynArray.iter begin fun
+                            [ ClpPlace (idx,(id,name,pos)) ->
+                              (
+                                let attrs = [ "idx" =*= idx; "id" =*= id; "posX" =.= pos.x; "posY" =.= pos.y ] in
+                                let attrs = match name with [ Some n -> [ "name" =|= n :: attrs ] | None -> attrs ] in
+                                Xmlm.output xmlout (`El_start (("","place"),attrs));
+                                Xmlm.output xmlout `El_end;
+                              )
+                            | ClpClear from count -> 
+                              (
+                                Xmlm.output xmlout (`El_start (("","clear-from"),[ "idx" =*= from; "count" =*= count ]));
+                                Xmlm.output xmlout `El_end
+                              )
+                            | ClpChange idx changes -> 
+                              (
+                                let changes = 
+                                  List.map begin fun
+                                    [ `move z -> "move" =*= z
+                                    | `posX x -> "posX" =.= x
+                                    | `posY y -> "posY" =.= y
+                                    ]
+                                  end changes
+                                in
+                                Xmlm.output xmlout (`El_start (("","change"),["idx" =*= idx :: changes ]));
+                                Xmlm.output xmlout `El_end;
+                              )
+                            ] 
+                          end commands;
+                          Xmlm.output xmlout `El_end;
+                        )
+                      | None -> ()
+                      ];
+                      Xmlm.output xmlout `El_end;
+                    )
+                  end frames;
+                  Xmlm.output xmlout `El_end;
+                )
+              | _ -> ()
+              ]
+          end items;(*}}}*)
+          Xmlm.output xmlout `El_end;(*}}}*)
+          Xmlm.output xmlout (`El_start (("","symbols"),[])); (* write symbols {{{*)
+          RefList.iter begin fun (cls,id) ->
             (
-              let attrs = [ "id" =*= id; "posX" =.= pos.x; "posY" =.= pos.y ] in
-              let attrs = match name with [ Some n -> [ "name" =|= n :: attrs ] | None -> attrs ] in
-              Xmlm.output xmlout (`El_start (("","child"),attrs));
+              Xmlm.output xmlout (`El_start (("","symbol"),[ "class" =|= cls; "id" =*= id ]));
               Xmlm.output xmlout `El_end;
             )
-          end 
+          end exports;
+          Xmlm.output xmlout `El_end;(*}}}*)
+          Xmlm.output xmlout `El_end;
+          close_out out;
+        )(*}}}*) 
+      | False -> (*{{{*)
+        let out = open_out (outdir // "lib.bin") in
+        let binout = IO.output_channel out in
+        let write_option_string = fun
+          [ Some name -> 
+            (
+              IO.write_byte binout (String.length name);
+              IO.nwrite binout name;
+            )
+          | None -> IO.write_byte binout 0
+          ]
         in
-        DynArray.iter begin fun (id,item) -> 
-            match item with
-            [ `image info when Hashtbl.mem images id -> 
+        (
+          IO.write_byte binout (List.length textures);
+          List.iter (fun imgname -> IO.write_string binout imgname) textures;
+          let cnt_items = DynArray.fold_left (fun cnt (id,item) -> match item with [ `image _ when not (Hashtbl.mem images id) -> cnt | _ -> cnt + 1 ]) 0 items in
+          IO.write_ui16 binout cnt_items;
+          let rec write_children children = 
+            let () = IO.write_byte binout (DynArray.length children) in
+            DynArray.iter begin fun (id,name,pos) ->
               (
-                let attributes = 
-                  [
-                    "type" =|= "image";
-                    "texture" =*= info.page;
-                    "x" =*= info.tx;
-                    "y" =*= info.ty;
-                    "width" =*= info.width;
-                    "height" =*= info.height
-                  ]
-                in
-                Xmlm.output xmlout (`El_start (("","item"),[ "id" =*= id :: attributes ]));
-                Xmlm.output xmlout `El_end;
+                IO.write_ui16 binout id;
+                IO.write_double binout pos.x;
+                IO.write_double binout pos.y;
+                write_option_string name;
+              )
+            end children
+          in
+          DynArray.iter begin fun (id,item) ->
+            match item with
+            [ `image info when Hashtbl.mem images id ->
+              (
+                IO.write_ui16 binout id;
+                IO.write_byte binout 0; (* this is image *)
+                IO.write_byte binout info.page;
+                IO.write_ui16 binout info.tx;
+                IO.write_ui16 binout info.ty;
+                IO.write_ui16 binout info.width;
+                IO.write_ui16 binout info.height;
               )
             | `sprite children ->
               (
-                Xmlm.output xmlout (`El_start (("","item"),[ "id" =*= id ; "type" =|= "sprite" ]));
+                IO.write_ui16 binout id;
+                IO.write_byte binout 1;
                 write_children children;
-                Xmlm.output xmlout `El_end;
               )
             | `clip frames ->
               (
-                Xmlm.output xmlout (`El_start (("","item"),[ "id" =*= id ; "type" =|= "clip" ]));
+                IO.write_ui16 binout id;
+                IO.write_byte binout 2;
+                IO.write_ui16 binout (DynArray.length frames);
                 DynArray.iter begin fun frame ->
                   (
-                    let attrs = [ "duration" =*= frame.duration ] in 
-                    let attrs = match frame.label with [ Some l -> [ "label" =|= l :: attrs ] | None -> attrs ] in
-                    Xmlm.output xmlout (`El_start (("","frame"),attrs));
+                    IO.write_byte binout frame.duration;
+                    write_option_string frame.label;
                     write_children frame.children;
-                    Xmlm.output xmlout `El_end;
+                    match frame.commands with
+                    [ None -> IO.write_byte binout 0
+                    | Some commands ->
+                      (
+                        IO.write_byte binout 1;
+                        IO.write_ui16 binout (DynArray.length commands);
+                        DynArray.iter begin fun
+                          [ ClpPlace (idx,(id,name,pos)) ->
+                            (
+                              IO.write_byte binout 0;
+                              IO.write_ui16 binout idx;
+                              IO.write_ui16 binout id;
+                              write_option_string name;
+                              IO.write_double binout pos.x;
+                              IO.write_double binout pos.y;
+                            )
+                          | ClpClear from count ->
+                            (
+                              IO.write_byte binout 1;
+                              IO.write_ui16 binout from;
+                              IO.write_ui16 binout count;
+                            )
+                          | ClpChange idx changes ->
+                            (
+                              IO.write_byte binout 2;
+                              IO.write_ui16 binout idx;
+                              IO.write_byte binout (List.length changes);
+                              List.iter begin fun
+                                [ `move z -> (IO.write_byte binout 0; IO.write_ui16 binout z)
+                                | `posX x -> (IO.write_byte binout 1; IO.write_double binout x)
+                                | `posY y -> (IO.write_byte binout 2; IO.write_double binout y)
+                                ]
+                              end changes;
+                            )
+                          ]
+                        end commands
+                      )
+                    ]
                   )
                 end frames;
-                Xmlm.output xmlout `El_end;
               )
             | _ -> ()
             ]
-        end items;
-        Xmlm.output xmlout `El_end;(*}}}*)
-        Xmlm.output xmlout (`El_start (("","symbols"),[])); (* write symbols {{{*)
-        RefList.iter begin fun (cls,id) ->
-          (
-            Xmlm.output xmlout (`El_start (("","symbol"),[ "class" =|= cls; "id" =*= id ]));
-            Xmlm.output xmlout `El_end;
-          )
-        end exports;
-        Xmlm.output xmlout `El_end;(*}}}*)
-        Xmlm.output xmlout `El_end;
-        close_out out;
-      )
+          end items;
+          IO.write_byte binout (RefList.length exports);
+          RefList.iter begin fun (cls,id) ->
+            (
+              IO.write_string binout cls;
+              IO.write_ui16 binout id;
+            )
+          end exports;
+          close_out out;
+        ) (*}}}*)
+      ];
     );
   );
 
-
 value () = 
   let indir = ref None in
+  let xml = ref False in
   (
-    Arg.parse [ ("-o",Arg.Set_string outdir,"outpud directory") ] (fun id -> indir.val := Some id) "usage msg";
+    Arg.parse [ ("-o",Arg.Set_string outdir,"outpud directory") ; ("-xml",Arg.Set xml, "lib in xml format") ] (fun id -> indir.val := Some id) "usage msg";
     match !indir with
     [ None -> failwith "You must spec input dir"
     | Some indir -> 
         let indir = if indir.[String.length indir - 1] = '/' then String.rchop indir else indir in
-        do_work indir
+        do_work !xml indir
     ]
   );
 
