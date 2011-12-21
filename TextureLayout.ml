@@ -78,7 +78,7 @@ value calc_subrect rect bound result =
   | _ -> rects @ result
   ];
 
-value rec maxrects rects placed empty unfit = 
+value rec maxrects ?(not_rotate=False)  rects placed empty unfit = 
   match rects with
   [ [] -> (placed, empty, unfit)    (* все разместили *)
   | [ ((info, img) as r) :: rects']  -> 
@@ -91,19 +91,27 @@ value rec maxrects rects placed empty unfit =
               let container = 
                 match rw > c.w || rh > c.h with
                 [ True -> 
-                    match rw > c.h || rh > c.w with
-                    [ True -> None
-                    | _ -> Some {(c) with isRotate = True}
-                    ]
-                | _ -> (* Some {(c) with isRotate=False} *)
-                    match rw < rh with
-                    [ True -> 
-                        match rw > c.h || rh > c.w with 
-                        [ True -> Some {(c) with isRotate= False}
+                    match not_rotate with
+                    [ False -> 
+                        match rw > c.h || rh > c.w with
+                        [ True -> None
                         | _ -> Some {(c) with isRotate = True}
                         ]
-                    | _  -> Some {(c) with isRotate=False}
-                    ] 
+                    | _ -> None
+                    ]
+                | _ -> 
+                    match not_rotate with
+                    [ True -> Some {(c) with isRotate=False} 
+                    | _ -> 
+                        match rw < rh with
+                        [ True -> 
+                            match rw > c.h || rh > c.w with 
+                            [ True -> Some {(c) with isRotate= False}
+                            | _ -> Some {(c) with isRotate = True}
+                            ]
+                        | _  -> Some {(c) with isRotate=False}
+                        ] 
+                    ]
                 ]
               in
               match container with
@@ -132,7 +140,7 @@ value rec maxrects rects placed empty unfit =
             end (None,[]) empty
           in 
           match rect with
-          [ None -> maxrects rects' placed empty [ r :: unfit] 
+          [ None -> maxrects ~not_rotate rects' placed empty [ r :: unfit] 
           | Some c ->
               let (rh,rw) =
                 match c.isRotate with
@@ -257,7 +265,7 @@ value rec maxrects rects placed empty unfit =
                 | _ -> img
                 ]
               in
-              maxrects rects' [ (info, (c.x, c.y, c.isRotate, img)) :: placed ] (filter_rects containers 0 []) unfit
+              maxrects ~not_rotate rects' [ (info, (c.x, c.y, c.isRotate, img)) :: placed ] (filter_rects containers 0 []) unfit
           ]
       ]
   ];
