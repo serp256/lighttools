@@ -205,7 +205,6 @@ and process_dir dirname = (* найти мету в этой директори�
         end (List.assoc "frames" mobj)
       in
       (* вычислим duration *)
-      (* FIXME: придумать сдесь механизм изменений *)
       let frames = DynArray.create () in
       (
         List.iter begin fun frame -> 
@@ -221,7 +220,7 @@ and process_dir dirname = (* найти мету в этой директори�
 
 
 
-
+(*  merge images {{{ *)
 value isImagesIntersect (id1,(x1,y1)) (id2,(x2,y2)) =
   match snd (DynArray.get items id1) with
   [ `image texInfo1 -> 
@@ -242,7 +241,6 @@ value isImagesIntersect (id1,(x1,y1)) (id2,(x2,y2)) =
   | _ -> False
   ];
   
-
 exception Next;
 
 value rec usageFrom address id = (* сделать енум *)
@@ -297,7 +295,7 @@ value rec usageFrom address id = (* сделать енум *)
         in
         findElement (nid,addr)
       with [ Next -> nextElement nid ]
-    in
+  in(*}}}*)
   Enum.make 
     ~next:begin fun () ->
       let ((addr,_) as res) = findElement !address in
@@ -332,10 +330,36 @@ value string_of_address (id,el) =
   | `clip _ fNum cNum -> Printf.sprintf "clip: %d:%d:%d" id fNum cNum
   ];
 
+value remove_unused_images () = 
+  let imgUsage = HSet.create 11 in
+  (
+    let add_children = DynArray.iter (fun (id,_,_) -> HSet.add imgUsage id) in
+    for i = 0 to DynArray.length items - 1 do
+      match DynArray.get items i with
+      [ (_,`sprite children) -> add_children children
+      | (_,`clip frames) -> DynArray.iter (fun {children=children} -> add_children children) frames
+      | _ -> ()
+      ]
+    done;
+    for i = 0 to DynArray.length items - 1 do
+      match DynArray.get items i with
+      [ (id,`image _) -> 
+        match HSet.mem imgUsage id with
+        [ False ->
+          let () = Printf.printf "remove unused img: %d\n%!" id in
+          Hashtbl.remove images id
+        | True -> ()
+        ]
+      | _ -> ()
+      ]
+    done;
+  );
+
 value merge_images () = 
+(
   let alredySeen = HSet.create 1 in
   (* проще выписать как-то все пересекающиеся области нахуй *)
-  let removed_img = Hashtbl.create 0 in
+(*   let removed_img = Hashtbl.create 0 in *)
   let rec mergeChildren makeAddr (children:children)  = 
     let i = ref 0 in
     while !i < DynArray.length children - 1 do
@@ -428,15 +452,15 @@ value merge_images () =
                     Array.init (maxOffset + 1) begin fun offset -> 
                       let (id,_,pos) = DynArray.get children (!i + offset) in
                       let () = Printf.printf "get image: %d\n%!" id in
-                      let img =
-                        try
+                      let img = 
+(*                         try *)
                           Hashtbl.find images id 
+(*
                         with
                           [ Not_found -> Hashtbl.find removed_img id ]
+*)
                       in
                       (
-                        Hashtbl.add removed_img id img;
-                        Hashtbl.remove images id;
                         (id,img,pos)
                       )
                     end
@@ -493,7 +517,6 @@ value merge_images () =
                       end places;
                     )
                   );
-                  (* вычислить смещения ебучие *)
                 )
               )
             | None -> ()
@@ -517,7 +540,14 @@ value merge_images () =
         done
     | `image _ -> ()
     ]
-  done;
+  done; 
+  remove_unused_images ()
+);
+
+(*}}}*)
+
+
+value optimize_clips () = ();
 
 value outdir = ref "output";
 
@@ -555,7 +585,7 @@ value do_work indir =
         Xmlm.output xmlout (`El_start (("","lib"),[]));
         Xmlm.output xmlout (`El_start (("","textures"),[])); (* write textures {{{*)
         let images = Hashtbl.fold (fun id img res -> [ (id,img) :: res ]) images [] in
-        let pages = TextureLayout.layout ~type_rects:`rand images in
+        let pages = TextureLayout.layout ~type_rects:`maxrect ~sqr:False images in
         List.iteri begin fun i (w,h,imgs) ->
           let texture = Rgba32.make w h bgcolor in
           (
@@ -590,24 +620,27 @@ value do_work indir =
           end 
         in
         DynArray.iter begin fun (id,item) -> 
-          (
             match item with
-            [ `image info -> 
-              let attributes = 
-                [
-                  "type" =|= "image";
-                  "texture" =*= info.page;
-                  "x" =*= info.tx;
-                  "y" =*= info.ty;
-                  "width" =*= info.width;
-                  "height" =*= info.height
-                ]
-              in
-              Xmlm.output xmlout (`El_start (("","item"),[ "id" =*= id :: attributes ]))
+            [ `image info when Hashtbl.mem images id -> 
+              (
+                let attributes = 
+                  [
+                    "type" =|= "image";
+                    "texture" =*= info.page;
+                    "x" =*= info.tx;
+                    "y" =*= info.ty;
+                    "width" =*= info.width;
+                    "height" =*= info.height
+                  ]
+                in
+                Xmlm.output xmlout (`El_start (("","item"),[ "id" =*= id :: attributes ]));
+                Xmlm.output xmlout `El_end;
+              )
             | `sprite children ->
               (
                 Xmlm.output xmlout (`El_start (("","item"),[ "id" =*= id ; "type" =|= "sprite" ]));
                 write_children children;
+                Xmlm.output xmlout `El_end;
               )
             | `clip frames ->
               (
@@ -621,10 +654,10 @@ value do_work indir =
                     Xmlm.output xmlout `El_end;
                   )
                 end frames;
+                Xmlm.output xmlout `El_end;
               )
-            ];
-            Xmlm.output xmlout `El_end;
-          )
+            | _ -> ()
+            ]
         end items;
         Xmlm.output xmlout `El_end;(*}}}*)
         Xmlm.output xmlout (`El_start (("","symbols"),[])); (* write symbols {{{*)
