@@ -238,7 +238,7 @@ value write_textures imagesMap frames outdir =
       let rgb = Rgba32.make w h {Color.color={Color.r=0;g=0;b=0}; alpha=0;} in
       let new_img = Images.Rgba32 rgb in
       (
-        BatList.iteri begin fun i (urlId,(sx,sy,img)) ->
+        BatList.iteri begin fun i (urlId,(sx,sy,isRotate,img)) ->
         (
           let (iw,ih) = Images.size img in
           (

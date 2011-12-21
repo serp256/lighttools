@@ -1,9 +1,23 @@
-
-
-
+BUILDER = ocamlbuild -use-ocamlfind -classic-display
 
 all: 
-	ocamlbuild -use-ocamlfind animexporter.native
+	$(BUILDER) convert.native
 
 clean:
 	ocamlbuild -use-ocamlfind -clean
+
+%.cmo:
+	  $(BUILDER) $@
+%.byte:
+	  $(BUILDER) $@
+%.cmx:
+	  $(BUILDER) $@
+%.cmxa:
+	  $(BUILDER) $@
+%.native: %.ml
+	  $(BUILDER) $@
+%.o: %.c
+	  $(BUILDER) $@
+%.cma:
+	  $(BUILDER) $@
+

@@ -17,12 +17,6 @@ value countEmptyPixels = 2;
 value point_in_rect x y rect =
   (x>= rect.x) && (y >= rect.y) && (x <= rect.x + rect.w) && (y <= rect.y + rect.h);
 
-value is_crossing_rect rect1 rect2 =
-  point_in_rect rect2.x rect2.y rect1 ||
-  point_in_rect (rect2.x + rect2.w) rect2.y rect1 ||
-  point_in_rect rect2.x (rect2.y + rect2.h) rect1 ||
-  point_in_rect (rect2.x + rect2.w) (rect2.y + rect2.h) rect1;
-
 value rect_in_rect rect2 rect1 =
   point_in_rect rect2.x rect2.y rect1 &&
   point_in_rect (rect2.x + rect2.w) rect2.y rect1 &&
@@ -30,51 +24,66 @@ value rect_in_rect rect2 rect1 =
   point_in_rect (rect2.x + rect2.w) (rect2.y + rect2.h) rect1;
 
 value calc_subrect rect bound result =
-  match is_crossing_rect rect bound with
-  [ True ->
-      let rects =  
-        let bx = bound.x - countEmptyPixels in
-        match rect.x < bound.x with (*left rect *)
-        [ True ->
-            [ {x =rect.x ; y = rect.y; w = bx - rect.x; h = rect.h; isRotate = False} :: result ]
-        | _ -> result
-        ]
-      in
-      let rects =
-        let by = bound.y - countEmptyPixels in
-        match rect.y < by with (* top rect *)
-        [ True ->
-            [ {x = rect.x; y = rect.y; w = rect.w; h = by - rect.y; isRotate = False} :: rects]
-        | _ -> rects
-        ]
-      in
-      let rects =
-        let x = bound.x + bound.w + countEmptyPixels
-        and rect_right = rect.x + rect.w 
-        in
-        match rect_right > x with (* right rect *)
-        [ True ->
-            [ {x = x; y = rect.y; w = rect_right - x; h =rect.h; isRotate = False} :: rects]
-        | _ -> rects
-        ]
-      in
-      let y = bound.y + bound.h + countEmptyPixels
-      and rect_bottom = rect.y + rect.h 
-      in
-        match rect_bottom > y with (* bottom rect *)
-        [ True ->
-            [ {x = rect.x; y = y; w = rect.w; h = rect_bottom - y; isRotate = False} :: rects]
-        | _ -> rects
-        ]
-  | _ -> [ rect :: result ]
+  let str = ref "" in
+  let rects =  
+    let bx = bound.x - countEmptyPixels in
+    match rect.x < bx && bound.x <= rect.x + rect.w && ((bound.y >= rect.y && bound.y <= rect.y + rect.h) || (bound.y < rect.y && bound.y + bound.h > rect.y)) with (*left rect *)
+    [ True -> 
+        (
+          str.val := !str ^ "left ";
+          [ {x =rect.x ; y = rect.y; w = bx - rect.x; h = rect.h; isRotate = False} ]
+        )
+    | _ -> []
+    ]
+  in
+  let rects =
+    let by = bound.y - countEmptyPixels in
+    match rect.y < by && bound.y <= rect.y + rect.h && ((bound.x >= rect.x && bound.x <= rect.x + rect.w) || (bound.x < rect.x && bound.x + bound.w > rect.x))   with (* top rect *)
+    [ True ->
+        (
+          str.val := !str ^ "top ";
+          [ {x = rect.x; y = rect.y; w = rect.w; h = by - rect.y; isRotate = False} :: rects]
+        )
+    | _ -> rects
+    ]
+  in
+  let rects =
+    let x = bound.x + bound.w + countEmptyPixels
+    and rect_right = rect.x + rect.w 
+    in
+    match rect_right > x && bound.x + bound.w >= rect.x && ((bound.y >= rect.y && bound.y <= rect.y + rect.h) || (bound.y < rect.y && bound.y + bound.h > rect.y)) with (* right rect *)
+    [ True ->
+        (
+          str.val := !str ^ "right ";
+          [ {x = x; y = rect.y; w = rect_right - x; h =rect.h; isRotate = False} :: rects];
+        )
+    | _ -> rects
+    ]
+  in
+  let y = bound.y + bound.h + countEmptyPixels
+  and rect_bottom = rect.y + rect.h 
+  in
+  let rects =
+    match rect_bottom > y && bound.y + bound.h >= rect.y && ((bound.x >= rect.x && bound.x <= rect.x + rect.w) || (bound.x < rect.x && bound.x + bound.w > rect.x)) with (* bottom rect *)
+    [ True ->
+        (
+          str.val := !str ^ "bottom ";
+          [ {x = rect.x; y = y; w = rect.w; h = rect_bottom - y; isRotate = False} :: rects ]
+        )
+    | _ -> rects
+    ]
+  in
+  match rects with
+  [ [] -> [ rect :: result ]
+  | _ -> rects @ result
   ];
 
 value rec maxrects rects placed empty unfit = 
   match rects with
-  [ [] -> (placed, unfit)    (* все разместили *)
+  [ [] -> (placed, empty, unfit)    (* все разместили *)
   | [ ((info, img) as r) :: rects']  -> 
       match empty with 
-      [ []  -> (placed, (List.append rects unfit))
+      [ []  -> (placed, empty, (List.append rects unfit))
       | _   -> 
           let (rw,rh) = Images.size img in
           let (rect, containers) = 
@@ -86,8 +95,7 @@ value rec maxrects rects placed empty unfit =
                     [ True -> None
                     | _ -> Some {(c) with isRotate = True}
                     ]
-                | _ ->  Some {(c) with isRotate=False}
-                    (*
+                | _ -> (* Some {(c) with isRotate=False} *)
                     match rw < rh with
                     [ True -> 
                         match rw > c.h || rh > c.w with 
@@ -96,7 +104,6 @@ value rec maxrects rects placed empty unfit =
                         ]
                     | _  -> Some {(c) with isRotate=False}
                     ] 
-                *)
                 ]
               in
               match container with
@@ -255,7 +262,6 @@ value rec maxrects rects placed empty unfit =
       ]
   ];
 
-
 (* 
   пробуем упаковать прямоугольники в заданные пустые прямоугольники.
   возвращаем оставшиеся прямоугольники и страницы
@@ -329,7 +335,9 @@ value rec layout_page ~type_rects ~sqr rects w h =
   let () = Printf.printf "Layout page x:%d y:%d w:%d h:%d \n%!" 0 0 w h in
   let (placed, rest) = 
     match type_rects with
-    [ `maxrect -> maxrects rects [] [mainrect] [] 
+    [ `maxrect ->
+        let (placed, _, rest) = maxrects rects [] [mainrect] [] in
+        (placed, rest)
     | _ -> tryLayout ~type_rects rects [] [mainrect] [] 
     ]
   in
@@ -379,5 +387,6 @@ value rec layout_multipage ~type_rects ~sqr rects pages =
 *)
 value layout ?(type_rects=`maxrect) ?(sqr=True) rects =
   (
+    Random.self_init ();
     layout_multipage ~type_rects ~sqr rects [];
   );

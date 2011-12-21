@@ -12,7 +12,7 @@ value sqr = ref False;
 
 value nocrop = ref "";
 value nocropHash:Hashtbl.t string unit = Hashtbl.create 3;
-value type_rect = ref `vert;
+value type_rect = ref `maxrect;
 
 value emptyPx = 2;
 
@@ -178,25 +178,6 @@ value createAtlas () =
             ] in
             let (w, h) = Images.size img in
             let () = Printf.printf "Images.blit x=%d; y=%d; w=%d; h=%d; isRotate=%b \n%!" x y w h isRotate in
-            let (img,w,h) = 
-              match isRotate with
-              [ True ->
-                  match img with
-                  [ Images.Rgba32 img ->
-                      let img' = Rgba32.create h w in
-                        (
-                          for i = 0 to (h-1) do
-                            for j = 0 to (w-1) do
-                              Rgba32.set img' i j (Rgba32.get img j i)
-                            done
-                          done;
-                          (Images.Rgba32 img', h, w)
-                        )
-                  | _ -> assert False
-                  ]
-              | _ -> (img,w,h)
-              ]
-            in
             let subTextureElt = Printf.sprintf "\t<SubTexture name='%s' x='%d' y='%d' height='%f' width='%f' isRotate='%b'/>\n" id x y (float_of_int h) (float_of_int w) isRotate in
               (
                 xml.val := !xml ^ subTextureElt;
@@ -242,7 +223,7 @@ value () =
     
     match !nocrop with
     [ "" -> ()
-    | str -> List.iter begin fun s -> Hashtbl.add nocropHash s () end (ExtString.String.nsplit str ",")
+    | str -> List.iter begin fun s -> Hashtbl.add nocropHash s () end (BatString.nsplit str ",")
     ];
     
     let dirname =

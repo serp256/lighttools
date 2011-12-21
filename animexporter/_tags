@@ -1,6 +1,7 @@
 true: debug
-<*.ml>: package(camlp4),syntax(camlp4r),package(camlimages)
+<*.ml>: package(camlp4),syntax(camlp4r),package(camlimages),package(batteries)
 "animexporter.ml": package(camlimages.png),package(json-wheel),package(batteries),package(xmlm)
 <HSet.ml{,i}>: package(camlp4),syntax(camlp4r),package(batteries)
 "JSObjAnim.ml": package(json-wheel),package(json-static),syntax(camlp4o)
 <animexporter.{byte,native}>: package(json-wheel),package(batteries),package(camlimages.png),package(xmlm)
+<convert.{byte,native}>: package(json-wheel),package(batteries),package(camlimages.png),package(xmlm)
