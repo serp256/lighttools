@@ -1,4 +1,7 @@
 package ru.redspell.rasterizer.flatten {
+	import com.adobe.crypto.SHA1;
+	import com.adobe.images.PNGEncoder;
+
 	import flash.display.Bitmap;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
@@ -177,7 +180,7 @@ package ru.redspell.rasterizer.flatten {
             }
         }
 
-		protected function cropTransparency():void {
+		protected function clipTransparency():void {
 			for (var i:uint = 0; i < _childs.length; i++) {
 				var img:FlattenImage = _childs[i];
 				var rect:Rectangle = img.getColorBoundsRect(0xff000000, 0x00000000, false);
@@ -186,15 +189,19 @@ package ru.redspell.rasterizer.flatten {
 					continue;
 				}
 
-				var cropped:FlattenImage = new FlattenImage(rect.width, rect.height, true, 0x00000000);
+				var clipped:FlattenImage = new FlattenImage(rect.width, rect.height, true, 0x00000000);
 
-				cropped.copyPixels(img, rect, new Point(0, 0));
-				cropped.matrix = img.matrix.clone();
-				cropped.matrix.translate(rect.x, rect.y);
-				cropped.name = img.name;
+				clipped.copyPixels(img, rect, new Point(0, 0));
+				clipped.matrix = img.matrix.clone();
+				clipped.matrix.translate(rect.x, rect.y);
+				clipped.name = img.name;
 
-				_childs.splice(i, 1, cropped);
+				_childs.splice(i, 1, clipped);
 				img.dispose();
+
+				if (SHA1.hashBytes(PNGEncoder.encode(clipped)) == '0cda52c1a16a1f57e608f468a082df409280c849') {
+					trace('rect: ' + rect);
+				}
 			}
 		}
 
@@ -202,7 +209,7 @@ package ru.redspell.rasterizer.flatten {
             cleanMasks();
             flatten(obj);
             applyMasks();
-			cropTransparency();
+			clipTransparency();
 
             return this;
         }

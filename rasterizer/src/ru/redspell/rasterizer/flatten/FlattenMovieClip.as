@@ -28,7 +28,7 @@ package ru.redspell.rasterizer.flatten {
 				MovieClipExt.recNextFrame(clip);
 			}
 
-			for each (var frame:FlattenSprite in _frames) {
+			for each (frame in _frames) {
 				trace(frame);
 
 				for each (var img:FlattenImage in frame.childs) {

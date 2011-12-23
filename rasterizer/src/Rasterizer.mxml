@@ -87,7 +87,7 @@
 			status = message;
 
 			if (hide) {
-				setTimeout(function () {
+				setTimeout(function ():void {
 					setStatus('');
 				}, 3000);
 			}

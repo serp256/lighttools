@@ -76,7 +76,7 @@ package ru.redspell.rasterizer.export {
 
 			meta.children = imgs;
 
-			if (obj.label != '') {
+			if (obj.label && obj.label != '') {
 				meta.label = obj.label;
 			}
 
