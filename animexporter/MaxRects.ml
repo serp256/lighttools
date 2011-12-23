@@ -2,7 +2,6 @@
 value max_size = ref 2048;
 value min_size = ref 2048;
 
-
 (* размещаем на одной странице, постепенно увеличивая ее размер *)
 value rec layout_page init_rects rects w h = 
   let init_rects =
@@ -12,36 +11,65 @@ value rec layout_page init_rects rects w h =
     ]
   in
   let () = Printf.printf "Layout page x:%d y:%d w:%d h:%d \n%!" 0 0 w h in
-  let (placed, empty, rest) = TextureLayout.maxrects ~not_rotate:True rects [] init_rects [] in
+  let (placed, empty, rest) = TextureLayout.maxrects rects [] init_rects [] in
   match rest with 
   [ [] -> (w, h, placed, empty,rest) (* разместили все *)
   | _  -> (!max_size, !max_size, [], init_rects, rest)
   ];
 
 (* размещаем на нескольких страницах *)
-value rec layout_multipage rects pages = 
-  let (need_new_page,_,i,placed, pages)  = 
-    List.fold_left begin fun (need,i,res_i,res_placed, res) ((w,h,placed', empty') as page) ->
+value rec layout_multipage name size rects pages = 
+  let (need_new_page,placed,rest, pages)  = 
+    List.fold_left begin fun (need,res_placed,rest',res) ((w,h,placed', empty', rects') as page) ->
       match need with
       [ True -> 
           let (w, h, placed, empty, rest) = layout_page empty' rects w h in
           match rest with
-          [ [] ->  (False, i+1, i, placed, [(w,h, placed' @ placed , empty) :: res])
-          | _ -> (need, i+1, res_i, res_placed, [page :: res ]) 
+          [ [] ->  (False, placed, rest', [(w,h, placed' @ [ (name, placed)] , empty, rects' @ [(name, rects)]) :: res])
+          | _ -> (need, res_placed, rest' @ rest, [page :: res ]) 
           ]
-      | _ -> (need, i+1, res_i,res_placed, [ page :: res ])
+      | _ -> (need, res_placed, rest',[ page :: res ])
       ]
-    end (True,0,0,[], []) pages
+    end (True,[],[],[]) pages
   in
   let pages = List.rev pages in
     match need_new_page with
     [ True -> 
-        let (w, h, placed, empty,rects) = layout_page [] rects !min_size !min_size in
-        (List.length pages, placed, pages @ [ (w,h,placed,empty) ])
-    | _ -> (i, placed, pages)
+        let (w, h, placed, empty, rest) = layout_page [] rects size size in
+        ( placed, rest, pages @ [ (w,h,[(name, placed)],empty, [(name,rects)]) ])
+    | _ -> ( placed, [], pages)
     ];
 
-value layout  ?(pages=[])  rects =
+value rec layout_last_page size init_pages =
+  let rec getLast pages resPages =
+    match pages with
+    [ [] -> assert False
+    | [ p ] -> (p, List.rev resPages)
+    | [ p :: pgs ] -> getLast pgs [p :: resPages]
+    ]
+  in
+  let ((_,_,_,_,rects), pages) = getLast init_pages [] in
+    (
+          let (new_pages, changeSize) = 
+            List.fold_left begin fun (pages,cs) (name,rs) -> 
+              let (_, rest, pages) = layout_multipage name size rs pages in
+              let cs = 
+                match cs with
+                [ False -> False
+                | _ -> rest = []
+                ]
+              in
+              (pages, cs )
+            end ([],True) rects
+          in
+          match changeSize && List.length new_pages < 4 with
+          [ True -> layout_last_page (size / 2) (pages @ new_pages)
+          | _ -> init_pages
+          ]
+    );
+
+value layout ?(pages=[]) name rects =
   (
-    layout_multipage rects pages;
+    TextureLayout.rotate.val := False;
+    layout_multipage name !min_size rects pages;
   );

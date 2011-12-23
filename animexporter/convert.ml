@@ -32,9 +32,7 @@ value write_utf out str=
   );
 
 value inp_dir = "../../mobile-farm/Resources/library";
-(*
 value inp_dir = "input"; 
- *)
 value outdir = "output";
 
 value get_images dir images  =
@@ -110,7 +108,6 @@ value get_images dir images  =
 value convert dir idTex imgs =
   let dir = outdir /// dir in
     (
-      Printf.printf "Convert rects for %s\n%!" dir;
       match Sys.file_exists dir with
       [ False -> Unix.mkdir dir 0o755
       | _ -> ()
@@ -150,33 +147,37 @@ value run () =
 (*  let images = [(0,"pizda", List.fold_left (fun res (_,_,img) ->  res @ img) [] images)] in *)
   let images = List.fast_sort (fun (s1,_,_) (s2,_,_) -> compare s2 s1) images in  
   let textures = List.fold_left begin fun textures  (_,path,images) -> 
-    let (texId, placed, textures) = MaxRects.layout ~pages:textures images in
-      (
-        convert path texId placed;
-        textures;
-      )
+    let () = Printf.printf "Layout %s\n%!" path in
+    let (placed,_, textures) = MaxRects.layout ~pages:textures path images in
+    textures
   end [] images in 
-  BatList.iteri begin fun cnt (w,h,imgs,_) ->
+  let textures = MaxRects.layout_last_page 1024 textures in
+  BatList.iteri begin fun cnt (w,h,imgs,_,_) ->
     let rgb = Rgba32.make w h {Color.color={Color.r=0;g=0;b=0}; alpha=0;} in
     let new_img = Images.Rgba32 rgb in
       (
         Printf.printf "Save %d.png \n%!" cnt;
-        BatList.iteri begin fun i (_,(sx,sy,isRotate,img)) ->
-          let (iw,ih) = Images.size img in
-            try
-              Images.blit img 0 0 new_img sx sy iw ih;
-            with 
-              [ Invalid_argument _ -> 
-                  (
-                    match img with
-                    [ Images.Index8 _ -> prerr_endline "index8"
-                    | Images.Rgb24 _ -> prerr_endline "rgb24"
-                    | Images.Rgba32 _ -> prerr_endline "rgba32"
-                    | _ -> prerr_endline "other"
-                    ];
-                    raise Exit;
-                  )
-              ]
+        List.iter begin fun (path, imgs) -> 
+          (
+            convert path cnt imgs;
+            List.iter begin fun (_,(sx,sy,isRotate,img)) ->
+              let (iw,ih) = Images.size img in
+                try
+                  Images.blit img 0 0 new_img sx sy iw ih;
+                with 
+                  [ Invalid_argument _ -> 
+                      (
+                        match img with
+                        [ Images.Index8 _ -> prerr_endline "index8"
+                        | Images.Rgb24 _ -> prerr_endline "rgb24"
+                        | Images.Rgba32 _ -> prerr_endline "rgba32"
+                        | _ -> prerr_endline "other"
+                        ];
+                        raise Exit;
+                      )
+                  ]
+            end imgs;
+          )
         end imgs;
         Images.save (outdir /// ((string_of_int cnt) ^ ".png")) (Some Images.Png) [] new_img;
       )
