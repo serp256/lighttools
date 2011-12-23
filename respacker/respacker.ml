@@ -858,7 +858,7 @@ value do_work isXml indir =
             | _ -> ()
             ]
           end items;
-          IO.write_byte binout (RefList.length exports);
+          IO.write_ui16 binout (RefList.length exports);
           RefList.iter begin fun (cls,id) ->
             (
               IO.write_string binout cls;
