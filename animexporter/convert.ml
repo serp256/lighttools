@@ -116,7 +116,7 @@ value convert dir idTex imgs =
       let newTexInfo = BatFile.open_out ~mode:[`create ] newTexInfo in
         (
           BatIO.write_ui16 newTexInfo 1;
-          write_utf newTexInfo (".." /// (string_of_int idTex) ^ ".png");
+          write_utf newTexInfo ((string_of_int idTex) ^ ".png");
           BatIO.write_ui16 newTexInfo (List.length imgs);
           BatList.iteri begin fun i (urlId,(sx,sy,isRotate,img)) ->
           (
