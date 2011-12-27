@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<view:ExpandableGrid
+	xmlns:fx="http://ns.adobe.com/mxml/2009"
+	xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	xmlns:view="ru.redspell.rasterizer.views.*"
+	dataTipField="path"
+	showDataTips="true">
+
+	<fx:Script><![CDATA[
+		import mx.collections.IList;
+		import mx.events.FlexNativeMenuEvent;
+
+		import ru.redspell.rasterizer.models.Swf;
+		import ru.redspell.rasterizer.models.SwfsPack;
+
+		import spark.events.GridEvent;
+
+		public static const ADD:String = 'swfsList_add';
+		public static const REMOVE:String = 'swfsList_remove';
+
+		public function menu_itemClickHandler(event:FlexNativeMenuEvent):void {
+			switch (event.item.action) {
+				case ADD:
+					Facade.runCommand(Facade.commandsFactory.getAddSwfsCommand());
+					break;
+			}
+		}
+
+		override public function set dataProvider(value:IList):void {
+			super.dataProvider = value;
+
+			var dp:ArrayCollection = (flexContextMenu as FlexNativeMenu).dataProvider as ArrayCollection;
+
+			dp.source.forEach(function (elem:*, index:int, arr:Array):void { elem.enabled = value != null; });
+			dp.refresh();
+		}
+	]]></fx:Script>
+
+	<view:columns>
+		<s:ArrayCollection>
+			<s:GridColumn
+				width="30"
+				dataField="checked"
+				itemRenderer="ru.redspell.rasterizer.views.CheckboxColumnRenderer"/>
+			<s:GridColumn
+				dataField="name"
+				dataTipField="path"
+				headerText="Swf"
+				itemRenderer="ru.redspell.rasterizer.views.SwfsGridNameRenderer"/>
+		</s:ArrayCollection>
+	</view:columns>
+
+	<view:flexContextMenu>
+		<mx:FlexNativeMenu labelField="label" itemClick="menu_itemClickHandler(event)">
+			<mx:dataProvider>
+				<mx:ArrayCollection>
+					<fx:Object label="Add" action="{ADD}" enabled="false"/>
+				</mx:ArrayCollection>
+			</mx:dataProvider>
+		</mx:FlexNativeMenu>
+	</view:flexContextMenu>
+</view:ExpandableGrid>

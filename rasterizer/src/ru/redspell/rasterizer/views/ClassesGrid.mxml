@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<s:DataGrid
+	xmlns:fx="http://ns.adobe.com/mxml/2009"
+	xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx">
+
+	<fx:Script><![CDATA[
+		import mx.collections.IList;
+
+		override public function set dataProvider(value:IList):void {
+			super.dataProvider = value;
+		}
+	]]></fx:Script>
+
+	<s:columns>
+		<s:ArrayCollection>
+			<s:GridColumn
+				width="30"
+				dataField="checked"
+				itemRenderer="ru.redspell.rasterizer.views.CheckboxColumnRenderer"/>
+			<s:GridColumn headerText="Class" dataField="name"/>
+			<s:GridColumn
+				headerText="Anim."
+				dataField="animated"
+				width="55"
+				itemRenderer="ru.redspell.rasterizer.views.CheckboxColumnRenderer"/>
+			<s:GridColumn
+				width="80"
+				itemRenderer="ru.redspell.rasterizer.views.PreviewColumnRenderer"/>
+		</s:ArrayCollection>
+	</s:columns>
+</s:DataGrid>

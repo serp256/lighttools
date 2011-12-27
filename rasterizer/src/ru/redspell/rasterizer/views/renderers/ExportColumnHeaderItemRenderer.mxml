@@ -5,7 +5,7 @@
 	<fx:Script><![CDATA[
 		import mx.collections.ArrayList;
 
-		import ru.redspell.rasterizer.ui.ClassesDataGrid;
+		import ru.redspell.rasterizer.views.ClassesDataGrid;
 
 		import ru.redspell.rasterizer.utils.ClassesGridItemData;
 
@@ -14,7 +14,7 @@
 		protected function checkAll_changeHandler(event:Event):void {
 			(grid.dataGrid as ClassesDataGrid).checkAll(checkAll.selected);
 		}
-	]]></fx:Script>
+		]]></fx:Script>
 
 	<s:Rect id="shadow" left="-1" right="-1" top="-1" bottom="-1" radiusX="2">
 		<s:fill>

@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<s:GridItemRenderer
+	xmlns:fx="http://ns.adobe.com/mxml/2009"
+	xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx">
+
+	<fx:Script><![CDATA[
+		import mx.events.FlexNativeMenuEvent;
+
+		import ru.redspell.rasterizer.models.SwfsPack;
+
+		protected function menu_itemClickHandler(event:FlexNativeMenuEvent):void {
+			switch (event.item.action) {
+				case PacksList.REMOVE:
+					Facade.runCommand(Facade.commandsFactory.getRemovePackCommand(data as SwfsPack));
+					break;
+
+				default:
+					(grid.dataGrid as PacksList).menu_itemClickHandler(event);
+			}
+		}
+		]]></fx:Script>
+
+	<s:HGroup width="100%" height="100%">
+		<s:Label id="labelDisplay" width="100%" height="100%" paddingBottom="5" paddingLeft="7" paddingRight="7" paddingTop="9"/>
+	</s:HGroup>
+
+	<s:flexContextMenu>
+		<mx:FlexNativeMenu labelField="label" itemClick="menu_itemClickHandler(event)">
+			<mx:dataProvider>
+				<mx:ArrayCollection>
+					<fx:Object label="Add" action="{PacksList.ADD}"/>
+					<fx:Object label="Remove" action="{PacksList.REMOVE}"/>
+				</mx:ArrayCollection>
+			</mx:dataProvider>
+		</mx:FlexNativeMenu>
+	</s:flexContextMenu>
+</s:GridItemRenderer>

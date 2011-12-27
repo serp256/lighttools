@@ -5,7 +5,7 @@
 	<fx:Script><![CDATA[
 		import mx.collections.ArrayList;
 
-		import ru.redspell.rasterizer.ui.renderers.ExportColumnHeaderItemRenderer;
+		import ru.redspell.rasterizer.views.renderers.ExportColumnHeaderItemRenderer;
 		import ru.redspell.rasterizer.utils.ClassesGridItemData;
 
 		public function checkAll(check:Boolean):void {

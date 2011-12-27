@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<s:TitleWindow
+	xmlns:fx="http://ns.adobe.com/mxml/2009"
+	xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	width="350"
+	height="125"
+	initialize="init()">
+
+	<fx:Script><![CDATA[
+		import ru.nazarov.asmvc.command.ICommandError;
+
+		protected var _error:ICommandError;
+
+		protected function init():void {
+			refresh();
+		}
+
+		protected function refresh():void {
+			if (_error && (message != null)) {
+				title = 'Error #' + _error.getCode();
+				message.text = _error.getCommand() + ': ' + _error.getMessage();
+			}
+		}
+
+		public function set error(value:ICommandError):void {
+			_error = value;
+			refresh();
+		}
+	]]></fx:Script>
+
+	<s:Label id="message" width="100%" height="100%" paddingBottom="5" paddingLeft="5" paddingRight="5" paddingTop="5" textAlign="center" verticalAlign="middle"/>
+</s:TitleWindow>

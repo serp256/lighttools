@@ -8,11 +8,9 @@
 
 		import ru.redspell.rasterizer.flatten.FlattenMovieClip;
 		import ru.redspell.rasterizer.flatten.FlattenSprite;
-
 		import ru.redspell.rasterizer.flatten.IFlatten;
-
-		import ru.redspell.rasterizer.ui.PreviewWindow;
 		import ru.redspell.rasterizer.utils.ClassesGridItemData;
+		import ru.redspell.rasterizer.views.PreviewWindow;
 
 		import spark.components.WindowedApplication;
 

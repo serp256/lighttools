@@ -3,7 +3,7 @@
 	xmlns:mx="library://ns.adobe.com/flex/mx">
 
 	<fx:Script><![CDATA[
-		import ru.redspell.rasterizer.ui.ClassesDataGrid;
+		import ru.redspell.rasterizer.views.ClassesDataGrid;
 		import ru.redspell.rasterizer.utils.ClassesGridItemData;
 
 		protected function chckbox_changeHandler(event:Event):void {

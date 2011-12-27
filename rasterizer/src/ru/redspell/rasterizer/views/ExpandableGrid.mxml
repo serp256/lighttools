@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<s:DataGrid
+	xmlns:fx="http://ns.adobe.com/mxml/2009"
+	xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	xmlns:view="ru.redspell.rasterizer.views.*"
+	gridClick="gridClickHandler(event)">
+
+	<fx:Script><![CDATA[
+		import mx.collections.ArrayCollection;
+		import mx.collections.IList;
+		import mx.events.CollectionEvent;
+		import mx.events.CollectionEventKind;
+
+		import spark.components.DataGrid;
+		import spark.events.GridEvent;
+
+		protected var _expandList:DataGrid;
+
+		protected function gridClickHandler(event:GridEvent):void {
+			if (_expandList && (event.rowIndex > -1)) {
+				_expandList.dataProvider = dataProvider.getItemAt(event.rowIndex) as IList;
+			}
+		}
+
+		public function set expandList(value:DataGrid):void {
+			_expandList = value;
+		}
+
+		public function scrollTo(data:Object):void {
+			var dp:ArrayCollection = dataProvider as ArrayCollection;
+			var index:int = dp.getItemIndex(data);
+
+			if (index > -1) {
+				ensureCellIsVisible(index, 0);
+			}
+		}
+
+		protected function dp_collectionChangeHandler(event:CollectionEvent):void {
+			var items:Array = event.items;
+			var lastItem:Object = items[items.length - 1];
+
+			switch (event.kind) {
+				case CollectionEventKind.ADD:
+					scrollTo(lastItem);
+					break;
+
+				case CollectionEventKind.REMOVE:
+					if (_expandList && (_expandList.dataProvider == lastItem)) {
+						_expandList.dataProvider = null;
+					}
+
+					break;
+			}
+		}
+
+		override public function set dataProvider(value:IList):void {
+			if (_expandList) {
+				_expandList.dataProvider = null;
+			}
+
+			if (value) {
+				value.addEventListener(CollectionEvent.COLLECTION_CHANGE, dp_collectionChangeHandler);
+			}
+
+			super.dataProvider = value;
+		}
+	]]></fx:Script>
+</s:DataGrid>

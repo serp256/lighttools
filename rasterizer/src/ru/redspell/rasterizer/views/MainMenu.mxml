@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<mx:MenuBar
+	xmlns:fx="http://ns.adobe.com/mxml/2009"
+	xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	width="100%"
+	itemClick="itemClickHandler(event)">
+
+	<fx:Script><![CDATA[
+		import mx.events.MenuEvent;
+
+		public static const NEW:String = 'mainMenu_new';
+		public static const OPEN:String = 'mainMenu_open';
+		public static const SAVE:String = 'mainMenu_save';
+
+		protected function itemClickHandler(event:MenuEvent):void {
+			switch (event.item.action) {
+				case NEW:
+					Facade.runCommand(Facade.commandsFactory.getNewProjectCommand());
+					break;
+
+				case OPEN:
+					Facade.runCommand(Facade.commandsFactory.getOpenProjectCommand());
+					break;
+
+				case SAVE:
+					Facade.runCommand(Facade.commandsFactory.getSaveProjectCommand());
+					break;
+			}
+		}
+	]]></fx:Script>
+
+	<mx:dataProvider>
+		<fx:Object label="File">
+			<fx:children>
+				<fx:Array>
+					<fx:Object label="New" action="{NEW}"/>
+					<fx:Object label="Open" action="{OPEN}"/>
+					<fx:Object label="Save" action="{SAVE}"/>
+				</fx:Array>
+			</fx:children>
+		</fx:Object>
+	</mx:dataProvider>
+</mx:MenuBar>
