@@ -42,7 +42,8 @@
 			<s:GridColumn
 				width="30"
 				dataField="checked"
-				itemRenderer="ru.redspell.rasterizer.views.CheckboxColumnRenderer"/>
+				itemRenderer="ru.redspell.rasterizer.views.CheckboxColumnRenderer"
+				showDataTips="false"/>
 			<s:GridColumn
 				dataField="name"
 				dataTipField="path"

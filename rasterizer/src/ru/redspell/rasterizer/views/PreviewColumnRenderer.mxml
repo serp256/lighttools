@@ -9,14 +9,13 @@
 		import ru.redspell.rasterizer.flatten.FlattenMovieClip;
 		import ru.redspell.rasterizer.flatten.FlattenSprite;
 		import ru.redspell.rasterizer.flatten.IFlatten;
-		import ru.redspell.rasterizer.utils.ClassesGridItemData;
-		import ru.redspell.rasterizer.views.PreviewWindow;
+		import ru.redspell.rasterizer.models.SwfClass;
 
 		import spark.components.WindowedApplication;
 
 		protected function showPreview():void {
 			var previewWin:PreviewWindow = new PreviewWindow();
-			var src:DisplayObject = new (data as ClassesGridItemData).cls();
+			var src:DisplayObject = new (data as SwfClass).definition();
 			var flatten:IFlatten = src is MovieClip ? new FlattenMovieClip() : new FlattenSprite();
 
 			PopUpManager.addPopUp(previewWin, (FlexGlobals.topLevelApplication as WindowedApplication), true);

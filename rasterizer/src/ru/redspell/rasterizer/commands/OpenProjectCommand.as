@@ -2,13 +2,14 @@ package ru.redspell.rasterizer.commands {
 	import flash.events.Event;
 	import flash.filesystem.File;
 	import flash.net.FileFilter;
+	import flash.utils.setTimeout;
 
 	import ru.nazarov.binstore.BinStore;
 	import ru.nazarov.binstore.IBinStore;
 	import ru.redspell.rasterizer.utils.Config;
 
 	public class OpenProjectCommand extends InitProjectCommand {
-		protected function projFile_selectHandler(event:Event):void {
+		protected function openProject(event:Event):void {
 			var projFile:File = event.target as File;
 
 			var store:IBinStore = new BinStore();
@@ -20,6 +21,13 @@ package ru.redspell.rasterizer.commands {
 
 			initProject(Facade.serializersFactory.getProjectSerializer().deserialize(store.getChunkAt(0).bytes), projDir, swfsDir, outDir);
 			Facade.app.setLock(false);
+
+			Facade.app.setStatus('project opened', true);
+		}
+
+		protected function projFile_selectHandler(event:Event):void {
+			Facade.app.setStatus('opening project...', false, true);
+			setTimeout(openProject, Config.STATUS_REFRESH_TIME, event);
 		}
 
 		override public function unsafeExecute():void {

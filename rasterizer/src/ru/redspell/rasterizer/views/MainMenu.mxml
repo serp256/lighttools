@@ -12,6 +12,7 @@
 		public static const NEW:String = 'mainMenu_new';
 		public static const OPEN:String = 'mainMenu_open';
 		public static const SAVE:String = 'mainMenu_save';
+		public static const EXPORT:String = 'mainMenu_export';
 
 		protected function itemClickHandler(event:MenuEvent):void {
 			switch (event.item.action) {
@@ -26,6 +27,10 @@
 				case SAVE:
 					Facade.runCommand(Facade.commandsFactory.getSaveProjectCommand());
 					break;
+
+				case EXPORT:
+					Facade.runCommand(Facade.commandsFactory.getExportCommand(Facade.proj));
+					break;
 			}
 		}
 	]]></fx:Script>
@@ -37,6 +42,7 @@
 					<fx:Object label="New" action="{NEW}"/>
 					<fx:Object label="Open" action="{OPEN}"/>
 					<fx:Object label="Save" action="{SAVE}"/>
+					<fx:Object label="Export" action="{EXPORT}"/>
 				</fx:Array>
 			</fx:children>
 		</fx:Object>

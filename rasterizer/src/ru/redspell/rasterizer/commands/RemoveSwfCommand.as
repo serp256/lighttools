@@ -1,4 +1,6 @@
 package ru.redspell.rasterizer.commands {
+	import flash.filesystem.File;
+
 	import ru.nazarov.asmvc.command.AbstractCommand;
 	import ru.redspell.rasterizer.models.Swf;
 
@@ -10,6 +12,12 @@ package ru.redspell.rasterizer.commands {
 		}
 
 		override public function unsafeExecute():void {
+			var swfFile:File = Facade.projSwfsDir.resolvePath(_swf.path);
+
+			if (swfFile.exists) {
+				swfFile.deleteFile();
+			}
+
 			_swf.pack.removeSwf(_swf);
 		}
 	}

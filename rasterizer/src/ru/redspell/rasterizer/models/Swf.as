@@ -41,6 +41,8 @@ package ru.redspell.rasterizer.models {
 					addItem(Facade.projFactory.getSwfClass(appDomain.getDefinition(className) as Class, className));
 				}
 			}
+
+			dispatchEvent(new Event(Event.COMPLETE));
 		}
 
 		public function loadClasses(useGetDefinitions:Boolean = true):void {

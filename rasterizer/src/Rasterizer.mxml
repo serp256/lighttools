@@ -6,11 +6,13 @@
 	xmlns:mx="library://ns.adobe.com/flex/mx"
 	title="Rasterizer"
 	width="800"
-	height="300"
-	initialize="init()">
+	height="450"
+	initialize="init()"
+	addedToStage="addedToStageHandler(event)">
 
 	<fx:Script><![CDATA[
 		import mx.core.IFlexDisplayObject;
+		import mx.managers.FocusManager;
 		import mx.managers.PopUpManager;
 
 		import ru.nazarov.asmvc.command.ICommandError;
@@ -180,12 +182,25 @@
 		 }
 		 */
 
+		protected function addedToStageHandler(event:Event):void {
+			stage.addEventListener(KeyboardEvent.KEY_DOWN, stage_keyDownHandler);
+		}
+
 		protected function init():void {
 			Facade.runCommand(Facade.commandsFactory.getInitCommand());
 		}
 
 		public function setLock(lock:Boolean):void {
 			rootGroup.enabled = !lock;
+		}
+
+		public function setStatus(status:String, hide:Boolean = false, lock:Boolean = false):void {
+			statusText.text = status;
+			setLock(lock);
+
+			if (hide) {
+				setTimeout(setStatus, 3000, '', false);
+			}
 		}
 
 		protected function popup_closeHandler(event:Event):void {
@@ -208,7 +223,29 @@
 			errorWin.error = error;
 			showPopup(errorWin);
 		}
-		]]></fx:Script>
+
+		protected function stage_keyDownHandler(event:KeyboardEvent):void {
+			if (event.ctrlKey) {
+				switch (event.keyCode) {
+					case Keyboard.N:
+						Facade.runCommand(Facade.commandsFactory.getNewProjectCommand());
+						break;
+
+					case Keyboard.O:
+						Facade.runCommand(Facade.commandsFactory.getOpenProjectCommand());
+						break;
+
+					case Keyboard.S:
+						Facade.runCommand(Facade.commandsFactory.getSaveProjectCommand());
+						break;
+
+					case Keyboard.E:
+						Facade.runCommand(Facade.commandsFactory.getExportCommand(Facade.proj));
+						break;
+				}
+			}
+		}
+	]]></fx:Script>
 
 	<s:VGroup width="100%" height="100%">
 		<view:MainMenu/>

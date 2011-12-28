@@ -5,14 +5,17 @@
 	xmlns:mx="library://ns.adobe.com/flex/mx">
 
 	<fx:Script><![CDATA[
+		import mx.binding.utils.BindingUtils;
+		import mx.events.CollectionEvent;
+		import mx.events.FlexEvent;
 		import mx.events.FlexNativeMenuEvent;
+
+		import ru.redspell.rasterizer.models.SwfsPack;
+
+		import spark.components.DataGrid;
 
 		public static const CHECK_ALL:String = 'checkboxColumnRenderer_checkAll';
 		public static const UNCHECK_ALL:String = 'checkboxColumnRenderer_uncheckAll';
-
-		protected function checked_changeHandler(event:Event):void {
-			data[column.dataField] = checked.selected;
-		}
 
 		protected function menu_menuShowHandler(event:FlexNativeMenuEvent):void {
 			var dp:ArrayCollection = grid.dataGrid.dataProvider as ArrayCollection;
@@ -36,17 +39,25 @@
 
 		protected function menu_itemClickHandler(event:FlexNativeMenuEvent):void {
 			var dp:ArrayCollection = grid.dataGrid.dataProvider as ArrayCollection;
+			var dataGrid:DataGrid = grid.dataGrid;
+			var chkboxVal:Boolean = event.item.action == CHECK_ALL;
 
 			for each (var item:Object in dp.source) {
-				item[column.dataField] = event.item.action == CHECK_ALL;
+				item[column.dataField] = chkboxVal;
 			}
 
 			dp.refresh();
 		}
+
+		public function set dataFieldValue(value:Boolean):void {
+			data[column.dataField] = value;
+		}
 	]]></fx:Script>
 
+	<fx:Binding source="checked.selected" destination="dataFieldValue"/>
+
 	<s:HGroup width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
-		<s:CheckBox id="checked" selected="{data[column.dataField]}" change="checked_changeHandler(event)"/>
+		<s:CheckBox id="checked" selected="{data[column.dataField]}"/>
 	</s:HGroup>
 
 	<s:flexContextMenu>

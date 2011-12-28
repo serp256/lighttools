@@ -1,6 +1,7 @@
 package ru.redspell.rasterizer.commands {
 	import flash.events.Event;
 	import flash.filesystem.File;
+	import flash.utils.setTimeout;
 
 	import mx.collections.IList;
 
@@ -10,7 +11,7 @@ package ru.redspell.rasterizer.commands {
 	import ru.redspell.rasterizer.utils.Config;
 
 	public class NewProjectCommand extends InitProjectCommand {
-		protected function projDir_selectHandler(event:Event):void {
+		protected function createProject(event:Event):void {
 			var projDir:File = event.target as File;
 
 			if (projDir.exists && projDir.isDirectory) {
@@ -27,7 +28,12 @@ package ru.redspell.rasterizer.commands {
 			outDir.createDirectory();
 
 			initProject(proj, projDir, swfsDir, outDir);
-			Facade.app.setLock(false);
+			Facade.runCommand(Facade.commandsFactory.getSaveProjectCommand(null, 'project created'));
+		}
+
+		protected function projDir_selectHandler(event:Event):void {
+			Facade.app.setStatus('creating project...', false, true);
+			setTimeout(createProject, Config.STATUS_REFRESH_TIME, event);
 		}
 
 		override public function unsafeExecute():void {

@@ -1,8 +1,10 @@
 package ru.redspell.rasterizer.factories {
 	import ru.redspell.rasterizer.commands.*;
 	import ru.nazarov.asmvc.command.ICommand;
+	import ru.redspell.rasterizer.models.Project;
 	import ru.redspell.rasterizer.models.Swf;
 	import ru.redspell.rasterizer.models.SwfsPack;
+	import ru.redspell.rasterizer.utils.Config;
 
 	public class CommandsFactory {
 		public function getNewProjectCommand():ICommand {
@@ -13,8 +15,9 @@ package ru.redspell.rasterizer.factories {
 			return new OpenProjectCommand();
 		}
 
-		public function getSaveProjectCommand():ICommand {
-			return new SaveProjectCommand();
+		public function getSaveProjectCommand(beforeStatus:String = null, afterStatus:String = null):ICommand {
+			return new SaveProjectCommand(beforeStatus ? beforeStatus : Config.DEFAULT_BEFORE_SAVE_STATUS,
+				afterStatus ? afterStatus : Config.DEFAULT_AFTER_SAVE_STATUS);
 		}
 
 		public function getInitCommand():ICommand {
@@ -35,6 +38,10 @@ package ru.redspell.rasterizer.factories {
 
 		public function getRemoveSwfCommand(swf:Swf):ICommand {
 			return new RemoveSwfCommand(swf);
+		}
+
+		public function getExportCommand(proj:Project):ICommand {
+			return new ExportCommand(proj);
 		}
 	}
 }

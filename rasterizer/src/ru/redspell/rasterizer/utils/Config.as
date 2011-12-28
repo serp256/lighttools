@@ -7,5 +7,8 @@ package ru.redspell.rasterizer.utils {
 		public static const DEFAULT_OUT_DIR:String = 'out';
 		public static const ENDIAN:String = Endian.BIG_ENDIAN;
 		public static const PROJECT_FILE_EXT:String = '.rst';
+		public static const STATUS_REFRESH_TIME:Number = 100;
+		public static const DEFAULT_BEFORE_SAVE_STATUS:String = 'saving project...';
+		public static const DEFAULT_AFTER_SAVE_STATUS:String = 'project saved';
 	}
 }
