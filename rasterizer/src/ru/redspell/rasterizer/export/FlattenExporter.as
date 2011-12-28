@@ -12,40 +12,7 @@ package ru.redspell.rasterizer.export {
 	import ru.redspell.rasterizer.flatten.FlattenMovieClip;
 	import ru.redspell.rasterizer.flatten.FlattenSprite;
 
-	public class Exporter {
-		protected var _dir:File;
-
-		public function Exporter(path:Object) {
-			if (path is File) {
-				_dir = path as File;
-			} else if (path is String) {
-				_dir = new File(String(path));
-			} else {
-				throw new Error('Expected path as flash.filesystem.File or String');
-			}
-		}
-
-		protected function getDir(className:String):File {
-			var dir:File = _dir.resolvePath(className);
-
-			if (dir.exists) {
-				dir.isDirectory ? dir.deleteDirectory(true) : dir.deleteFile();
-			}
-
-			dir.createDirectory();
-
-			return dir;
-		}
-
-		protected function writeMeta(dir:File, meta:Object):void {
-			var metaFile:File = new File(dir.resolvePath('meta.json').nativePath);
-			var fs:FileStream = new FileStream();
-
-			fs.open(metaFile, FileMode.WRITE);
-			fs.writeUTFBytes(JSON.encode(meta));
-			fs.close();
-		}
-
+	public class FlattenExporter extends BaseExporter implements IExporter {
 		protected function exportSprite(obj:FlattenSprite, className:String, dir:File = null, write:Boolean = true):Object {
 			var meta:Object = { type:'sprite' };
 			var imgs:Array = [];
@@ -87,7 +54,7 @@ package ru.redspell.rasterizer.export {
 			return meta;
 		}
 
-		public function export(obj:Object, className:String):void {
+		override public function export(obj:Object, className:String):IExporter {
 			var dir:File = getDir(className);
 
 			if (obj is FlattenSprite) {
@@ -105,6 +72,8 @@ package ru.redspell.rasterizer.export {
 			} else {
 				throw new Error('Expected obj as FlattenSprite or FlattenMovieClip');
 			}
+
+			return this;
 		}
 	}
 }

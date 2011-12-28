@@ -6,7 +6,9 @@ package ru.redspell.rasterizer.commands {
 
 	import ru.nazarov.asmvc.command.AbstractCommand;
 	import ru.nazarov.asmvc.command.CommandError;
-	import ru.redspell.rasterizer.export.Exporter;
+	import ru.redspell.rasterizer.export.FlattenExporter;
+	import ru.redspell.rasterizer.export.IExporter;
+	import ru.redspell.rasterizer.export.StaticExporter;
 	import ru.redspell.rasterizer.flatten.FlattenMovieClip;
 	import ru.redspell.rasterizer.flatten.FlattenSprite;
 	import ru.redspell.rasterizer.flatten.IFlatten;
@@ -45,7 +47,8 @@ package ru.redspell.rasterizer.commands {
 			var flatten:IFlatten = instance is MovieClip ? new FlattenMovieClip() : new FlattenSprite();
 
 			try {
-				(new Exporter(_packDir)).export(flatten.fromDisplayObject(instance), clsName);
+				var exporter:IExporter = cls.animated ? new FlattenExporter() : new StaticExporter();
+				exporter.setPath(_packDir).export(cls.animated ? flatten.fromDisplayObject(instance) : instance, clsName);
 			} catch (e:Error) {
 				var errorText:String = e.errorID + ': ' + e.message;
 				Facade.app.reportError(CommandError.create(e, String(this)));
