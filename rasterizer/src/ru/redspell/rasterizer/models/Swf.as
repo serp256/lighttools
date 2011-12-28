@@ -12,12 +12,14 @@ package ru.redspell.rasterizer.models {
 
 	public class Swf extends ArrayCollection {
 		public var path:String;
-		public var checked:Boolean = true;
+		public var checked:Boolean;
+		public var animated:Boolean;
 		public var pack:SwfsPack;
 		protected var _useGetDefinitions:Boolean;
 
 		public function addClass(cls:SwfClass):void {
 			addItem(cls);
+			cls.swf = this;
 		}
 
 		public function removeClass(cls:SwfClass):void {
@@ -25,6 +27,7 @@ package ru.redspell.rasterizer.models {
 
 			if (index > -1) {
 				removeItemAt(index);
+				cls.swf = null;
 			}
 		}
 
@@ -38,7 +41,7 @@ package ru.redspell.rasterizer.models {
 					(cls as SwfClass).definition = appDomain.getDefinition(cls.name) as Class;
 				} else {
 					var className:String = String(cls);
-					addItem(Facade.projFactory.getSwfClass(appDomain.getDefinition(className) as Class, className));
+					addClass(Facade.projFactory.getSwfClass(appDomain.getDefinition(className) as Class, className));
 				}
 			}
 

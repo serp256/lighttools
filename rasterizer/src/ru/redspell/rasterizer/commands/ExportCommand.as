@@ -44,11 +44,14 @@ package ru.redspell.rasterizer.commands {
 			clsDir.createDirectory();
 
 			var instance:DisplayObject = new cls.definition();
+			var animated:Boolean = cls.animated && cls.swf.animated;
+
 			var flatten:IFlatten = instance is MovieClip ? new FlattenMovieClip() : new FlattenSprite();
+			flatten.fromDisplayObject(instance)
 
 			try {
-				var exporter:IExporter = cls.animated ? new FlattenExporter() : new StaticExporter();
-				exporter.setPath(_packDir).export(cls.animated ? flatten.fromDisplayObject(instance) : instance, clsName);
+				var exporter:IExporter = new FlattenExporter();
+				exporter.setPath(_packDir).export(!animated && (flatten is FlattenMovieClip) ? (flatten as FlattenMovieClip).frames[0] : flatten, clsName);
 			} catch (e:Error) {
 				var errorText:String = e.errorID + ': ' + e.message;
 				Facade.app.reportError(CommandError.create(e, String(this)));

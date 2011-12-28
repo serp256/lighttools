@@ -49,6 +49,12 @@
 				dataTipField="path"
 				headerText="Swf"
 				itemRenderer="ru.redspell.rasterizer.views.SwfsGridNameRenderer"/>
+			<s:GridColumn
+				dataField="animated"
+				showDataTips="false"
+				headerText="Anim."
+				itemRenderer="ru.redspell.rasterizer.views.CheckboxColumnRenderer"
+				width="55"/>
 		</s:ArrayCollection>
 	</view:columns>
 
