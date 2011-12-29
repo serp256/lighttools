@@ -198,10 +198,6 @@ package ru.redspell.rasterizer.flatten {
 
 				_childs.splice(i, 1, clipped);
 				img.dispose();
-
-				if (SHA1.hashBytes(PNGEncoder.encode(clipped)) == '0cda52c1a16a1f57e608f468a082df409280c849') {
-					trace('rect: ' + rect);
-				}
 			}
 		}
 

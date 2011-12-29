@@ -9,9 +9,11 @@ package ru.redspell.rasterizer.factories {
 			return new Project();
 		}
 
-		public function getSwfPack(name:String):SwfsPack {
+		public function getSwfPack(name:String, checked:Boolean = true):SwfsPack {
 			var instance:SwfsPack = new SwfsPack();
+
 			instance.name = name;
+			instance.checked = checked;
 
 			return instance;
 		}

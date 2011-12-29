@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<view:ExpandableGrid
+	xmlns:fx="http://ns.adobe.com/mxml/2009"
+	xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	xmlns:view="ru.redspell.rasterizer.views.*"
+	editable="true">
+
+	<fx:Script><![CDATA[
+		import mx.collections.IList;
+		import mx.events.FlexNativeMenuEvent;
+
+		import ru.redspell.rasterizer.models.Project;
+		import ru.redspell.rasterizer.models.SwfsPack;
+
+		import spark.events.GridEvent;
+
+		public static const ADD:String = 'packsList_add';
+		public static const REMOVE:String = 'packsList_remove';
+
+		public function menu_itemClickHandler(event:FlexNativeMenuEvent):void {
+			switch (event.item.action) {
+				case ADD:
+					Facade.runCommand(Facade.commandsFactory.getAddPackCommand());
+					break;
+			}
+		}
+	]]></fx:Script>
+
+	<view:columns>
+		<mx:ArrayCollection>
+			<s:GridColumn
+				width="30"
+				dataField="checked"
+				itemRenderer="ru.redspell.rasterizer.views.CheckboxColumnRenderer"
+				editable="false"/>
+			<s:GridColumn
+				dataField="name"
+				headerText="Pack"
+				itemRenderer="ru.redspell.rasterizer.views.PackNameRenderer"/>
+		</mx:ArrayCollection>
+	</view:columns>
+
+	<view:flexContextMenu>
+		<mx:FlexNativeMenu labelField="label" itemClick="menu_itemClickHandler(event)">
+			<mx:dataProvider>
+				<mx:ArrayCollection>
+					<fx:Object label="Add" action="{ADD}"/>
+				</mx:ArrayCollection>
+			</mx:dataProvider>
+		</mx:FlexNativeMenu>
+	</view:flexContextMenu>
+</view:ExpandableGrid>

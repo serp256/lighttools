@@ -18,11 +18,13 @@ package ru.redspell.rasterizer.serializers {
 
 			for each (var pack:SwfsPack in proj.source) {
 				binary.writeUTF(pack.name);
+				binary.writeBoolean(pack.checked);
 				binary.writeUnsignedInt(pack.length);
 
 				for each (var swf:Swf in pack) {
 					binary.writeUTF(swf.path);
 					binary.writeBoolean(swf.checked);
+					binary.writeBoolean(swf.animated);
 					binary.writeUnsignedInt(swf.length);
 
 					for each (var cls:SwfClass in swf) {
@@ -44,11 +46,11 @@ package ru.redspell.rasterizer.serializers {
 			var packsNum:uint = binary.readUnsignedInt();
 
 			for (var i:uint = 0; i < packsNum; i++) {
-				var pack:SwfsPack = factory.getSwfPack(binary.readUTF());
+				var pack:SwfsPack = factory.getSwfPack(binary.readUTF(), binary.readBoolean());
 				var swfsNum:uint = binary.readUnsignedInt();
 
 				for (var j:uint = 0; j < swfsNum; j++) {
-					var swf:Swf = factory.getSwf(binary.readUTF(), binary.readBoolean());
+					var swf:Swf = factory.getSwf(binary.readUTF(), binary.readBoolean(), binary.readBoolean());
 					var classesNum:uint = binary.readUnsignedInt();
 
 					for (var k:uint = 0; k < classesNum; k++) {

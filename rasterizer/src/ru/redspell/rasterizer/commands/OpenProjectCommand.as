@@ -20,8 +20,6 @@ package ru.redspell.rasterizer.commands {
 			var outDir:File = projDir.resolvePath(Config.DEFAULT_OUT_DIR);
 
 			initProject(Facade.serializersFactory.getProjectSerializer().deserialize(store.getChunkAt(0).bytes), projDir, swfsDir, outDir);
-			Facade.app.setLock(false);
-
 			Facade.app.setStatus('project opened', true);
 		}
 

@@ -103,7 +103,11 @@ package ru.redspell.rasterizer.commands {
 					_packDir.createDirectory();
 				}
 
-				exportNextSwf();
+				if (_pack.checked) {
+					exportNextSwf();
+				} else {
+					exportNextPack();
+				}
 			} else {
 				Facade.app.setStatus('Export complete', true);
 			}
@@ -111,6 +115,10 @@ package ru.redspell.rasterizer.commands {
 
 		protected function calcTotalClassesNum():void {
 			for each (var pack:SwfsPack in _proj) {
+				if (!pack.checked) {
+					continue;
+				}
+
 				for each (var swf:Swf in pack) {
 					if (!swf.checked) {
 						continue;
