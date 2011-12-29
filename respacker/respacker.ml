@@ -58,6 +58,7 @@ type item = [= `image of texinfo | `sprite of children | `clip of DynArray.t fra
 type iteminfo = (int * item);
 
 value items : DynArray.t iteminfo = DynArray.create ();
+value exports: RefList.t (string*int) = RefList.empty ();
 
 exception Not_equal;
 
@@ -340,10 +341,11 @@ value remove_unused_images () =
       | _ -> ()
       ]
     done;
+    let in_exports id = RefList.exists (fun (_,iid) -> iid = id) exports in
     for i = 0 to DynArray.length items - 1 do
       match DynArray.get items i with
       [ (id,`image _) -> 
-        match HSet.mem imgUsage id with
+        match HSet.mem imgUsage id || in_exports id with
         [ False ->
           let () = Printf.printf "remove unused img: %d\n%!" id in
           Hashtbl.remove images id
@@ -595,7 +597,6 @@ value make_clip_commands () =
 value outdir = ref "output";
 
 value do_work isXml indir =
-  let exports = RefList.empty () in
   (
     Array.iter begin fun fl ->
       let dirname = indir // fl in
