@@ -1,12 +1,10 @@
 <?xml version="1.0"?>
-<view:GridBaseList
+<view:ExpandableGrid
 	xmlns:fx="http://ns.adobe.com/mxml/2009"
 	xmlns:s="library://ns.adobe.com/flex/spark"
 	xmlns:mx="library://ns.adobe.com/flex/mx"
 	xmlns:view="ru.redspell.rasterizer.views.*"
-	itemRenderer="ru.redspell.rasterizer.views.PacksListRenderer"
-	editable="true"
-	dataField="name">
+	editable="true">
 
 	<fx:Script><![CDATA[
 		import mx.collections.IList;
@@ -27,11 +25,21 @@
 					break;
 			}
 		}
-
-		override public function set dataProvider(value:IList):void {
-			super.dataProvider = value;
-		}
 	]]></fx:Script>
+
+	<view:columns>
+		<mx:ArrayCollection>
+			<s:GridColumn
+				width="30"
+				dataField="checked"
+				itemRenderer="ru.redspell.rasterizer.views.CheckboxColumnRenderer"
+				editable="false"/>
+			<s:GridColumn
+				dataField="name"
+				headerText="Pack"
+				itemRenderer="ru.redspell.rasterizer.views.PackNameRenderer"/>
+		</mx:ArrayCollection>
+	</view:columns>
 
 	<view:flexContextMenu>
 		<mx:FlexNativeMenu labelField="label" itemClick="menu_itemClickHandler(event)">
@@ -42,4 +50,4 @@
 			</mx:dataProvider>
 		</mx:FlexNativeMenu>
 	</view:flexContextMenu>
-</view:GridBaseList>
+</view:ExpandableGrid>

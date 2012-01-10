@@ -11,12 +11,12 @@
 
 		protected function menu_itemClickHandler(event:FlexNativeMenuEvent):void {
 			switch (event.item.action) {
-				case PacksList.REMOVE:
+				case PacksGrid.REMOVE:
 					Facade.runCommand(Facade.commandsFactory.getRemovePackCommand(data as SwfsPack));
 					break;
 
 				default:
-					(grid.dataGrid as PacksList).menu_itemClickHandler(event);
+					(grid.dataGrid as PacksGrid).menu_itemClickHandler(event);
 			}
 		}
 		]]></fx:Script>
@@ -29,8 +29,8 @@
 		<mx:FlexNativeMenu labelField="label" itemClick="menu_itemClickHandler(event)">
 			<mx:dataProvider>
 				<mx:ArrayCollection>
-					<fx:Object label="Add" action="{PacksList.ADD}"/>
-					<fx:Object label="Remove" action="{PacksList.REMOVE}"/>
+					<fx:Object label="Add" action="{PacksGrid.ADD}"/>
+					<fx:Object label="Remove" action="{PacksGrid.REMOVE}"/>
 				</mx:ArrayCollection>
 			</mx:dataProvider>
 		</mx:FlexNativeMenu>

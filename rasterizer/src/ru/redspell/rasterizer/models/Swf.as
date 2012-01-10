@@ -2,6 +2,7 @@ package ru.redspell.rasterizer.models {
 	import flash.display.Loader;
 	import flash.display.LoaderInfo;
 	import flash.events.Event;
+	import flash.events.IOErrorEvent;
 	import flash.filesystem.File;
 	import flash.net.URLRequest;
 	import flash.system.ApplicationDomain;
@@ -48,11 +49,23 @@ package ru.redspell.rasterizer.models {
 			dispatchEvent(new Event(Event.COMPLETE));
 		}
 
+		protected function loader_ioErrorHandler(event:IOErrorEvent):void {
+
+		}
+
 		public function loadClasses(useGetDefinitions:Boolean = true):void {
 			var loader:Loader = new Loader();
 
 			_useGetDefinitions = useGetDefinitions;
-			loader.contentLoaderInfo.addEventListener(Event.COMPLETE, loader_completeHandler)
+			loader.contentLoaderInfo.addEventListener(Event.COMPLETE, loader_completeHandler);
+
+			var f:File = new File(path);
+
+			if (!f.exists) {
+				trace('(new File(path)).url): ' + f.url);
+			}
+
+			loader.addEventListener(IOErrorEvent.IO_ERROR, loader_ioErrorHandler);
 			loader.load(new URLRequest((new File(path)).url));
 		}
 

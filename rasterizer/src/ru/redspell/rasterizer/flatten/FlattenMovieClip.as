@@ -10,8 +10,6 @@ package ru.redspell.rasterizer.flatten {
         protected var _curFrame:int = 0;
 
         public function fromDisplayObject(obj:DisplayObject):IFlatten {
-			trace('fromDisplayObject call');
-
 			var clip:MovieClip = obj as MovieClip;
 
 			if (!clip) {

@@ -4,6 +4,7 @@ package ru.redspell.rasterizer.models {
 	public class SwfsPack extends ArrayCollection {
 		public var name:String;
 		public var proj:Project;
+		public var checked:Boolean;
 
 		public function addSwf(swf:Swf):void {
 			swf.pack = this;
