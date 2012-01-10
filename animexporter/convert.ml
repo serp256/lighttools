@@ -32,12 +32,13 @@ value write_utf out str=
   );
 
 value inp_dir = "../../mobile-farm/Resources/library";
-value inp_dir = "input"; 
-value outdir = "output";
+value inp_dir = ref "input"; 
+value outdir = ref "output";
+value gen_pvr = ref False;
 
 value get_images dir images  =
-  let texInfo = inp_dir /// dir /// texInfo in
-  let frameInfo =BatFile.open_in (inp_dir /// dir /// "frames.dat") in 
+  let texInfo = !inp_dir /// dir /// texInfo in
+  let frameInfo =BatFile.open_in (!inp_dir /// dir /// "frames.dat") in 
   let rec getLayers cnt layers =
     match cnt with
     [ 0 -> layers 
@@ -92,7 +93,7 @@ value get_images dir images  =
     match countTex with
     [ 0 -> (s,dir, images)
     | _ ->
-        let name = inp_dir /// dir /// read_utf texInfo in
+        let name = !inp_dir /// dir /// read_utf texInfo in
         let () = Printf.printf "Try open %s\n%!" name in
         let texture = Images.load name [] in 
         let count = BatIO.read_ui16 texInfo in
@@ -106,15 +107,17 @@ value get_images dir images  =
     );
 
 value convert dir idTex imgs =
-  let dir = outdir /// dir in
+  let res_dir = !outdir /// dir in
     (
-      match Sys.file_exists dir with
-      [ False -> Unix.mkdir dir 0o755
+      match Sys.file_exists res_dir with
+      [ False -> Unix.mkdir res_dir 0o755
       | _ -> ()
       ];
-      let newTexInfo = dir /// "texInfo.dat" in
+      let newTexInfo = res_dir /// "texInfo.dat" in
       let newTexInfo = BatFile.open_out ~mode:[`create ] newTexInfo in
         (
+          ignore(Sys.command (Printf.sprintf "cp -f %s/%s/animations.dat %s" !inp_dir dir res_dir));
+          ignore(Sys.command (Printf.sprintf "cp -f %s/%s/frames.dat %s" !inp_dir dir res_dir));
           BatIO.write_ui16 newTexInfo 1;
           write_utf newTexInfo ((string_of_int idTex) ^ ".png");
           BatIO.write_ui16 newTexInfo (List.length imgs);
@@ -135,14 +138,15 @@ value convert dir idTex imgs =
       );
     
 value run () =
+  let _ = Sys.command (Printf.sprintf "cp -f %s/info_objects.xml %s" !inp_dir !outdir) in
   let images = 
     Array.fold_left begin fun images path -> 
       let () = Printf.printf "try convert %s\n%!" path in 
-      match Sys.is_directory (inp_dir /// path) with
+      match Sys.is_directory (!inp_dir /// path) with
       [ True -> get_images path images
       | _ -> images 
       ]
-    end [] (Sys.readdir inp_dir)
+    end [] (Sys.readdir !inp_dir)
   in
 (*  let images = [(0,"pizda", List.fold_left (fun res (_,_,img) ->  res @ img) [] images)] in *)
   let images = List.fast_sort (fun (s1,_,_) (s2,_,_) -> compare s2 s1) images in  
@@ -179,7 +183,14 @@ value run () =
             end imgs;
           )
         end imgs;
-        Images.save (outdir /// ((string_of_int cnt) ^ ".png")) (Some Images.Png) [] new_img;
+        let save_img = !outdir /// (string_of_int cnt) in
+          (
+            Images.save (save_img ^ ".png") (Some Images.Png) [] new_img;
+            match !gen_pvr with
+            [ True -> ignore(Sys.command (Printf.sprintf "PVRTexTool -fOGLPVRTC4 -i%s.png -o %s.pvr" save_img save_img))
+            | _ -> ()
+            ]
+          );
       )
   end textures;
 
@@ -187,6 +198,17 @@ value run () =
 value () = convert "an_chicken_ex";
 *)
 
-value () = run ();
+value () =
+  (
+    Arg.parse 
+      [
+        ("-inp",Arg.Set_string inp_dir,"input directory");
+        ("-o",Arg.Set_string outdir, "output directory");
+        ("-pvr",Arg.Set gen_pvr,"generate pvr file")
+      ]
+      (fun _ -> ())
+      "";
+    run ();
+  );
 
 
