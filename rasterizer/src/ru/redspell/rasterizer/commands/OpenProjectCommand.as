@@ -6,6 +6,8 @@ package ru.redspell.rasterizer.commands {
 
 	import ru.nazarov.binstore.BinStore;
 	import ru.nazarov.binstore.IBinStore;
+	import ru.redspell.rasterizer.models.Swf;
+	import ru.redspell.rasterizer.models.SwfsPack;
 	import ru.redspell.rasterizer.utils.Config;
 
 	public class OpenProjectCommand extends InitProjectCommand {
@@ -16,10 +18,17 @@ package ru.redspell.rasterizer.commands {
 			store.read(projFile, Config.ENDIAN);
 
 			var projDir:File = projFile.parent;
-			var swfsDir:File = projDir.resolvePath(Config.DEFAULT_OUT_DIR);
+			var swfsDir:File = projDir.resolvePath(Config.DEFAULT_SWFS_DIR);
 			var outDir:File = projDir.resolvePath(Config.DEFAULT_OUT_DIR);
 
 			initProject(Facade.serializersFactory.getProjectSerializer().deserialize(store.getChunkAt(0).bytes), projDir, swfsDir, outDir);
+
+			for each (var pack:SwfsPack in Facade.proj) {
+				for each (var swf:Swf in pack) {
+					swf.loadClasses(Facade.projSwfsDir, false);
+				}
+			}
+
 			Facade.app.setStatus('project opened', true);
 		}
 

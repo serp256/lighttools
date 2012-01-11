@@ -68,7 +68,7 @@ package ru.redspell.rasterizer.commands {
 				var cls:SwfClass = _swf.getItemAt(_clsIdx) as SwfClass;
 
 				if (cls.checked) {
-					Facade.app.setStatus('Exporting pack ' + _pack.name + ' swf ' + _swf.name + ' class ' + cls.name + ' (' + _classesExported + '/' + _classesTotal + ')', false, true);
+					Facade.app.setStatus('Exporting pack ' + _pack.name + ' swf ' + _swf.path + ' class ' + cls.name + ' (' + _classesExported + '/' + _classesTotal + ')', false, true);
 					setTimeout(exportClass, Config.STATUS_REFRESH_TIME, cls);
 				} else {
 					exportNextSwf();

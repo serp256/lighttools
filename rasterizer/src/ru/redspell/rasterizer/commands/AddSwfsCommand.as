@@ -29,7 +29,7 @@ package ru.redspell.rasterizer.commands {
 
 				swfFile.copyTo(dst, true);
 				swf.addEventListener(Event.COMPLETE, swf_completeHandler);
-				swf.loadClasses();
+				swf.loadClasses(Facade.projSwfsDir);
 
 				(Facade.app.packsList.selectedItem as SwfsPack).addSwf(swf);
 

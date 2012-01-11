@@ -1,4 +1,5 @@
 package ru.redspell.rasterizer.serializers {
+	import flash.filesystem.File;
 	import flash.utils.ByteArray;
 
 	import ru.redspell.rasterizer.factories.ProjectFactory;
@@ -58,7 +59,6 @@ package ru.redspell.rasterizer.serializers {
 						swf.addClass(cls);
 					}
 
-					swf.loadClasses(false);
 					pack.addSwf(swf);
 				}
 

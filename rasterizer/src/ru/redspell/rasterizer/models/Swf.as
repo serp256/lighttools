@@ -4,6 +4,7 @@ package ru.redspell.rasterizer.models {
 	import flash.events.Event;
 	import flash.events.IOErrorEvent;
 	import flash.filesystem.File;
+	import flash.filesystem.File;
 	import flash.net.URLRequest;
 	import flash.system.ApplicationDomain;
 
@@ -50,31 +51,20 @@ package ru.redspell.rasterizer.models {
 		}
 
 		protected function loader_ioErrorHandler(event:IOErrorEvent):void {
-
 		}
 
-		public function loadClasses(useGetDefinitions:Boolean = true):void {
+		public function loadClasses(swfsDir:File, useGetDefinitions:Boolean = true):void {
 			var loader:Loader = new Loader();
 
 			_useGetDefinitions = useGetDefinitions;
 			loader.contentLoaderInfo.addEventListener(Event.COMPLETE, loader_completeHandler);
 
-			var f:File = new File(path);
-
-			if (!f.exists) {
-				trace('(new File(path)).url): ' + f.url);
-			}
-
 			loader.addEventListener(IOErrorEvent.IO_ERROR, loader_ioErrorHandler);
-			loader.load(new URLRequest((new File(path)).url));
+			loader.load(new URLRequest(swfsDir.resolvePath(path).url));
 		}
 
 		public function get classes():Array {
 			return source;
-		}
-
-		public function get name():String {
-			return (new File(path)).name;
 		}
 	}
 }
