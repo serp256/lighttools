@@ -187,7 +187,7 @@ value run () =
           (
             Images.save (save_img ^ ".png") (Some Images.Png) [] new_img;
             match !gen_pvr with
-            [ True -> ignore(Sys.command (Printf.sprintf "PVRTexTool -fOGLPVRTC4 -i%s.png -o %s.pvr" save_img save_img))
+            [ True -> ignore(Sys.command (Printf.sprintf "PVRTexTool -yflip0 -fOGLPVRTC4 -i%s.png -o %s.pvr" save_img save_img))
             | _ -> ()
             ]
           );
@@ -204,7 +204,8 @@ value () =
       [
         ("-inp",Arg.Set_string inp_dir,"input directory");
         ("-o",Arg.Set_string outdir, "output directory");
-        ("-pvr",Arg.Set gen_pvr,"generate pvr file")
+        ("-pvr",Arg.Set gen_pvr,"generate pvr file");
+        ("-p",Arg.Set_int TextureLayout.countEmptyPixels, "count Empty pixels between images");
       ]
       (fun _ -> ())
       "";

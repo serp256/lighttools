@@ -15,7 +15,7 @@ value rotate = ref True;
 
 type ltype = [= `vert | `hor | `rand | `maxrect ];
 
-value countEmptyPixels = 2;
+value countEmptyPixels = ref 2;
 
 value point_in_rect x y rect =
   (x>= rect.x) && (y >= rect.y) && (x <= rect.x + rect.w) && (y <= rect.y + rect.h);
@@ -29,7 +29,7 @@ value rect_in_rect rect2 rect1 =
 value calc_subrect rect bound result =
   let str = ref "" in
   let rects =  
-    let bx = bound.x - countEmptyPixels in
+    let bx = bound.x - !countEmptyPixels in
     match rect.x < bx && bound.x <= rect.x + rect.w && ((bound.y >= rect.y && bound.y <= rect.y + rect.h) || (bound.y < rect.y && bound.y + bound.h > rect.y)) with (*left rect *)
     [ True -> 
         (
@@ -40,7 +40,7 @@ value calc_subrect rect bound result =
     ]
   in
   let rects =
-    let by = bound.y - countEmptyPixels in
+    let by = bound.y - !countEmptyPixels in
     match rect.y < by && bound.y <= rect.y + rect.h && ((bound.x >= rect.x && bound.x <= rect.x + rect.w) || (bound.x < rect.x && bound.x + bound.w > rect.x))   with (* top rect *)
     [ True ->
         (
@@ -51,7 +51,7 @@ value calc_subrect rect bound result =
     ]
   in
   let rects =
-    let x = bound.x + bound.w + countEmptyPixels
+    let x = bound.x + bound.w + !countEmptyPixels
     and rect_right = rect.x + rect.w 
     in
     match rect_right > x && bound.x + bound.w >= rect.x && ((bound.y >= rect.y && bound.y <= rect.y + rect.h) || (bound.y < rect.y && bound.y + bound.h > rect.y)) with (* right rect *)
@@ -63,7 +63,7 @@ value calc_subrect rect bound result =
     | _ -> rects
     ]
   in
-  let y = bound.y + bound.h + countEmptyPixels
+  let y = bound.y + bound.h + !countEmptyPixels
   and rect_bottom = rect.y + rect.h 
   in
   let rects =
@@ -151,17 +151,17 @@ value rec maxrects rects placed empty unfit =
                 | _ -> (rh,rw)
                 ]
               in
-              let y = c.y + rh + countEmptyPixels in
+              let y = c.y + rh + !countEmptyPixels in
               let rect1 = 
                 match y < c.y + c.h with
-                [ True -> Some {x = c.x; y = y; w = c.w; h = c.h - rh - countEmptyPixels; isRotate = False } 
+                [ True -> Some {x = c.x; y = y; w = c.w; h = c.h - rh - !countEmptyPixels; isRotate = False } 
                 | _ -> None
                 ]
               in
-              let x = c.x + rw + countEmptyPixels in
+              let x = c.x + rw + !countEmptyPixels in
               let rect2 = 
                 match x < c.x + c.w with
-                [ True -> Some { x; y = c.y; w = c.w - rw - countEmptyPixels; h = c.h; isRotate = False  }
+                [ True -> Some { x; y = c.y; w = c.w - rw - !countEmptyPixels; h = c.h; isRotate = False  }
                 | _ -> None
                 ]
               in
@@ -305,13 +305,13 @@ value rec tryLayout ~type_rects rects placed empty unfit =
               match type_rects with
               [ `vert ->
                   [
-                    { x = c.x; y = c.y + rh + countEmptyPixels; w = rw; h = c.h - rh - countEmptyPixels; isRotate = False  };
-                    { x = c.x + rw + countEmptyPixels; y = c.y; w = c.w - rw - countEmptyPixels; h = c.h; isRotate = False  }
+                    { x = c.x; y = c.y + rh + !countEmptyPixels; w = rw; h = c.h - rh - !countEmptyPixels; isRotate = False  };
+                    { x = c.x + rw + !countEmptyPixels; y = c.y; w = c.w - rw - !countEmptyPixels; h = c.h; isRotate = False  }
                   ]
               | `hor -> 
                   [
-                    { x = c.x; y = c.y + rh + countEmptyPixels; w = c.w; h = c.h - rh - countEmptyPixels; isRotate = False  };
-                    { x = c.x + rw + countEmptyPixels; y = c.y; w = c.w - rw - countEmptyPixels; h = rh; isRotate = False  }
+                    { x = c.x; y = c.y + rh + !countEmptyPixels; w = c.w; h = c.h - rh - !countEmptyPixels; isRotate = False  };
+                    { x = c.x + rw + !countEmptyPixels; y = c.y; w = c.w - rw - !countEmptyPixels; h = rh; isRotate = False  }
                   ]
               ]
             in 
