@@ -13,40 +13,91 @@
 		import ru.redspell.rasterizer.models.SwfsPack;
 
 		import spark.components.DataGrid;
+		import spark.components.gridClasses.GridSelectionMode;
 
 		public static const CHECK_ALL:String = 'checkboxColumnRenderer_checkAll';
 		public static const UNCHECK_ALL:String = 'checkboxColumnRenderer_uncheckAll';
+		public static const CHECK_SELECTION:String = 'checkboxColumnRenderer_checkSelection';
+		public static const UNCHECK_SELECTION:String = 'checkboxColumnRenderer_uncheckSelection';
 
 		protected function menu_menuShowHandler(event:FlexNativeMenuEvent):void {
 			var dp:ArrayCollection = grid.dataGrid.dataProvider as ArrayCollection;
 			var menuDp:ArrayCollection = (flexContextMenu as FlexNativeMenu).dataProvider as ArrayCollection;
-			var checkAllItem:Object = menuDp.getItemAt(0);
+			var chkAllItem:Object = menuDp.getItemAt(0);
+			var checkAll:Boolean = false;
 
 			for each (var item:Object in dp.source) {
 				if (!item[column.dataField]) {
-					checkAllItem.label = 'Check all';
-					checkAllItem.action = CHECK_ALL;
-					menuDp.refresh();
-
-					return;
+					checkAll = true;
+					break;
 				}
 			}
 
-			checkAllItem.label = 'Uncheck all';
-			checkAllItem.action = UNCHECK_ALL;
+			if (checkAll) {
+				chkAllItem.label = 'Check all';
+				chkAllItem.action = CHECK_ALL;
+			} else {
+				chkAllItem.label = 'Uncheck all';
+				chkAllItem.action = UNCHECK_ALL;
+			}
+
+			var dataGrd:DataGrid = grid.dataGrid;
+
+			if (dataGrd.selectionMode == GridSelectionMode.MULTIPLE_ROWS) {
+				if (menuDp.length < 2) {
+					var chkSltnItem:Object = {};
+					menuDp.addItem(chkSltnItem);
+				} else {
+					chkSltnItem = menuDp.getItemAt(1);
+				}
+
+				var checkSelection:Boolean = false;
+
+				for each (var item:Object in dataGrd.selectedItems) {
+					if (!item[column.dataField]) {
+						checkSelection = true;
+						break;
+					}
+				}
+
+				if (checkSelection) {
+					chkSltnItem.label = 'Check selection';
+					chkSltnItem.action = CHECK_SELECTION;
+				} else {
+					chkSltnItem.label = 'Uncheck selection';
+					chkSltnItem.action = UNCHECK_SELECTION;
+				}
+			} else if (menuDp.length > 1) {
+				menuDp.removeItemAt(1);
+			}
+
 			menuDp.refresh();
 		}
 
 		protected function menu_itemClickHandler(event:FlexNativeMenuEvent):void {
-			var dp:ArrayCollection = grid.dataGrid.dataProvider as ArrayCollection;
 			var dataGrid:DataGrid = grid.dataGrid;
-			var chkboxVal:Boolean = event.item.action == CHECK_ALL;
+			var dp:ArrayCollection = grid.dataGrid.dataProvider as ArrayCollection;
 
-			for each (var item:Object in dp.source) {
+			if (event.item.action == CHECK_ALL || event.item.action == UNCHECK_ALL) {
+				var items:Array = dp.source;
+				var chkboxVal:Boolean = event.item.action == CHECK_ALL;
+			} else {
+				items = [];
+				chkboxVal = event.item.action == CHECK_SELECTION;
+
+				for each (var sltnItem:Object in dataGrid.selectedItems) {
+					items.push(sltnItem);
+				}
+			}
+
+			for each (var item:Object in items) {
 				item[column.dataField] = chkboxVal;
 			}
 
+			var selection:Vector.<Object> = dataGrid.selectedItems;
+
 			dp.refresh();
+			dataGrid.selectedItems = selection;
 		}
 
 		public function set dataFieldValue(value:Boolean):void {
@@ -64,6 +115,7 @@
 		<mx:FlexNativeMenu labelField="label" menuShow="menu_menuShowHandler(event)" itemClick="menu_itemClickHandler(event)">
 			<mx:dataProvider>
 				<mx:ArrayCollection>
+					<fx:Object/>
 					<fx:Object/>
 				</mx:ArrayCollection>
 			</mx:dataProvider>

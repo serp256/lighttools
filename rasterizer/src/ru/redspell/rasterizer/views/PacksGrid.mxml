@@ -4,7 +4,8 @@
 	xmlns:s="library://ns.adobe.com/flex/spark"
 	xmlns:mx="library://ns.adobe.com/flex/mx"
 	xmlns:view="ru.redspell.rasterizer.views.*"
-	editable="true">
+	editable="true"
+	selectionMode="multipleRows">
 
 	<fx:Script><![CDATA[
 		import mx.collections.IList;

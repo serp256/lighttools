@@ -4,8 +4,7 @@
 	xmlns:s="library://ns.adobe.com/flex/spark"
 	xmlns:mx="library://ns.adobe.com/flex/mx"
 	xmlns:view="ru.redspell.rasterizer.views.*"
-	dataTipField="path"
-	showDataTips="true">
+	selectionMode="multipleRows">
 
 	<fx:Script><![CDATA[
 		import mx.collections.IList;
@@ -45,13 +44,11 @@
 				itemRenderer="ru.redspell.rasterizer.views.CheckboxColumnRenderer"
 				showDataTips="false"/>
 			<s:GridColumn
-				dataField="name"
-				dataTipField="path"
+				dataField="path"
 				headerText="Swf"
 				itemRenderer="ru.redspell.rasterizer.views.SwfsGridNameRenderer"/>
 			<s:GridColumn
 				dataField="animated"
-				showDataTips="false"
 				headerText="Anim."
 				itemRenderer="ru.redspell.rasterizer.views.CheckboxColumnRenderer"
 				width="55"/>
