@@ -9,14 +9,25 @@
 
 		import ru.redspell.rasterizer.models.Swf;
 
+		import spark.components.DataGrid;
+
 		public function menu_itemClickHandler(event:FlexNativeMenuEvent):void {
+			var dataGrid:DataGrid = grid.dataGrid;
+
 			switch (event.item.action) {
 				case SwfsGrid.REMOVE:
-					Facade.runCommand(Facade.commandsFactory.getRemoveSwfCommand(data as Swf));
+					if (dataGrid.selectedItems) {
+						for each (var swf:Object in dataGrid.selectedItems) {
+							Facade.runCommand(Facade.commandsFactory.getRemoveSwfCommand(swf as Swf));
+						}
+					} else {
+						Facade.runCommand(Facade.commandsFactory.getRemoveSwfCommand(data as Swf));
+					}
+
 					break;
 
 				default:
-					(grid.dataGrid as SwfsGrid).menu_itemClickHandler(event);
+					(dataGrid as SwfsGrid).menu_itemClickHandler(event);
 			}
 		}
 	]]></fx:Script>
