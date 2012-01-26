@@ -39,6 +39,10 @@ package ru.redspell.rasterizer.flatten {
 			return this;
         }
 
+		public function get curFrame():uint {
+			return _curFrame;
+		}
+
         public function nextFrame():void {
             _curFrame = ++_curFrame % _frames.length;
             render();

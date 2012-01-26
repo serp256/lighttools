@@ -16,13 +16,13 @@
 
 			switch (event.item.action) {
 				case SwfsGrid.REMOVE:
-					if (dataGrid.selectedItems) {
-						for each (var swf:Object in dataGrid.selectedItems) {
-							Facade.runCommand(Facade.commandsFactory.getRemoveSwfCommand(swf as Swf));
-						}
-					} else {
-						Facade.runCommand(Facade.commandsFactory.getRemoveSwfCommand(data as Swf));
-					}
+								if (dataGrid.selectedItems) {
+									for each (var swf:Object in dataGrid.selectedItems) {
+										Facade.runCommand(Facade.commandsFactory.getRemoveSwfCommand(swf as Swf));
+									}
+								} else {
+									Facade.runCommand(Facade.commandsFactory.getRemoveSwfCommand(data as Swf));
+								}
 
 					break;
 

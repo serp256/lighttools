@@ -15,6 +15,7 @@
 		}
 
 		protected function timerHandler(event:TimerEvent):void {
+			trace('frame: ' + (_obj as FlattenMovieClip).curFrame + ' ' + ((_obj as FlattenMovieClip).getChildAt(0) as DisplayObjectContainer).numChildren);
 			(_obj as FlattenMovieClip).nextFrame();
 		}
 
@@ -22,7 +23,7 @@
 			PopUpManager.removePopUp(this);
 			_obj.dispose();
 			_timer.stop();
-		}
+										}
 
 		public function preview(obj:IFlatten):void {
 			_obj = obj;

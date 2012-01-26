@@ -33,7 +33,7 @@ package ru.redspell.rasterizer.export {
 				}
 
 				imgs.push({
-					//name:img.name,
+					name:img.name,
 					x:img.matrix.tx,
 					y:img.matrix.ty,
 					type:'image',
