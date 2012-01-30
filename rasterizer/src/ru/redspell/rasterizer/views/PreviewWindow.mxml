@@ -49,7 +49,39 @@
 				_timer.start();
 			}
 		}
+
+		protected function switchFrame(next:Boolean = true):void {
+			if (_timer.running) {
+				playBtn.label = 'play';
+				_timer.stop();
+			}
+
+			if (next) {
+				(_obj as FlattenMovieClip).nextFrame();
+			} else {
+				(_obj as FlattenMovieClip).prevFrame();
+			}
+		}
+
+		protected function togglePlay():void {
+			if (_timer.running) {
+				playBtn.label = 'play';
+				_timer.stop();
+			} else {
+				playBtn.label = 'stop';
+				_timer.start();
+			}
+		}
 	]]></fx:Script>
 
 	<s:SpriteVisualElement id="container"/>
+
+	<s:HGroup width="100%" height="100%" verticalAlign="bottom" horizontalAlign="center" paddingBottom="5">
+		<s:HGroup>
+			<s:Button click="switchFrame(false)" label="prev"/>
+			<s:Button click="togglePlay()" id="playBtn" label="stop"/>
+			<s:Button click="switchFrame()" label="next"/>
+		</s:HGroup>
+	</s:HGroup>
+
 </s:TitleWindow>
