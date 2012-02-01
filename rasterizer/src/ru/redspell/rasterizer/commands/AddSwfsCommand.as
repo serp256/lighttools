@@ -25,7 +25,7 @@ package ru.redspell.rasterizer.commands {
 		protected function loadSwfs(event:FileListEvent):void {
 			for each (var swfFile:File in event.files) {
 				var dst:File = Facade.projSwfsDir.resolvePath(swfFile.name);
-				var swf:Swf = Facade.projFactory.getSwf(dst.nativePath);
+				var swf:Swf = Facade.projFactory.getSwf(dst.name);
 
 				swfFile.copyTo(dst, true);
 				swf.addEventListener(Event.COMPLETE, swf_completeHandler);

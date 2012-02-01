@@ -16,13 +16,13 @@
 
 			switch (event.item.action) {
 				case SwfsGrid.REMOVE:
-								if (dataGrid.selectedItems) {
-									for each (var swf:Object in dataGrid.selectedItems) {
-										Facade.runCommand(Facade.commandsFactory.getRemoveSwfCommand(swf as Swf));
-									}
-								} else {
-									Facade.runCommand(Facade.commandsFactory.getRemoveSwfCommand(data as Swf));
-								}
+					if (dataGrid.selectedItems) {
+						for each (var swf:Object in dataGrid.selectedItems) {
+							Facade.runCommand(Facade.commandsFactory.getRemoveSwfCommand(swf as Swf));
+						}
+					} else {
+						Facade.runCommand(Facade.commandsFactory.getRemoveSwfCommand(data as Swf));
+					}
 
 					break;
 
@@ -33,7 +33,7 @@
 	]]></fx:Script>
 
 	<s:HGroup width="100%" height="100%">
-		<s:Label id="labelDisplay" width="100%" height="100%" paddingBottom="5" paddingLeft="7" paddingRight="7" paddingTop="9"/>
+		<s:Label id="labelDisplay" maxDisplayedLines="1" width="100%" height="100%" paddingBottom="5" paddingLeft="7" paddingRight="7" paddingTop="9"/>
 	</s:HGroup>
 
 	<s:flexContextMenu>

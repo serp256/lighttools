@@ -51,7 +51,14 @@ package ru.redspell.rasterizer.serializers {
 				var swfsNum:uint = binary.readUnsignedInt();
 
 				for (var j:uint = 0; j < swfsNum; j++) {
-					var swf:Swf = factory.getSwf(binary.readUTF(), binary.readBoolean(), binary.readBoolean());
+					var name:String = binary.readUTF();
+
+					try {
+						name = (new File(name)).name
+					} catch (e:Error) {
+					}
+
+					var swf:Swf = factory.getSwf(name, binary.readBoolean(), binary.readBoolean());
 					var classesNum:uint = binary.readUnsignedInt();
 
 					for (var k:uint = 0; k < classesNum; k++) {

@@ -1,5 +1,6 @@
 package ru.redspell.rasterizer.commands {
 	import flash.display.DisplayObject;
+	import flash.display.DisplayObjectContainer;
 	import flash.display.MovieClip;
 	import flash.filesystem.File;
 	import flash.utils.setTimeout;
@@ -17,6 +18,7 @@ package ru.redspell.rasterizer.commands {
 	import ru.redspell.rasterizer.models.SwfClass;
 	import ru.redspell.rasterizer.models.SwfsPack;
 	import ru.redspell.rasterizer.utils.Config;
+	import ru.redspell.rasterizer.utils.Utils;
 
 	public class ExportCommand extends AbstractCommand {
 		protected var _packIdx:int = -1;
@@ -46,12 +48,15 @@ package ru.redspell.rasterizer.commands {
 			var instance:DisplayObject = new cls.definition();
 			var animated:Boolean = cls.animated && cls.swf.animated;
 
-			var flatten:IFlatten = instance is MovieClip ? new FlattenMovieClip() : new FlattenSprite();
+			Utils.traceObj(instance as DisplayObjectContainer);
+
+			var flatten:IFlatten = (instance is MovieClip) && animated ? new FlattenMovieClip() : new FlattenSprite();
 			flatten.fromDisplayObject(instance)
 
 			try {
 				var exporter:IExporter = new FlattenExporter();
-				exporter.setPath(_packDir).export(!animated && (flatten is FlattenMovieClip) ? (flatten as FlattenMovieClip).frames[0] : flatten, clsName);
+				//exporter.setPath(_packDir).export(!animated && (flatten is FlattenMovieClip) ? (flatten as FlattenMovieClip).frames[0] : flatten, clsName);
+				exporter.setPath(_packDir).export(flatten, clsName);
 			} catch (e:Error) {
 				var errorText:String = e.errorID + ': ' + e.message;
 				Facade.app.reportError(CommandError.create(e, String(this)));

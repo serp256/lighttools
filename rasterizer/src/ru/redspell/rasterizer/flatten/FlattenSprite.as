@@ -96,6 +96,13 @@ package ru.redspell.rasterizer.flatten {
                 var masked:FlattenImage = m as FlattenImage;
                 var mask:FlattenImage = _masks[_masked[masked]];
 
+				trace('mask: ' + mask);
+				trace('masked: ' + masked);
+
+				if (mask == null || masked == null) {
+					continue;
+				}
+
                 var maskedRect:Rectangle = new Rectangle(Math.round(masked.matrix.tx), Math.round(masked.matrix.ty), masked.width, masked.height);
                 var maskRect:Rectangle = new Rectangle(Math.round(mask.matrix.tx), Math.round(mask.matrix.ty), mask.width, mask.height);
                 var intersect:Rectangle = maskedRect.intersection(maskRect);
@@ -181,11 +188,16 @@ package ru.redspell.rasterizer.flatten {
         }
 
 		protected function clipTransparency():void {
-			for (var i:uint = 0; i < _childs.length; i++) {
+			var i:uint = 0;
+
+			while (i < _childs.length) {
 				var img:FlattenImage = _childs[i];
 				var rect:Rectangle = img.getColorBoundsRect(0xff000000, 0x00000000, false);
 
+				trace(SHA1.hashBytes(PNGEncoder.encode(img)) + ' ' + rect);
+
 				if (rect.isEmpty()) {
+					_childs.splice(i, 1);
 					continue;
 				}
 
@@ -196,7 +208,7 @@ package ru.redspell.rasterizer.flatten {
 				clipped.matrix.translate(rect.x, rect.y);
 				clipped.name = img.name;
 
-				_childs.splice(i, 1, clipped);
+				_childs.splice(i++, 1, clipped);
 				img.dispose();
 			}
 		}

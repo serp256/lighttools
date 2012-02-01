@@ -16,14 +16,18 @@
 
 		protected function timerHandler(event:TimerEvent):void {
 			trace('frame: ' + (_obj as FlattenMovieClip).curFrame + ' ' + ((_obj as FlattenMovieClip).getChildAt(0) as DisplayObjectContainer).numChildren);
-			(_obj as FlattenMovieClip).nextFrame();
+
+			var fmc:FlattenMovieClip = _obj as FlattenMovieClip;
+
+			fmc.nextFrame();
+			frameLbl.text = 'frame: ' + fmc.curFrame;
 		}
 
 		protected function closeHandler():void {
 			PopUpManager.removePopUp(this);
 			_obj.dispose();
 			_timer.stop();
-										}
+		}
 
 		public function preview(obj:IFlatten):void {
 			_obj = obj;
@@ -56,14 +60,20 @@
 				_timer.stop();
 			}
 
+			var fmc:FlattenMovieClip = _obj as FlattenMovieClip;
+
 			if (next) {
-				(_obj as FlattenMovieClip).nextFrame();
+				fmc.nextFrame();
 			} else {
-				(_obj as FlattenMovieClip).prevFrame();
+				fmc.prevFrame();
 			}
+
+			frameLbl.text = 'frame: ' + fmc.curFrame;
 		}
 
 		protected function togglePlay():void {
+			var fmc:FlattenMovieClip = _obj as FlattenMovieClip;
+
 			if (_timer.running) {
 				playBtn.label = 'play';
 				_timer.stop();
@@ -76,12 +86,13 @@
 
 	<s:SpriteVisualElement id="container"/>
 
-	<s:HGroup width="100%" height="100%" verticalAlign="bottom" horizontalAlign="center" paddingBottom="5">
+	<s:VGroup width="100%" height="100%" verticalAlign="bottom" horizontalAlign="center" paddingBottom="5">
 		<s:HGroup>
 			<s:Button click="switchFrame(false)" label="prev"/>
 			<s:Button click="togglePlay()" id="playBtn" label="stop"/>
 			<s:Button click="switchFrame()" label="next"/>
 		</s:HGroup>
-	</s:HGroup>
+		<s:Label id="frameLbl"/>
+	</s:VGroup>
 
 </s:TitleWindow>
