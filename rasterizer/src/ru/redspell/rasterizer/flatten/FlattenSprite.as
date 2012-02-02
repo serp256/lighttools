@@ -18,7 +18,7 @@ package ru.redspell.rasterizer.flatten {
 
 		public var label:String = '';
 
-		protected var _childs:Vector.<FlattenImage> = new Vector.<FlattenImage>();
+		protected var _childs:Vector.<IFlatten> = new Vector.<IFlatten>();
         protected var _masks:Object = {};
         protected var _masked:Dictionary = new Dictionary();
 
@@ -163,6 +163,15 @@ package ru.redspell.rasterizer.flatten {
 
                 mtx.concat(matrix);
 
+				if (!/^instance[\d]+$/.test(obj.name)) {
+					var box:FlattenSprite = new FlattenSprite();
+
+					box.name = obj.name;
+					box.transform.matrix = mtx.clone();
+
+					_childs.push(box);
+				}
+
                 for (var i:uint = 0; i < container.numChildren; i++) {
                     flatten(container.getChildAt(i), mtx, clr, fltrs);
                 }
@@ -191,10 +200,14 @@ package ru.redspell.rasterizer.flatten {
 			var i:uint = 0;
 
 			while (i < _childs.length) {
-				var img:FlattenImage = _childs[i];
-				var rect:Rectangle = img.getColorBoundsRect(0xff000000, 0x00000000, false);
+				var img:FlattenImage = _childs[i] as FlattenImage;
 
-				trace(SHA1.hashBytes(PNGEncoder.encode(img)) + ' ' + rect);
+				if (!img) {
+					i++;
+					continue;
+				}
+
+				var rect:Rectangle = img.getColorBoundsRect(0xff000000, 0x00000000, false);
 
 				if (rect.isEmpty()) {
 					_childs.splice(i, 1);
@@ -222,13 +235,15 @@ package ru.redspell.rasterizer.flatten {
             return this;
         }
 
-		public function get childs():Vector.<FlattenImage> {
+		public function get childs():Vector.<IFlatten> {
 			return _childs;
 		}
 
 		public function dispose():void {
-			for each (var child:FlattenImage in _childs) {
-				child.dispose();
+			for each (var child:IFlatten in _childs) {
+				if (child is FlattenImage) {
+					(child as FlattenImage).dispose();
+				}
 			}
 		}
 
@@ -237,7 +252,13 @@ package ru.redspell.rasterizer.flatten {
 				removeChildAt(0);
 			}
 
-			for each (var img:FlattenImage in childs) {
+			for each (var child:IFlatten in childs) {
+				var img:FlattenImage = child as FlattenImage;
+
+				if (!img) {
+					continue;
+				}
+
 				var bmp:Bitmap = new Bitmap(img);
 
 				bmp.transform.matrix = img.matrix;

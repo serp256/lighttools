@@ -11,37 +11,51 @@ package ru.redspell.rasterizer.export {
 	import ru.redspell.rasterizer.flatten.FlattenImage;
 	import ru.redspell.rasterizer.flatten.FlattenMovieClip;
 	import ru.redspell.rasterizer.flatten.FlattenSprite;
+	import ru.redspell.rasterizer.flatten.IFlatten;
 
 	public class FlattenExporter extends BaseExporter implements IExporter {
 		protected function exportSprite(obj:FlattenSprite, className:String, dir:File = null, write:Boolean = true):Object {
 			var meta:Object = { type:'sprite' };
-			var imgs:Array = [];
+			var childs:Array = [];
 
 			dir = dir == null ? getDir(className) : dir;
 
-			for each (var img:FlattenImage in obj.childs) {
-				var binary:ByteArray = PNGEncoder.encode(img);
-				var hash:String = SHA1.hashBytes(binary);
-				var imgFile:File = new File(dir.resolvePath(hash + '.png').nativePath);
+			for each (var child:IFlatten in obj.childs) {
+				if (child is FlattenImage) {
+					var img:FlattenImage = child as FlattenImage;
 
-				if (!imgFile.exists) {
-					var s:FileStream = new FileStream();
+					var binary:ByteArray = PNGEncoder.encode(img);
+					var hash:String = SHA1.hashBytes(binary);
+					var imgFile:File = new File(dir.resolvePath(hash + '.png').nativePath);
 
-					s.open(imgFile, FileMode.WRITE);
-					s.writeBytes(binary);
-					s.close();
+					if (!imgFile.exists) {
+						var s:FileStream = new FileStream();
+
+						s.open(imgFile, FileMode.WRITE);
+						s.writeBytes(binary);
+						s.close();
+					}
+
+					childs.push({
+						name:img.name,
+						x:img.matrix.tx,
+						y:img.matrix.ty,
+						type:'image',
+						file:dir.getRelativePath(imgFile)
+					});
+				} else {
+					var box:FlattenSprite = child as FlattenSprite;
+
+					childs.push({
+						name:box.name,
+						x:box.transform.matrix.tx,
+						y:box.transform.matrix.ty,
+						type:'box'
+					});
 				}
-
-				imgs.push({
-					name:img.name,
-					x:img.matrix.tx,
-					y:img.matrix.ty,
-					type:'image',
-					file:dir.getRelativePath(imgFile)
-				})
 			}
 
-			meta.children = imgs;
+			meta.children = childs;
 
 			if (obj.label && obj.label != '') {
 				meta.label = obj.label;

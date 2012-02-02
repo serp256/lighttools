@@ -55,7 +55,6 @@ package ru.redspell.rasterizer.commands {
 
 			try {
 				var exporter:IExporter = new FlattenExporter();
-				//exporter.setPath(_packDir).export(!animated && (flatten is FlattenMovieClip) ? (flatten as FlattenMovieClip).frames[0] : flatten, clsName);
 				exporter.setPath(_packDir).export(flatten, clsName);
 			} catch (e:Error) {
 				var errorText:String = e.errorID + ': ' + e.message;
