@@ -84,8 +84,7 @@ value reduce_colors colors =
     )
     done;
     let newColors = Array.fold_left (fun l c -> match c with [None -> l | Some x -> [x::l]]) [] colorArray in  (colorMap, newColors);
-  );  
-
+  );
 
 (* *)
 value build_palette reducedColors = 

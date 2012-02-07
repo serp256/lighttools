@@ -50,15 +50,15 @@ end;
 
 type pos = {x:float;y:float};
 type texinfo = {page:mutable int; tx:mutable int;ty:mutable int; width: int;height:int};
-type child = (int * option string * pos);
+type child = [= `chld of (int * option string * pos) | `box of (pos * string) ];
 type children = DynArray.t child;
 type clipcmd = [ ClpPlace of (int * child) | ClpClear of (int*int) | ClpChange of (int * list [= `posX of float | `posY of float | `move of int]) ];
 type frame = {children:children; commands: mutable option (DynArray.t clipcmd); label: option string; duration: mutable int};
 type item = [= `image of texinfo | `sprite of children | `clip of DynArray.t frame ];
-type iteminfo = (int * item);
+type iteminfo = {item_id:int; item:item; deleted: mutable bool};
 
 value items : DynArray.t iteminfo = DynArray.create ();
-value exports: RefList.t (string*int) = RefList.empty ();
+value exports: DynArray.t (string*int) = DynArray.create ();
 
 exception Not_equal;
 
@@ -116,7 +116,7 @@ value compare_item item1 item2 =
 
 value push_item item =
   try
-    DynArray.index_of (fun (_,i) -> match i with [ `image _ -> False | (`sprite _ | `clip _ ) as el -> compare_item el item]) items
+    DynArray.index_of (fun {item=i} -> match i with [ `image _ -> False | (`sprite _ | `clip _ ) as el -> compare_item el item]) items
     (*
     match item with
     [ `sprite _ | `clip _ -> DynArray.index_of (fun (_,i) -> compare_item i item) items
@@ -126,7 +126,7 @@ value push_item item =
   with 
   [ Not_found ->
     (
-      DynArray.add items (DynArray.length items,(item :> item));
+      DynArray.add items {item_id=(DynArray.length items);item=(item :> item);deleted=False};
       (DynArray.length items) - 1;
     )
   ];
@@ -148,7 +148,7 @@ value add_image path =
   in
   (
     let (width,height) = Images.size img in
-    DynArray.add items (id,(`image {page=0;tx=0;ty=0;width;height}));
+    DynArray.add items {item_id=id;item=(`image {page=0;tx=0;ty=0;width;height});deleted=False};
     Hashtbl.add images id img;
     id
   );
@@ -172,16 +172,21 @@ value rec process_children dirname children =
   let lst = 
     list begin fun child ->
       let child = objekt child in
-      let name = try Some (string (List.assoc "name" child)) with [ Not_found -> None ] in
+      let ctype =  string (List.assoc "type" child) in
       let pos = getpos child in
-      let id = 
-        match string (List.assoc "type" child) with
-        [ "image" -> add_child_image dirname child
-        | "clip" | "sprite" -> process_dir (dirname // (string (List.assoc "dir" child)))
-        | _ -> assert False
-        ]
-      in
-      (id,name,pos)
+      match ctype with
+      [ "box" -> `box (pos,string (List.assoc "name" child))
+      | _ ->
+        let name = try Some (string (List.assoc "name" child)) with [ Not_found -> None ] in
+        let id = 
+          match ctype with
+          [ "image" -> (add_child_image dirname child)
+          | "clip" | "sprite" -> process_dir (dirname // (string (List.assoc "dir" child)))
+          | _ -> assert False
+          ]
+        in
+        `chld (id,name,pos)
+      ]
     end children
   in
   DynArray.of_list lst
@@ -222,9 +227,9 @@ and process_dir dirname = (* найти мету в этой директори�
 
 (*  merge images {{{ *)
 value isImagesIntersect (id1,(x1,y1)) (id2,(x2,y2)) =
-  match snd (DynArray.get items id1) with
+  match (DynArray.get items id1).item with
   [ `image texInfo1 -> 
-    match snd (DynArray.get items id2) with
+    match (DynArray.get items id2).item with
     [ `image texInfo2 ->
       let left = max x1 x2
       and right = min (x1 +. (float texInfo1.width)) (x2 +. (float texInfo2.width)) in
@@ -252,7 +257,7 @@ value rec usageFrom address id = (* сделать енум *)
         if numChildren > i
         then
           match DynArray.get children i with
-          [ (id',_,pos) when id' = id -> (i,pos)
+          [ `chld (id',_,pos) when id' = id -> (i,pos)
           | _ -> findChildren (i+1)
           ]
         else raise Next
@@ -287,7 +292,7 @@ value rec usageFrom address id = (* сделать енум *)
       let nel = DynArray.get items nid in
       try
         let addr = 
-          match snd nel with
+          match nel.item with
           [ `sprite children -> `sprite children 0
           | `clip frames -> `clip frames 0 0 
           | `image _ -> raise Next
@@ -315,12 +320,16 @@ value nextChild ?(offset=1) (_,el) =
     let frame = DynArray.get frames fNum in
     if DynArray.length frame.children > cNum + offset
     then
-      let (id,_,pos) = DynArray.get frame.children (cNum + offset) in
-      Some (id,pos)
+      match DynArray.get frame.children (cNum + offset) with
+      [ `chld (id,_,pos) -> Some (id,pos)
+      | _ -> None
+      ]
     else None
   | `sprite children cNum when DynArray.length children > cNum + offset -> 
-      let (id,_,pos) = DynArray.get children (cNum + offset) in
-      Some (id,pos)
+      match DynArray.get children (cNum + offset) with
+      [ `chld (id,_,pos) -> Some (id,pos)
+      | _ -> None 
+      ]
   | _ -> None
   ];
 
@@ -333,15 +342,15 @@ value string_of_address (id,el) =
 value remove_unused_images () = 
   let imgUsage = HSet.create 11 in
   (
-    let add_children = DynArray.iter (fun (id,_,_) -> HSet.add imgUsage id) in
+    let add_children = DynArray.iter (fun [ `chld (id,_,_) -> HSet.add imgUsage id | _ -> ()]) in
     for i = 0 to DynArray.length items - 1 do
-      match DynArray.get items i with
-      [ (_,`sprite children) -> add_children children
-      | (_,`clip frames) -> DynArray.iter (fun {children=children} -> add_children children) frames
+      match (DynArray.get items i).item with
+      [ `sprite children -> add_children children
+      | `clip frames -> DynArray.iter (fun {children=children} -> add_children children) frames
       | _ -> ()
       ]
     done;
-    let in_exports id = RefList.exists (fun (_,iid) -> iid = id) exports in
+    let in_exports id = try let () = ignore(DynArray.index_of (fun (_,iid) -> iid = id)) exports in True with [ Not_found -> False ] in
     for i = 0 to DynArray.length items - 1 do
       match DynArray.get items i with
       [ (id,`image _) -> 
@@ -364,164 +373,176 @@ value merge_images () =
   let rec mergeChildren makeAddr (children:children)  = 
     let i = ref 0 in
     while !i < DynArray.length children - 1 do
-      let (id1,label,pos1) = DynArray.get children !i in
-      match DynArray.get items id1 with
-      [ (_,`image texInfo1) when not (HSet.mem alredySeen id1) ->
-        let () = HSet.add alredySeen id1 in
-        let (id2,_,pos2) = DynArray.get children (!i + 1) in
-        match DynArray.get items id2 with
-        [ (_,`image texInfo2) ->
-          let rect1 = Rectangle.create pos1.x pos1.y (float texInfo1.width) (float texInfo1.height)
-          and rect2 = Rectangle.create pos2.x pos2.y (float texInfo2.width) (float texInfo2.height) in
-          if not (Rectangle.isIntersect rect1 rect2)
-          then ()
-          else
-            let () = Printf.printf "fineded intersect images: [%s] and [%s] \n" (string_of_address (makeAddr !i)) (string_of_address (makeAddr (!i+1))) in
-            let dx = pos1.x -. pos2.x
-            and dy = pos1.y -. pos2.y in
-            let usage = usageFrom (makeAddr (!i+2)) id1 in
-            let rec findAll res = (*{{{*)
-              match Enum.get usage with
-              [ Some ((addr,pos) as r) ->
-                (* если следующий елемент такойже и такойже дистанс между ними то круто *)
-                match nextChild addr with
-                [ Some (nid,npos) when nid = id2 ->
-                  let dx' = pos.x -. npos.x in
-                  if dx = dx'
-                  then
-                    let dy' = pos.y -. npos.y in
-                    if dy = dy' then findAll [ r :: res ] else None
-                  else None
-                | _ -> None
-                ]
-              | None -> Some res 
-              ] (*}}}*)
-            in
-            match findAll [] with (*{{{*)
-            [ Some places -> (* ура у нас есть что заменить *) 
-              (
-                Printf.printf "merge %d and %d for (%s)\n%!" id1 id2 (String.concat ";" (List.map (fun (addr,pos) -> Printf.sprintf "[%s]" (string_of_address addr)) places));
-                (* надо найти самое длинное *)
-                let cNum = DynArray.length children in
-                let rec findMaxOffset rect offset = (*{{{*)
-                  if !i + offset + 1 < cNum 
-                  then
-                    let (id,_,pos) = DynArray.get children (!i + offset + 1) in
-                    match snd (DynArray.get items id) with
-                    [ `image texInfo ->
-                      let rect' = Rectangle.create pos.x pos.y (float texInfo.width) (float texInfo.height) in
-                      if not (Rectangle.isIntersect rect rect')
-                      then 
-                        let () = print_endline "does not intersect, stop find offset" in
-                        offset 
-                      else
-                        (* это кандидат на расширение, пробуем его во всех плэйсах *)
-                        let dx = pos1.x -. pos.x
-                        and dy = pos1.y -. pos.y in
-                        let res = 
-                          List.for_all begin fun (addr,pos) ->
-                            match nextChild ~offset:(offset + 1) addr with
-                            [ Some (id',pos') when id = id' -> 
-                              let dx' = pos.x -. pos'.x in
-                              if dx' = dx
-                              then
-                                let dy' = pos.y -. pos'.y in
-                                if dy = dy' then True else False
-                              else False
-                            | _ -> False
-                            ]
-                          end places
-                        in
-                        if res 
-                        then findMaxOffset (Rectangle.join rect rect') (offset + 1) 
-                        else 
-                          let () = print_endline "not all distances are same, stop find offset" in
-                          offset
-                    | _ -> 
-                        let () = print_endline "does not image, stop find offset" in
-                        offset 
+      match DynArray.get children !i with
+      [ `chld (id1,label,pos1) ->
+        match DynArray.get items id1 with
+        [ (_,`image texInfo1) when not (HSet.mem alredySeen id1) ->
+          let () = HSet.add alredySeen id1 in
+          match DynArray.get children (!i + 1) with
+          [ `chld (id2,_,pos2) ->
+            match DynArray.get items id2 with
+            [ (_,`image texInfo2) ->
+              let rect1 = Rectangle.create pos1.x pos1.y (float texInfo1.width) (float texInfo1.height)
+              and rect2 = Rectangle.create pos2.x pos2.y (float texInfo2.width) (float texInfo2.height) in
+              if not (Rectangle.isIntersect rect1 rect2)
+              then ()
+              else
+                let () = Printf.printf "fineded intersect images: [%s] and [%s] \n" (string_of_address (makeAddr !i)) (string_of_address (makeAddr (!i+1))) in
+                let dx = pos1.x -. pos2.x
+                and dy = pos1.y -. pos2.y in
+                let usage = usageFrom (makeAddr (!i+2)) id1 in
+                let rec findAll res = (*{{{*)
+                  match Enum.get usage with
+                  [ Some ((addr,pos) as r) ->
+                    (* если следующий елемент такойже и такойже дистанс между ними то круто *)
+                    match nextChild addr with
+                    [ Some (nid,npos) when nid = id2 ->
+                      let dx' = pos.x -. npos.x in
+                      if dx = dx'
+                      then
+                        let dy' = pos.y -. npos.y in
+                        if dy = dy' then findAll [ r :: res ] else None
+                      else None
+                    | _ -> None
                     ]
-                  else 
-                    let () = print_endline "end of childrens, stop find offset" in
-                    offset  (*}}}*)
+                  | None -> Some res 
+                  ] (*}}}*)
                 in
-                let maxOffset = findMaxOffset (Rectangle.join rect1 rect2) 1 in
-                (
-                  Printf.printf "maxOffset %d\n%!" maxOffset;
-                  (* здесь схлопываем нахуй *)
-                  let imgs = 
-                    Array.init (maxOffset + 1) begin fun offset -> 
-                      let (id,_,pos) = DynArray.get children (!i + offset) in
-                      let () = Printf.printf "get image: %d\n%!" id in
-                      let img = 
-(*                         try *)
-                          Hashtbl.find images id 
-(*
-                        with
-                          [ Not_found -> Hashtbl.find removed_img id ]
-*)
-                      in
-                      (
-                        (id,img,pos)
-                      )
-                    end
-                  in
-                  let rect = [| max_float; max_float ; ~-.max_float; ~-.max_float |] in
+                match findAll [] with (*{{{*)
+                [ Some places -> (* ура у нас есть что заменить *) 
                   (
-                    Array.iter begin fun (_,img,pos) -> 
-                      (
-                        if rect.(0) > pos.x then rect.(0) := pos.x else ();
-                        if rect.(1) > pos.y then rect.(1) := pos.y else ();
-                        let (width,height) = Images.size img in
-                        (
-                          if rect.(2) < pos.x +. (float width) then rect.(2) := pos.x +. (float width) else ();
-                          if rect.(3) < pos.y +. (float height) then rect.(3) := pos.y +. (float height) else ();
-                        )
-                      )
-                    end imgs;
-                    let gwidth = truncate (rect.(2) -. rect.(0) +. 0.5)
-                    and gheight = truncate (rect.(3) -. rect.(1) +. 0.5) in
-                    let gimg = Rgba32.make gwidth gheight bgcolor in
-(*                     let debug_dir = Printf.sprintf "/tmp/respacker/%d" id1 in *)
-                    (
-(*                       Unix.mkdir debug_dir 0o755; *)
-                      Array.iter begin fun (id,img,pos) ->
-(*                         let () = Images.save (debug_dir // (Printf.sprintf "%d.png" id)) (Some Images.Png) [] img in *)
-                        let x = truncate (pos.x -. rect.(0) )
-                        and y = truncate (pos.y -. rect.(1)) 
-                        and img = match img with [ Images.Rgba32 img -> img | _ -> assert False ] in
-                        Rgba32.blit ~alphaBlend:True img 0 0 gimg x y img.Rgba32.width img.Rgba32.height
-                      end imgs;
-(*                       Images.save (debug_dir // "result.png") (Some Images.Png) [] (Images.Rgba32 gimg); *)
-                      Hashtbl.replace images id1 (Images.Rgba32 gimg);
-                      DynArray.set items id1 (id1,`image {(texInfo1) with width = gwidth; height = gheight});
-                      DynArray.delete_range children !i (maxOffset+1);
-                      DynArray.insert children !i (id1,label,{x=rect.(0);y=rect.(1)}); (* FIXME: label skipped *)
-                      let dx = pos1.x -. rect.(0)
-                      and dy = pos1.y -. rect.(1) in
-                      (* А теперь все вхождения пореплейсить нахуй *)
-                      List.iter begin fun ((_,el),pos) ->
-                        let gpos = {x= pos.x -. dx; y = pos.y -. dy} in
-                        match el with
-                        [ `sprite children cNum ->
-                          (
-                            DynArray.delete_range children cNum (maxOffset + 1);
-                            DynArray.insert children cNum (id1,Some "pizda",gpos); (* FIXME: fix label *)
-                          )
-                        | `clip frames fNum cNum ->
-                            let frame = DynArray.get frames fNum in
-                            (
-                              DynArray.delete_range frame.children cNum (maxOffset + 1);
-                              DynArray.insert frame.children cNum (id1,Some "pizda",gpos);
-                            )
+                    Printf.printf "merge %d and %d for (%s)\n%!" id1 id2 (String.concat ";" (List.map (fun (addr,pos) -> Printf.sprintf "[%s]" (string_of_address addr)) places));
+                    (* надо найти самое длинное *)
+                    let cNum = DynArray.length children in
+                    let rec findMaxOffset rect offset = (*{{{*)
+                      if !i + offset + 1 < cNum 
+                      then
+                        match DynArray.get children (!i + offset + 1) with
+                        [ `chld (id,_,pos) ->
+                          match snd (DynArray.get items id) with
+                          [ `image texInfo ->
+                            let rect' = Rectangle.create pos.x pos.y (float texInfo.width) (float texInfo.height) in
+                            if not (Rectangle.isIntersect rect rect')
+                            then 
+                              let () = print_endline "does not intersect, stop find offset" in
+                              offset 
+                            else
+                              (* это кандидат на расширение, пробуем его во всех плэйсах *)
+                              let dx = pos1.x -. pos.x
+                              and dy = pos1.y -. pos.y in
+                              let res = 
+                                List.for_all begin fun (addr,pos) ->
+                                  match nextChild ~offset:(offset + 1) addr with
+                                  [ Some (id',pos') when id = id' -> 
+                                    let dx' = pos.x -. pos'.x in
+                                    if dx' = dx
+                                    then
+                                      let dy' = pos.y -. pos'.y in
+                                      if dy = dy' then True else False
+                                    else False
+                                  | _ -> False
+                                  ]
+                                end places
+                              in
+                              if res 
+                              then findMaxOffset (Rectangle.join rect rect') (offset + 1) 
+                              else 
+                                let () = print_endline "not all distances are same, stop find offset" in
+                                offset
+                          | _ -> 
+                              let () = print_endline "does not image, stop find offset" in
+                              offset 
+                          ]
+                        | _ -> offset
                         ]
-                      end places;
+                      else 
+                        let () = print_endline "end of childrens, stop find offset" in
+                        offset  (*}}}*)
+                    in
+                    let maxOffset = findMaxOffset (Rectangle.join rect1 rect2) 1 in
+                    (
+                      Printf.printf "maxOffset %d\n%!" maxOffset;
+                      (* здесь схлопываем нахуй *)
+                      let imgs = 
+                        Array.init (maxOffset + 1) begin fun offset -> 
+                          match DynArray.get children (!i + offset) with
+                          [ `chld (id,_,pos) ->
+                            let () = Printf.printf "get image: %d\n%!" id in
+                            let img = 
+      (*                         try *)
+                                Hashtbl.find images id 
+      (*
+                              with
+                                [ Not_found -> Hashtbl.find removed_img id ]
+      *)
+                            in
+                            (
+                              (id,img,pos)
+                            )
+                          | _ -> assert False
+                          ]
+                        end
+                      in
+                      let rect = [| max_float; max_float ; ~-.max_float; ~-.max_float |] in
+                      (
+                        Array.iter begin fun (_,img,pos) -> 
+                          (
+                            if rect.(0) > pos.x then rect.(0) := pos.x else ();
+                            if rect.(1) > pos.y then rect.(1) := pos.y else ();
+                            let (width,height) = Images.size img in
+                            (
+                              if rect.(2) < pos.x +. (float width) then rect.(2) := pos.x +. (float width) else ();
+                              if rect.(3) < pos.y +. (float height) then rect.(3) := pos.y +. (float height) else ();
+                            )
+                          )
+                        end imgs;
+                        let gwidth = truncate (rect.(2) -. rect.(0) +. 0.5)
+                        and gheight = truncate (rect.(3) -. rect.(1) +. 0.5) in
+                        let gimg = Rgba32.make gwidth gheight bgcolor in
+    (*                     let debug_dir = Printf.sprintf "/tmp/respacker/%d" id1 in *)
+                        (
+    (*                       Unix.mkdir debug_dir 0o755; *)
+                          Array.iter begin fun (id,img,pos) ->
+    (*                         let () = Images.save (debug_dir // (Printf.sprintf "%d.png" id)) (Some Images.Png) [] img in *)
+                            let x = truncate (pos.x -. rect.(0) )
+                            and y = truncate (pos.y -. rect.(1)) 
+                            and img = match img with [ Images.Rgba32 img -> img | _ -> assert False ] in
+                            Rgba32.blit ~alphaBlend:True img 0 0 gimg x y img.Rgba32.width img.Rgba32.height
+                          end imgs;
+    (*                       Images.save (debug_dir // "result.png") (Some Images.Png) [] (Images.Rgba32 gimg); *)
+                          Hashtbl.replace images id1 (Images.Rgba32 gimg);
+                          DynArray.set items id1 (id1,`image {(texInfo1) with width = gwidth; height = gheight});
+                          DynArray.delete_range children !i (maxOffset+1);
+                          DynArray.insert children !i (`chld (id1,label,{x=rect.(0);y=rect.(1)})); (* FIXME: label skipped *)
+                          let dx = pos1.x -. rect.(0)
+                          and dy = pos1.y -. rect.(1) in
+                          (* А теперь все вхождения пореплейсить нахуй *)
+                          List.iter begin fun ((_,el),pos) ->
+                            let gpos = {x= pos.x -. dx; y = pos.y -. dy} in
+                            match el with
+                            [ `sprite children cNum ->
+                              (
+                                DynArray.delete_range children cNum (maxOffset + 1);
+                                DynArray.insert children cNum (`chld (id1,None,gpos)); (* FIXME: fix label *)
+                              )
+                            | `clip frames fNum cNum ->
+                                let frame = DynArray.get frames fNum in
+                                (
+                                  DynArray.delete_range frame.children cNum (maxOffset + 1);
+                                  DynArray.insert frame.children cNum (`chld (id1,None,gpos));
+                                )
+                            ]
+                          end places;
+                        )
+                      );
                     )
-                  );
-                )
-              )
-            | None -> ()
-            ] (*}}}*)
+                  )
+                | None -> ()
+                ] (*}}}*)
+            | _ -> ()
+            ]
+          | _ -> ()
+          ]
         | _ -> ()
         ]
       | _ -> ()
@@ -547,8 +568,32 @@ value merge_images () =
 
 (*}}}*)
 
-value make_clip_commands () =
-(
+
+(*
+value optimize_symbols () = 
+  for i = 0 to DynArray.length exports do
+    let (name,id) = DynArray.get exports i in
+    match DynArray.get items id with
+    [ `sprite children -> 
+      if DynArray.length children = 1 (* если тут один чайлд - то это просто картинка *)
+      then 
+        (
+          match DynArray.get items (DynArray.get children 0) with
+          [ `chld (id,name,pos) -> DynArray.set exports i (name,id) (* FIXME: check *)
+          | _ -> assert False 
+          ];
+        )
+      else (* если есть боксы то сложный иначе простой *)
+    | `clip frames -> 
+        (* это может быть image clip *)
+    | _ -> ()
+    ]
+  end;
+*)
+
+
+
+value make_clip_commands () = 
   for i = 0 to DynArray.length items - 1 do
     match DynArray.get items i with
     [ (id,`clip frames) -> 
@@ -561,21 +606,24 @@ value make_clip_commands () =
           let len = DynArray.length frame.children in 
           (
             for c = 0 to len - 1 do
-              let ((id,_,pos) as child) = DynArray.get frame.children c in
-              try
-                let pidx = DynArray.index_of (fun (id',_,pos) -> id' = id) !pchildren  in
-                let (_,_,pos') = DynArray.get !pchildren pidx in
-                let changes = if pidx <> 0 then [ `move c ] else [] in
-                let changes = if pos.x <> pos'.x then [ `posX pos.x :: changes ] else changes in
-                let changes = if pos.y <> pos'.y then [ `posY pos.y :: changes ] else changes in
-                (
-                  DynArray.delete !pchildren pidx;
-                  match changes with
-                  [ [] -> ()
-                  | changes -> DynArray.add commands (ClpChange (pidx + c,changes)) 
-                  ]
-                )
-              with [ Not_found -> DynArray.add commands (ClpPlace (c,child)) ];
+              match DynArray.get frame.children c with
+              [ `chld ((id,_,pos) as child) ->
+                try
+                  let pidx = DynArray.index_of (fun (id',_,pos) -> id' = id) !pchildren  in
+                  let (_,_,pos') = DynArray.get !pchildren pidx in
+                  let changes = if pidx <> 0 then [ `move c ] else [] in
+                  let changes = if pos.x <> pos'.x then [ `posX pos.x :: changes ] else changes in
+                  let changes = if pos.y <> pos'.y then [ `posY pos.y :: changes ] else changes in
+                  (
+                    DynArray.delete !pchildren pidx;
+                    match changes with
+                    [ [] -> ()
+                    | changes -> DynArray.add commands (ClpChange (pidx + c,changes)) 
+                    ]
+                  )
+                with [ Not_found -> DynArray.add commands (ClpPlace (c,child)) ]
+              | _ -> failwith "boxes not supported in clips yeat"
+              ]
             done;
             (* еще удалить надо *)
             let clen = DynArray.length !pchildren in
@@ -591,7 +639,6 @@ value make_clip_commands () =
     | _ -> ()
     ]
   done;
-);
 
 
 value outdir = ref "output";
@@ -607,7 +654,7 @@ value do_work isXml indir =
           let item_id = add_image dirname in
           (Filename.chop_extension fl,item_id)
       in
-      RefList.push exports (name,item_id)
+      DynArray.add exports (name,item_id)
     end (Sys.readdir indir);
     merge_images();
     make_clip_commands ();
@@ -749,7 +796,7 @@ value do_work isXml indir =
           end items;(*}}}*)
           Xmlm.output xmlout `El_end;(*}}}*)
           Xmlm.output xmlout (`El_start (("","symbols"),[])); (* write symbols {{{*)
-          RefList.iter begin fun (cls,id) ->
+          DynArray.iter begin fun (cls,id) ->
             (
               Xmlm.output xmlout (`El_start (("","symbol"),[ "class" =|= cls; "id" =*= id ]));
               Xmlm.output xmlout `El_end;
@@ -859,8 +906,8 @@ value do_work isXml indir =
             | _ -> ()
             ]
           end items;
-          IO.write_ui16 binout (RefList.length exports);
-          RefList.iter begin fun (cls,id) ->
+          IO.write_ui16 binout (DynArray.length exports);
+          DynArray.iter begin fun (cls,id) ->
             (
               IO.write_string binout cls;
               IO.write_ui16 binout id;
