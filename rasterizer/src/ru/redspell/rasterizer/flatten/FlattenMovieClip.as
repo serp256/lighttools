@@ -26,14 +26,6 @@ package ru.redspell.rasterizer.flatten {
 				MovieClipExt.recNextFrame(clip);
 			}
 
-			for each (frame in _frames) {
-				trace(frame);
-
-				for each (var img:FlattenImage in frame.childs) {
-					trace('\t' + img.name);
-				}
-			}
-
 			_curFrame = 0;
 
 			return this;
