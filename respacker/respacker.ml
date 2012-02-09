@@ -52,7 +52,7 @@ type pos = {x:float;y:float};
 type texinfo = {page:mutable int; tx:mutable int;ty:mutable int; width: int;height:int};
 type child = [= `chld of (int * option string * pos) | `box of (pos * string) ];
 type children = DynArray.t child;
-type clipcmd = [ ClpPlace of (int * child) | ClpClear of (int*int) | ClpChange of (int * list [= `posX of float | `posY of float | `move of int]) ];
+type clipcmd = [ ClpPlace of (int * (int * option string * pos)) | ClpClear of (int*int) | ClpChange of (int * list [= `posX of float | `posY of float | `move of int]) ];
 type frame = {children:children; commands: mutable option (DynArray.t clipcmd); label: option string; duration: mutable int};
 type item = [= `image of texinfo | `sprite of children | `clip of DynArray.t frame ];
 type iteminfo = {item_id:int; item:item; deleted: mutable bool};
@@ -350,10 +350,10 @@ value remove_unused_images () =
       | _ -> ()
       ]
     done;
-    let in_exports id = try let () = ignore(DynArray.index_of (fun (_,iid) -> iid = id)) exports in True with [ Not_found -> False ] in
+    let in_exports id = try let () = ignore(DynArray.index_of (fun (_,iid) -> iid = id) exports) in True with [ Not_found -> False ] in
     for i = 0 to DynArray.length items - 1 do
       match DynArray.get items i with
-      [ (id,`image _) -> 
+      [ {item_id=id;item=`image _} -> 
         match HSet.mem imgUsage id || in_exports id with
         [ False ->
           let () = Printf.printf "remove unused img: %d\n%!" id in
@@ -375,13 +375,13 @@ value merge_images () =
     while !i < DynArray.length children - 1 do
       match DynArray.get children !i with
       [ `chld (id1,label,pos1) ->
-        match DynArray.get items id1 with
-        [ (_,`image texInfo1) when not (HSet.mem alredySeen id1) ->
+        match  (DynArray.get items id1).item with
+        [ `image texInfo1 when not (HSet.mem alredySeen id1) ->
           let () = HSet.add alredySeen id1 in
           match DynArray.get children (!i + 1) with
           [ `chld (id2,_,pos2) ->
-            match DynArray.get items id2 with
-            [ (_,`image texInfo2) ->
+            match (DynArray.get items id2).item with
+            [ `image texInfo2 ->
               let rect1 = Rectangle.create pos1.x pos1.y (float texInfo1.width) (float texInfo1.height)
               and rect2 = Rectangle.create pos2.x pos2.y (float texInfo2.width) (float texInfo2.height) in
               if not (Rectangle.isIntersect rect1 rect2)
@@ -419,7 +419,7 @@ value merge_images () =
                       then
                         match DynArray.get children (!i + offset + 1) with
                         [ `chld (id,_,pos) ->
-                          match snd (DynArray.get items id) with
+                          match (DynArray.get items id).item with
                           [ `image texInfo ->
                             let rect' = Rectangle.create pos.x pos.y (float texInfo.width) (float texInfo.height) in
                             if not (Rectangle.isIntersect rect rect')
@@ -511,7 +511,7 @@ value merge_images () =
                           end imgs;
     (*                       Images.save (debug_dir // "result.png") (Some Images.Png) [] (Images.Rgba32 gimg); *)
                           Hashtbl.replace images id1 (Images.Rgba32 gimg);
-                          DynArray.set items id1 (id1,`image {(texInfo1) with width = gwidth; height = gheight});
+                          DynArray.set items id1 {item_id=id1;item=`image {(texInfo1) with width = gwidth; height = gheight};deleted=False};
                           DynArray.delete_range children !i (maxOffset+1);
                           DynArray.insert children !i (`chld (id1,label,{x=rect.(0);y=rect.(1)})); (* FIXME: label skipped *)
                           let dx = pos1.x -. rect.(0)
@@ -551,11 +551,11 @@ value merge_images () =
     done
   in
   for i = 0 to (DynArray.length items - 1) do
-    let (elid,el) = DynArray.get items i in
-    match el with
-    [ `sprite children -> mergeChildren (fun cNum -> (elid,`sprite children cNum)) children
+    let el = DynArray.get items i in
+    match el.item with
+    [ `sprite children -> mergeChildren (fun cNum -> (el.item_id,`sprite children cNum)) children
     | `clip frames ->
-        let makeAddr fNum cNum = (elid,`clip frames fNum cNum) in
+        let makeAddr fNum cNum = (el.item_id,`clip frames fNum cNum) in
         for fi = 0 to DynArray.length frames - 1 do
           let frame = DynArray.get frames fi in
           mergeChildren (makeAddr fi) frame.children
@@ -569,34 +569,44 @@ value merge_images () =
 (*}}}*)
 
 
-(*
-value optimize_symbols () = 
-  for i = 0 to DynArray.length exports do
+value optimize_sprites () = 
+  for i = 0 to DynArray.length exports - 1 do
     let (name,id) = DynArray.get exports i in
-    match DynArray.get items id with
+    let item = DynArray.get items id in
+    match item.item with
     [ `sprite children -> 
       if DynArray.length children = 1 (* если тут один чайлд - то это просто картинка *)
       then 
-        (
-          match DynArray.get items (DynArray.get children 0) with
-          [ `chld (id,name,pos) -> DynArray.set exports i (name,id) (* FIXME: check *)
-          | _ -> assert False 
-          ];
-        )
-      else (* если есть боксы то сложный иначе простой *)
-    | `clip frames -> 
-        (* это может быть image clip *)
+        match DynArray.get children 0 with
+        [ `chld (id,_,pos) -> 
+          (
+            DynArray.set exports i (name,id); (* FIXME: check pos *)
+            item.deleted := True;
+          )
+        | _ -> assert False 
+        ]
+      else ()
     | _ -> ()
     ]
-  end;
-*)
+  done;
 
+
+value is_simple_clip frames = 
+  try
+    for fi = 0 to DynArray.length frames - 1 do
+      let f = DynArray.get frames fi in
+      if DynArray.length f.children > 1 
+      then raise Exit
+      else ()
+    done;
+    True;
+  with [ Exit -> False ];
 
 
 value make_clip_commands () = 
   for i = 0 to DynArray.length items - 1 do
     match DynArray.get items i with
-    [ (id,`clip frames) -> 
+    [ {item_id=id;item=`clip frames;_} when not (is_simple_clip frames) ->
       (
         let fframe = DynArray.get frames 0 in
         let pchildren = ref (DynArray.copy fframe.children) in
@@ -609,18 +619,21 @@ value make_clip_commands () =
               match DynArray.get frame.children c with
               [ `chld ((id,_,pos) as child) ->
                 try
-                  let pidx = DynArray.index_of (fun (id',_,pos) -> id' = id) !pchildren  in
-                  let (_,_,pos') = DynArray.get !pchildren pidx in
-                  let changes = if pidx <> 0 then [ `move c ] else [] in
-                  let changes = if pos.x <> pos'.x then [ `posX pos.x :: changes ] else changes in
-                  let changes = if pos.y <> pos'.y then [ `posY pos.y :: changes ] else changes in
-                  (
-                    DynArray.delete !pchildren pidx;
-                    match changes with
-                    [ [] -> ()
-                    | changes -> DynArray.add commands (ClpChange (pidx + c,changes)) 
-                    ]
-                  )
+                  let pidx = DynArray.index_of (fun [ `chld (id',_,pos) -> id' = id | _ -> assert False ]) !pchildren  in
+                  match DynArray.get !pchildren pidx with
+                  [ `chld (_,_,pos') ->
+                    let changes = if pidx <> 0 then [ `move c ] else [] in
+                    let changes = if pos.x <> pos'.x then [ `posX pos.x :: changes ] else changes in
+                    let changes = if pos.y <> pos'.y then [ `posY pos.y :: changes ] else changes in
+                    (
+                      DynArray.delete !pchildren pidx;
+                      match changes with
+                      [ [] -> ()
+                      | changes -> DynArray.add commands (ClpChange (pidx + c,changes)) 
+                      ]
+                    )
+                  | _ -> assert False
+                  ]
                 with [ Not_found -> DynArray.add commands (ClpPlace (c,child)) ]
               | _ -> failwith "boxes not supported in clips yeat"
               ]
@@ -640,8 +653,13 @@ value make_clip_commands () =
     ]
   done;
 
-
 value outdir = ref "output";
+
+
+value goup_images () = 
+  for i = 0 to DynArray.length exports do
+
+  done;
 
 value do_work isXml indir =
   (
@@ -657,6 +675,7 @@ value do_work isXml indir =
       DynArray.add exports (name,item_id)
     end (Sys.readdir indir);
     merge_images();
+    optimize_sprites();
     make_clip_commands ();
     let outdir = !outdir // (Filename.basename indir) in
     let () = printf "output to %s\n%!" outdir in
@@ -680,8 +699,8 @@ value do_work isXml indir =
             (
               let img = match img with [ Images.Rgba32 img -> img | Images.Rgb24 img -> Rgb24.to_rgba32 img | _ -> assert False ] in
               Rgba32.blit img 0 0 texture x y img.Rgba32.width img.Rgba32.height;
-              match DynArray.get items key with
-              [ (_,`image inf) -> ( inf.tx := x; inf.ty := y; inf.page := i;)
+              match (DynArray.get items key).item with
+              [ `image inf -> ( inf.tx := x; inf.ty := y; inf.page := i;)
               | _ -> assert False
               ]
             )
@@ -694,6 +713,31 @@ value do_work isXml indir =
           )
         end pages
       in
+      let group_children children = 
+        let qchld = Stack.create () in
+        (
+          DynArray.iter begin fun 
+            [ `chld _ as chld when Stack.is_empty qchld -> Stack.push chld qchld
+            | `chld img as chld -> 
+                match Stack.pop qchld with
+                [ `chld pimg -> Stack.push (`atlas [ img ; pimg ]) qchld
+                | `atlas els -> Stack.push (`atlas [ img :: els ]) qchld
+                | `box _ as b -> (Stack.push b qchld; Stack.push chld qchld)
+                ]
+            | `box _ as b -> Stack.push b qchld
+            ]
+          end children;
+          let res = BatRefList.empty () in
+          (
+            Stack.iter begin fun 
+              [ `atlas els -> BatRefList.push res (`atlas (List.rev els))
+              | _ as el -> BatRefList.push res el
+              ]
+            end qchld;
+            BatRefList.to_list res;
+          )
+        )
+      in
       match isXml with
       [ True -> (*{{{*)
         (* Теперича сохранить xml и усе *)
@@ -703,20 +747,36 @@ value do_work isXml indir =
           Xmlm.output xmlout (`Dtd None);
           Xmlm.output xmlout (`El_start (("","lib"),[]));
           Xmlm.output xmlout (`El_start (("","textures"),[])); 
-          List.iter (fun imgname -> Xmlm.output xmlout (`El_start (("","texture"),["file" =|= imgname]))) textures;
+          List.iter (fun imgname -> (Xmlm.output xmlout (`El_start (("","texture"),["file" =|= imgname])); Xmlm.output xmlout `El_end)) textures;
           Xmlm.output xmlout `El_end;
           Xmlm.output xmlout (`El_start (("","items"),[]));(* write items {{{ *)
-          let rec write_children = 
-            DynArray.iter begin fun (id,name,pos) ->
-              (
-                let attrs = [ "id" =*= id; "posX" =.= pos.x; "posY" =.= pos.y ] in
-                let attrs = match name with [ Some n -> [ "name" =|= n :: attrs ] | None -> attrs ] in
-                Xmlm.output xmlout (`El_start (("","child"),attrs));
-                Xmlm.output xmlout `El_end;
-              )
-            end 
+          let write_child (id,name,pos) =
+            (
+              let attrs = [ "id" =*= id; "posX" =.= pos.x; "posY" =.= pos.y ] in
+              let attrs = match name with [ Some n -> [ "name" =|= n :: attrs ] | None -> attrs ] in
+              Xmlm.output xmlout (`El_start (("","child"),attrs));
+              Xmlm.output xmlout `El_end
+            )
           in
-          DynArray.iter begin fun (id,item) -> (*{{{*)
+          let write_sprite_children children = 
+            List.iter begin fun 
+              [ `chld params -> write_child params
+              | `box (pos,name) ->
+                (
+                  Xmlm.output xmlout (`El_start (("","box"),[ "posX" =.= pos.x; "posY" =.= pos.y; "name" =|= name ]));
+                  Xmlm.output xmlout `El_end
+                )
+              | `atlas els -> 
+                (
+                  Xmlm.output xmlout (`El_start (("","atlas"),[]));
+                  List.iter write_child els;
+                  Xmlm.output xmlout `El_end;
+                )
+              ]
+            end (group_children children)
+          in
+          DynArray.iter begin fun 
+            [ {item_id=id;item;deleted=False} -> (*{{{*)
               match item with
               [ `image info when Hashtbl.mem images id -> 
                 (
@@ -736,9 +796,28 @@ value do_work isXml indir =
               | `sprite children ->
                 (
                   Xmlm.output xmlout (`El_start (("","item"),[ "id" =*= id ; "type" =|= "sprite" ]));
-                  write_children children;
+                  write_sprite_children children;
                   Xmlm.output xmlout `El_end;
                 )
+              | `clip frames when is_simple_clip frames ->
+                  (
+                    Xmlm.output xmlout (`El_start (("","item"),[ "id" =*= id ; "type" =|= "iclip" ]));
+                    DynArray.iter begin fun frame ->
+                      (
+                        let attrs = [ "duration" =*= frame.duration ] in 
+                        let attrs = match frame.label with [ Some l -> [ "label" =|= l :: attrs ] | None -> attrs ] in
+                        let imgattrs = 
+                          match DynArray.get frame.children 0 with 
+                          [ `chld (id,_,pos) -> [ "img" =*= id; "posX" =.= pos.x; "posY" =.= pos.y ]
+                          | _ -> assert False
+                          ]
+                        in
+                        Xmlm.output xmlout (`El_start (("","frame"),attrs @ imgattrs));
+                        Xmlm.output xmlout `El_end;
+                      )
+                    end frames;
+                    Xmlm.output xmlout `El_end;
+                  )
               | `clip frames ->
                 (
                   Xmlm.output xmlout (`El_start (("","item"),[ "id" =*= id ; "type" =|= "clip" ]));
@@ -748,7 +827,7 @@ value do_work isXml indir =
                       let attrs = match frame.label with [ Some l -> [ "label" =|= l :: attrs ] | None -> attrs ] in
                       Xmlm.output xmlout (`El_start (("","frame"),attrs));
                       Xmlm.output xmlout (`El_start (("","children"),[]));
-                      write_children frame.children;
+                      DynArray.iter (fun [ `chld params -> write_child params | `box _ -> assert False ]) frame.children;
                       Xmlm.output xmlout `El_end;
                       match frame.commands with
                       [ Some commands ->
@@ -793,6 +872,8 @@ value do_work isXml indir =
                 )
               | _ -> ()
               ]
+            | _ -> ()
+            ]
           end items;(*}}}*)
           Xmlm.output xmlout `El_end;(*}}}*)
           Xmlm.output xmlout (`El_start (("","symbols"),[])); (* write symbols {{{*)
@@ -818,91 +899,171 @@ value do_work isXml indir =
           | None -> IO.write_byte binout 0
           ]
         in
+        let nreg = Str.regexp "^instance[0-9]+$" in
+        let write_name = fun
+          [ Some name when Str.string_match nreg name 0 -> IO.write_byte binout 0
+          | Some name ->
+            (
+              IO.write_byte binout (String.length name);
+              IO.nwrite binout name;
+            )
+          | None -> IO.write_byte binout 0
+          ]
+        in
         (
           IO.write_byte binout (List.length textures);
           List.iter (fun imgname -> IO.write_string binout imgname) textures;
-          let cnt_items = DynArray.fold_left (fun cnt (id,item) -> match item with [ `image _ when not (Hashtbl.mem images id) -> cnt | _ -> cnt + 1 ]) 0 items in
+          let cnt_items = 
+            DynArray.fold_left begin fun cnt it -> 
+              if it.deleted then cnt
+              else
+                match it.item with 
+                [ `image _ when not (Hashtbl.mem images it.item_id) -> cnt 
+                | _ -> cnt + 1 
+                ]
+            end 0 items 
+          in
           IO.write_ui16 binout cnt_items;
-          let rec write_children children = 
-            let () = IO.write_byte binout (DynArray.length children) in
-            DynArray.iter begin fun (id,name,pos) ->
-              (
-                IO.write_ui16 binout id;
-                IO.write_double binout pos.x;
-                IO.write_double binout pos.y;
-                write_option_string name;
-              )
+          let write_child (id,name,pos) =
+            (
+              IO.write_ui16 binout id;
+              IO.write_double binout pos.x;
+              IO.write_double binout pos.y;
+              write_name name;
+            )
+          in
+          let write_sprite_children children = 
+            let children = group_children children in
+            let () = IO.write_byte binout (List.length children) in
+            List.iter begin fun 
+              [ `chld params -> 
+                (
+                  IO.write_byte binout 0;
+                  write_child params
+                )
+              | `box (pos,name) ->
+                (
+                  IO.write_byte binout 2;
+                  IO.write_double binout pos.x;
+                  IO.write_double binout pos.y;
+                  IO.write_string binout name;
+                )
+              | `atlas els -> 
+                (
+                  IO.write_byte binout 1;
+                  IO.write_byte binout (List.length els);
+                  List.iter write_child els;
+                )
+              ]
             end children
           in
-          DynArray.iter begin fun (id,item) ->
-            match item with
-            [ `image info when Hashtbl.mem images id ->
-              (
-                IO.write_ui16 binout id;
-                IO.write_byte binout 0; (* this is image *)
-                IO.write_byte binout info.page;
-                IO.write_ui16 binout info.tx;
-                IO.write_ui16 binout info.ty;
-                IO.write_ui16 binout info.width;
-                IO.write_ui16 binout info.height;
-              )
-            | `sprite children ->
-              (
-                IO.write_ui16 binout id;
-                IO.write_byte binout 1;
-                write_children children;
-              )
-            | `clip frames ->
-              (
-                IO.write_ui16 binout id;
-                IO.write_byte binout 2;
-                IO.write_ui16 binout (DynArray.length frames);
-                DynArray.iter begin fun frame ->
-                  (
-                    IO.write_byte binout frame.duration;
-                    write_option_string frame.label;
-                    write_children frame.children;
-                    match frame.commands with
-                    [ None -> IO.write_byte binout 0
-                    | Some commands ->
-                      (
-                        IO.write_byte binout 1;
-                        IO.write_ui16 binout (DynArray.length commands);
-                        DynArray.iter begin fun
-                          [ ClpPlace (idx,(id,name,pos)) ->
-                            (
-                              IO.write_byte binout 0;
-                              IO.write_ui16 binout idx;
-                              IO.write_ui16 binout id;
-                              write_option_string name;
-                              IO.write_double binout pos.x;
-                              IO.write_double binout pos.y;
-                            )
-                          | ClpClear from count ->
-                            (
-                              IO.write_byte binout 1;
-                              IO.write_ui16 binout from;
-                              IO.write_ui16 binout count;
-                            )
-                          | ClpChange idx changes ->
-                            (
-                              IO.write_byte binout 2;
-                              IO.write_ui16 binout idx;
-                              IO.write_byte binout (List.length changes);
-                              List.iter begin fun
-                                [ `move z -> (IO.write_byte binout 0; IO.write_ui16 binout z)
-                                | `posX x -> (IO.write_byte binout 1; IO.write_double binout x)
-                                | `posY y -> (IO.write_byte binout 2; IO.write_double binout y)
-                                ]
-                              end changes;
-                            )
-                          ]
-                        end commands
-                      )
-                    ]
-                  )
-                end frames;
-              )
+          let write_children children = 
+            let () = IO.write_byte binout (DynArray.length children) in
+            DynArray.iter begin fun 
+              [ `chld (id,name,pos) ->
+                (
+                  IO.write_ui16 binout id;
+                  IO.write_double binout pos.x;
+                  IO.write_double binout pos.y;
+                  write_name name;
+                )
+              | `box (pos,name)-> assert False
+              ]
+            end children
+          in
+          DynArray.iter begin fun 
+            [ {item_id=id;item;deleted=False} ->
+              match item with
+              [ `image info when Hashtbl.mem images id ->
+                (
+                  IO.write_ui16 binout id;
+                  IO.write_byte binout 0; (* this is image *)
+                  IO.write_byte binout info.page;
+                  IO.write_ui16 binout info.tx;
+                  IO.write_ui16 binout info.ty;
+                  IO.write_ui16 binout info.width;
+                  IO.write_ui16 binout info.height;
+                )
+              | `sprite children ->
+                (
+                  IO.write_ui16 binout id;
+                  IO.write_byte binout 1;
+                  write_sprite_children children;
+                )
+              | `clip frames when is_simple_clip frames ->
+                (
+                  IO.write_ui16 binout id;
+                  IO.write_byte binout 2;
+                  IO.write_ui16 binout (DynArray.length frames);
+                  DynArray.iter begin fun frame ->
+                    (
+                      IO.write_byte binout frame.duration;
+                      write_option_string frame.label;
+                      match DynArray.get frame.children 0 with
+                      [ `chld (id,name,pos) -> 
+                        (
+                          IO.write_ui16 binout id;
+                          IO.write_double binout pos.x;
+                          IO.write_double binout pos.y;
+                        )
+                      | _ -> assert False
+                      ]
+                    )
+                  end frames
+                )
+              | `clip frames ->
+                (
+                  IO.write_ui16 binout id;
+                  IO.write_byte binout 3;
+                  IO.write_ui16 binout (DynArray.length frames);
+                  DynArray.iter begin fun frame ->
+                    (
+                      IO.write_byte binout frame.duration;
+                      write_option_string frame.label;
+                      write_children frame.children;
+                      match frame.commands with
+                      [ None -> IO.write_byte binout 0
+                      | Some commands ->
+                        (
+                          IO.write_byte binout 1;
+                          IO.write_ui16 binout (DynArray.length commands);
+                          DynArray.iter begin fun
+                            [ ClpPlace (idx,(id,name,pos)) ->
+                              (
+                                IO.write_byte binout 0;
+                                IO.write_ui16 binout idx;
+                                IO.write_ui16 binout id;
+                                write_name name;
+                                IO.write_double binout pos.x;
+                                IO.write_double binout pos.y;
+                              )
+                            | ClpClear from count ->
+                              (
+                                IO.write_byte binout 1;
+                                IO.write_ui16 binout from;
+                                IO.write_ui16 binout count;
+                              )
+                            | ClpChange idx changes ->
+                              (
+                                IO.write_byte binout 2;
+                                IO.write_ui16 binout idx;
+                                IO.write_byte binout (List.length changes);
+                                List.iter begin fun
+                                  [ `move z -> (IO.write_byte binout 0; IO.write_ui16 binout z)
+                                  | `posX x -> (IO.write_byte binout 1; IO.write_double binout x)
+                                  | `posY y -> (IO.write_byte binout 2; IO.write_double binout y)
+                                  ]
+                                end changes;
+                              )
+                            ]
+                          end commands
+                        )
+                      ]
+                    )
+                  end frames;
+                )
+              | _ -> ()
+              ]
             | _ -> ()
             ]
           end items;
