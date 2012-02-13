@@ -1,5 +1,5 @@
 all: 
-	ocamlbuild -use-ocamlfind fontmaker.byte
+	ocamlbuild -use-ocamlfind fontmaker.native
 
 clean:
 	ocamlbuild -use-ocamlfind -clean

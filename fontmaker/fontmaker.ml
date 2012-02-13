@@ -1,5 +1,4 @@
 open Printf;
-open ExtString;
 
 module Ft = Freetype;
 
@@ -16,7 +15,7 @@ value (=*=) k v = k =|= string_of_int v;
 value pattern = ref "";
 value fontFile = ref "";
 value sizes = ref [ ]; (* add support for multisize *)
-value color = ref {Color.r = 255; g = 255; b = 255};
+value color = {Color.r = 255; g = 255; b = 255};
 value dpi = ref 72;
 
 value bgcolor = {Color.color = {Color.r = 0; g = 0; b = 0}; alpha = 0};
@@ -24,22 +23,23 @@ value bgcolor = {Color.color = {Color.r = 0; g = 0; b = 0}; alpha = 0};
 value make_size face size callback = 
 (
   Freetype.set_char_size face size 0. !dpi 0;
-  UTF8.iter begin fun uchar ->
+  BatUTF8.iter begin fun uchar ->
   (
-    let code = UChar.code uchar in
+    let code = BatUChar.to_int uchar in
 (*     let () = Printf.printf "process char: %d\n%!" code in *)
     let char_index = Freetype.get_char_index face code in
     let (xadv,yadv) = Freetype.render_glyph face char_index [] Freetype.Render_Normal in
     let bi = Freetype.get_bitmap_info face in
     (* take bitmap as is for now *)
     let open Freetype in
-(*     let () = Printf.printf "bi.width: %d, bi.height: %d\n%!" bi.bitmap_width bi.bitmap_height in *)
+    let () = Printf.printf "%C: bi.left = %d, bi.top = %d,bi.width: %d, bi.height: %d\n%!" (char_of_int code) bi.bitmap_left bi.bitmap_top bi.bitmap_width bi.bitmap_height in
     let img =  Rgba32.make bi.bitmap_width bi.bitmap_height bgcolor in
     (
       for y = 0 to bi.bitmap_height - 1 do
         for x = 0 to bi.bitmap_width - 1 do
           let level = read_bitmap face x y in
-          let color = {Color.color = {Color.r=level;Color.g=level;Color.b=level}; alpha = level} in
+(*           let () = Printf.printf "level: %d\n%!" level in *)
+          let color = {Color.color; alpha =level } in
           Rgba32.set img x (bi.bitmap_height - y - 1) color
         done
       done;
@@ -47,7 +47,7 @@ value make_size face size callback =
       callback code xadv bi.bitmap_left bi.bitmap_top img
     )
   )
-  end !pattern;
+  end (BatUTF8.of_string !pattern);
 );
 
 type sdescr = 
@@ -59,10 +59,10 @@ type sdescr =
 
 value parse_sizes str = 
   try
-    sizes.val := List.map int_of_string (String.nsplit str ",")
+    sizes.val := List.map int_of_string (BatString.nsplit str ",")
   with [ _ -> failwith "Failure parse sizes" ];
 
-value read_chars fname = pattern.val := String.strip (Std.input_file fname);
+value read_chars fname = pattern.val := BatString.strip (BatStd.input_file fname);
 value output = ref None;
 
 (* use xmlm for writing xml *)
@@ -84,7 +84,7 @@ else
     if !fontFile = "" then bad_arg "font file"
     else ();
 
-Printf.printf "chars: [%s] = %d\n%!" !pattern (UTF8.length !pattern);
+(* Printf.printf "chars: [%s] = %d\n%!" !pattern (BatUTF8.length !pattern); *)
 let t = Freetype.init () in
 let (face,face_info) = Freetype.new_face t !fontFile 0 in
 let chars = Hashtbl.create 1 in
@@ -116,11 +116,13 @@ let xmlout = Xmlm.make_output ~nl:True ~indent:(Some 4) (`Channel (open_out xmlf
     end !sizes;
     let () = Printf.printf "len imgs: %d\n%!" (List.length !imgs) in
     Xmlm.output xmlout (`El_start (("","Pages"),[]));
-    let textures = TextureLayout.layout !imgs in
-    ExtList.List.iteri begin fun i (w,h,imgs) ->
+
+    let () = TextureLayout.rotate.val := False in
+    let textures = TextureLayout.layout ~type_rects:`maxrect ~sqr:False !imgs in
+    BatList.iteri begin fun i (w,h,imgs) ->
       let texture = Rgba32.make w h bgcolor in
       (
-        List.iter begin fun (key,(x,y,img)) ->
+        List.iter begin fun (key,(x,y,_,img)) ->
           (
             let img = match img with [ Images.Rgba32 img -> img | _ -> assert False ] in
             Rgba32.blit img 0 0 texture x y img.Rgba32.width img.Rgba32.height;
@@ -142,19 +144,22 @@ let xmlout = Xmlm.make_output ~nl:True ~indent:(Some 4) (`Channel (open_out xmlf
   List.iter begin fun size ->
     (
       Freetype.set_char_size face (float size) 0. !dpi 0;
-      let spaceIndex = Freetype.get_char_index face (UChar.code (UChar.of_char ' ')) in
+      let spaceIndex = Freetype.get_char_index face (int_of_char ' ') in
       let (spaceXAdv, spaceYAdv) = Freetype.render_glyph face spaceIndex [] Freetype.Render_Normal in
       let sizeInfo = Freetype.get_size_metrics face in
       (
+        let () = Printf.printf "descender: %f, max_advance: %f, x_ppem: %d, y_ppem: %d, ascender: %f, height: %f\n%!" sizeInfo.Freetype.descender sizeInfo.Freetype.max_advance sizeInfo.Freetype.x_ppem
+        sizeInfo.Freetype.y_ppem sizeInfo.Freetype.ascender sizeInfo.Freetype.height in
         Xmlm.output xmlout (`El_start (("","Chars"),[ "space" =.= spaceXAdv; "size" =*= size ; "lineHeight" =.= sizeInfo.Freetype.height; "baseLine" =.= sizeInfo.Freetype.ascender ]));
-        UTF8.iter begin fun uchar ->
-          let code = UChar.code uchar in
+        BatUTF8.iter begin fun uchar ->
+          let code = BatUChar.to_int uchar in
           let info = Hashtbl.find chars (code,size) in
+          let () = Printf.printf "char: %C, xoffset: %d, yoffset: %d\n%!" (char_of_int code) info.xoffset info.yoffset in
           let attribs = 
             [ "id" =*= code
             ; "xadvance" =.= info.xadvance
             ; "xoffset" =*= info.xoffset
-            ; "yoffset" =*= (truncate (sizeInfo.Freetype.height -. (float info.yoffset)))
+            ; "yoffset" =*= (truncate (sizeInfo.Freetype.ascender -. (float info.yoffset)))
             ; "x" =*= info.x
             ; "y" =*= info.y
             ; "width" =*= info.width
@@ -166,7 +171,7 @@ let xmlout = Xmlm.make_output ~nl:True ~indent:(Some 4) (`Channel (open_out xmlf
             Xmlm.output xmlout (`El_start (("","char"),attribs));
             Xmlm.output xmlout `El_end;
           )
-        end !pattern;
+        end (BatUTF8.of_string !pattern);
       );
       Xmlm.output xmlout `El_end;
     )
