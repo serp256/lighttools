@@ -4,6 +4,7 @@ package ru.redspell.rasterizer.flatten {
 	import flash.display.Sprite;
 
 	import ru.redspell.rasterizer.utils.MovieClipExt;
+	import ru.redspell.rasterizer.utils.Utils;
 
 	public class FlattenMovieClip extends Sprite implements IFlatten {
         protected var _frames:Vector.<FlattenSprite> = new Vector.<FlattenSprite>();
@@ -17,6 +18,7 @@ package ru.redspell.rasterizer.flatten {
 			}
 
 			MovieClipExt.recStop(clip);
+			Utils.traceObj(clip);
 
 			for (var i:uint = 1; i <= clip.totalFrames; i++) {
 				var frame:FlattenSprite = (new FlattenSprite()).fromDisplayObject(obj) as FlattenSprite;
@@ -33,6 +35,10 @@ package ru.redspell.rasterizer.flatten {
 
 		public function get curFrame():uint {
 			return _curFrame;
+		}
+
+		public function goto(frame:uint):void {
+			_curFrame = (frame < _frames.length) ? frame : (_frames.length - 1);
 		}
 
         public function nextFrame():void {
@@ -59,6 +65,8 @@ package ru.redspell.rasterizer.flatten {
 			while (numChildren) {
 				removeChildAt(0);
 			}
+
+			trace('_________________rendering frame ' + _curFrame + '_____________________');
 
 			var frame:FlattenSprite = _frames[_curFrame];
 
