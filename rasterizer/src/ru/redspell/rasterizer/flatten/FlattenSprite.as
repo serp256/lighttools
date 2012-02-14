@@ -13,6 +13,8 @@ package ru.redspell.rasterizer.flatten {
 	import flash.geom.Rectangle;
 	import flash.utils.Dictionary;
 
+	import mx.core.FlexGlobals;
+
 	public class FlattenSprite extends Sprite implements IFlatten {
         public static const BMP_SMOOTHING_MISTAKE:Number = 0;
 
@@ -259,9 +261,9 @@ package ru.redspell.rasterizer.flatten {
 					continue;
 				}
 
-				var bmp:Bitmap = new Bitmap(img);
-
+				var bmp:Bitmap = new Bitmap(img.clone());
 				bmp.transform.matrix = img.matrix;
+
 				addChild(bmp);
 			}
 		}

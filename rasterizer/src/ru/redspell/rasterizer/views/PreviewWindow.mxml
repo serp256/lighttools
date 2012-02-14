@@ -15,8 +15,6 @@
 		}
 
 		protected function timerHandler(event:TimerEvent):void {
-			trace('frame: ' + (_obj as FlattenMovieClip).curFrame + ' ' + ((_obj as FlattenMovieClip).getChildAt(0) as DisplayObjectContainer).numChildren);
-
 			var fmc:FlattenMovieClip = _obj as FlattenMovieClip;
 
 			fmc.nextFrame();
@@ -32,9 +30,21 @@
 		public function preview(obj:IFlatten):void {
 			_obj = obj;
 			_obj.render();
+
 			container.addChild(_obj as DisplayObject);
 
 			var rect:Rectangle = container.getBounds(this);
+			var fltMc:FlattenMovieClip = _obj as FlattenMovieClip
+
+			//when obj rect is empty, container rect is something like (x=6710887.4, y=6710918.6, w=0, h=0); we need to find non-empty-rect frame to align container correctly
+			if (fltMc != null) {
+				while (rect.isEmpty() && (fltMc.curFrame < fltMc.frames.length)) {
+					fltMc.nextFrame();
+					rect = container.getBounds(this);
+				}
+
+				fltMc.goto(0);
+			}
 
 			if (rect.width > width) {
 				container.scaleX = container.scaleY = width / rect.width;
@@ -49,7 +59,7 @@
 			container.x = (width  - rect.width) / 2 - rect.x;
 			container.y = (height - rect.height) / 2 - rect.y;
 
-			if (_obj is FlattenMovieClip) {
+			if (fltMc != null) {
 				_timer.start();
 			}
 		}
