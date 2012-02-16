@@ -206,6 +206,7 @@ and process_dir dirname = (* найти мету в этой директори�
           let frame = objekt frame in 
           let label = try Some (string (List.assoc "label" frame)) with [ Not_found -> None ] in
           let children = process_children dirname (List.assoc "children" frame) in
+          let () = DynArray.filter (fun [ `chld _ -> True | _ -> False ]) children in
           {label;commands=None;children;duration=1}
         end (List.assoc "frames" mobj)
       in
@@ -635,7 +636,7 @@ value make_clip_commands () =
                   | _ -> assert False
                   ]
                 with [ Not_found -> DynArray.add commands (ClpPlace (c,child)) ]
-              | _ -> failwith "boxes not supported in clips yeat"
+              | _ -> prerr_endline "boxes not supported in clips yeat"
               ]
             done;
             (* еще удалить надо *)

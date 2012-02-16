@@ -32,7 +32,7 @@ value make_size face size callback =
     let bi = Freetype.get_bitmap_info face in
     (* take bitmap as is for now *)
     let open Freetype in
-    let () = Printf.printf "%C: bi.left = %d, bi.top = %d,bi.width: %d, bi.height: %d\n%!" (char_of_int code) bi.bitmap_left bi.bitmap_top bi.bitmap_width bi.bitmap_height in
+(*     let () = Printf.printf "%C: bi.left = %d, bi.top = %d,bi.width: %d, bi.height: %d\n%!" (char_of_int code) bi.bitmap_left bi.bitmap_top bi.bitmap_width bi.bitmap_height in *)
     let img =  Rgba32.make bi.bitmap_width bi.bitmap_height bgcolor in
     (
       for y = 0 to bi.bitmap_height - 1 do
@@ -150,11 +150,18 @@ let xmlout = Xmlm.make_output ~nl:True ~indent:(Some 4) (`Channel (open_out xmlf
       (
         let () = Printf.printf "descender: %f, max_advance: %f, x_ppem: %d, y_ppem: %d, ascender: %f, height: %f\n%!" sizeInfo.Freetype.descender sizeInfo.Freetype.max_advance sizeInfo.Freetype.x_ppem
         sizeInfo.Freetype.y_ppem sizeInfo.Freetype.ascender sizeInfo.Freetype.height in
-        Xmlm.output xmlout (`El_start (("","Chars"),[ "space" =.= spaceXAdv; "size" =*= size ; "lineHeight" =.= sizeInfo.Freetype.height; "baseLine" =.= sizeInfo.Freetype.ascender ]));
+        Xmlm.output xmlout (`El_start (("","Chars"),
+          [ "space" =.= spaceXAdv; 
+            "size" =*= size ; 
+            "lineHeight" =.= sizeInfo.Freetype.height; 
+            "ascender" =.= sizeInfo.Freetype.ascender;
+            "descender" =.= ~-. (sizeInfo.Freetype.descender);
+          ])
+        );
         BatUTF8.iter begin fun uchar ->
           let code = BatUChar.to_int uchar in
           let info = Hashtbl.find chars (code,size) in
-          let () = Printf.printf "char: %C, xoffset: %d, yoffset: %d\n%!" (char_of_int code) info.xoffset info.yoffset in
+(*           let () = Printf.printf "char: %C, xoffset: %d, yoffset: %d\n%!" (char_of_int code) info.xoffset info.yoffset in *)
           let attribs = 
             [ "id" =*= code
             ; "xadvance" =.= info.xadvance
