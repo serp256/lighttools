@@ -6,6 +6,7 @@ package ru.redspell.rasterizer.commands {
 	import flash.utils.setTimeout;
 
 	import ru.nazarov.asmvc.command.AbstractCommand;
+	import ru.nazarov.asmvc.command.CommandError;
 	import ru.redspell.rasterizer.models.Swf;
 	import ru.redspell.rasterizer.models.SwfsPack;
 	import ru.redspell.rasterizer.utils.Config;

@@ -11,6 +11,7 @@ package ru.redspell.rasterizer.models {
 	import mx.collections.ArrayCollection;
 
 	import ru.etcs.utils.getDefinitionNames;
+	import ru.nazarov.asmvc.command.CommandError;
 
 	public class Swf extends ArrayCollection {
 		public var path:String;
@@ -34,20 +35,24 @@ package ru.redspell.rasterizer.models {
 		}
 
 		protected function loader_completeHandler(event:Event):void {
-			var li:LoaderInfo = event.target as LoaderInfo;
-			var appDomain:ApplicationDomain = li.applicationDomain;
-			var classes:Array = _useGetDefinitions ? getDefinitionNames(li) : source;
+			try {
+				var li:LoaderInfo = event.target as LoaderInfo;
+				var appDomain:ApplicationDomain = li.applicationDomain;
+				var classes:Array = _useGetDefinitions ? getDefinitionNames(li) : source;
 
-			for each (var cls:Object in classes) {
-				if (cls is SwfClass) {
-					(cls as SwfClass).definition = appDomain.getDefinition(cls.name) as Class;
-				} else {
-					var className:String = String(cls);
-					addClass(Facade.projFactory.getSwfClass(appDomain.getDefinition(className) as Class, className));
+				for each (var cls:Object in classes) {
+					if (cls is SwfClass) {
+						(cls as SwfClass).definition = appDomain.getDefinition(cls.name) as Class;
+					} else {
+						var className:String = String(cls);
+						addClass(Facade.projFactory.getSwfClass(appDomain.getDefinition(className) as Class, className));
+					}
 				}
-			}
 
-			dispatchEvent(new Event(Event.COMPLETE));
+				dispatchEvent(new Event(Event.COMPLETE));
+			} catch (e:Error) {
+				Facade.app.reportError(CommandError.create(e, this.toString()));
+			}
 		}
 
 		protected function loader_ioErrorHandler(event:IOErrorEvent):void {
