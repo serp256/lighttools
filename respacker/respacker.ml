@@ -579,11 +579,12 @@ value optimize_sprites () =
       if DynArray.length children = 1 (* если тут один чайлд - то это просто картинка *)
       then 
         match DynArray.get children 0 with
-        [ `chld (id,_,pos) -> 
+        [ `chld (id,_,pos) when pos.x = 0. && pos.y = 0. -> 
           (
             DynArray.set exports i (name,id); (* FIXME: check pos *)
             item.deleted := True;
           )
+        | `chld _ -> () 
         | _ -> assert False 
         ]
       else ()
