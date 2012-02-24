@@ -7,6 +7,9 @@ package ru.redspell.rasterizer.models {
 	import flash.filesystem.File;
 	import flash.net.URLRequest;
 	import flash.system.ApplicationDomain;
+	import flash.system.LoaderContext;
+	import flash.system.Security;
+	import flash.system.SecurityDomain;
 
 	import mx.collections.ArrayCollection;
 
@@ -45,7 +48,9 @@ package ru.redspell.rasterizer.models {
 						(cls as SwfClass).definition = appDomain.getDefinition(cls.name) as Class;
 					} else {
 						var className:String = String(cls);
-						addClass(Facade.projFactory.getSwfClass(appDomain.getDefinition(className) as Class, className));
+						if (/E?Skins./.test(className)) {
+							addClass(Facade.projFactory.getSwfClass(appDomain.getDefinition(className) as Class, className));
+						}
 					}
 				}
 
@@ -66,6 +71,7 @@ package ru.redspell.rasterizer.models {
 
 			loader.addEventListener(IOErrorEvent.IO_ERROR, loader_ioErrorHandler);
 			loader.load(new URLRequest(swfsDir.resolvePath(path).url));
+			trace(Security.sandboxType);
 		}
 
 		public function get classes():Array {
