@@ -658,12 +658,49 @@ value make_clip_commands () =
 value outdir = ref "output";
 
 
-value goup_images () = 
+value group_images () = 
   for i = 0 to DynArray.length exports do
 
   done;
 
-value do_work isXml indir =
+value images_by_symbols () =
+  DynArray.fold_left begin fun res (_,id) ->
+    let item = DynArray.get items id in
+    match item.item with
+    [ `image _ -> [ [ (item.item_id,(Hashtbl.find images item.item_id)) ] :: res ]
+    | `sprite children ->
+        let imgs = 
+          DynArray.fold_left begin fun res child ->
+            match child with
+            [ `chld (id,_,_) ->
+              match (DynArray.get items id).item with
+              [ `image _ -> [ (id,Hashtbl.find images id) :: res ]
+              | _ -> assert False
+              ]
+            | _ -> res
+            ]
+          end [] children
+        in
+        [ imgs :: res ]
+    | `clip frames ->
+        let imgs = 
+          DynArray.fold_left begin fun res frame ->
+            DynArray.fold_left begin fun res -> fun
+              [ `chld (id,_,_) ->
+                match (DynArray.get items id).item with
+                [ `image _ -> [ (id,Hashtbl.find images id) :: res ]
+                | _ -> assert False
+                ]
+              | _ -> res
+              ]
+            end res frame.children
+          end [] frames
+        in
+        [ imgs :: res ]
+    ]
+  end [] exports;
+
+value do_work isXml separate indir =
   (
     Array.iter begin fun fl ->
       let dirname = indir // fl in
@@ -690,11 +727,11 @@ value do_work isXml indir =
         ]
       else ();
       Unix.mkdir outdir 0o755;
-      let imgs = Hashtbl.fold (fun id img res -> [ (id,img) :: res ]) images [] in
       let () = TextureLayout.rotate.val := False in
-      let pages = TextureLayout.layout ~type_rects:`maxrect ~sqr:False imgs in
-      let textures = 
+      let pack_textures starts_with images = 
+        let pages = TextureLayout.layout ~type_rects:`maxrect ~sqr:False images in
         List.mapi begin fun i (w,h,imgs) ->
+          let idx = i + starts_with in
           let texture = Rgba32.make w h bgcolor in
           (
             List.iter begin fun (key,(x,y,_,img)) ->
@@ -702,18 +739,31 @@ value do_work isXml indir =
               let img = match img with [ Images.Rgba32 img -> img | Images.Rgb24 img -> Rgb24.to_rgba32 img | _ -> assert False ] in
               Rgba32.blit img 0 0 texture x y img.Rgba32.width img.Rgba32.height;
               match (DynArray.get items key).item with
-              [ `image inf -> ( inf.tx := x; inf.ty := y; inf.page := i;)
+              [ `image inf -> ( inf.tx := x; inf.ty := y; inf.page := idx)
               | _ -> assert False
               ]
             )
             end imgs;
-            let imgname = Printf.sprintf "%d.png" i in
+            let imgname = Printf.sprintf "%d.png" idx in
             (
               Images.save (outdir // imgname) (Some Images.Png) [] (Images.Rgba32 texture);
               imgname;
             )
           )
         end pages
+      in
+      let textures = 
+        match separate with
+        [ True -> 
+          let images = images_by_symbols () in
+          List.fold_left begin fun res images ->
+            let textures = pack_textures (List.length res) images in
+            textures @ res
+          end [] images
+        | False ->
+            let images = Hashtbl.fold (fun id img res -> [ (id,img) :: res ]) images [] in
+            pack_textures 0 images
+        ]
       in
       let group_children children = 
         let qchld = Stack.create () in
@@ -913,7 +963,7 @@ value do_work isXml indir =
           ]
         in
         (
-          IO.write_byte binout (List.length textures);
+          IO.write_ui16 binout (List.length textures);
           List.iter (fun imgname -> IO.write_string binout imgname) textures;
           let cnt_items = 
             DynArray.fold_left begin fun cnt it -> 
@@ -1085,13 +1135,14 @@ value do_work isXml indir =
 value () = 
   let indir = ref None in
   let xml = ref False in
+  let separate = ref False in
   (
-    Arg.parse [ ("-o",Arg.Set_string outdir,"outpud directory") ; ("-xml",Arg.Set xml, "lib in xml format") ] (fun id -> indir.val := Some id) "usage msg";
+    Arg.parse [ ("-o",Arg.Set_string outdir,"outpud directory") ; ("-xml",Arg.Set xml, "lib in xml format") ; ("-sep",Arg.Set separate,"each symbol in separate texture")] (fun id -> indir.val := Some id) "usage msg";
     match !indir with
     [ None -> failwith "You must spec input dir"
     | Some indir -> 
         let indir = if indir.[String.length indir - 1] = '/' then String.rchop indir else indir in
-        do_work !xml indir
+        do_work !xml !separate indir
     ]
   );
 
