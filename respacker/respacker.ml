@@ -756,10 +756,10 @@ value do_work isXml separate indir =
         match separate with
         [ True -> 
           let images = images_by_symbols () in
-          List.fold_left begin fun res images ->
-            let textures = pack_textures (List.length res) images in
-            textures @ res
-          end [] images
+            List.fold_left begin fun res images ->
+              let textures = pack_textures (List.length res) images in
+              res @ textures
+            end [] images
         | False ->
             let images = Hashtbl.fold (fun id img res -> [ (id,img) :: res ]) images [] in
             pack_textures 0 images
@@ -1030,7 +1030,7 @@ value do_work isXml separate indir =
                 (
                   IO.write_ui16 binout id;
                   IO.write_byte binout 0; (* this is image *)
-                  IO.write_byte binout info.page;
+                  IO.write_ui16 binout info.page;
                   IO.write_ui16 binout info.tx;
                   IO.write_ui16 binout info.ty;
                   IO.write_ui16 binout info.width;
