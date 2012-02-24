@@ -15,6 +15,8 @@ package ru.redspell.rasterizer.flatten {
 
 	import mx.core.FlexGlobals;
 
+	import ru.redspell.rasterizer.utils.Utils;
+
 	public class FlattenSprite extends Sprite implements IFlatten {
         public static const BMP_SMOOTHING_MISTAKE:Number = 0;
 
@@ -142,6 +144,10 @@ package ru.redspell.rasterizer.flatten {
         }
 
         protected function flatten(obj:DisplayObject, matrix:Matrix = null, color:ColorTransform = null, filters:Array = null):void {
+			if (!obj) {
+				return;
+			}
+
             if (matrix == null) {
                 matrix = new Matrix();
             }
@@ -229,6 +235,8 @@ package ru.redspell.rasterizer.flatten {
 		}
 
         public function fromDisplayObject(obj:DisplayObject):IFlatten {
+			Utils.traceObj(obj as DisplayObjectContainer);
+
             cleanMasks();
             flatten(obj);
             applyMasks();
