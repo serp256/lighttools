@@ -171,6 +171,10 @@ package ru.redspell.rasterizer.flatten {
 
                 mtx.concat(matrix);
 
+                for (var i:uint = 0; i < container.numChildren; i++) {
+                    flatten(container.getChildAt(i), mtx, clr, fltrs);
+                }
+
 				if (!/^instance[\d]+$/.test(obj.name)) {
 					var box:FlattenSprite = new FlattenSprite();
 
@@ -179,10 +183,6 @@ package ru.redspell.rasterizer.flatten {
 
 					_childs.push(box);
 				}
-
-                for (var i:uint = 0; i < container.numChildren; i++) {
-                    flatten(container.getChildAt(i), mtx, clr, fltrs);
-                }
             } else {
                 mtx = matrix.clone();
                 mtx.concat(obj.transform.matrix);
