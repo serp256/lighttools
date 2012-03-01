@@ -187,7 +187,7 @@ value run () =
           (
             Images.save (save_img ^ ".png") (Some Images.Png) [] new_img;
             match !gen_pvr with
-            [ True -> ignore(Sys.command (Printf.sprintf "PVRTexTool -yflip0 -fOGLPVRTC4 -i%s.png -o %s.pvr" save_img save_img))
+            [ True -> TextureLayout.pvr_png save_img
             | _ -> ()
             ]
           );

@@ -664,28 +664,15 @@ value group_images () =
   done;
 
 value images_by_symbols () =
-  DynArray.fold_left begin fun res (_,id) ->
-    let item = DynArray.get items id in
-    match item.item with
-    [ `image _ -> [ [ (item.item_id,(Hashtbl.find images item.item_id)) ] :: res ]
-    | `sprite children ->
-        let imgs = 
-          DynArray.fold_left begin fun res child ->
-            match child with
-            [ `chld (id,_,_) ->
-              match (DynArray.get items id).item with
-              [ `image _ -> [ (id,Hashtbl.find images id) :: res ]
-              | _ -> assert False
-              ]
-            | _ -> res
-            ]
-          end [] children
-        in
-        [ imgs :: res ]
-    | `clip frames ->
-        let imgs = 
-          DynArray.fold_left begin fun res frame ->
-            DynArray.fold_left begin fun res -> fun
+  let imgs = 
+    DynArray.fold_left begin fun res (_,id) ->
+      let item = DynArray.get items id in
+      match item.item with
+      [ `image _ -> [ [ (item.item_id,(Hashtbl.find images item.item_id)) ] :: res ]
+      | `sprite children ->
+          let imgs = 
+            DynArray.fold_left begin fun res child ->
+              match child with
               [ `chld (id,_,_) ->
                 match (DynArray.get items id).item with
                 [ `image _ -> [ (id,Hashtbl.find images id) :: res ]
@@ -693,14 +680,44 @@ value images_by_symbols () =
                 ]
               | _ -> res
               ]
-            end res frame.children
-          end [] frames
-        in
-        [ imgs :: res ]
-    ]
-  end [] exports;
+            end [] children
+          in
+          [ imgs :: res ]
+      | `clip frames ->
+          let imgs = 
+            DynArray.fold_left begin fun res frame ->
+              DynArray.fold_left begin fun res -> fun
+                [ `chld (id,_,_) ->
+                  match (DynArray.get items id).item with
+                  [ `image _ -> [ (id,Hashtbl.find images id) :: res ]
+                  | _ -> assert False
+                  ]
+                | _ -> res
+                ]
+              end res frame.children
+            end [] frames
+          in
+          [ imgs :: res ]
+      ]
+    end [] exports
+  in
+  merge imgs [] where
+    rec merge imgs res =
+      match imgs with
+      [ [] -> res
+      |  [ imgs :: rest ] ->
+          let (commons,others) = 
+            List.partition begin fun imgs' ->
+              List.exists begin fun (id,_) ->
+                List.exists (fun (id',_) -> id = id') imgs'
+              end imgs
+            end rest
+          in
+          merge others [ imgs @ (List.concat commons) :: res ]
+      ]
+;
 
-value do_work isXml separate indir =
+value do_work isXml separate pvr indir =
   (
     Array.iter begin fun fl ->
       let dirname = indir // fl in
@@ -729,7 +746,7 @@ value do_work isXml separate indir =
       Unix.mkdir outdir 0o755;
       let () = TextureLayout.rotate.val := False in
       let pack_textures starts_with images = 
-        let pages = TextureLayout.layout ~type_rects:`maxrect ~sqr:False images in
+        let pages = TextureLayout.layout ~type_rects:`maxrect ~sqr:pvr images in
         List.mapi begin fun i (w,h,imgs) ->
           let idx = i + starts_with in
           let texture = Rgba32.make w h bgcolor in
@@ -747,6 +764,9 @@ value do_work isXml separate indir =
             let imgname = Printf.sprintf "%d.png" idx in
             (
               Images.save (outdir // imgname) (Some Images.Png) [] (Images.Rgba32 texture);
+              if pvr 
+              then TextureLayout.pvr_png (outdir // (string_of_int idx))
+              else ();
               imgname;
             )
           )
@@ -1136,13 +1156,21 @@ value () =
   let indir = ref None in
   let xml = ref False in
   let separate = ref False in
+  let pvr = ref False in
   (
-    Arg.parse [ ("-o",Arg.Set_string outdir,"outpud directory") ; ("-xml",Arg.Set xml, "lib in xml format") ; ("-sep",Arg.Set separate,"each symbol in separate texture")] (fun id -> indir.val := Some id) "usage msg";
+    Arg.parse 
+      [ 
+        ("-o",Arg.Set_string outdir,"outpud directory") ; 
+        ("-xml",Arg.Set xml, "lib in xml format") ; 
+        ("-sep",Arg.Set separate,"each symbol in separate texture");
+        ("-pvr",Arg.Set pvr,"make pvr")
+      ] 
+      (fun id -> indir.val := Some id) "usage msg";
     match !indir with
     [ None -> failwith "You must spec input dir"
     | Some indir -> 
         let indir = if indir.[String.length indir - 1] = '/' then String.rchop indir else indir in
-        do_work !xml !separate indir
+        do_work !xml !separate !pvr indir
     ]
   );
 
