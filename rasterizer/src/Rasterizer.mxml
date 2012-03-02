@@ -16,6 +16,7 @@
 		import mx.managers.PopUpManager;
 
 		import ru.nazarov.asmvc.command.ICommandError;
+		import ru.redspell.rasterizer.commands.ConvertProjectCommand;
 		import ru.redspell.rasterizer.views.ErrorWindow;
 
 		protected function addedToStageHandler(event:Event):void {
@@ -77,6 +78,10 @@
 
 					case Keyboard.E:
 						Facade.runCommand(Facade.commandsFactory.getExportCommand(Facade.proj));
+						break;
+
+					case Keyboard.F:
+						Facade.runCommand(new ConvertProjectCommand());
 						break;
 				}
 			}

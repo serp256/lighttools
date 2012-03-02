@@ -27,6 +27,8 @@ package ru.redspell.rasterizer.commands {
 				var swf:Swf = event.target as Swf;
 				var meta:Object = getMetaObj(new File(swf.path + Config.META_EXT));
 
+				trace(swf.path + Config.META_EXT, meta);
+
 				if (!meta.empty) {
 					for each (var cls:SwfClass in swf.classes) {
 						if (meta.hasOwnProperty(cls.name)) {
@@ -112,10 +114,11 @@ package ru.redspell.rasterizer.commands {
 				proj.addPack(pack);
 			}
 
-			meta = getMetaObj(Facade.projDir.resolvePath(Config.META_FILENAME));
+			meta = getMetaObj(projDir.resolvePath(Config.META_FILENAME));
 
 			if (!meta.empty) {
 				for each (pack in proj.packs) {
+					trace('meta.hasOwnProperty(pack.name) ? meta[pack.name].checked : true', meta.hasOwnProperty(pack.name) ? meta[pack.name].checked : true);
 					pack.checked = meta.hasOwnProperty(pack.name) ? meta[pack.name].checked : true;
 				}
 			}

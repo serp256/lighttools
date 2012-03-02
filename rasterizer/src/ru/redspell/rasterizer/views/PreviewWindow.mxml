@@ -72,13 +72,15 @@
 
 			var fmc:FlattenMovieClip = _obj as FlattenMovieClip;
 
-			if (next) {
-				fmc.nextFrame();
-			} else {
-				fmc.prevFrame();
-			}
+			if (fmc) {
+				if (next) {
+					fmc.nextFrame();
+				} else {
+					fmc.prevFrame();
+				}
 
-			frameLbl.text = 'frame: ' + fmc.curFrame;
+				frameLbl.text = 'frame: ' + fmc.curFrame;
+			}
 		}
 
 		protected function togglePlay():void {
