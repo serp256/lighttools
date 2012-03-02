@@ -16,17 +16,17 @@
 
 		protected function itemClickHandler(event:MenuEvent):void {
 			switch (event.item.action) {
-				case NEW:
-					Facade.runCommand(Facade.commandsFactory.getNewProjectCommand());
-					break;
+				//case NEW:
+				//	Facade.runCommand(Facade.commandsFactory.getNewProjectCommand());
+				//	break;
 
 				case OPEN:
 					Facade.runCommand(Facade.commandsFactory.getOpenProjectCommand());
 					break;
 
-				case SAVE:
-					Facade.runCommand(Facade.commandsFactory.getSaveProjectCommand());
-					break;
+				//case SAVE:
+				//	Facade.runCommand(Facade.commandsFactory.getSaveProjectCommand());
+				//	break;
 
 				case EXPORT:
 					Facade.runCommand(Facade.commandsFactory.getExportCommand(Facade.proj));

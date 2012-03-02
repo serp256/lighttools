@@ -5,7 +5,8 @@
 	xmlns:mx="library://ns.adobe.com/flex/mx"
 	xmlns:view="ru.redspell.rasterizer.views.*"
 	editable="true"
-	selectionMode="multipleRows">
+	selectionMode="multipleRows"
+	initialize="init()">
 
 	<fx:Script><![CDATA[
 		import mx.collections.IList;
@@ -15,9 +16,30 @@
 		import ru.redspell.rasterizer.models.SwfsPack;
 
 		import spark.events.GridEvent;
+		import spark.events.GridItemEditorEvent;
 
 		public static const ADD:String = 'packsList_add';
 		public static const REMOVE:String = 'packsList_remove';
+
+		protected var _prevPackName:String;
+
+		protected function init():void {
+			addEventListener(GridItemEditorEvent.GRID_ITEM_EDITOR_SESSION_STARTING, gridItemEditorSessionStartingHandler);
+			addEventListener(GridItemEditorEvent.GRID_ITEM_EDITOR_SESSION_SAVE, gridItemEditorSessionSaveHandler);
+		}
+
+		protected function gridItemEditorSessionStartingHandler(event:GridItemEditorEvent):void {
+			if (event.column.dataField == 'name') {
+				var pack:SwfsPack = (dataProvider as ArrayCollection).getItemAt(event.rowIndex) as SwfsPack;
+				_prevPackName = pack.name;
+			}
+		}
+
+		protected function gridItemEditorSessionSaveHandler(event:GridItemEditorEvent):void {
+			if (event.column.dataField == 'name') {
+				Facade.runCommand(Facade.commandsFactory.getRenamePackCommand((dataProvider as ArrayCollection).getItemAt(event.rowIndex) as SwfsPack, _prevPackName));
+			}
+		}
 
 		public function menu_itemClickHandler(event:FlexNativeMenuEvent):void {
 			switch (event.item.action) {
@@ -30,11 +52,16 @@
 
 	<view:columns>
 		<mx:ArrayCollection>
-			<s:GridColumn
+			<view:CheckboxGridColumn
 				width="30"
 				dataField="checked"
-				itemRenderer="ru.redspell.rasterizer.views.CheckboxColumnRenderer"
+				changed="Facade.runCommand(Facade.commandsFactory.getRefreshPacksMetaCommand())"
 				editable="false"/>
+			<!--<s:GridColumn-->
+				<!--width="30"-->
+				<!--dataField="checked"-->
+				<!--itemRenderer="ru.redspell.rasterizer.views.CheckboxColumnRenderer"-->
+				<!--editable="false"/>-->
 			<s:GridColumn
 				dataField="name"
 				headerText="Pack"

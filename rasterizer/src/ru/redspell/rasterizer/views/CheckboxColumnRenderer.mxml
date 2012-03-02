@@ -11,6 +11,7 @@
 		import mx.events.FlexNativeMenuEvent;
 
 		import ru.redspell.rasterizer.models.SwfsPack;
+		import ru.redspell.rasterizer.views.events.CheckboxColumnRendererEvent;
 
 		import spark.components.DataGrid;
 		import spark.components.gridClasses.GridSelectionMode;
@@ -53,7 +54,7 @@
 
 				var checkSelection:Boolean = false;
 
-				for each (var item:Object in dataGrd.selectedItems) {
+				for each (item in dataGrd.selectedItems) {
 					if (!item[column.dataField]) {
 						checkSelection = true;
 						break;
@@ -98,6 +99,14 @@
 
 			dp.refresh();
 			dataGrid.selectedItems = selection;
+
+			dispatchChangedEvent();
+		}
+
+		protected function dispatchChangedEvent():void {
+			if (column is CheckboxGridColumn) {
+				column.dispatchEvent(new CheckboxColumnRendererEvent(CheckboxColumnRendererEvent.CHANGED, (column.grid.dataProvider as ArrayCollection).getItemAt(rowIndex)));
+			}
 		}
 
 		public function set dataFieldValue(value:Boolean):void {
@@ -108,7 +117,7 @@
 	<fx:Binding source="checked.selected" destination="dataFieldValue"/>
 
 	<s:HGroup width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
-		<s:CheckBox id="checked" selected="{data[column.dataField]}"/>
+		<s:CheckBox id="checked" selected="{data[column.dataField]}" change="dispatchChangedEvent()"/>
 	</s:HGroup>
 
 	<s:flexContextMenu>

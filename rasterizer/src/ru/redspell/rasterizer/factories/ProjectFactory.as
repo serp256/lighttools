@@ -18,11 +18,10 @@ package ru.redspell.rasterizer.factories {
 			return instance;
 		}
 
-		public function getSwf(path:String, checked:Boolean = true, animated:Boolean = true):Swf {
+		public function getSwf(path:String, animated:Boolean = true):Swf {
 			var instance:Swf = new Swf();
 
 			instance.path = path;
-			instance.checked = checked;
 			instance.animated = animated;
 
 			return instance;

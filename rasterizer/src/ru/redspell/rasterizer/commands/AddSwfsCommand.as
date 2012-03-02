@@ -25,14 +25,16 @@ package ru.redspell.rasterizer.commands {
 
 		protected function loadSwfs(event:FileListEvent):void {
 			for each (var swfFile:File in event.files) {
-				var dst:File = Facade.projSwfsDir.resolvePath(swfFile.name);
-				var swf:Swf = Facade.projFactory.getSwf(dst.name);
+				var pack:SwfsPack = Facade.app.packsList.selectedItem as SwfsPack;
+
+				var dst:File = Facade.projDir.resolvePath(pack.name).resolvePath(swfFile.name);
+				var swf:Swf = Facade.projFactory.getSwf(dst.nativePath);
 
 				swfFile.copyTo(dst, true);
 				swf.addEventListener(Event.COMPLETE, swf_completeHandler);
-				swf.loadClasses(Facade.projSwfsDir);
+				swf.loadClasses(dst.parent);
 
-				(Facade.app.packsList.selectedItem as SwfsPack).addSwf(swf);
+				pack.addSwf(swf);
 
 				_totalSwfs++;
 			}

@@ -18,7 +18,6 @@ package ru.redspell.rasterizer.models {
 
 	public class Swf extends ArrayCollection {
 		public var path:String;
-		public var checked:Boolean;
 		public var animated:Boolean;
 		public var pack:SwfsPack;
 		protected var _useGetDefinitions:Boolean;
@@ -63,19 +62,22 @@ package ru.redspell.rasterizer.models {
 		protected function loader_ioErrorHandler(event:IOErrorEvent):void {
 		}
 
-		public function loadClasses(swfsDir:File, useGetDefinitions:Boolean = true):void {
+		public function loadClasses(useGetDefinitions:Boolean = true):void {
 			var loader:Loader = new Loader();
 
 			_useGetDefinitions = useGetDefinitions;
 			loader.contentLoaderInfo.addEventListener(Event.COMPLETE, loader_completeHandler);
 
 			loader.addEventListener(IOErrorEvent.IO_ERROR, loader_ioErrorHandler);
-			loader.load(new URLRequest(swfsDir.resolvePath(path).url));
-			trace(Security.sandboxType);
+			loader.load(new URLRequest(new File(path).url));
 		}
 
 		public function get classes():Array {
 			return source;
+		}
+
+		public function get filename():String {
+			return new File(path).name;
 		}
 	}
 }

@@ -3,6 +3,7 @@ package ru.redspell.rasterizer.commands {
 
 	import ru.nazarov.asmvc.command.AbstractCommand;
 	import ru.redspell.rasterizer.models.Swf;
+	import ru.redspell.rasterizer.models.SwfClass;
 
 	public class RemoveSwfCommand extends AbstractCommand {
 		protected var _swf:Swf;
@@ -12,10 +13,20 @@ package ru.redspell.rasterizer.commands {
 		}
 
 		override public function unsafeExecute():void {
-			var swfFile:File = Facade.projSwfsDir.resolvePath(_swf.path);
+			var swfFile:File = new File (_swf.path);
 
 			if (swfFile.exists) {
 				swfFile.deleteFile();
+			}
+
+			var packOut:File = Facade.projOutDir.resolvePath(_swf.pack.name);
+
+			for each (var cls:SwfClass in _swf.classes) {
+				var out:File = packOut.resolvePath(cls.name.replace('::', '.'));
+
+				if (out.exists) {
+					out.deleteDirectory(true);
+				}
 			}
 
 			_swf.pack.removeSwf(_swf);

@@ -39,18 +39,13 @@
 	<view:columns>
 		<s:ArrayCollection>
 			<s:GridColumn
-				width="30"
-				dataField="checked"
-				itemRenderer="ru.redspell.rasterizer.views.CheckboxColumnRenderer"
-				showDataTips="false"/>
-			<s:GridColumn
-				dataField="path"
+				dataField="filename"
 				headerText="Swf"
 				itemRenderer="ru.redspell.rasterizer.views.SwfsGridNameRenderer"/>
-			<s:GridColumn
+			<view:CheckboxGridColumn
 				dataField="animated"
 				headerText="Anim."
-				itemRenderer="ru.redspell.rasterizer.views.CheckboxColumnRenderer"
+				changed="Facade.runCommand(Facade.commandsFactory.getRefreshSwfsMetaCommand((event.item as Swf).pack))"
 				width="55"/>
 		</s:ArrayCollection>
 	</view:columns>

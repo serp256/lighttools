@@ -43,5 +43,21 @@ package ru.redspell.rasterizer.factories {
 		public function getExportCommand(proj:Project):ICommand {
 			return new ExportCommand(proj);
 		}
+
+		public function getRenamePackCommand(pack:SwfsPack, prevName:String):ICommand {
+			return new RenamePackCommand(pack, prevName);
+		}
+
+		public function getRefreshPacksMetaCommand():ICommand {
+			return new RefreshPacksMetaCommand();
+		}
+
+		public function getRefreshSwfsMetaCommand(pack:SwfsPack):ICommand {
+			return new RefreshSwfsMetaCommand(pack);
+		}
+
+		public function getRefreshClassesMetaCommand(swf:Swf):ICommand {
+			return new RefreshClassesMetaCommand(swf);
+		}
 	}
 }

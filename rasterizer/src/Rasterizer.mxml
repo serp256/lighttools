@@ -63,17 +63,17 @@
 		protected function stage_keyDownHandler(event:KeyboardEvent):void {
 			if (event.ctrlKey) {
 				switch (event.keyCode) {
-					case Keyboard.N:
-						Facade.runCommand(Facade.commandsFactory.getNewProjectCommand());
-						break;
+					//case Keyboard.N:
+					//	Facade.runCommand(Facade.commandsFactory.getNewProjectCommand());
+					//	break;
 
 					case Keyboard.O:
 						Facade.runCommand(Facade.commandsFactory.getOpenProjectCommand());
 						break;
 
-					case Keyboard.S:
-						Facade.runCommand(Facade.commandsFactory.getSaveProjectCommand());
-						break;
+					//case Keyboard.S:
+					//	Facade.runCommand(Facade.commandsFactory.getSaveProjectCommand());
+					//	break;
 
 					case Keyboard.E:
 						Facade.runCommand(Facade.commandsFactory.getExportCommand(Facade.proj));
@@ -87,8 +87,8 @@
 		<view:MainMenu/>
 
 		<s:HGroup id="rootGroup" width="100%" height="100%" paddingLeft="10" paddingBottom="10" paddingRight="10" paddingTop="10" enabled="false">
-			<view:PacksGrid id="packsList" width="20%" height="100%" expandList="{swfsList}"/>
-			<view:SwfsGrid id="swfsList" width="35%" height="100%" expandList="{classesGrid}"/>
+			<view:PacksGrid id="packsList" width="25%" height="100%" expandList="{swfsList}"/>
+			<view:SwfsGrid id="swfsList" width="30%" height="100%" expandList="{classesGrid}"/>
 			<view:ClassesGrid id="classesGrid" width="45%" height="100%"/>
 		</s:HGroup>
 	</s:VGroup>

@@ -10,5 +10,7 @@ package ru.redspell.rasterizer.utils {
 		public static const STATUS_REFRESH_TIME:Number = 100;
 		public static const DEFAULT_BEFORE_SAVE_STATUS:String = 'saving project...';
 		public static const DEFAULT_AFTER_SAVE_STATUS:String = 'project saved';
+		public static const META_FILENAME:String = 'meta';
+		public static const META_EXT:String = '.meta';
 	}
 }

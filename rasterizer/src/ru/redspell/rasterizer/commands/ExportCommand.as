@@ -88,14 +88,15 @@ package ru.redspell.rasterizer.commands {
 		protected function exportNextSwf():void {
 			if (++_swfIdx < _pack.length) {
 				_swf = _pack.getItemAt(_swfIdx) as Swf;
-				trace(_swf.path);
 
-				if (_swf.checked) {
-					_clsIdx = -1;
-					exportNextClass();
-				} else {
-					exportNextSwf();
-				}
+				//if (_swf.checked) {
+				//	_clsIdx = -1;
+				//	exportNextClass();
+				//} else {
+				//	exportNextSwf();
+				//}
+				_clsIdx = -1;
+				exportNextClass();
 			} else {
 				exportNextPack();
 			}
@@ -128,10 +129,10 @@ package ru.redspell.rasterizer.commands {
 				}
 
 				for each (var swf:Swf in pack) {
-					if (!swf.checked) {
-						continue;
-					}
-
+					//if (!swf.checked) {
+					//	continue;
+					//}
+					//
 					for each (var cls:SwfClass in swf) {
 						if (cls.checked) {
 							_classesTotal++;
