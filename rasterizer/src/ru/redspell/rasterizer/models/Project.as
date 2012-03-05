@@ -3,6 +3,7 @@ package ru.redspell.rasterizer.models {
 
 	public class Project extends ArrayCollection {
 		protected var _lastAdded:SwfsPack;
+		public var meta:Object = {};
 
 		public function addPack(pack:SwfsPack):void {
 			addItem(pack);

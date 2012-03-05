@@ -1,5 +1,5 @@
 package ru.redspell.rasterizer.commands {
-	import com.adobe.serialization.json.JSON;
+	import com.maccherone.json.JSON;
 
 	import flash.filesystem.File;
 	import flash.filesystem.FileMode;
@@ -14,6 +14,7 @@ package ru.redspell.rasterizer.commands {
 	import ru.redspell.rasterizer.models.SwfClass;
 	import ru.redspell.rasterizer.models.SwfsPack;
 	import ru.redspell.rasterizer.utils.Config;
+	import ru.redspell.rasterizer.utils.Utils;
 
 	public class ConvertProjectCommand extends AbstractCommand {
 		override public function unsafeExecute():void {
@@ -32,37 +33,37 @@ package ru.redspell.rasterizer.commands {
 			var outDir:File = projDir.resolvePath(Config.DEFAULT_OUT_DIR);
 			var proj:Project = Facade.serializersFactory.getProjectSerializer().deserialize(store.getChunkAt(0).bytes);
 
+			outDir.copyTo(out.resolvePath('out'));
+
 			var packsMeta:Object = {};
 
-			//outDir.copyTo(out.resolvePath('out'));
-
 			for each (var pack:SwfsPack in proj.packs) {
+				var packMeta:Object = {};
 				trace(pack.name);
 
 				if (!pack.checked) {
-					packsMeta[pack.name] = { checked:false };
+					packMeta = { checked:false };
 				}
 
 				var packDir:File = out.resolvePath(pack.name);
 				packDir.createDirectory();
 
-				var swfsMeta:Object = {};
-
 				for each (var swf:Swf in pack.swfs) {
+					var swfMeta:Object = {};
 					trace('\t', swf.path);
 
 					if (!swf.animated) {
-						swfsMeta[swf.path] = { animated:false };
+						swfMeta = { animated:false };
 					}
 
 					swfsDir.resolvePath(swf.path).copyTo(packDir.resolvePath(swf.path));
 
-					var clsMeta:Object = {};
-
 					for each (var cls:SwfClass in swf.classes) {
+						var clsMeta:Object = {};
+
 						if (!cls.checked || !cls.animated) {
 							if (!cls.checked) {
-								clsMeta[cls.name] = { checked:false };
+								clsMeta = { checked:false };
 
 								var clsDir:File = out.resolvePath('out').resolvePath(pack.name).resolvePath(cls.name.replace('::', '.'));
 
@@ -73,32 +74,36 @@ package ru.redspell.rasterizer.commands {
 
 							if (!cls.animated) {
 								if (clsMeta.hasOwnProperty(cls.name)) {
-									clsMeta[cls.name]['animated'] = false;
+									clsMeta['animated'] = false;
 								} else {
-									clsMeta[cls.name] = { animated:false };
+									clsMeta = { animated:false };
 								}
 							}
+						}
+
+						if (!Utils.objIsEmpty(clsMeta)) {
+							swfMeta[cls.name] = clsMeta;
 						}
 
 						trace('\t\t', cls.name);
 					}
 
-					fs = new FileStream();
-					fs.open(packDir.resolvePath(swf.path + Config.META_EXT), FileMode.WRITE);
-					fs.writeUTFBytes(JSON.encode(clsMeta));
-					fs.close();
+					if (!Utils.objIsEmpty(swfMeta)) {
+						packMeta[swf.path] = swfMeta;
+					}
 				}
 
-				var fs:FileStream = new FileStream();
-				fs.open(packDir.resolvePath(Config.META_FILENAME), FileMode.WRITE);
-				fs.writeUTFBytes(JSON.encode(swfsMeta));
-				fs.close();
+				if (!Utils.objIsEmpty(packMeta)) {
+					packsMeta[pack.name] = packMeta;
+				}
 			}
 
-			fs = new FileStream();
-			fs.open(out.resolvePath(Config.META_FILENAME), FileMode.WRITE);
-			fs.writeUTFBytes(JSON.encode(packsMeta));
-			fs.close();
+			if (!Utils.objIsEmpty(packsMeta)) {
+				var fs:FileStream = new FileStream();
+				fs.open(out.resolvePath(Config.META_FILENAME), FileMode.WRITE);
+				fs.writeUTFBytes(JSON.encode(packsMeta));
+				fs.close();
+			}
 		}
 	}
 }

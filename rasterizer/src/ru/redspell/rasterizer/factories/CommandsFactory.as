@@ -3,6 +3,7 @@ package ru.redspell.rasterizer.factories {
 	import ru.nazarov.asmvc.command.ICommand;
 	import ru.redspell.rasterizer.models.Project;
 	import ru.redspell.rasterizer.models.Swf;
+	import ru.redspell.rasterizer.models.SwfClass;
 	import ru.redspell.rasterizer.models.SwfsPack;
 	import ru.redspell.rasterizer.utils.Config;
 
@@ -48,16 +49,16 @@ package ru.redspell.rasterizer.factories {
 			return new RenamePackCommand(pack, prevName);
 		}
 
-		public function getRefreshPacksMetaCommand():ICommand {
-			return new RefreshPacksMetaCommand();
+		public function getRefreshPackMetaCommand(pack:SwfsPack):ICommand {
+			return new RefreshPackMetaCommand(pack);
 		}
 
-		public function getRefreshSwfsMetaCommand(pack:SwfsPack):ICommand {
-			return new RefreshSwfsMetaCommand(pack);
+		public function getRefreshSwfMetaCommand(swf:Swf):ICommand {
+			return new RefreshSwfMetaCommand(swf);
 		}
 
-		public function getRefreshClassesMetaCommand(swf:Swf):ICommand {
-			return new RefreshClassesMetaCommand(swf);
+		public function getRefreshClassesMetaCommand(cls:SwfClass):ICommand {
+			return new RefreshClassMetaCommand(cls);
 		}
 	}
 }

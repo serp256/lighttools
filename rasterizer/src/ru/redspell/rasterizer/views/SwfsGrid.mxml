@@ -45,7 +45,7 @@
 			<view:CheckboxGridColumn
 				dataField="animated"
 				headerText="Anim."
-				changed="Facade.runCommand(Facade.commandsFactory.getRefreshSwfsMetaCommand((event.item as Swf).pack))"
+				changed="Facade.runCommand(Facade.commandsFactory.getRefreshSwfMetaCommand(event.item as Swf))"
 				width="55"/>
 		</s:ArrayCollection>
 	</view:columns>

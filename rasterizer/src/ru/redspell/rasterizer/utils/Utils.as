@@ -47,5 +47,13 @@ package ru.redspell.rasterizer.utils {
 				return name + '_' + String(i);
 			}
 		}
+
+		public static function objIsEmpty(obj:Object):Boolean {
+			for (var key:* in obj) {
+				return false;
+			}
+
+			return true;
+		}
 	}
 }

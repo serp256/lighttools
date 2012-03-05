@@ -39,9 +39,9 @@
 		<fx:Object label="File">
 			<fx:children>
 				<fx:Array>
-					<fx:Object label="New" action="{NEW}"/>
+					<!--<fx:Object label="New" action="{NEW}"/>-->
 					<fx:Object label="Open" action="{OPEN}"/>
-					<fx:Object label="Save" action="{SAVE}"/>
+					<!--<fx:Object label="Save" action="{SAVE}"/>-->
 					<fx:Object label="Export" action="{EXPORT}"/>
 				</fx:Array>
 			</fx:children>

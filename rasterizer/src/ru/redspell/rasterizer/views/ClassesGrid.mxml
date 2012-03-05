@@ -19,7 +19,7 @@
 		}
 
 		protected function checkboxColChanged(event:CheckboxColumnRendererEvent):void {
-			Facade.runCommand(Facade.commandsFactory.getRefreshClassesMetaCommand((event.item as SwfClass).swf));
+			Facade.runCommand(Facade.commandsFactory.getRefreshClassesMetaCommand(event.item as SwfClass));
 		}
 	]]></fx:Script>
 

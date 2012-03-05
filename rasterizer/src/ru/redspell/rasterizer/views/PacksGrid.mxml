@@ -55,7 +55,7 @@
 			<view:CheckboxGridColumn
 				width="30"
 				dataField="checked"
-				changed="Facade.runCommand(Facade.commandsFactory.getRefreshPacksMetaCommand())"
+				changed="Facade.runCommand(Facade.commandsFactory.getRefreshPackMetaCommand(event.item as SwfsPack))"
 				editable="false"/>
 			<!--<s:GridColumn-->
 				<!--width="30"-->

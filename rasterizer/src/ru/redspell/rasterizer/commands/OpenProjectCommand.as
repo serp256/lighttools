@@ -25,19 +25,28 @@ package ru.redspell.rasterizer.commands {
 				Facade.app.setStatus('project opened', true);
 			} else {
 				var swf:Swf = event.target as Swf;
-				var meta:Object = getMetaObj(new File(swf.path + Config.META_EXT));
+				var meta:Object = Facade.proj.meta;
 
-				trace(swf.path + Config.META_EXT, meta);
-
-				if (!meta.empty) {
-					for each (var cls:SwfClass in swf.classes) {
-						if (meta.hasOwnProperty(cls.name)) {
-							var clsMeta:Object = meta[cls.name];
-
-							cls.checked = clsMeta.hasOwnProperty('checked') ? clsMeta['checked'] : true;
-							cls.animated = clsMeta.hasOwnProperty('animated') ? clsMeta['animated'] : true;
-						}
+				for each (var cls:SwfClass in swf.classes) {
+					if (!meta.hasOwnProperty(cls.swf.pack.name)) {
+						continue;
 					}
+
+					var packMeta:Object = meta[cls.swf.pack.name];
+
+					if (!packMeta.hasOwnProperty(cls.swf.filename)) {
+						continue;
+					}
+
+					var swfMeta:Object = packMeta[cls.swf.filename];
+
+					if (!swfMeta.hasOwnProperty(cls.name)) {
+						continue;
+					}
+
+					var clsMeta:Object = swfMeta[cls.name];
+					cls.checked = clsMeta.hasOwnProperty('checked') ? clsMeta.checked : true;
+					cls.animated = clsMeta.hasOwnProperty('animated') ? clsMeta.animated : true;
 				}
 
 				Facade.app.setStatus('loading swfs (' + _loadedSwfs + '/' + _totalSwfs + ')', true);
@@ -45,12 +54,11 @@ package ru.redspell.rasterizer.commands {
 		}
 
 		protected function getMetaObj(metaFile:File):Object {
-			var metaObj:Object = { empty:true };
+			var metaObj:Object = {};
 
 			if (metaFile.exists) {
 				var fs:FileStream = new FileStream();
 				fs.open(metaFile, FileMode.READ);
-				metaObj.empty = false;
 				metaObj = JSON.decode(fs.readUTFBytes(fs.bytesAvailable));
 				fs.close();
 			}
@@ -80,6 +88,7 @@ package ru.redspell.rasterizer.commands {
 			var swfsDir:File = projDir.resolvePath(Config.DEFAULT_SWFS_DIR);
 			var outDir:File = projDir.resolvePath(Config.DEFAULT_OUT_DIR);
 			var proj:Project = new Project();
+			var meta:Object = getMetaObj(projDir.resolvePath(Config.META_FILENAME));
 
 			for each (var dir:File in projDir.getDirectoryListing()) {
 				if (!dir.isDirectory || (dir.name == Config.DEFAULT_OUT_DIR)) {
@@ -88,12 +97,22 @@ package ru.redspell.rasterizer.commands {
 
 				var pack:SwfsPack = Facade.projFactory.getSwfPack(dir.name);
 
+				if (meta.hasOwnProperty(dir.name)) {
+					var packMeta:Object = meta[dir.name];
+					pack.checked = packMeta.hasOwnProperty('checked') ? packMeta.checked : true;
+				}
+
 				for each (var swfFile:File in dir.getDirectoryListing()) {
 					if (swfFile.isDirectory || swfFile.extension != 'swf') {
 						continue;
 					}
 
 					var swf:Swf = Facade.projFactory.getSwf(swfFile.nativePath);
+
+					if (packMeta && packMeta.hasOwnProperty(swf.filename)) {
+						var swfMeta:Object = packMeta[swf.filename];
+						swf.animated = swfMeta.hasOwnProperty('animated') ? swfMeta.aninated : true;
+					}
 
 					swf.addEventListener(Event.COMPLETE, swf_completeHandler);
 					swf.loadClasses(dir);
@@ -103,26 +122,10 @@ package ru.redspell.rasterizer.commands {
 					_totalSwfs++;
 				}
 
-				var meta:Object = getMetaObj(dir.resolvePath(Config.META_FILENAME));
-
-				if (!meta.empty) {
-					for each (swf in pack.swfs) {
-						swf.animated = meta.hasOwnProperty(swf.filename) ? meta[swf.filename].animated : true;
-					}
-				}
-
 				proj.addPack(pack);
 			}
 
-			meta = getMetaObj(projDir.resolvePath(Config.META_FILENAME));
-
-			if (!meta.empty) {
-				for each (pack in proj.packs) {
-					trace('meta.hasOwnProperty(pack.name) ? meta[pack.name].checked : true', meta.hasOwnProperty(pack.name) ? meta[pack.name].checked : true);
-					pack.checked = meta.hasOwnProperty(pack.name) ? meta[pack.name].checked : true;
-				}
-			}
-
+			proj.meta = meta;
 			initProject(proj, projDir, swfsDir, outDir);
 
 			if (_totalSwfs == 0) {
