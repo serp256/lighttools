@@ -10,6 +10,10 @@
 		import mx.events.FlexEvent;
 		import mx.events.FlexNativeMenuEvent;
 
+		import ru.nazarov.asmvc.command.ICommand;
+		import ru.redspell.rasterizer.models.Swf;
+		import ru.redspell.rasterizer.models.SwfClass;
+
 		import ru.redspell.rasterizer.models.SwfsPack;
 		import ru.redspell.rasterizer.views.events.CheckboxColumnRendererEvent;
 
@@ -93,7 +97,21 @@
 
 			for each (var item:Object in items) {
 				item[column.dataField] = chkboxVal;
+
+				if (item is SwfsPack) {
+					var command:ICommand = Facade.commandsFactory.getRefreshPackMetaCommand(item as SwfsPack, false);
+				} else if (item is Swf) {
+					command = Facade.commandsFactory.getRefreshSwfMetaCommand(item as Swf, false);
+				} else if (item is SwfClass) {
+					command = Facade.commandsFactory.getRefreshClassMetaCommand(item as SwfClass, false);
+				}
+
+				if (command) {
+					Facade.runCommand(command);
+				}
 			}
+
+			Facade.runCommand(Facade.commandsFactory.getSaveProjectMetaCommand());
 
 			var selection:Vector.<Object> = dataGrid.selectedItems;
 
@@ -112,7 +130,7 @@
 		public function set dataFieldValue(value:Boolean):void {
 			data[column.dataField] = value;
 		}
-	]]></fx:Script>
+		]]></fx:Script>
 
 	<fx:Binding source="checked.selected" destination="dataFieldValue"/>
 

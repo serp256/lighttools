@@ -7,7 +7,7 @@ package ru.redspell.rasterizer.commands {
 	import ru.nazarov.asmvc.command.AbstractCommand;
 	import ru.redspell.rasterizer.utils.Config;
 
-	public class RefreshMetaCommand extends AbstractCommand {
+	public class SaveProjectMetaCommand extends AbstractCommand {
 		override public function unsafeExecute():void {
 			var fs:FileStream = new FileStream();
 			fs.open(Facade.projDir.resolvePath(Config.META_FILENAME), FileMode.WRITE);

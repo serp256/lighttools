@@ -1,4 +1,5 @@
 package ru.redspell.rasterizer.factories {
+	import ru.nazarov.asmvc.command.ICommandManager;
 	import ru.redspell.rasterizer.commands.*;
 	import ru.nazarov.asmvc.command.ICommand;
 	import ru.redspell.rasterizer.models.Project;
@@ -49,16 +50,20 @@ package ru.redspell.rasterizer.factories {
 			return new RenamePackCommand(pack, prevName);
 		}
 
-		public function getRefreshPackMetaCommand(pack:SwfsPack):ICommand {
-			return new RefreshPackMetaCommand(pack);
+		public function getRefreshPackMetaCommand(pack:SwfsPack, save:Boolean = true):ICommand {
+			return new RefreshPackMetaCommand(pack, save);
 		}
 
-		public function getRefreshSwfMetaCommand(swf:Swf):ICommand {
-			return new RefreshSwfMetaCommand(swf);
+		public function getRefreshSwfMetaCommand(swf:Swf, save:Boolean = true):ICommand {
+			return new RefreshSwfMetaCommand(swf, save);
 		}
 
-		public function getRefreshClassesMetaCommand(cls:SwfClass):ICommand {
-			return new RefreshClassMetaCommand(cls);
+		public function getRefreshClassMetaCommand(cls:SwfClass, save:Boolean = true):ICommand {
+			return new RefreshClassMetaCommand(cls, save);
+		}
+
+		public function getSaveProjectMetaCommand():ICommand {
+			return new SaveProjectMetaCommand();
 		}
 	}
 }

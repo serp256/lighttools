@@ -19,9 +19,9 @@
 		}
 
 		protected function checkboxColChanged(event:CheckboxColumnRendererEvent):void {
-			Facade.runCommand(Facade.commandsFactory.getRefreshClassesMetaCommand(event.item as SwfClass));
+			Facade.runCommand(Facade.commandsFactory.getRefreshClassMetaCommand(event.item as SwfClass));
 		}
-	]]></fx:Script>
+		]]></fx:Script>
 
 	<s:columns>
 		<s:ArrayCollection>

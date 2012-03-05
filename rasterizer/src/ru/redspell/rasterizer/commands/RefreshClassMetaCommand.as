@@ -3,10 +3,11 @@ package ru.redspell.rasterizer.commands {
 	import ru.redspell.rasterizer.models.SwfClass;
 	import ru.redspell.rasterizer.utils.Utils;
 
-	public class RefreshClassMetaCommand extends RefreshMetaCommand {
+	public class RefreshClassMetaCommand extends SaveProjectMetaRunnerCommand {
 		protected var _cls:SwfClass;
 
-		public function RefreshClassMetaCommand(cls:SwfClass) {
+		public function RefreshClassMetaCommand(cls:SwfClass, save:Boolean = true) {
+			super(save);
 			_cls = cls;
 		}
 

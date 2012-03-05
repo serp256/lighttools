@@ -240,7 +240,7 @@ package ru.redspell.rasterizer.flatten {
             cleanMasks();
             flatten(obj);
             applyMasks();
-			clipTransparency();
+			//clipTransparency();
 
             return this;
         }

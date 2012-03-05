@@ -1,19 +1,13 @@
 package ru.redspell.rasterizer.commands {
-	import com.adobe.serialization.json.JSON;
-
-	import flash.filesystem.File;
-	import flash.filesystem.FileMode;
-	import flash.filesystem.FileStream;
-
 	import ru.nazarov.asmvc.command.AbstractCommand;
 	import ru.redspell.rasterizer.models.SwfsPack;
-	import ru.redspell.rasterizer.utils.Config;
 	import ru.redspell.rasterizer.utils.Utils;
 
-	public class RefreshPackMetaCommand extends RefreshMetaCommand {
+	public class RefreshPackMetaCommand extends SaveProjectMetaRunnerCommand {
 		protected var _pack:SwfsPack;
 
-		public function RefreshPackMetaCommand(pack:SwfsPack) {
+		public function RefreshPackMetaCommand(pack:SwfsPack, save:Boolean = true) {
+			super(save);
 			_pack = pack;
 		}
 
