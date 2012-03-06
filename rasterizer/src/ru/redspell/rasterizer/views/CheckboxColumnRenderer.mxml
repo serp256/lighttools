@@ -10,7 +10,11 @@
 		import mx.events.FlexEvent;
 		import mx.events.FlexNativeMenuEvent;
 
+		import ru.nazarov.asmvc.command.AbstractMacroCommand;
+
 		import ru.nazarov.asmvc.command.ICommand;
+		import ru.nazarov.asmvc.command.IMacroCommand;
+		import ru.redspell.rasterizer.commands.SavePackMetaCommand;
 		import ru.redspell.rasterizer.models.Swf;
 		import ru.redspell.rasterizer.models.SwfClass;
 
@@ -100,10 +104,25 @@
 
 				if (item is SwfsPack) {
 					var command:ICommand = Facade.commandsFactory.getRefreshPackMetaCommand(item as SwfsPack, false);
+
+					if (saveCmd == null) {
+						var saveCmd:ICommand = new AbstractMacroCommand();
+					}
+
+					(saveCmd as IMacroCommand).addSubcommand(new SavePackMetaCommand(item as SwfsPack));
 				} else if (item is Swf) {
 					command = Facade.commandsFactory.getRefreshSwfMetaCommand(item as Swf, false);
+
+					if (saveCmd == null) {
+						saveCmd = Facade.commandsFactory.getSavePackMetaCommand((item as Swf).pack);
+					}
+
 				} else if (item is SwfClass) {
 					command = Facade.commandsFactory.getRefreshClassMetaCommand(item as SwfClass, false);
+
+					if (saveCmd == null) {
+						saveCmd = Facade.commandsFactory.getSavePackMetaCommand((item as Swf).pack);
+					}
 				}
 
 				if (command) {
@@ -111,7 +130,7 @@
 				}
 			}
 
-			Facade.runCommand(Facade.commandsFactory.getSaveProjectMetaCommand());
+			Facade.runCommand(saveCmd);
 
 			var selection:Vector.<Object> = dataGrid.selectedItems;
 

@@ -9,17 +9,8 @@ package ru.redspell.rasterizer.factories {
 	import ru.redspell.rasterizer.utils.Config;
 
 	public class CommandsFactory {
-		public function getNewProjectCommand():ICommand {
-			return new NewProjectCommand();
-		}
-
 		public function getOpenProjectCommand():ICommand {
 			return new OpenProjectCommand();
-		}
-
-		public function getSaveProjectCommand(beforeStatus:String = null, afterStatus:String = null):ICommand {
-			return new SaveProjectCommand(beforeStatus ? beforeStatus : Config.DEFAULT_BEFORE_SAVE_STATUS,
-				afterStatus ? afterStatus : Config.DEFAULT_AFTER_SAVE_STATUS);
 		}
 
 		public function getInitCommand():ICommand {
@@ -64,6 +55,10 @@ package ru.redspell.rasterizer.factories {
 
 		public function getSaveProjectMetaCommand():ICommand {
 			return new SaveProjectMetaCommand();
+		}
+
+		public function getSavePackMetaCommand(pack:SwfsPack):ICommand {
+			return new SavePackMetaCommand(pack);
 		}
 	}
 }

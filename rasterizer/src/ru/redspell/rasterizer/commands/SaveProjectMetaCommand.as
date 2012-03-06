@@ -5,14 +5,16 @@ package ru.redspell.rasterizer.commands {
 	import flash.filesystem.FileStream;
 
 	import ru.nazarov.asmvc.command.AbstractCommand;
+	import ru.nazarov.asmvc.command.AbstractMacroCommand;
+	import ru.redspell.rasterizer.models.Project;
+	import ru.redspell.rasterizer.models.SwfsPack;
 	import ru.redspell.rasterizer.utils.Config;
 
-	public class SaveProjectMetaCommand extends AbstractCommand {
-		override public function unsafeExecute():void {
-			var fs:FileStream = new FileStream();
-			fs.open(Facade.projDir.resolvePath(Config.META_FILENAME), FileMode.WRITE);
-			fs.writeUTFBytes(JSON.encode(Facade.proj.meta));
-			fs.close();
+	public class SaveProjectMetaCommand extends AbstractMacroCommand {
+		public function SaveProjectMetaCommand() {
+			for each (var pack:SwfsPack in Facade.proj.packs) {
+				addSubcommand(new SavePackMetaCommand(pack));
+			}
 		}
 	}
 }

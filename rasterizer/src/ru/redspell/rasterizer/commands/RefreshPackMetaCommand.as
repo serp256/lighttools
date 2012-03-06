@@ -3,12 +3,9 @@ package ru.redspell.rasterizer.commands {
 	import ru.redspell.rasterizer.models.SwfsPack;
 	import ru.redspell.rasterizer.utils.Utils;
 
-	public class RefreshPackMetaCommand extends SaveProjectMetaRunnerCommand {
-		protected var _pack:SwfsPack;
-
+	public class RefreshPackMetaCommand extends SavePackMetaRunnerCommand {
 		public function RefreshPackMetaCommand(pack:SwfsPack, save:Boolean = true) {
-			super(save);
-			_pack = pack;
+			super(pack, save);
 		}
 
 		override public function unsafeExecute():void {

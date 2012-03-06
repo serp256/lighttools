@@ -15,6 +15,7 @@ package ru.redspell.rasterizer.commands {
 	import ru.redspell.rasterizer.models.SwfClass;
 	import ru.redspell.rasterizer.models.SwfsPack;
 	import ru.redspell.rasterizer.utils.Config;
+	import ru.redspell.rasterizer.utils.Utils;
 
 	public class OpenProjectCommand extends InitProjectCommand {
 		protected var _totalSwfs:uint = 0;
@@ -88,7 +89,7 @@ package ru.redspell.rasterizer.commands {
 			var swfsDir:File = projDir.resolvePath(Config.DEFAULT_SWFS_DIR);
 			var outDir:File = projDir.resolvePath(Config.DEFAULT_OUT_DIR);
 			var proj:Project = new Project();
-			var meta:Object = getMetaObj(projDir.resolvePath(Config.META_FILENAME));
+			var meta:Object = {};
 
 			for each (var dir:File in projDir.getDirectoryListing()) {
 				if (!dir.isDirectory || (dir.name == Config.DEFAULT_OUT_DIR)) {
@@ -96,10 +97,11 @@ package ru.redspell.rasterizer.commands {
 				}
 
 				var pack:SwfsPack = Facade.projFactory.getSwfPack(dir.name);
+				var packMeta:Object = getMetaObj(projDir.resolvePath(pack.name).resolvePath(Config.META_FILENAME));
 
-				if (meta.hasOwnProperty(dir.name)) {
-					var packMeta:Object = meta[dir.name];
+				if (!Utils.objIsEmpty(packMeta)) {
 					pack.checked = packMeta.hasOwnProperty('checked') ? packMeta.checked : true;
+					meta[pack.name] = packMeta;
 				}
 
 				for each (var swfFile:File in dir.getDirectoryListing()) {

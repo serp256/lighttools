@@ -17,6 +17,7 @@
 
 		import ru.nazarov.asmvc.command.ICommandError;
 		import ru.redspell.rasterizer.commands.ConvertProjectCommand;
+		import ru.redspell.rasterizer.commands.SaveProjectMetaCommand;
 		import ru.redspell.rasterizer.views.ErrorWindow;
 
 		protected function addedToStageHandler(event:Event):void {
@@ -81,7 +82,7 @@
 						break;
 
 					case Keyboard.F:
-						Facade.runCommand(new ConvertProjectCommand());
+						Facade.runCommand(new SaveProjectMetaCommand());
 						break;
 				}
 			}
