@@ -63,7 +63,11 @@ value get_images dir images  =
   in
   let rec getFrames cnt frames = 
     match cnt with
-    [ 0 -> frames 
+    [ 0 -> 
+        ( 
+          BatIO.close_in frameInfo;
+          frames;
+        )
     | _ ->
         let x = BatIO.read_ui16 frameInfo in
         let y = BatIO.read_ui16 frameInfo in
@@ -155,7 +159,7 @@ value run () =
     let (placed,_, textures) = MaxRects.layout ~pages:textures path images in
     textures
   end [] images in 
-  let textures = MaxRects.layout_last_page 1024 textures in
+(*  let textures = MaxRects.layout_last_page 1024 textures in *)
   BatList.iteri begin fun cnt (w,h,imgs,_,_) ->
     let rgb = Rgba32.make w h {Color.color={Color.r=0;g=0;b=0}; alpha=0;} in
     let new_img = Images.Rgba32 rgb in
