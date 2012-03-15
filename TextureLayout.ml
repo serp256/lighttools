@@ -1,6 +1,6 @@
 
 value max_size = ref 2048;
-value min_size = ref 1;
+value min_size = ref 32;
 
 type rect = {
   x           : int;
@@ -359,9 +359,15 @@ value rec layout_page ~type_rects ~sqr rects w h =
         match sqr with
         [ True -> (w*2, h*2)
         | _ -> 
+            match w < !max_size with
+            [ True -> (w * 2, h)
+            | _ -> (!min_size, h*2)
+            ]
+(*
           if w > h 
           then (w, (h*2))
           else ((w*2), h)
+          *)
         ]
       in 
       if w' > !max_size 
@@ -404,7 +410,11 @@ value layout ?(type_rects=`maxrect) ?(sqr=True) rects =
 
 
 value pvr_png img = 
-  match Sys.command (Printf.sprintf "PVRTexTool -yflip0 -fOGLPVRTC4 -i%s.png -o %s.pvr" img img) with
-  [ 0 -> ()
-  | _ -> failwith (Printf.sprintf "Failed pvr %s.png" img)
-  ];
+  let cmd = Printf.sprintf "PVRTexTool -yflip0 -fOGLPVRTC4 -i%s.png -o %s.pvr" img img in
+  (
+    Printf.printf "%s\n%!" cmd;
+    match Sys.command cmd with
+    [ 0 -> ()
+    | _ -> failwith (Printf.sprintf "Failed pvr %s.png" img)
+    ];
+  );

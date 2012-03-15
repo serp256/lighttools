@@ -31,7 +31,6 @@ value write_utf out str=
     BatIO.nwrite out str;
   );
 
-value inp_dir = "../../mobile-farm/Resources/library";
 value inp_dir = ref "input"; 
 value outdir = ref "output";
 value gen_pvr = ref False;
