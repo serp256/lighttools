@@ -121,7 +121,7 @@
 					command = Facade.commandsFactory.getRefreshClassMetaCommand(item as SwfClass, false);
 
 					if (saveCmd == null) {
-						saveCmd = Facade.commandsFactory.getSavePackMetaCommand((item as Swf).pack);
+						saveCmd = Facade.commandsFactory.getSavePackMetaCommand((item as SwfClass).swf.pack);
 					}
 				}
 
