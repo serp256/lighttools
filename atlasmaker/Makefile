@@ -1,7 +1,7 @@
-BUILDER = /usr/local/bin/ocamlbuild -use-ocamlfind -classic-display
+BUILDER = ocamlbuild -use-ocamlfind -classic-display
 
 all: 
-	ocamlbuild -use-ocamlfind atlasmaker.native
+	ocamlbuild -use-ocamlfind atlasmaker.byte
 
 animate:
 	$(BUILDER) animatemaker.native

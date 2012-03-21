@@ -366,11 +366,9 @@ value remove_unused_images () =
     done;
   );
 
-value merge_images () = 
-(
+value do_merge_images () = 
+  let has_changes = ref False in begin
   let alredySeen = HSet.create 1 in
-  (* проще выписать как-то все пересекающиеся области нахуй *)
-(*   let removed_img = Hashtbl.create 0 in *)
   let rec mergeChildren makeAddr (children:children)  = 
     let i = ref 0 in
     while !i < DynArray.length children - 1 do
@@ -412,6 +410,7 @@ value merge_images () =
                 match findAll [] with (*{{{*)
                 [ Some places -> (* ура у нас есть что заменить *) 
                   (
+                    has_changes.val := True;
                     Printf.printf "merge %d and %d for (%s)\n%!" id1 id2 (String.concat ";" (List.map (fun (addr,pos) -> Printf.sprintf "[%s]" (string_of_address addr)) places));
                     (* надо найти самое длинное *)
                     let cNum = DynArray.length children in
@@ -564,9 +563,20 @@ value merge_images () =
     | `image _ -> ()
     ]
   done; 
-  remove_unused_images ()
-);
+  !has_changes;
+  end;
 
+value merge_images () = 
+(
+  let rec loop () = 
+    match do_merge_images () with
+    [ True -> loop ()
+    | False -> ()
+    ]
+  in
+  loop ();
+  remove_unused_images();
+);
 (*}}}*)
 
 
