@@ -1,5 +1,7 @@
 open Images;
 
+value pfname = ref "pallete";
+
 value iter_2d f sx sy mx my = 
   let y = ref sy in
   while !y < my do
@@ -109,7 +111,7 @@ value process_files files =
   else
 (*     let prefix = Filename.chop_extension (Filename.basename fn) in *)
     (* найти максимально квадратную текстуру со степенями 2 чтобы впихнуть ебанную палитру нахуй *)
-    let (pw,ph) = save_pallete pallete (Printf.sprintf "pallete.png") in
+    let (pw,ph) = save_pallete pallete (!pfname ^ ".png") in
     (* сделаем превью *)
     List.iter2 begin fun fname image ->
       let prefix = Filename.chop_extension (Filename.basename fname) in
@@ -149,7 +151,7 @@ value process_files files =
 value () = 
   let files = RefList.empty () in
   (
-    Arg.parse [] (fun s -> RefList.push files s) "";
+    Arg.parse [("-p",Arg.Set_string pfname,"pallete file name")] (fun s -> RefList.push files s) "";
     if RefList.is_empty files
     then failwith ("select images")
     else
