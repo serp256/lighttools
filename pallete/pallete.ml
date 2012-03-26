@@ -1,6 +1,10 @@
 open Images;
 
-value pfname = ref "pallete";
+value pfolder = ref "palletes";
+value pallete_size = 256 * 256;
+value (//) = Filename.concat;
+value zclr = {Color.color={Color.r=0;g=0;b=0}; alpha=0;};
+value make_preview = ref False;
 
 value iter_2d f sx sy mx my = 
   let y = ref sy in
@@ -36,20 +40,21 @@ value image_iter f img =
 
 
 (* return array of all colors *)
-value get_colors imgs = 
+value get_colors img = 
   let clrTable = HSet.create 65001 in
-  let () = List.iter (fun img -> image_iter (fun _ _ clr -> HSet.add clrTable clr) img) imgs in 
-  let result = Array.make (HSet.length clrTable) {color={r=0;g=0;b=0};alpha=0} in
-  let i = ref 0 in
   (
-    HSet.iter (fun k -> (result.(!i) := k; incr i)) clrTable;
-    result;
+    image_iter (fun _ _ clr -> HSet.add clrTable clr) img;
+    let result = Array.make (HSet.length clrTable) zclr in
+    let i = ref 0 in
+    (
+      HSet.iter (fun k -> (result.(!i) := k; incr i)) clrTable;
+      result;
+    );
   );
 
 (* build color table *)
-value reduce_colors colors = 
+value reduce_colors pallete colors = 
   let colorMap = Hashtbl.create 3 in
-  let reduced_colors = DynArray.make ((Array.length colors) / 2) in
   (
     Array.iter begin fun clr ->
       if not (Hashtbl.mem colorMap clr)
@@ -58,36 +63,38 @@ value reduce_colors colors =
           try
             DynArray.index_of begin fun eclr -> 
               let dist = Color.Rgb.square_distance clr.color eclr.color in
-              if dist < 33 & dist > 0 & clr.alpha == eclr.alpha (* CHECK THIS *)
+              if dist < 33 & dist >= 0 & clr.alpha == eclr.alpha (* CHECK THIS *)
               then True
               else False
-            end reduced_colors
-          with [ Not_found -> (DynArray.add reduced_colors clr;(DynArray.length reduced_colors) - 1) ]
+            end pallete
+          with [ Not_found -> (DynArray.add pallete clr;(DynArray.length pallete) - 1) ]
         in
         Hashtbl.add colorMap clr eidx
       else ()
     end colors;
-    (DynArray.to_array reduced_colors, colorMap);
+    colorMap;
   );
 
 value save_pallete pallete outputf = 
-  let cnt_colors = Array.length pallete in
-  let (w,h) = find_size 8 8 where 
+  let cnt_colors = DynArray.length pallete in
+  let (w,h) = (256,256)
+    (*
+    find_size 8 8 where 
     rec find_size w h =
       if (w * h) >= cnt_colors
       then (w,h)
       else 
         if w > h then find_size w (h*2) else find_size (w*2) h
+    *)
   in
-  let () = Printf.printf "pallete size: %d:%d\n" w h in
-  let out = Rgba32.make w h {Color.color={Color.r=0;g=0;b=0}; alpha=0;} in
+  let out = Rgba32.make w h zclr in
   (
     let i = ref 0
     and x = ref 0 
     and y = ref 0
     in
     while (!i < cnt_colors) do
-      Rgba32.set out !x !y pallete.(!i);
+      Rgba32.set out !x !y (DynArray.get pallete !i);
       incr x;
       if !x = w 
       then (incr y; x.val := 0;)
@@ -95,65 +102,130 @@ value save_pallete pallete outputf =
       incr i;
     done;
     Images.save outputf (Some Png) [] (Rgba32 out);
+    Printf.printf "pallete %s saved\n%!" outputf;
     (w,h)
   );
   (* подобрать размеры картинки нахуй *)
 
-(* *)
-value process_files files = 
-  let images = List.map (fun fn -> Images.load fn []) files in
-  let colors   = get_colors images in
-  let () = Printf.eprintf "Total %d colors\n%!" (Array.length colors) in
-  let (pallete,remapTable) = reduce_colors colors in
-  let () = Printf.eprintf "Reduced to %d colors (keys in table %d)\n%!" (Array.length pallete) (Hashtbl.length remapTable) in
-  if Array.length pallete > 256 * 256
-  then failwith ("Big pallete!!!")
-  else
-(*     let prefix = Filename.chop_extension (Filename.basename fn) in *)
-    (* найти максимально квадратную текстуру со степенями 2 чтобы впихнуть ебанную палитру нахуй *)
-    let (pw,ph) = save_pallete pallete (!pfname ^ ".png") in
-    (* сделаем превью *)
-    List.iter2 begin fun fname image ->
-      let prefix = Filename.chop_extension (Filename.basename fname) in
-      let (w,h) = Images.size image in
-      let preview = Rgba32.make w h {Color.color={Color.r=0;g=0;b=0}; alpha=0;} in
-      let index = IO.output_channel (open_out_bin (Printf.sprintf "%s.idx" prefix)) in
-      (
-        IO.write_ui16 index w;
-        IO.write_ui16 index h;
-  (*       let i = ref 0 in *)
-        image_iter begin fun x y clr ->
+
+
+value rec palletes () = 
+  let i = ref ~-1 in
+  let finished = ref False in
+  Enum.from begin fun () ->
+    if !finished then raise Enum.No_more_elements
+    else
+      let () = incr i in
+      let plt = !pfolder // (Printf.sprintf "%d.plt" !i) in
+      match Sys.file_exists plt with
+      [ True ->
+          let img = Images.load plt [] in
+          let pallete = DynArray.make pallete_size in
           (
-            let idx = Hashtbl.find remapTable clr
-            (*
-              try
-                Hashtbl.find remapTable clr
-              with [ Not_found -> let r = !i in (incr i; r) ]
-            *)
-            in
-            (
-  (*             Printf.printf "[%d:%d] index in pallete: %d\n" x y idx; *)
-              let clr = pallete.(idx) in
-              Rgba32.set preview x y clr;
-              let x = idx mod pw in
-              IO.write_byte index x;
-              let y = idx / pw in
-              IO.write_byte index y;
-            )
+            image_iter begin fun x y clr -> 
+              if clr <> zclr || (y = 0 && x = 0)
+              then DynArray.add pallete clr
+              else ()
+            end img;
+            (!i,pallete)
           )
-        end image;
-        IO.close_out index;
-        Images.save (Printf.sprintf "%s_preview.png" prefix) (Some Png) [] (Rgba32 preview);
-      );
-    end files images;
+      | False -> 
+        (
+          finished.val := True;
+          let p = DynArray.make pallete_size in
+          (
+            DynArray.add p zclr;
+            (!i,p)
+          )
+        )
+      ]
+  end;
+
+(* *)
+value process_file file = 
+  let () = Printf.printf "--> PROCESS '%s'\n%!" file in
+  let image = Images.load file [] in
+  let colors   = get_colors image in
+  let () = Printf.eprintf "Total %d colors\n%!" (Array.length colors) in
+  let palletes = palletes () in
+    try_pallete () where
+      rec try_pallete () = 
+        match Enum.get palletes with
+        [ Some (pn,pallete) ->
+          let () = Printf.printf "Try %d pallete\n%!" pn in
+          let remapTable = reduce_colors pallete colors in
+          if DynArray.length pallete > pallete_size
+          then try_pallete ()
+          else
+            let () = Printf.eprintf "Reduced to %d colors (keys in table %d)\n%!" (DynArray.length pallete) (Hashtbl.length remapTable) in
+        (*     let prefix = Filename.chop_extension (Filename.basename fn) in *)
+            let (pw,ph) = save_pallete pallete (!pfolder // (Printf.sprintf "%d.plt" pn)) in
+            (* сделаем превью *)
+            let prefix = Filename.chop_extension file in
+            let (w,h) = Images.size image in
+            let preview = Rgba32.make w h zclr in
+            let index = IO.output_channel (open_out_bin (Printf.sprintf "%s.plx" prefix)) in
+            (
+              IO.write_byte index pn;
+              IO.write_ui16 index w;
+              IO.write_ui16 index h;
+              image_iter begin fun x y clr ->
+                (
+                  let idx = Hashtbl.find remapTable clr
+                  in
+                  (
+                    if !make_preview 
+                    then
+                      let clr = DynArray.get pallete idx in
+                      Rgba32.set preview x y clr
+                    else ();
+                    let x = idx mod pw in
+                    IO.write_byte index x;
+                    let y = idx / pw in
+                    IO.write_byte index y;
+                  )
+                )
+              end image;
+              IO.close_out index;
+              if !make_preview
+              then
+                Images.save (Printf.sprintf "%s_preview.png" prefix) (Some Png) [] (Rgba32 preview)
+              else ();
+            )
+          | None -> failwith (Printf.sprintf "Can't add %s to pallete of 256x256" file)
+        ];
 
 
+(* Мы даем картинки и папку с палитрами, нужно попытаца впихнуть в любую из этих палитр нахуй *)
 value () = 
   let files = RefList.empty () in
   (
-    Arg.parse [("-p",Arg.Set_string pfname,"pallete file name")] (fun s -> RefList.push files s) "";
+    Arg.parse [("-plt",Arg.Set_string pfolder,"pallete folder");("-p",Arg.Set make_preview,"make preview")] (fun s -> RefList.push files s) "";
     if RefList.is_empty files
     then failwith ("select images")
     else
-      process_files (RefList.to_list files);
+    (
+      if Sys.file_exists !pfolder
+      then 
+        if not (Sys.is_directory !pfolder)
+        then 
+          failwith (Printf.sprintf "pallete folder %s is not directory" !pfolder)
+        else ()
+      else Unix.mkdir !pfolder 0o774;
+      RefList.iter begin fun pf ->
+        if Sys.file_exists pf
+        then
+          if Sys.is_directory pf
+          then
+            let files = Sys.readdir pf in
+            Array.iter begin fun fn ->
+              match Filename.check_suffix fn ".png" with
+              [ True -> process_file (pf // fn)
+              | False -> ()
+              ]
+            end files
+          else process_file pf
+        else Printf.printf "!!! SKIP %s not exists\n%!" pf
+      end files;
+    )
   );
