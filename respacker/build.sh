@@ -1,6 +1,6 @@
 #!/bin/bash
 
-OCB="ocamlbuild -use-ocamlfind"
+OCB="ocamlbuild -classic-display -use-ocamlfind"
 target=respacker
 
 case $1 in

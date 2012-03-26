@@ -1,7 +1,8 @@
 
-<*.ml>: package(camlp4),syntax(camlp4r),package(camlimages.png),package(batteries)
-"animatemaker.ml": package(camlimages.png),package(batteries),package(xmlm)
 true:debug
-<atlasmaker.{byte,native}>: package(camlimages.png),package(batteries)
+
+<*.ml>: package(camlp4),syntax(camlp4r),package(camlimages.core),package(xmlm),package(batteries)
+"atlasmaker.ml": package(extlib)
+<atlasmaker.{byte,native}>: package(batteries),package(extlib),package(camlimages.core),package(camlimages.png),package(xmlm)
 <animatemaker.{byte,native}>: package(camlimages.png),package(batteries),package(xmlm)
 
