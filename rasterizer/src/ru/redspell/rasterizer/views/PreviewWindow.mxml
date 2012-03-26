@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark"
-	xmlns:mx="library://ns.adobe.com/flex/mx" title="Preview" width="500" height="300" close="closeHandler()" initialize="init()">
+	xmlns:mx="library://ns.adobe.com/flex/mx" title="Preview" width="500" height="400" close="closeHandler()" initialize="init()">
 	<fx:Script><![CDATA[
 		import mx.managers.PopUpManager;
 
@@ -31,7 +31,8 @@
 			_obj = obj;
 			_obj.render();
 
-			container.addChild(_obj as DisplayObject);
+			var dobj:DisplayObject = _obj as DisplayObject;
+			container.addChild(dobj);
 
 			var rect:Rectangle = container.getBounds(this);
 			var fltMc:FlattenMovieClip = _obj as FlattenMovieClip
@@ -46,18 +47,34 @@
 				fltMc.goto(0);
 			}
 
-			if (rect.width > width) {
-				container.scaleX = container.scaleY = width / rect.width;
+			trace('rect', rect);
+			trace('w, h', containerGrp.width, containerGrp.height);
+
+			if (rect.width > containerGrp.width) {
+				container.scaleX = container.scaleY = containerGrp.width / rect.width;
 				rect = container.getBounds(this);
+				trace('scaling width, new rect', rect);
 			}
 
-			if (rect.height > height) {
-				container.scaleX = container.scaleY = height / rect.height;
+			if (rect.height > containerGrp.height) {
+				container.scaleX = container.scaleY = containerGrp.height / rect.height * container.scaleX;
 				rect = container.getBounds(this);
+				trace('scaling height, new rect', rect);
 			}
 
-			container.x = (width  - rect.width) / 2 - rect.x;
-			container.y = (height - rect.height) / 2 - rect.y;
+			rect = container.getRect(containerGrp);
+
+			trace('containerGrp.width, containerGrp.height', containerGrp.width, containerGrp.height);
+			trace('container.width, container.height', container.width, container.height);
+
+
+			container.x = (containerGrp.width - rect.width) / 2 - rect.x ;
+			container.y = (containerGrp.height - rect.height) / 2 - rect.y;
+			//dobj.x = -rect.x;
+			//(_obj as DisplayObject).x = -rect.x;
+			//(_obj as DisplayObject).y = -rect.y;
+			//(_obj as DisplayObject).x = (containerGrp.width  - rect.width - rect.x) / 2;
+			//(_obj as DisplayObject).y = (containerGrp.height - rect.height + rect.y) / 2;
 
 			if (fltMc != null) {
 				_timer.start();
@@ -96,10 +113,11 @@
 		}
 	]]></fx:Script>
 
-	<s:SpriteVisualElement id="container"/>
-
-	<s:VGroup width="100%" height="100%" verticalAlign="bottom" horizontalAlign="center" paddingBottom="5">
-		<s:HGroup>
+	<s:VGroup width="100%" height="100%" verticalAlign="middle" horizontalAlign="center" paddingBottom="5">
+		<s:Group id="containerGrp" width="100%" height="100%">
+			<s:SpriteVisualElement id="container"/>
+		</s:Group>
+		<s:HGroup width="100%" horizontalAlign="center">
 			<s:Button click="switchFrame(false)" label="prev"/>
 			<s:Button click="togglePlay()" id="playBtn" label="stop"/>
 			<s:Button click="switchFrame()" label="next"/>
