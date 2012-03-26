@@ -5,6 +5,7 @@ value pallete_size = 256 * 256;
 value (//) = Filename.concat;
 value zclr = {Color.color={Color.r=0;g=0;b=0}; alpha=0;};
 value make_preview = ref False;
+value only_colors = ref False;
 
 value iter_2d f sx sy mx my = 
   let y = ref sy in
@@ -147,6 +148,8 @@ value process_file file =
   let image = Images.load file [] in
   let colors   = get_colors image in
   let () = Printf.eprintf "Total %d colors\n%!" (Array.length colors) in
+  if !only_colors then ()
+  else
   let palletes = palletes () in
     try_pallete () where
       rec try_pallete () = 
@@ -200,7 +203,7 @@ value process_file file =
 value () = 
   let files = RefList.empty () in
   (
-    Arg.parse [("-plt",Arg.Set_string pfolder,"pallete folder");("-p",Arg.Set make_preview,"make preview")] (fun s -> RefList.push files s) "";
+    Arg.parse [("-c",Arg.Set only_colors,"show only cnt colors in images");("-plt",Arg.Set_string pfolder,"pallete folder");("-p",Arg.Set make_preview,"make preview")] (fun s -> RefList.push files s) "";
     if RefList.is_empty files
     then failwith ("select images")
     else
