@@ -1,4 +1,5 @@
 
+open ExtList;
 value max_size = ref 2048;
 value min_size = ref 32;
 
@@ -9,6 +10,50 @@ type rect = {
   h           : int;
   isRotate  : bool
 };
+
+value iter_2d f sx sy mx my = 
+  let y = ref sy in
+  while !y < my do
+  (
+    let x = ref sx in
+    while !x < mx do
+    (
+      f !x !y;
+      incr x;
+    )
+    done; 
+    incr y;
+  ) done;
+  
+
+(* iterate over image *)
+value image_iter f img = 
+  let (w,h) = Images.size img in
+  iter_2d begin fun x y ->
+    let elt =
+      match img with 
+      [ Images.Rgb24  i24 -> 
+        let elt = (Rgb24.get i24 x y) in
+        { Color.Rgba.color = elt; alpha = 1 }
+      | Images.Rgba32 i32 -> Rgba32.get i32 x y
+      | _   -> failwith "Unsupported format"
+      ]
+    in 
+    (f x y elt);
+  end 0 0 w h;
+
+value save_alpha img fname = 
+  let out = open_out_bin fname in
+  let binout = IO.output_channel out in
+  let (width,height) = Images.size img in
+  (
+    IO.write_ui16 binout width;
+    IO.write_ui16 binout height;
+    image_iter (fun _ _ clr -> IO.write_byte binout clr.Color.alpha) img;
+    close_out out;
+  );
+
+
 
 
 value rotate = ref True;
@@ -197,7 +242,7 @@ value rec maxrects rects placed empty unfit =
                     let inRect =
                       try 
                         (
-                          ignore(BatList.findi (fun j rect -> (i <> j) && rect_in_rect r rect) containers);
+                          ignore(List.findi (fun j rect -> (i <> j) && rect_in_rect r rect) containers);
                           True
                         )
                       with
@@ -325,16 +370,13 @@ value rec tryLayout ~type_rects rects placed empty unfit =
       (* пытаемся впихнуть наибольший прямоугольник в наименьшую пустую область *)
       try 
         let (placed', empty') = putToMinimalContainer r placed empty []  
-        in tryLayout ~type_rects rects' placed' (List.sort begin fun c1 c2 -> 
-          let s1 = c1.w*c1.h 
-          and s2 = c2.w*c2.h
-          in 
-          if s1 = s2 
-          then 0
-          else if s1 > s2 
-          then 1
-          else -1  
-        end empty') unfit
+        in tryLayout ~type_rects rects' placed' begin
+          List.sort ~cmp:begin fun c1 c2 -> 
+            let s1 = c1.w*c1.h and s2 = c2.w*c2.h in 
+            if s1 = s2 then 0
+            else if s1 > s2 then 1 else -1  
+          end empty'
+        end unfit
       with [Not_found -> tryLayout ~type_rects rects' placed empty [r :: unfit]]
     ]
   ];
@@ -383,7 +425,7 @@ value rec layout_multipage ~type_rects ~sqr rects pages =
   let (w, h, placed, rest) = 
     layout_page ~type_rects ~sqr
       (List.sort 
-        begin fun (_,i1)  (_,i2) -> 
+        ~cmp:begin fun (_,i1)  (_,i2) -> 
           let (w1,h1) = Images.size i1
           and (w2,h2) = Images.size i2 in
           let s1 = w1*h1 and s2 = w2*h2 in
@@ -410,7 +452,7 @@ value layout ?(type_rects=`maxrect) ?(sqr=True) rects =
 
 
 value pvr_png img = 
-  let cmd = Printf.sprintf "PVRTexTool -yflip0 -fOGLPVRTC4 -i%s.png -o %s.pvr" img img in
+  let cmd = Printf.sprintf "PVRTexTool -yflip0 -fOGLPVRTC4 -premultalpha -pvrtcbest -i%s.png -o %s.pvr" img img in
   (
     Printf.printf "%s\n%!" cmd;
     match Sys.command cmd with

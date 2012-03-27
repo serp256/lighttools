@@ -7,37 +7,9 @@ value zclr = {Color.color={Color.r=0;g=0;b=0}; alpha=0;};
 value make_preview = ref False;
 value only_colors = ref False;
 
-value iter_2d f sx sy mx my = 
-  let y = ref sy in
-  while !y < my do
-  (
-    let x = ref sx in
-    while !x < mx do
-    (
-      f !x !y;
-      incr x;
-    )
-    done; 
-    incr y;
-  ) done;
-  
 
-(* iterate over image *)
-value image_iter f img = 
-  let (w,h) = Images.size img in
-  iter_2d begin fun x y ->
-    let elt =
-      match img with 
-      [ Rgb24  i24 -> 
-        let elt = (Rgb24.get i24 x y) in
-        { Color.Rgba.color = elt; alpha = 1 }
-      | Rgba32 i32 -> Rgba32.get i32 x y
-      | _   -> failwith "Unsupported format"
-      ]
-    in 
-    (f x y elt);
-  end 0 0 w h;
 
+value image_iter = TextureLayout.image_iter;
 
 
 (* return array of all colors *)

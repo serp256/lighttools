@@ -1,5 +1,8 @@
 open Printf;
 
+open ExtString;
+open ExtList;
+
 module Ft = Freetype;
 
 value print_face_info fi = 
@@ -17,15 +20,16 @@ value fontFile = ref "";
 value sizes = ref [ ]; (* add support for multisize *)
 value color = {Color.r = 255; g = 255; b = 255};
 value dpi = ref 72;
+value alpha_texture = ref False;
 
 value bgcolor = {Color.color = {Color.r = 0; g = 0; b = 0}; alpha = 0};
 
 value make_size face size callback = 
 (
   Freetype.set_char_size face size 0. !dpi 0;
-  BatUTF8.iter begin fun uchar ->
+  UTF8.iter begin fun uchar ->
   (
-    let code = BatUChar.to_int uchar in
+    let code = UChar.code uchar in
 (*     let () = Printf.printf "process char: %d\n%!" code in *)
     let char_index = Freetype.get_char_index face code in
     let (xadv,yadv) = Freetype.render_glyph face char_index [] Freetype.Render_Normal in
@@ -47,7 +51,7 @@ value make_size face size callback =
       callback code xadv bi.bitmap_left bi.bitmap_top img
     )
   )
-  end (BatUTF8.of_string !pattern);
+  end !pattern;
 );
 
 type sdescr = 
@@ -59,10 +63,10 @@ type sdescr =
 
 value parse_sizes str = 
   try
-    sizes.val := List.map int_of_string (BatString.nsplit str ",")
+    sizes.val := List.map int_of_string (String.nsplit str ",")
   with [ _ -> failwith "Failure parse sizes" ];
 
-value read_chars fname = pattern.val := BatString.strip (BatStd.input_file fname);
+value read_chars fname = pattern.val := String.strip (Std.input_file fname);
 value output = ref None;
 
 (* use xmlm for writing xml *)
@@ -71,6 +75,7 @@ Arg.parse
     ("-c",Arg.Set_string pattern,"chars");
     ("-s",Arg.String parse_sizes,"sizes");
     ("-cf",Arg.String read_chars,"chars from file");
+    ("-alpha",Arg.Set alpha_texture,"make alpha texture");
     ("-o",Arg.String (fun s -> output.val := Some s),"output dir")
   ] 
   (fun f -> fontFile.val := f) "Usage msg";
@@ -119,7 +124,7 @@ let xmlout = Xmlm.make_output ~nl:True ~indent:(Some 4) (`Channel (open_out xmlf
 
     let () = TextureLayout.rotate.val := False in
     let textures = TextureLayout.layout ~type_rects:`maxrect ~sqr:False !imgs in
-    BatList.iteri begin fun i (w,h,imgs) ->
+    List.iteri begin fun i (w,h,imgs) ->
       let texture = Rgba32.make w h bgcolor in
       (
         List.iter begin fun (key,(x,y,_,img)) ->
@@ -130,10 +135,14 @@ let xmlout = Xmlm.make_output ~nl:True ~indent:(Some 4) (`Channel (open_out xmlf
             ( r.x := x; r.y := y; r.page := i;)
           )
         end imgs;
-        let imgname = Printf.sprintf "%s%d.png" fname i in
+        let ext = match !alpha_texture with [ True -> "alpha" | False -> "png" ] in
+        let imgname =  Printf.sprintf "%s%d.%s" fname i ext in
+        let fname = match !output with [ None -> imgname | Some o -> Filename.concat o imgname] in
         (
-          Images.save (match !output with [ None -> imgname | Some o ->
-            Filename.concat o imgname]) (Some Images.Png) [] (Images.Rgba32 texture);
+          match !alpha_texture with
+          [ True -> TextureLayout.save_alpha (Images.Rgba32 texture) fname
+          | False -> Images.save fname (Some Images.Png) [] (Images.Rgba32 texture)
+          ];
           Xmlm.output xmlout (`El_start (("","page"),["file" =|= imgname]));
           Xmlm.output xmlout `El_end;
         );
@@ -158,8 +167,8 @@ let xmlout = Xmlm.make_output ~nl:True ~indent:(Some 4) (`Channel (open_out xmlf
             "descender" =.= ~-. (sizeInfo.Freetype.descender);
           ])
         );
-        BatUTF8.iter begin fun uchar ->
-          let code = BatUChar.to_int uchar in
+        UTF8.iter begin fun uchar ->
+          let code = UChar.code uchar in
           let info = Hashtbl.find chars (code,size) in
 (*           let () = Printf.printf "char: %C, xoffset: %d, yoffset: %d\n%!" (char_of_int code) info.xoffset info.yoffset in *)
           let attribs = 
@@ -178,7 +187,7 @@ let xmlout = Xmlm.make_output ~nl:True ~indent:(Some 4) (`Channel (open_out xmlf
             Xmlm.output xmlout (`El_start (("","char"),attribs));
             Xmlm.output xmlout `El_end;
           )
-        end (BatUTF8.of_string !pattern);
+        end !pattern;
       );
       Xmlm.output xmlout `El_end;
     )
