@@ -108,13 +108,13 @@ package ru.redspell.rasterizer.commands {
 				_swfIdx = -1;
 				_packDir = Facade.projOutDir.resolvePath(_pack.name);
 
-				if (_packDir.exists) {
-					_packDir.deleteDirectory(true);
-				}
-
-				_packDir.createDirectory();
-
 				if (_pack.checked) {
+					if (_packDir.exists) {
+						_packDir.deleteDirectory(true);
+					}
+
+					_packDir.createDirectory();
+
 					exportNextSwf();
 				} else {
 					exportNextPack();
