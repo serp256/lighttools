@@ -44,7 +44,7 @@ value alredy_calc = Hashtbl.create 1;
 
 value calc_file fn ((cnt,size) as res) =
   let iname = Filename.chop_extension fn in
-  match (not (Hashtbl.mem alredy_calc iname)) && (Filename.check_suffix fn ".png" || Filename.check_suffix fn ".jpg") with
+  match (not (Hashtbl.mem alredy_calc iname)) && (Filename.check_suffix fn ".png" || Filename.check_suffix fn ".jpg" || Filename.check_suffix fn ".plx" || Filename.check_suffix fn ".alpha") with
   [ True ->
     let () = Hashtbl.add alredy_calc iname True in
     try
@@ -53,8 +53,22 @@ value calc_file fn ((cnt,size) as res) =
         if !pvr && Sys.file_exists fpvr
         then 
           let s = Unix.stat fpvr in
-          (fpvr,s.Unix.st_size)
+          (fpvr,s.Unix.st_size - 52) (* FIXME: meta in pvr3, ну да хуй с ней *)
         else
+          let plx = iname ^ ".plx" in
+          if Sys.file_exists plx
+          then
+            let gzin = TCommon.gzip_input plx in
+            (
+              ignore (IO.read_byte gzin);
+              let w = IO.read_ui16 gzin
+              and h = IO.read_ui16 gzin in
+              (
+                IO.close_in gzin;
+                (plx,w * h * 2);
+              )
+            )
+          else
             let (fmt,header) = Images.file_format fn in
             let bpp = 
               match fmt with

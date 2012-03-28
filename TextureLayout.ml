@@ -11,48 +11,6 @@ type rect = {
   isRotate  : bool
 };
 
-value iter_2d f sx sy mx my = 
-  let y = ref sy in
-  while !y < my do
-  (
-    let x = ref sx in
-    while !x < mx do
-    (
-      f !x !y;
-      incr x;
-    )
-    done; 
-    incr y;
-  ) done;
-  
-
-(* iterate over image *)
-value image_iter f img = 
-  let (w,h) = Images.size img in
-  iter_2d begin fun x y ->
-    let elt =
-      match img with 
-      [ Images.Rgb24  i24 -> 
-        let elt = (Rgb24.get i24 x y) in
-        { Color.Rgba.color = elt; alpha = 1 }
-      | Images.Rgba32 i32 -> Rgba32.get i32 x y
-      | _   -> failwith "Unsupported format"
-      ]
-    in 
-    (f x y elt);
-  end 0 0 w h;
-
-value save_alpha img fname = 
-  let out = open_out_bin fname in
-  let binout = IO.output_channel out in
-  let (width,height) = Images.size img in
-  (
-    IO.write_ui16 binout width;
-    IO.write_ui16 binout height;
-    image_iter (fun _ _ clr -> IO.write_byte binout clr.Color.alpha) img;
-    close_out out;
-  );
-
 
 
 
