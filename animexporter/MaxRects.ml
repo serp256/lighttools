@@ -1,6 +1,6 @@
 
 value max_size = ref 2048;
-value min_size = ref 1;
+value min_size = ref 256;
 
 
 (* размещаем на одной странице, постепенно увеличивая ее размер *)
