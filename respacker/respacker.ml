@@ -727,7 +727,9 @@ value images_by_symbols () =
       ]
 ;
 
-value do_work isXml separate pvr indir =
+type fmt = [ FPng | FPvr | FPlx of string ];
+
+value do_work isXml separate fmt indir =
   (
     Array.iter begin fun fl ->
       let dirname = indir // fl in
@@ -756,7 +758,7 @@ value do_work isXml separate pvr indir =
       Unix.mkdir outdir 0o755;
       let () = TextureLayout.rotate.val := False in
       let pack_textures starts_with images = 
-        let pages = TextureLayout.layout ~type_rects:`maxrect ~sqr:pvr images in
+        let pages = TextureLayout.layout ~type_rects:`maxrect ~sqr:(fmt = FPvr) images in
         List.mapi begin fun i (w,h,imgs) ->
           let idx = i + starts_with in
           let texture = Rgba32.make w h bgcolor in
@@ -774,9 +776,11 @@ value do_work isXml separate pvr indir =
             let imgname = Printf.sprintf "%d.png" idx in
             (
               Images.save (outdir // imgname) (Some Images.Png) [] (Images.Rgba32 texture);
-              if pvr 
-              then TextureLayout.pvr_png (outdir // (string_of_int idx))
-              else ();
+              match fmt with
+              [ FPvr -> Utils.pvr_png (outdir // (string_of_int idx))
+              | FPlx plt -> Utils.plx_png plt (outdir // (string_of_int idx))
+              | FPng -> ()
+              ];
               imgname;
             )
           )
@@ -809,14 +813,14 @@ value do_work isXml separate pvr indir =
             | `box _ as b -> Stack.push b qchld
             ]
           end children;
-          let res = BatRefList.empty () in
+          let res = RefList.empty () in
           (
             Stack.iter begin fun 
-              [ `atlas els -> BatRefList.push res (`atlas (List.rev els))
-              | _ as el -> BatRefList.push res el
+              [ `atlas els -> RefList.push res (`atlas (List.rev els))
+              | _ as el -> RefList.push res el
               ]
             end qchld;
-            BatRefList.to_list res;
+            RefList.to_list res;
           )
         )
       in
@@ -1167,20 +1171,36 @@ value () =
   let xml = ref False in
   let separate = ref False in
   let pvr = ref False in
+  let plt = ref None in
   (
     Arg.parse 
       [ 
         ("-o",Arg.Set_string outdir,"outpud directory") ; 
         ("-xml",Arg.Set xml, "lib in xml format") ; 
         ("-sep",Arg.Set separate,"each symbol in separate texture");
-        ("-pvr",Arg.Set pvr,"make pvr")
+        ("-pvr",Arg.Set pvr,"make pvr");
+        ("-plt",Arg.String (fun s -> plt.val := Some s),"make pallete textures");
       ] 
       (fun id -> indir.val := Some id) "usage msg";
     match !indir with
     [ None -> failwith "You must spec input dir"
     | Some indir -> 
+        let fmt = 
+          match !pvr with
+          [ True -> 
+            match !plt with
+            [ None -> FPvr
+            | Some _ -> failwith "It's wrong to make both pvr and plx"
+            ]
+          | False ->
+              match !plt with
+              [ Some plt -> FPlx plt
+              | None -> FPng
+              ]
+          ]
+        in
         let indir = if indir.[String.length indir - 1] = '/' then String.rchop indir else indir in
-        do_work !xml !separate !pvr indir
+        do_work !xml !separate fmt indir
     ]
   );
 

@@ -407,14 +407,3 @@ value layout ?(type_rects=`maxrect) ?(sqr=True) rects =
     Random.self_init ();
     layout_multipage ~type_rects ~sqr rects [];
   );
-
-
-value pvr_png img = 
-  let cmd = Printf.sprintf "PVRTexTool -yflip0 -fOGLPVRTC4 -premultalpha -pvrtcbest -i%s.png -o %s.pvr" img img in
-  (
-    Printf.printf "%s\n%!" cmd;
-    match Sys.command cmd with
-    [ 0 -> ()
-    | _ -> failwith (Printf.sprintf "Failed pvr %s.png" img)
-    ];
-  );

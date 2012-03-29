@@ -139,7 +139,7 @@ value process_file file =
             let prefix = Filename.chop_extension file in
             let (w,h) = Images.size image in
             let preview = Rgba32.make w h zclr in
-            let index = IO.output_channel (open_out_bin (Printf.sprintf "%s.plx" prefix)) in
+            let index = Utils.gzip_output ~level:3 (Printf.sprintf "%s.plx" prefix) in
             (
               IO.write_byte index pn;
               IO.write_ui16 index w;
