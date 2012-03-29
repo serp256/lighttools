@@ -9,7 +9,7 @@ value only_colors = ref False;
 
 
 
-value image_iter = TextureLayout.image_iter;
+value image_iter = Utils.image_iter;
 
 
 (* return array of all colors *)
