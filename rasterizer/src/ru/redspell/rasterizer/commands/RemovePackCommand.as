@@ -14,15 +14,15 @@ package ru.redspell.rasterizer.commands {
 		override public function unsafeExecute():void {
 			Facade.proj.removePack(_pack);
 
-			var packSrc:File = Facade.projDir;
-			var packOut:File = Facade.projOutDir;
+			var packSrc:File = Facade.projDir.resolvePath(_pack.name);
+			var packOut:File = Facade.projOutDir.resolvePath(_pack.name);
 
 			if (packSrc.exists) {
-				packSrc.resolvePath(_pack.name).deleteDirectory(true);
+				packSrc.deleteDirectory(true);
 			}
 
 			if (packOut.exists) {
-				packOut.resolvePath(_pack.name).deleteDirectory(true);
+				packOut.deleteDirectory(true);
 			}
 		}
 	}

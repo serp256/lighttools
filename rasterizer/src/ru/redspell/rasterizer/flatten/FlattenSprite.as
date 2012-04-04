@@ -181,6 +181,10 @@ package ru.redspell.rasterizer.flatten {
 					box.name = obj.name;
 					box.transform.matrix = mtx.clone();
 
+					trace('obj.transform.matrix', obj.transform.matrix);
+					trace('matrix', matrix);
+					trace('mtx', mtx);
+
 					_childs.push(box);
 				}
             } else {
