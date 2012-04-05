@@ -1,3 +1,5 @@
+open ExtList;
+
 value texInfo = "texInfo.dat";
 value frames = "frames.dat";
 
@@ -22,13 +24,13 @@ type frame =
   };
 
 value read_utf inp = 
-  let len = BatIO.read_i16 inp in
-  BatIO.really_nread inp len;
+  let len = IO.read_i16 inp in
+  IO.really_nread inp len;
 
 value write_utf out str=
   (
-    BatIO.write_i16 out (String.length str);
-    BatIO.nwrite out str;
+    IO.write_i16 out (String.length str);
+    IO.nwrite out str;
   );
 
 value inp_dir = ref "input"; 
@@ -37,19 +39,19 @@ value gen_pvr = ref False;
 
 value get_images dir images  =
   let texInfo = !inp_dir /// dir /// texInfo in
-  let frameInfo =BatFile.open_in (!inp_dir /// dir /// "frames.dat") in 
+  let frameInfo =IO.input_channel (open_in (!inp_dir /// dir /// "frames.dat")) in 
   let rec getLayers cnt layers =
     match cnt with
     [ 0 -> layers 
     | _ ->
         (
-          ignore(BatIO.read_byte frameInfo);
-          let imgId = BatIO.read_i32 frameInfo in
-          let lx = BatIO.read_ui16 frameInfo in
-          let ly = BatIO.read_ui16 frameInfo in
-          let alpha = BatIO.read_byte frameInfo in
+          ignore(IO.read_byte frameInfo);
+          let imgId = IO.read_i32 frameInfo in
+          let lx = IO.read_ui16 frameInfo in
+          let ly = IO.read_ui16 frameInfo in
+          let alpha = IO.read_byte frameInfo in
           let flip = 
-            match BatIO.read_byte frameInfo with
+            match IO.read_byte frameInfo with
             [ 0 -> False 
             | _ -> True
             ]
@@ -64,31 +66,31 @@ value get_images dir images  =
     match cnt with
     [ 0 -> 
         ( 
-          BatIO.close_in frameInfo;
+          IO.close_in frameInfo;
           frames;
         )
     | _ ->
-        let x = BatIO.read_ui16 frameInfo in
-        let y = BatIO.read_ui16 frameInfo in
-        let iconX = BatIO.read_ui16 frameInfo in
-        let iconY = BatIO.read_ui16 frameInfo in
-        let layers = getLayers (BatIO.read_byte frameInfo) [] in
+        let x = IO.read_ui16 frameInfo in
+        let y = IO.read_ui16 frameInfo in
+        let iconX = IO.read_ui16 frameInfo in
+        let iconY = IO.read_ui16 frameInfo in
+        let layers = getLayers (IO.read_byte frameInfo) [] in
         getFrames (cnt - 1) [ {x;y; iconX;iconY; layers} :: frames ]
 
     ]
   in
-  let frames = getFrames (BatIO.read_i32 frameInfo) [] in
-  let texInfo = BatFile.open_in texInfo in 
-  let countTex = BatIO.read_ui16 texInfo in
+  let frames = getFrames (IO.read_i32 frameInfo) [] in
+  let texInfo = IO.input_channel (open_in texInfo) in 
+  let countTex = IO.read_ui16 texInfo in
   let () = Printf.printf "count textures : %d\n%!" countTex in
   let rec imagesByTexture img countImage id s images =
     match countImage with
     [ 0 -> (id, s, images) 
     | _ ->
-        let sx = BatIO.read_ui16 texInfo in
-        let sy = BatIO.read_ui16 texInfo in
-        let iw = BatIO.read_ui16 texInfo in
-        let ih = BatIO.read_ui16 texInfo in
+        let sx = IO.read_ui16 texInfo in
+        let sy = IO.read_ui16 texInfo in
+        let iw = IO.read_ui16 texInfo in
+        let ih = IO.read_ui16 texInfo in
         imagesByTexture img (countImage - 1) (id +1) (s + iw * ih) [ ((id,dir), Images.sub img sx sy iw ih) :: images ]
     ]
   in
@@ -99,13 +101,13 @@ value get_images dir images  =
         let name = !inp_dir /// dir /// read_utf texInfo in
         let () = Printf.printf "Try open %s\n%!" name in
         let texture = Images.load name [] in 
-        let count = BatIO.read_ui16 texInfo in
+        let count = IO.read_ui16 texInfo in
         readTexture (countTex - 1) (imagesByTexture texture count id s images) 
     ]
   in
   let res = [ readTexture countTex (0,0,[]) :: images ] in
     (
-      BatIO.close_in texInfo;
+      IO.close_in texInfo;
       res
     );
 
@@ -117,26 +119,26 @@ value convert dir idTex imgs =
       | _ -> ()
       ];
       let newTexInfo = res_dir /// "texInfo.dat" in
-      let newTexInfo = BatFile.open_out ~mode:[`create ] newTexInfo in
+      let newTexInfo = IO.output_channel (open_out newTexInfo) in
         (
           ignore(Sys.command (Printf.sprintf "cp -f %s/%s/animations.dat %s" !inp_dir dir res_dir));
           ignore(Sys.command (Printf.sprintf "cp -f %s/%s/frames.dat %s" !inp_dir dir res_dir));
-          BatIO.write_ui16 newTexInfo 1;
+          IO.write_ui16 newTexInfo 1;
           write_utf newTexInfo ((string_of_int idTex) ^ ".png");
-          BatIO.write_ui16 newTexInfo (List.length imgs);
-          BatList.iteri begin fun i (urlId,(sx,sy,isRotate,img)) ->
+          IO.write_ui16 newTexInfo (List.length imgs);
+          List.iteri begin fun i (urlId,(sx,sy,isRotate,img)) ->
           (
             let (iw,ih) = Images.size img in
             (
-              BatIO.write_ui16 newTexInfo sx;
-              BatIO.write_ui16 newTexInfo sy;
-              BatIO.write_ui16 newTexInfo iw;
-              BatIO.write_ui16 newTexInfo ih;
-           (*   BatIO.write_byte newTexInfo (match isRotate with [ True -> 1 | _ -> 0]); *)
+              IO.write_ui16 newTexInfo sx;
+              IO.write_ui16 newTexInfo sy;
+              IO.write_ui16 newTexInfo iw;
+              IO.write_ui16 newTexInfo ih;
+           (*   IO.write_byte newTexInfo (match isRotate with [ True -> 1 | _ -> 0]); *)
             );
           )
           end imgs;
-          BatIO.close_out newTexInfo;
+          IO.close_out newTexInfo;
         );
       );
     
@@ -159,7 +161,7 @@ value run () =
     textures
   end [] images in 
 (*  let textures = MaxRects.layout_last_page 1024 textures in *)
-  BatList.iteri begin fun cnt (w,h,imgs,_,_) ->
+  List.iteri begin fun cnt (w,h,imgs,_,_) ->
     let rgb = Rgba32.make w h {Color.color={Color.r=0;g=0;b=0}; alpha=0;} in
     let new_img = Images.Rgba32 rgb in
       (
@@ -190,7 +192,7 @@ value run () =
           (
             Images.save (save_img ^ ".png") (Some Images.Png) [] new_img;
             match !gen_pvr with
-            [ True -> TextureLayout.pvr_png save_img
+            [ True -> Utils.pvr_png save_img
             | _ -> ()
             ]
           );
