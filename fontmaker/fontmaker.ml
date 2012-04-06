@@ -140,7 +140,7 @@ let xmlout = Xmlm.make_output ~nl:True ~indent:(Some 4) (`Channel (open_out xmlf
         let fname = match !output with [ None -> imgname | Some o -> Filename.concat o imgname] in
         (
           match !alpha_texture with
-          [ True -> TextureLayout.save_alpha (Images.Rgba32 texture) fname
+          [ True -> Utils.save_alpha (Images.Rgba32 texture) fname
           | False -> Images.save fname (Some Images.Png) [] (Images.Rgba32 texture)
           ];
           Xmlm.output xmlout (`El_start (("","page"),["file" =|= imgname]));
