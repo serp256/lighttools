@@ -62,7 +62,7 @@ value write_png_file_rgb( name, buffer, width, height, with_alpha )
   }
 
   /* error handling */
-  if (setjmp(png_ptr->jmpbuf)) {
+  if (png_jmpbuf(png_ptr)) {
     /* Free all of the memory associated with the png_ptr and info_ptr */
     png_destroy_write_struct(&png_ptr, &info_ptr);
     fclose(fp);
@@ -171,7 +171,7 @@ value write_png_file_index( name, buffer, cmap, width, height )
   }
 
   /* error handling */
-  if (setjmp(png_ptr->jmpbuf)) {
+  if (png_jmpbuf(png_ptr)) {
     /* Free all of the memory associated with the png_ptr and info_ptr */
     png_destroy_write_struct(&png_ptr, &info_ptr);
     fclose(fp);
