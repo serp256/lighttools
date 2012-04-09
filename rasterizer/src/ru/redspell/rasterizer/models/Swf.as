@@ -40,7 +40,13 @@ package ru.redspell.rasterizer.models {
 			try {
 				var li:LoaderInfo = event.target as LoaderInfo;
 				var appDomain:ApplicationDomain = li.applicationDomain;
-				var classes:Array = _useGetDefinitions ? getDefinitionNames(li) : source;
+
+				if (_useGetDefinitions) {
+					var classes:Array = getDefinitionNames(li);
+					classes.sort();
+				} else {
+					classes = source;
+				}
 
 				for each (var cls:Object in classes) {
 					if (cls is SwfClass) {
