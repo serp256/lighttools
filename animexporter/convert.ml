@@ -36,6 +36,7 @@ value write_utf out str=
 value inp_dir = ref "input"; 
 value outdir = ref "output";
 value gen_pvr = ref False;
+value start_num = ref 0;
 
 value get_images dir images  =
   let texInfo = !inp_dir /// dir /// texInfo in
@@ -162,6 +163,7 @@ value run () =
   end [] images in 
 (*  let textures = MaxRects.layout_last_page 1024 textures in *)
   List.iteri begin fun cnt (w,h,imgs,_,_) ->
+    let cnt = cnt + !start_num in
     let rgb = Rgba32.make w h {Color.color={Color.r=0;g=0;b=0}; alpha=0;} in
     let new_img = Images.Rgba32 rgb in
       (
@@ -210,7 +212,9 @@ value () =
         ("-inp",Arg.Set_string inp_dir,"input directory");
         ("-o",Arg.Set_string outdir, "output directory");
         ("-pvr",Arg.Set gen_pvr,"generate pvr file");
+        ("-n",Arg.Set_int start_num,"set first name texture ");
         ("-p",Arg.Set_int TextureLayout.countEmptyPixels, "count Empty pixels between images");
+        ("-min",Arg.Set_int MaxRects.min_size, "Min size texture");
       ]
       (fun _ -> ())
       "";
