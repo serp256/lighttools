@@ -2,6 +2,7 @@ package ru.redspell.rasterizer.factories {
 	import ru.nazarov.asmvc.command.ICommandManager;
 	import ru.redspell.rasterizer.commands.*;
 	import ru.nazarov.asmvc.command.ICommand;
+	import ru.redspell.rasterizer.models.Profile;
 	import ru.redspell.rasterizer.models.Project;
 	import ru.redspell.rasterizer.models.Swf;
 	import ru.redspell.rasterizer.models.SwfClass;
@@ -59,6 +60,14 @@ package ru.redspell.rasterizer.factories {
 
 		public function getSavePackMetaCommand(pack:SwfsPack):ICommand {
 			return new SavePackMetaCommand(pack);
+		}
+
+		public function getChooseProfileCommand(profile:Profile):ICommand {
+			return new ChooseProfileCommand(profile);
+		}
+
+		public function getCreateProfileCommand(label:String, scale:Number):ICommand {
+			return new CreateProfileCommand(label, scale);
 		}
 	}
 }

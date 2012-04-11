@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<s:TitleWindow
+	xmlns:fx="http://ns.adobe.com/mxml/2009"
+	xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	title="Create profile"
+	width="250"
+	height="130">
+
+	<fx:Script><![CDATA[
+		protected function btClickHandler():void {
+			Facade.runCommand(Facade.commandsFactory.getCreateProfileCommand(label.text, Number(scale.text)));
+			dispatchEvent(new Event(Event.CLOSE));
+		}
+	]]></fx:Script>
+
+	<s:VGroup width="100%" height="100%" horizontalAlign="center" paddingBottom="5" paddingLeft="5" paddingRight="5" paddingTop="5">
+		<s:HGroup width="100%" height="100%" verticalAlign="middle">
+			<s:VGroup width="50%" horizontalAlign="right" paddingRight="5">
+				<s:Label text="Profile label" height="20" verticalAlign="middle"/>
+				<s:Label text="Scale factor" height="20" verticalAlign="middle"/>
+			</s:VGroup>
+
+			<s:VGroup width="50%" horizontalAlign="left" paddingLeft="5">
+				<s:TextInput id="label"/>
+				<s:TextInput id="scale"/>
+			</s:VGroup>
+		</s:HGroup>
+		<s:Button label="ok" click="btClickHandler()"/>
+	</s:VGroup>
+</s:TitleWindow>

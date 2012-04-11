@@ -65,17 +65,9 @@
 		protected function stage_keyDownHandler(event:KeyboardEvent):void {
 			if (event.ctrlKey) {
 				switch (event.keyCode) {
-					//case Keyboard.N:
-					//	Facade.runCommand(Facade.commandsFactory.getNewProjectCommand());
-					//	break;
-
 					case Keyboard.O:
 						Facade.runCommand(Facade.commandsFactory.getOpenProjectCommand());
 						break;
-
-					//case Keyboard.S:
-					//	Facade.runCommand(Facade.commandsFactory.getSaveProjectCommand());
-					//	break;
 
 					case Keyboard.E:
 						Facade.runCommand(Facade.commandsFactory.getExportCommand(Facade.proj));
@@ -87,10 +79,16 @@
 				}
 			}
 		}
+
+		public function setProfileLbl(lbl:String):void {
+			var regex:RegExp = /^([\w]+)(\(.*?\))?$/;
+
+			title = title.replace(regex, '$1(' + lbl + ')');
+		}
 	]]></fx:Script>
 
 	<s:VGroup width="100%" height="100%">
-		<view:MainMenu/>
+		<view:MainMenu id="mainMenu"/>
 
 		<s:HGroup id="rootGroup" width="100%" height="100%" paddingLeft="10" paddingBottom="10" paddingRight="10" paddingTop="10" enabled="false">
 			<view:PacksGrid id="packsList" width="25%" height="100%" expandList="{swfsList}"/>
@@ -98,4 +96,5 @@
 			<view:ClassesGrid id="classesGrid" width="45%" height="100%"/>
 		</s:HGroup>
 	</s:VGroup>
+
 </s:WindowedApplication>

@@ -4,47 +4,96 @@
 	xmlns:s="library://ns.adobe.com/flex/spark"
 	xmlns:mx="library://ns.adobe.com/flex/mx"
 	width="100%"
-	itemClick="itemClickHandler(event)">
+	itemClick="itemClickHandler(event)"
+	dataProvider="{dp}">
 
 	<fx:Script><![CDATA[
+		import mx.collections.ArrayCollection;
+		import mx.collections.ListCollectionView;
+		import mx.collections.XMLListCollection;
+		import mx.events.CollectionEvent;
 		import mx.events.MenuEvent;
 
-		public static const NEW:String = 'mainMenu_new';
+		import ru.redspell.rasterizer.models.Profile;
+
 		public static const OPEN:String = 'mainMenu_open';
-		public static const SAVE:String = 'mainMenu_save';
 		public static const EXPORT:String = 'mainMenu_export';
+		public static const CREATE_PROFILE:String = 'mainMenu_createProfile';
+		public static const CHOOSE_PROFILE:String = 'mainMenu_chooseProfile';
+
+		protected var chooseItem:Object = { label:'Choose', children:[] };
+
+		[Bindable]
+		protected var dp:Array = [
+			{ label:'File', children:[
+				{ label:'Open', action:OPEN },
+				{ label:'Export', action:EXPORT }
+			] },
+			{ label:'Profiles', children:[
+				{ label:'Create', action:CREATE_PROFILE },
+				chooseItem
+			] }
+		];
 
 		protected function itemClickHandler(event:MenuEvent):void {
 			switch (event.item.action) {
-				//case NEW:
-				//	Facade.runCommand(Facade.commandsFactory.getNewProjectCommand());
-				//	break;
-
 				case OPEN:
 					Facade.runCommand(Facade.commandsFactory.getOpenProjectCommand());
 					break;
 
-				//case SAVE:
-				//	Facade.runCommand(Facade.commandsFactory.getSaveProjectCommand());
-				//	break;
-
 				case EXPORT:
 					Facade.runCommand(Facade.commandsFactory.getExportCommand(Facade.proj));
 					break;
+
+				case CREATE_PROFILE:
+					Facade.app.showPopup(new CreateProfileWindow());
+					break;
+
+				case CHOOSE_PROFILE:
+					/*
+					for each (var menuItemData:Object in chooseItem.children) {
+						menuItemData.toggled = ;
+					}
+					*/
+
+					Facade.runCommand(Facade.commandsFactory.getChooseProfileCommand(event.item.data as Profile))
+					break;
+			}
+		}
+
+		public function setProfilesDp(dp:ArrayCollection):void {
+			dp.addEventListener(CollectionEvent.COLLECTION_CHANGE, profilesDp_collectionChangeHandler);
+			dp.refresh();
+		}
+
+		protected function profilesDp_collectionChangeHandler(event:CollectionEvent):void {
+			chooseItem.children = [];
+
+			for each (var profileModel:Profile in (event.target as ArrayCollection).source) {
+				var profile:Object = { label: profileModel.label, action:CHOOSE_PROFILE, data:profileModel, type:'check', toggled:(profileModel == Facade.profile) };
+				chooseItem.children.push(profile);
 			}
 		}
 	]]></fx:Script>
 
-	<mx:dataProvider>
-		<fx:Object label="File">
-			<fx:children>
-				<fx:Array>
-					<!--<fx:Object label="New" action="{NEW}"/>-->
-					<fx:Object label="Open" action="{OPEN}"/>
-					<!--<fx:Object label="Save" action="{SAVE}"/>-->
-					<fx:Object label="Export" action="{EXPORT}"/>
-				</fx:Array>
-			</fx:children>
-		</fx:Object>
-	</mx:dataProvider>
+	<!--<mx:dataProvider>-->
+		<!--<fx:Array>-->
+			<!--<fx:Object label="File">-->
+				<!--<fx:children>-->
+					<!--<fx:Array>-->
+						<!--<fx:Object label="Open" action="{OPEN}"/>-->
+						<!--<fx:Object label="Export" action="{EXPORT}"/>-->
+					<!--</fx:Array>-->
+				<!--</fx:children>-->
+			<!--</fx:Object>-->
+			<!--<fx:Object label="Profiles">-->
+				<!--<fx:children>-->
+					<!--<fx:Array>-->
+						<!--<fx:Object label="Create profile" action="{CREATE_PROFILE}"/>-->
+						<!--<fx:Object label="Choose profile" action="{CHOOSE_PROFILE}"/>-->
+					<!--</fx:Array>-->
+				<!--</fx:children>-->
+			<!--</fx:Object>-->
+		<!--</fx:Array>-->
+	<!--</mx:dataProvider>-->
 </mx:MenuBar>
