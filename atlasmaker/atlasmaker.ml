@@ -11,6 +11,8 @@ value maxTextureSize = ref 2048;
 value out_file = ref "";
 value gen_pvr = ref False;
 value is_xml = ref False;
+value dirname = ref None;
+value fp = ref False;
 
 value nocrop = ref "";
 value nocropHash:Hashtbl.t string unit = Hashtbl.create 3;
@@ -128,7 +130,16 @@ value readImageRect path fname =
         let () = Printf.eprintf "Won't crop %s\n%!" fname 
         in image
       with [ Not_found -> croppedImageRect image ] 
-    in  Hashtbl.add imageRects fname rect
+    in
+		let name = 
+				match !fp with
+				[ True -> 
+						let dirname = Option.get !dirname in
+						snd (ExtString.String.replace ~str:path ~sub:dirname  ~by:"")
+				| _ -> fname
+				]
+		in
+		Hashtbl.add imageRects name rect
   with [Images.Wrong_file_type -> Printf.eprintf "Wrong file type: %s\n%!" path ];
   
 
@@ -294,17 +305,17 @@ value createAtlas () =
 
 (* *)
 value () = 
-  let dirname = ref None in
   (
     Arg.parse
       [
+        ("-fp", Arg.Set fp, "Full path name for item atlase");
         ("-max", Arg.Set_int TextureLayout.max_size, "Max texture size");
         ("-min", Arg.Set_int TextureLayout.min_size, "Max texture size");
         ("-o",Arg.Set_string out_file,"output file");
         ("-nc", Arg.Set_string nocrop, "files that are not supposed to be cropped");
         ("-t",Arg.String (fun s -> let t = match s with [ "vert" -> `vert | "hor" -> `hor | "rand" -> `rand | "maxrect" -> `maxrect |  _ -> failwith "unknown type rect" ] in type_rect.val := t),"type rect for insert images");
         ("-p",Arg.Set gen_pvr,"generate pvr file");
-        ("-xml",Arg.Set is_xml,"meta in xml format")
+        ("-xml",Arg.Set is_xml,"meta in xml format");
       ]
       (fun dn -> match !dirname with [ None -> dirname.val := Some dn | Some _ -> failwith "You must specify only one directory" ])
       "---"
