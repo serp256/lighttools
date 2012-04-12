@@ -23,10 +23,11 @@ value dpi = ref 72;
 value alpha_texture = ref False;
 
 value bgcolor = {Color.color = {Color.r = 0; g = 0; b = 0}; alpha = 0};
+value scale = ref 1.;
 
 value make_size face size callback = 
 (
-  Freetype.set_char_size face size 0. !dpi 0;
+  Freetype.set_char_size face (!scale *. size) 0. !dpi 0;
   UTF8.iter begin fun uchar ->
   (
     let code = UChar.code uchar in
@@ -76,7 +77,8 @@ Arg.parse
     ("-s",Arg.String parse_sizes,"sizes");
     ("-cf",Arg.String read_chars,"chars from file");
     ("-alpha",Arg.Set alpha_texture,"make alpha texture");
-    ("-o",Arg.String (fun s -> output.val := Some s),"output dir")
+    ("-o",Arg.String (fun s -> output.val := Some s),"output dir");
+    ("-scale", Arg.Float (fun s -> scale.val := s ), "scale factor")
   ] 
   (fun f -> fontFile.val := f) "Usage msg";
 
@@ -93,7 +95,8 @@ else
 let t = Freetype.init () in
 let (face,face_info) = Freetype.new_face t !fontFile 0 in
 let chars = Hashtbl.create 1 in
-let fname = Filename.chop_extension (Filename.basename !fontFile) in
+let fname = (Filename.chop_extension (Filename.basename !fontFile)) ^ (if !scale
+= 1. then "" else "_x" ^ (string_of_int (int_of_float !scale))) in
 let xmlfname =  fname ^ ".fnt" in
 let xmlfname = match !output with [ None -> xmlfname | Some dir -> Filename.concat dir xmlfname ] in
 let out = open_out xmlfname in
@@ -136,7 +139,7 @@ let xmlout = Xmlm.make_output ~nl:True ~indent:(Some 4) (`Channel (open_out xmlf
           )
         end imgs;
         let ext = match !alpha_texture with [ True -> "alpha" | False -> "png" ] in
-        let imgname =  Printf.sprintf "%s%d.%s" fname i ext in
+        let imgname =  Printf.sprintf "%s_%d.%s" fname i ext in
         let fname = match !output with [ None -> imgname | Some o -> Filename.concat o imgname] in
         (
           match !alpha_texture with
