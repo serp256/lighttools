@@ -38,6 +38,8 @@ package ru.redspell.rasterizer.models {
 
 		protected function loader_completeHandler(event:Event):void {
 			try {
+				trace('loader_completeHandler', path);
+
 				var li:LoaderInfo = event.target as LoaderInfo;
 				var appDomain:ApplicationDomain = li.applicationDomain;
 
@@ -69,6 +71,8 @@ package ru.redspell.rasterizer.models {
 		}
 
 		public function loadClasses(useGetDefinitions:Boolean = true):void {
+			trace('load class call', path);
+
 			var loader:Loader = new Loader();
 
 			_useGetDefinitions = useGetDefinitions;

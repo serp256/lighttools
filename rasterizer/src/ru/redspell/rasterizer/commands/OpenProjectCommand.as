@@ -23,35 +23,41 @@ package ru.redspell.rasterizer.commands {
 		protected var _loadedSwfs:uint = 0;
 
 		protected function swf_completeHandler(event:Event = null):void {
+			trace(_loadedSwfs, _totalSwfs)
+
+			var swf:Swf = event.target as Swf;
+			var meta:Object = Facade.proj.meta;
+
+			trace('swf_completeHandler', swf.path);
+
+			for each (var cls:SwfClass in swf.classes) {
+				if (!meta.hasOwnProperty(cls.swf.pack.name)) {
+					continue;
+				}
+
+				var packMeta:Object = meta[cls.swf.pack.name];
+
+				if (!packMeta.hasOwnProperty(cls.swf.filename)) {
+					continue;
+				}
+
+				var swfMeta:Object = packMeta[cls.swf.filename];
+
+				if (!swfMeta.hasOwnProperty(cls.name)) {
+					continue;
+				}
+
+				var clsMeta:Object = swfMeta[cls.name];
+				cls.checked = clsMeta.hasOwnProperty('checked') ? clsMeta.checked : true;
+				cls.animated = clsMeta.hasOwnProperty('animated') ? clsMeta.animated : true;
+				cls.scales = clsMeta.hasOwnProperty('scales') ? clsMeta.scales : {};
+
+				trace(swf.path, cls.name, JSON.encode(clsMeta.scales));
+			}
+
 			if (++_loadedSwfs == _totalSwfs) {
 				Facade.app.setStatus('project opened', true);
 			} else {
-				var swf:Swf = event.target as Swf;
-				var meta:Object = Facade.proj.meta;
-
-				for each (var cls:SwfClass in swf.classes) {
-					if (!meta.hasOwnProperty(cls.swf.pack.name)) {
-						continue;
-					}
-
-					var packMeta:Object = meta[cls.swf.pack.name];
-
-					if (!packMeta.hasOwnProperty(cls.swf.filename)) {
-						continue;
-					}
-
-					var swfMeta:Object = packMeta[cls.swf.filename];
-
-					if (!swfMeta.hasOwnProperty(cls.name)) {
-						continue;
-					}
-
-					var clsMeta:Object = swfMeta[cls.name];
-					cls.checked = clsMeta.hasOwnProperty('checked') ? clsMeta.checked : true;
-					cls.animated = clsMeta.hasOwnProperty('animated') ? clsMeta.animated : true;
-					cls.scales = clsMeta.hasOwnProperty('scales') ? clsMeta.scales : {};
-				}
-
 				Facade.app.setStatus('loading swfs (' + _loadedSwfs + '/' + _totalSwfs + ')', true);
 			}
 		}
@@ -117,6 +123,8 @@ package ru.redspell.rasterizer.commands {
 						var swfMeta:Object = packMeta[swf.filename];
 						swf.animated = swfMeta.hasOwnProperty('animated') ? swfMeta.aninated : true;
 					}
+
+					trace('loaing swf', swf.path);
 
 					swf.addEventListener(Event.COMPLETE, swf_completeHandler);
 					swf.loadClasses(dir);
