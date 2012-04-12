@@ -46,16 +46,13 @@
 					break;
 
 				case CREATE_PROFILE:
-					Facade.app.showPopup(new CreateProfileWindow());
+					if (Facade.projDir != null) {
+						Facade.app.showPopup(new CreateProfileWindow());
+					}
+
 					break;
 
 				case CHOOSE_PROFILE:
-					/*
-					for each (var menuItemData:Object in chooseItem.children) {
-						menuItemData.toggled = ;
-					}
-					*/
-
 					Facade.runCommand(Facade.commandsFactory.getChooseProfileCommand(event.item.data as Profile))
 					break;
 			}
@@ -70,30 +67,9 @@
 			chooseItem.children = [];
 
 			for each (var profileModel:Profile in (event.target as ArrayCollection).source) {
-				var profile:Object = { label: profileModel.label, action:CHOOSE_PROFILE, data:profileModel, type:'check', toggled:(profileModel == Facade.profile) };
+				var profile:Object = { label: profileModel.label, action:CHOOSE_PROFILE, data:profileModel, type:'radio', toggled:(profileModel == Facade.profile) };
 				chooseItem.children.push(profile);
 			}
 		}
 	]]></fx:Script>
-
-	<!--<mx:dataProvider>-->
-		<!--<fx:Array>-->
-			<!--<fx:Object label="File">-->
-				<!--<fx:children>-->
-					<!--<fx:Array>-->
-						<!--<fx:Object label="Open" action="{OPEN}"/>-->
-						<!--<fx:Object label="Export" action="{EXPORT}"/>-->
-					<!--</fx:Array>-->
-				<!--</fx:children>-->
-			<!--</fx:Object>-->
-			<!--<fx:Object label="Profiles">-->
-				<!--<fx:children>-->
-					<!--<fx:Array>-->
-						<!--<fx:Object label="Create profile" action="{CREATE_PROFILE}"/>-->
-						<!--<fx:Object label="Choose profile" action="{CHOOSE_PROFILE}"/>-->
-					<!--</fx:Array>-->
-				<!--</fx:children>-->
-			<!--</fx:Object>-->
-		<!--</fx:Array>-->
-	<!--</mx:dataProvider>-->
 </mx:MenuBar>

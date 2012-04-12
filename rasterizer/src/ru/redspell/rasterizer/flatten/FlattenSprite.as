@@ -20,6 +20,7 @@ package ru.redspell.rasterizer.flatten {
 	public class FlattenSprite extends Sprite implements IFlatten {
         public static const BMP_SMOOTHING_MISTAKE:Number = 0;
 
+		protected var _scale:Number = 1;
 		public var label:String = '';
 
 		protected var _childs:Vector.<IFlatten> = new Vector.<IFlatten>();
@@ -190,6 +191,7 @@ package ru.redspell.rasterizer.flatten {
             } else {
                 mtx = matrix.clone();
                 mtx.concat(obj.transform.matrix);
+				mtx.scale(_scale, _scale);
 
                 var layer:FlattenImage = applyFilters(applyMatrix(obj, mtx, clr), filters);
                 _childs.push(layer);
@@ -238,8 +240,9 @@ package ru.redspell.rasterizer.flatten {
 			}
 		}
 
-        public function fromDisplayObject(obj:DisplayObject):IFlatten {
-			Utils.traceObj(obj as DisplayObjectContainer);
+        public function fromDisplayObject(obj:DisplayObject, scale:Number = 1):IFlatten {
+			//Utils.traceObj(obj as DisplayObjectContainer);
+			_scale = scale;
 
             cleanMasks();
             flatten(obj);

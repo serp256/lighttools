@@ -1,5 +1,5 @@
 package ru.redspell.rasterizer.commands {
-	import com.adobe.serialization.json.JSON;
+	import com.maccherone.json.JSON;
 
 	import flash.events.Event;
 	import flash.filesystem.File;
@@ -10,6 +10,7 @@ package ru.redspell.rasterizer.commands {
 
 	import ru.nazarov.binstore.BinStore;
 	import ru.nazarov.binstore.IBinStore;
+	import ru.redspell.rasterizer.models.Profile;
 	import ru.redspell.rasterizer.models.Project;
 	import ru.redspell.rasterizer.models.Swf;
 	import ru.redspell.rasterizer.models.SwfClass;
@@ -48,6 +49,7 @@ package ru.redspell.rasterizer.commands {
 					var clsMeta:Object = swfMeta[cls.name];
 					cls.checked = clsMeta.hasOwnProperty('checked') ? clsMeta.checked : true;
 					cls.animated = clsMeta.hasOwnProperty('animated') ? clsMeta.animated : true;
+					cls.scales = clsMeta.hasOwnProperty('scales') ? clsMeta.scales : {};
 				}
 
 				Facade.app.setStatus('loading swfs (' + _loadedSwfs + '/' + _totalSwfs + ')', true);
@@ -133,6 +135,26 @@ package ru.redspell.rasterizer.commands {
 			if (_totalSwfs == 0) {
 				_totalSwfs = 1;
 				swf_completeHandler();
+			}
+
+			var profsFile:File = Facade.projDir.resolvePath(Config.PROFILES_FILENAME);
+			var profsDpSrc:Array = Facade.profiles.source.slice(0, 1);
+
+			Facade.profiles.source = profsDpSrc;
+
+			if (profsFile.exists) {
+				var s:FileStream = new FileStream();
+				var profsSrc:Array;
+
+				s.open(profsFile, FileMode.READ);
+				profsSrc = JSON.decode(s.readUTFBytes(s.bytesAvailable));
+				s.close();
+
+				for each (var profSrc:Object in profsSrc) {
+					profsDpSrc.push(Profile.create(profSrc.label, profSrc.scale));
+				}
+
+				Facade.profiles.refresh();
 			}
 		}
 

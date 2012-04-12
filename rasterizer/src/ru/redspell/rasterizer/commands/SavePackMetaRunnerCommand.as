@@ -13,7 +13,6 @@ package ru.redspell.rasterizer.commands {
 		}
 
 		override public function unsafeExecute():void {
-			trace(_save);
 			if (_save) {
 				Facade.runCommand(Facade.commandsFactory.getSavePackMetaCommand(_pack));
 			}

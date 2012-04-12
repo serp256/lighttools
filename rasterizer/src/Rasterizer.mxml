@@ -5,7 +5,7 @@
 	xmlns:s="library://ns.adobe.com/flex/spark"
 	xmlns:mx="library://ns.adobe.com/flex/mx"
 	title="Rasterizer"
-	width="825"
+	width="870"
 	height="450"
 	initialize="init()"
 	addedToStage="addedToStageHandler(event)">
@@ -91,9 +91,9 @@
 		<view:MainMenu id="mainMenu"/>
 
 		<s:HGroup id="rootGroup" width="100%" height="100%" paddingLeft="10" paddingBottom="10" paddingRight="10" paddingTop="10" enabled="false">
-			<view:PacksGrid id="packsList" width="25%" height="100%" expandList="{swfsList}"/>
-			<view:SwfsGrid id="swfsList" width="30%" height="100%" expandList="{classesGrid}"/>
-			<view:ClassesGrid id="classesGrid" width="45%" height="100%"/>
+			<view:PacksGrid id="packsList" width="23%" height="100%" expandList="{swfsList}"/>
+			<view:SwfsGrid id="swfsList" width="27%" height="100%" expandList="{classesGrid}"/>
+			<view:ClassesGrid id="classesGrid" width="50%" height="100%"/>
 		</s:HGroup>
 	</s:VGroup>
 

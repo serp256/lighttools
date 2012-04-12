@@ -10,7 +10,7 @@ package ru.redspell.rasterizer.flatten {
         protected var _frames:Vector.<FlattenSprite> = new Vector.<FlattenSprite>();
         protected var _curFrame:int = 0;
 
-        public function fromDisplayObject(obj:DisplayObject):IFlatten {
+        public function fromDisplayObject(obj:DisplayObject, scale:Number = 1):IFlatten {
 			var clip:MovieClip = obj as MovieClip;
 
 			if (!clip) {
@@ -21,7 +21,7 @@ package ru.redspell.rasterizer.flatten {
 			Utils.traceObj(clip);
 
 			for (var i:uint = 1; i <= clip.totalFrames; i++) {
-				var frame:FlattenSprite = (new FlattenSprite()).fromDisplayObject(obj) as FlattenSprite;
+				var frame:FlattenSprite = (new FlattenSprite()).fromDisplayObject(obj, scale) as FlattenSprite;
 
 				frame.label = clip.currentLabel;
 				_frames.push(frame);

@@ -13,6 +13,7 @@ package ru.redspell.rasterizer.commands {
 	import ru.redspell.rasterizer.flatten.FlattenMovieClip;
 	import ru.redspell.rasterizer.flatten.FlattenSprite;
 	import ru.redspell.rasterizer.flatten.IFlatten;
+	import ru.redspell.rasterizer.models.Profile;
 	import ru.redspell.rasterizer.models.Project;
 	import ru.redspell.rasterizer.models.Swf;
 	import ru.redspell.rasterizer.models.SwfClass;
@@ -51,7 +52,12 @@ package ru.redspell.rasterizer.commands {
 			Utils.traceObj(instance as DisplayObjectContainer);
 
 			var flatten:IFlatten = (instance is MovieClip) && animated ? new FlattenMovieClip() : new FlattenSprite();
-			flatten.fromDisplayObject(instance)
+			var scales:Object = cls.scales;
+			var profile:Profile = Facade.profile;
+
+			trace(clsName, scales.hasOwnProperty(profile.label) ? scales[profile.label] : profile.scale);
+
+			flatten.fromDisplayObject(instance, scales.hasOwnProperty(profile.label) ? scales[profile.label] : profile.scale);
 
 			try {
 				var exporter:IExporter = new FlattenExporter();
@@ -106,7 +112,7 @@ package ru.redspell.rasterizer.commands {
 			if (++_packIdx < _proj.length) {
 				_pack = _proj.getItemAt(_packIdx) as SwfsPack;
 				_swfIdx = -1;
-				_packDir = Facade.projOutDir.resolvePath(_pack.name);
+				_packDir = Facade.projOutDir.resolvePath(Facade.profile.label).resolvePath(_pack.name);
 
 				if (_pack.checked) {
 					if (_packDir.exists) {

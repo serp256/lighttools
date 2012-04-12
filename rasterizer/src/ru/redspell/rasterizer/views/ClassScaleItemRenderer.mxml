@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<s:DefaultGridItemRenderer
+	xmlns:fx="http://ns.adobe.com/mxml/2009"
+	xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx">
+
+	<fx:Script><![CDATA[
+		import com.adobe.serialization.json.JSON;
+
+		import ru.redspell.rasterizer.models.Profile;
+		import ru.redspell.rasterizer.models.SwfClass;
+
+		override public function set data(value:Object):void {
+			super.data = value;
+
+			if (value == null) {
+				return;
+			}
+
+			var scales:Object = (value as SwfClass).scales;
+			var profile:Profile = Facade.profile;
+
+			label = scales.hasOwnProperty(profile.label) ? scales[profile.label] : String(profile.scale);
+		}
+	]]></fx:Script>
+</s:DefaultGridItemRenderer>

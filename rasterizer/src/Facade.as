@@ -18,7 +18,7 @@ package {
 
 		public static var projFactory:ProjectFactory = new ProjectFactory();
 		public static var proj:Project;
-		public static var projDir:File = new File('/Users/andrey/Desktop/xyupizda');
+		public static var projDir:File;
 		public static var projSwfsDir:File;
 		public static var projOutDir:File;
 

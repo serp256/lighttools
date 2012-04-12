@@ -11,8 +11,8 @@ package ru.redspell.rasterizer.flatten {
 			super(width, height, transparent, fillColor);
 		}
 
-		public function fromDisplayObject(obj:DisplayObject):IFlatten {
-			draw(obj);
+		public function fromDisplayObject(obj:DisplayObject, scale:Number = 1):IFlatten {
+			draw(obj, new Matrix(scale, 0, 0, scale));
 			return this;
 		}
 

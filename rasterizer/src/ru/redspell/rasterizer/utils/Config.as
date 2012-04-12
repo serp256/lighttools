@@ -12,5 +12,6 @@ package ru.redspell.rasterizer.utils {
 		public static const DEFAULT_AFTER_SAVE_STATUS:String = 'project saved';
 		public static const META_FILENAME:String = 'meta';
 		public static const META_EXT:String = '.meta';
+		public static const PROFILES_FILENAME:String = 'profiles';
 	}
 }

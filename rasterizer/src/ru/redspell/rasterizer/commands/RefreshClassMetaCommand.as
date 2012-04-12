@@ -35,6 +35,12 @@ package ru.redspell.rasterizer.commands {
 
 			var clsMeta:Object = swfMeta[cls];
 
+			if (Utils.objIsEmpty(_cls.scales)) {
+				delete clsMeta.scales;
+			} else {
+				clsMeta.scales = _cls.scales;
+			}
+
 			if (_cls.checked) {
 				delete clsMeta.checked;
 			} else {

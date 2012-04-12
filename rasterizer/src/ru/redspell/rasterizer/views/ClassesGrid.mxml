@@ -4,7 +4,8 @@
 	xmlns:s="library://ns.adobe.com/flex/spark"
 	xmlns:mx="library://ns.adobe.com/flex/mx"
 	xmlns:view="ru.redspell.rasterizer.views.*"
-	selectionMode="multipleRows">
+	selectionMode="multipleRows"
+	editable="true">
 
 	<fx:Script><![CDATA[
 		import mx.collections.IList;
@@ -28,16 +29,27 @@
 			<view:CheckboxGridColumn
 				width="30"
 				dataField="checked"
+				editable="false"
 				changed="checkboxColChanged(event)"/>
-			<s:GridColumn headerText="Class" dataField="name"/>
+			<s:GridColumn
+				headerText="Class"
+				dataField="name"
+				editable="false"/>
+			<s:GridColumn
+				headerText="Scale"
+				width="50"
+				itemRenderer="ru.redspell.rasterizer.views.ClassScaleItemRenderer"
+				itemEditor="ru.redspell.rasterizer.views.ClassScaleItemEditor"/>
 			<view:CheckboxGridColumn
 				headerText="Anim."
 				dataField="animated"
 				changed="checkboxColChanged(event)"
-				width="55"/>
+				width="55"
+				editable="false"/>
 			<s:GridColumn
 				width="80"
-				itemRenderer="ru.redspell.rasterizer.views.PreviewColumnRenderer"/>
+				itemRenderer="ru.redspell.rasterizer.views.PreviewColumnRenderer"
+				editable="false"/>
 		</s:ArrayCollection>
 	</s:columns>
 </s:DataGrid>
