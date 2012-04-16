@@ -177,8 +177,9 @@ package ru.redspell.rasterizer.flatten {
                 }
 
 				if (!/^instance[\d]+$/.test(obj.name)) {
-					var box:FlattenSprite = new FlattenSprite();
+					mtx.scale(_scale, _scale);
 
+					var box:FlattenSprite = new FlattenSprite();
 					box.name = obj.name;
 					box.transform.matrix = mtx.clone();
 

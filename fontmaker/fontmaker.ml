@@ -155,7 +155,7 @@ let xmlout = Xmlm.make_output ~nl:True ~indent:(Some 4) (`Channel (open_out xmlf
   );
   List.iter begin fun size ->
     (
-      Freetype.set_char_size face (float size) 0. !dpi 0;
+      Freetype.set_char_size face (!scale *. (float size)) 0. !dpi 0;
       let spaceIndex = Freetype.get_char_index face (int_of_char ' ') in
       let (spaceXAdv, spaceYAdv) = Freetype.render_glyph face spaceIndex [] Freetype.Render_Normal in
       let sizeInfo = Freetype.get_size_metrics face in
