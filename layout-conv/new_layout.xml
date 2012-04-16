@@ -1,0 +1,4741 @@
+<els>
+  <el name="">
+    <el name="SocialFriends">
+      <el name="logo">
+        <layout left="80" top="-36"/>
+      </el>
+      <el name="box">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+      <el name="item">
+        <el name="ok">
+          <layout left="50" top="-5"/>
+        </el>
+        <el name="box">
+          <layout vCenter="0" hCenter="0"/>
+        </el>
+        <el name="btConnect">
+          <layout vCenter="0" hCenter="0"/>
+        </el>
+        <el name="texts">
+          <layout vCenter="0" hCenter="0"/>
+        </el>
+      </el>
+      <el name="ok">
+        <layout left="50" top="-5"/>
+      </el>
+      <el name="box">
+        <layout vCenter="0" hCenter="0"/>
+      </el>
+      <el name="btConnect">
+        <layout vCenter="0" hCenter="0"/>
+      </el>
+      <el name="texts">
+        <layout vCenter="0" hCenter="0"/>
+      </el>
+    </el>
+    <el name="logo">
+      <layout left="80" top="-36"/>
+    </el>
+    <el name="box">
+      <layout hCenter="0" vCenter="0"/>
+    </el>
+    <el name="item">
+      <el name="ok">
+        <layout left="50" top="-5"/>
+      </el>
+      <el name="box">
+        <layout vCenter="0" hCenter="0"/>
+      </el>
+      <el name="btConnect">
+        <layout vCenter="0" hCenter="0"/>
+      </el>
+      <el name="texts">
+        <layout vCenter="0" hCenter="0"/>
+      </el>
+    </el>
+    <el name="ok">
+      <layout left="50" top="-5"/>
+    </el>
+    <el name="box">
+      <layout vCenter="0" hCenter="0"/>
+    </el>
+    <el name="btConnect">
+      <layout vCenter="0" hCenter="0"/>
+    </el>
+    <el name="texts">
+      <layout vCenter="0" hCenter="0"/>
+    </el>
+    <el name="ShareDialog">
+      <el name="MonsterLogo">
+        <layout left="-19" top="-25"/>
+      </el>
+      <el name="share_prize">
+        <layout left="20" right="20" top="62"/>
+      </el>
+      <el name="target_bg">
+        <layout w="350" h="72" hCenter="0" top="86"/>
+      </el>
+      <el name="target_bg2">
+        <layout w="350" h="140" hCenter="0" top="174"/>
+      </el>
+      <el name="bonus">
+        <layout left="62" right="66" top="89" h="61"/>
+      </el>
+      <el name="icon">
+        <layout left="28" top="194"/>
+      </el>
+      <el name="image">
+        <layout left="32" top="198" w="92" h="92"/>
+      </el>
+      <el name="msg_label">
+        <layout left="138" right="68" top="188" bottom="64"/>
+      </el>
+      <el name="box">
+        <layout hCenter="0" bottom="20"/>
+      </el>
+    </el>
+    <el name="MonsterLogo">
+      <layout left="-19" top="-25"/>
+    </el>
+    <el name="share_prize">
+      <layout left="20" right="20" top="62"/>
+    </el>
+    <el name="target_bg">
+      <layout w="350" h="72" hCenter="0" top="86"/>
+    </el>
+    <el name="target_bg2">
+      <layout w="350" h="140" hCenter="0" top="174"/>
+    </el>
+    <el name="bonus">
+      <layout left="62" right="66" top="89" h="61"/>
+    </el>
+    <el name="icon">
+      <layout left="28" top="194"/>
+    </el>
+    <el name="image">
+      <layout left="32" top="198" w="92" h="92"/>
+    </el>
+    <el name="msg_label">
+      <layout left="138" right="68" top="188" bottom="64"/>
+    </el>
+    <el name="box">
+      <layout hCenter="0" bottom="20"/>
+    </el>
+    <el name="Checkbox">
+      <el name="box">
+        <layout vCenter="0"/>
+      </el>
+      <el name="label">
+        <layout right="0" vCenter="0" left="3"/>
+      </el>
+    </el>
+    <el name="box">
+      <layout vCenter="0"/>
+    </el>
+    <el name="label">
+      <layout right="0" vCenter="0" left="3"/>
+    </el>
+    <el name="SettingsDialog">
+      <el name="off">
+        <layout left="-5" top="-5"/>
+      </el>
+      <el name="bg">
+        <layout left="10" right="10" top="80" bottom="100"/>
+      </el>
+      <el name="logo">
+        <layout left="-30" top="-52"/>
+      </el>
+      <el name="requests">
+        <layout left="70" right="62" top="120"/>
+      </el>
+      <el name="tabPanel">
+        <layout left="10" top="45"/>
+      </el>
+      <el name="sound">
+        <layout left="79" top="100"/>
+      </el>
+      <el name="soundSettings">
+        <layout left="70" right="62" top="120"/>
+      </el>
+      <el name="feedback">
+        <layout hCenter="0" top="180"/>
+      </el>
+    </el>
+    <el name="off">
+      <layout left="-5" top="-5"/>
+    </el>
+    <el name="bg">
+      <layout left="10" right="10" top="80" bottom="100"/>
+    </el>
+    <el name="logo">
+      <layout left="-30" top="-52"/>
+    </el>
+    <el name="requests">
+      <layout left="70" right="62" top="120"/>
+    </el>
+    <el name="tabPanel">
+      <layout left="10" top="45"/>
+    </el>
+    <el name="sound">
+      <layout left="79" top="100"/>
+    </el>
+    <el name="soundSettings">
+      <layout left="70" right="62" top="120"/>
+    </el>
+    <el name="feedback">
+      <layout hCenter="0" top="180"/>
+    </el>
+    <el name="FriendHelpPanel">
+      <el name="bg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="box">
+        <layout hCenter="0" vCenter="1"/>
+      </el>
+      <el name="actionSkin">
+        <layout bottom="1" right="1" w="30" h="30"/>
+      </el>
+    </el>
+    <el name="bg">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="box">
+      <layout hCenter="0" vCenter="1"/>
+    </el>
+    <el name="actionSkin">
+      <layout bottom="1" right="1" w="30" h="30"/>
+    </el>
+    <el name="NeighItemPanel">
+      <el name="energyPanel">
+        <layout w="28" h="28" top="4" right="-7"/>
+        <el name="label">
+          <layout hCenter="-1" vCenter="-2"/>
+        </el>
+        <el name="bg">
+          <layout w="100%" h="100%"/>
+        </el>
+      </el>
+      <el name="label">
+        <layout hCenter="-1" vCenter="-2"/>
+      </el>
+      <el name="bg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="name">
+        <layout hCenter="0"/>
+      </el>
+      <el name="level">
+        <layout w="100%" top="20"/>
+      </el>
+      <el name="avatar">
+        <el name="gift">
+          <layout hCenter="0" top="20"/>
+        </el>
+        <el name="neighbour">
+          <layout hCenter="0" top="40"/>
+        </el>
+      </el>
+      <el name="gift">
+        <layout hCenter="0" top="20"/>
+      </el>
+      <el name="neighbour">
+        <layout hCenter="0" top="40"/>
+      </el>
+      <el name="invite">
+        <layout hCenter="0" bottom="-6"/>
+      </el>
+      <el name="to_friend">
+        <layout hCenter="3" bottom="-31"/>
+      </el>
+    </el>
+    <el name="energyPanel">
+      <layout w="28" h="28" top="4" right="-7"/>
+      <el name="label">
+        <layout hCenter="-1" vCenter="-2"/>
+      </el>
+      <el name="bg">
+        <layout w="100%" h="100%"/>
+      </el>
+    </el>
+    <el name="label">
+      <layout hCenter="-1" vCenter="-2"/>
+    </el>
+    <el name="bg">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="name">
+      <layout hCenter="0"/>
+    </el>
+    <el name="level">
+      <layout w="100%" top="20"/>
+    </el>
+    <el name="avatar">
+      <el name="gift">
+        <layout hCenter="0" top="20"/>
+      </el>
+      <el name="neighbour">
+        <layout hCenter="0" top="40"/>
+      </el>
+    </el>
+    <el name="gift">
+      <layout hCenter="0" top="20"/>
+    </el>
+    <el name="neighbour">
+      <layout hCenter="0" top="40"/>
+    </el>
+    <el name="invite">
+      <layout hCenter="0" bottom="-6"/>
+    </el>
+    <el name="to_friend">
+      <layout hCenter="3" bottom="-31"/>
+    </el>
+    <el name="NeighItemRender">
+      <el name="box">
+        <layout left="12" vCenter="0"/>
+      </el>
+    </el>
+    <el name="box">
+      <layout left="12" vCenter="0"/>
+    </el>
+    <el name="NeighbourPanel">
+      <el name="lp">
+        <layout w="100%" top="74"/>
+      </el>
+    </el>
+    <el name="lp">
+      <layout w="100%" top="74"/>
+    </el>
+    <el name="NeighDialog">
+      <el name="btInvite">
+        <layout right="10" top="50"/>
+        <el name="Logo">
+          <layout left="-40" vCenter="-5"/>
+        </el>
+        <el name="plus">
+          <layout left="-50" vCenter="0"/>
+        </el>
+      </el>
+      <el name="Logo">
+        <layout left="-40" vCenter="-5"/>
+      </el>
+      <el name="plus">
+        <layout left="-50" vCenter="0"/>
+      </el>
+      <el name="TabPanel">
+        <layout left="10" top="45"/>
+      </el>
+      <el name="CounterBg">
+        <layout w="22" h="21" right="-5" bottom="-10"/>
+      </el>
+      <el name="label">
+        <layout w="18" h="19" right="-3" bottom="-9"/>
+      </el>
+      <el name="navPanel">
+        <layout hCenter="0" bottom="8"/>
+      </el>
+      <el name="panel">
+        <layout left="25" right="25" top="60" bottom="25"/>
+      </el>
+      <el name="lbEmpty">
+        <layout left="30" right="30" vCenter="6"/>
+      </el>
+      <el name="logo">
+        <layout left="-11" top="-55"/>
+      </el>
+      <el name="requestsCanvas">
+        <el name="lp">
+          <layout top="20" left="3" right="3"/>
+        </el>
+      </el>
+      <el name="lp">
+        <layout top="20" left="3" right="3"/>
+      </el>
+      <el name="reqRndr">
+        <el name="skin">
+          <layout hCenter="0" vCenter="0"/>
+        </el>
+        <el name="skinBg">
+          <layout w="100%" h="100%"/>
+        </el>
+        <el name="skinContainer">
+          <layout left="75" vCenter="0" w="105" h="105"/>
+        </el>
+        <el name="ap">
+          <layout hCenter="0" vCenter="10"/>
+        </el>
+        <el name="mes">
+          <layout hCenter="0" top="30"/>
+        </el>
+        <el name="giveBt">
+          <layout right="50" vCenter="0"/>
+        </el>
+      </el>
+      <el name="skin">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+      <el name="skinBg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="skinContainer">
+        <layout left="75" vCenter="0" w="105" h="105"/>
+      </el>
+      <el name="ap">
+        <layout hCenter="0" vCenter="10"/>
+      </el>
+      <el name="mes">
+        <layout hCenter="0" top="30"/>
+      </el>
+      <el name="giveBt">
+        <layout right="50" vCenter="0"/>
+      </el>
+    </el>
+    <el name="btInvite">
+      <layout right="10" top="50"/>
+      <el name="Logo">
+        <layout left="-40" vCenter="-5"/>
+      </el>
+      <el name="plus">
+        <layout left="-50" vCenter="0"/>
+      </el>
+    </el>
+    <el name="Logo">
+      <layout left="-40" vCenter="-5"/>
+    </el>
+    <el name="plus">
+      <layout left="-50" vCenter="0"/>
+    </el>
+    <el name="TabPanel">
+      <layout left="10" top="45"/>
+    </el>
+    <el name="CounterBg">
+      <layout w="22" h="21" right="-5" bottom="-10"/>
+    </el>
+    <el name="label">
+      <layout w="18" h="19" right="-3" bottom="-9"/>
+    </el>
+    <el name="navPanel">
+      <layout hCenter="0" bottom="8"/>
+    </el>
+    <el name="panel">
+      <layout left="25" right="25" top="60" bottom="25"/>
+    </el>
+    <el name="lbEmpty">
+      <layout left="30" right="30" vCenter="6"/>
+    </el>
+    <el name="logo">
+      <layout left="-11" top="-55"/>
+    </el>
+    <el name="requestsCanvas">
+      <el name="lp">
+        <layout top="20" left="3" right="3"/>
+      </el>
+    </el>
+    <el name="lp">
+      <layout top="20" left="3" right="3"/>
+    </el>
+    <el name="reqRndr">
+      <el name="skin">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+      <el name="skinBg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="skinContainer">
+        <layout left="75" vCenter="0" w="105" h="105"/>
+      </el>
+      <el name="ap">
+        <layout hCenter="0" vCenter="10"/>
+      </el>
+      <el name="mes">
+        <layout hCenter="0" top="30"/>
+      </el>
+      <el name="giveBt">
+        <layout right="50" vCenter="0"/>
+      </el>
+    </el>
+    <el name="skin">
+      <layout hCenter="0" vCenter="0"/>
+    </el>
+    <el name="skinBg">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="skinContainer">
+      <layout left="75" vCenter="0" w="105" h="105"/>
+    </el>
+    <el name="ap">
+      <layout hCenter="0" vCenter="10"/>
+    </el>
+    <el name="mes">
+      <layout hCenter="0" top="30"/>
+    </el>
+    <el name="giveBt">
+      <layout right="50" vCenter="0"/>
+    </el>
+    <el name="MoneyItem">
+      <el name="CounterBg">
+        <layout left="12" right="12" top="-18" h="35"/>
+      </el>
+      <el name="label">
+        <layout hCenter="-1" top="-16" w="96" h="25"/>
+      </el>
+      <el name="clip">
+        <layout hCenter="0" vCenter="-8"/>
+      </el>
+      <el name="goldLabel">
+        <layout hCenter="0" bottom="21"/>
+      </el>
+      <el name="bt">
+        <layout hCenter="0" bottom="-11"/>
+      </el>
+      <el name="arrow">
+        <layout left="98" top="126"/>
+      </el>
+      <el name="doubleGold">
+        <layout right="-20" top="12" w="60" h="60"/>
+      </el>
+      <el name="icon">
+        <layout right="-35" top="7"/>
+      </el>
+    </el>
+    <el name="CounterBg">
+      <layout left="12" right="12" top="-18" h="35"/>
+    </el>
+    <el name="label">
+      <layout hCenter="-1" top="-16" w="96" h="25"/>
+    </el>
+    <el name="clip">
+      <layout hCenter="0" vCenter="-8"/>
+    </el>
+    <el name="goldLabel">
+      <layout hCenter="0" bottom="21"/>
+    </el>
+    <el name="bt">
+      <layout hCenter="0" bottom="-11"/>
+    </el>
+    <el name="arrow">
+      <layout left="98" top="126"/>
+    </el>
+    <el name="doubleGold">
+      <layout right="-20" top="12" w="60" h="60"/>
+    </el>
+    <el name="icon">
+      <layout right="-35" top="7"/>
+    </el>
+    <el name="MoneyDialog">
+      <el name="GoldLogoBg">
+        <layout left="-28" top="-27"/>
+      </el>
+      <el name="GoldLogo">
+        <layout left="-18" top="-24"/>
+      </el>
+      <el name="BaksLogoBg">
+        <layout left="-26" top="-29"/>
+      </el>
+      <el name="BaksLogo">
+        <layout left="-12" top="-27"/>
+      </el>
+      <el name="doubleGoldTilePanel">
+        <layout hCenter="0" top="176" w="500" h="340"/>
+      </el>
+      <el name="TilePanel">
+        <layout hCenter="0" top="67" w="500" h="340"/>
+      </el>
+      <el name="dgHeader">
+        <layout left="20" right="20" top="60" h="150"/>
+        <el name="title">
+          <layout left="170" right="6"/>
+        </el>
+        <el name="label">
+          <layout left="226" top="40"/>
+        </el>
+        <el name="clock">
+          <layout left="167" top="28"/>
+        </el>
+        <el name="box">
+          <layout ledt="226" top="70"/>
+        </el>
+      </el>
+      <el name="title">
+        <layout left="170" right="6"/>
+      </el>
+      <el name="label">
+        <layout left="226" top="40"/>
+      </el>
+      <el name="clock">
+        <layout left="167" top="28"/>
+      </el>
+      <el name="box">
+        <layout ledt="226" top="70"/>
+      </el>
+    </el>
+    <el name="GoldLogoBg">
+      <layout left="-28" top="-27"/>
+    </el>
+    <el name="GoldLogo">
+      <layout left="-18" top="-24"/>
+    </el>
+    <el name="BaksLogoBg">
+      <layout left="-26" top="-29"/>
+    </el>
+    <el name="BaksLogo">
+      <layout left="-12" top="-27"/>
+    </el>
+    <el name="doubleGoldTilePanel">
+      <layout hCenter="0" top="176" w="500" h="340"/>
+    </el>
+    <el name="TilePanel">
+      <layout hCenter="0" top="67" w="500" h="340"/>
+    </el>
+    <el name="dgHeader">
+      <layout left="20" right="20" top="60" h="150"/>
+      <el name="title">
+        <layout left="170" right="6"/>
+      </el>
+      <el name="label">
+        <layout left="226" top="40"/>
+      </el>
+      <el name="clock">
+        <layout left="167" top="28"/>
+      </el>
+      <el name="box">
+        <layout ledt="226" top="70"/>
+      </el>
+    </el>
+    <el name="title">
+      <layout left="170" right="6"/>
+    </el>
+    <el name="label">
+      <layout left="226" top="40"/>
+    </el>
+    <el name="clock">
+      <layout left="167" top="28"/>
+    </el>
+    <el name="box">
+      <layout ledt="226" top="70"/>
+    </el>
+    <el name="DailyBonusFieldCell">
+      <el name="bg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="amount">
+        <layout bottom="12" w="100%"/>
+      </el>
+      <el name="button">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="pressedCell">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="salute">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="icon">
+        <layout h="60%" hCenter="0" vCenter="0" w="60%"/>
+      </el>
+    </el>
+    <el name="bg">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="amount">
+      <layout bottom="12" w="100%"/>
+    </el>
+    <el name="button">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="pressedCell">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="salute">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="icon">
+      <layout h="60%" hCenter="0" vCenter="0" w="60%"/>
+    </el>
+    <el name="DailyBonusPaidTry">
+      <el name="numLabel">
+        <layout left="15" vCenter="-2"/>
+      </el>
+      <el name="costLabel">
+        <layout left="165" vCenter="-2"/>
+      </el>
+      <el name="bt">
+        <layout bottom="-20" hCenter="0"/>
+      </el>
+    </el>
+    <el name="numLabel">
+      <layout left="15" vCenter="-2"/>
+    </el>
+    <el name="costLabel">
+      <layout left="165" vCenter="-2"/>
+    </el>
+    <el name="bt">
+      <layout bottom="-20" hCenter="0"/>
+    </el>
+    <el name="DailyBonusPrizeDialog">
+      <layout hCenter="0" vCenter="20"/>
+      <el name="daysLabel">
+        <layout left="20" h="88" top="80" w="240"/>
+        <el name="title">
+          <layout right="15" vCenter="0"/>
+        </el>
+      </el>
+      <el name="title">
+        <layout right="15" vCenter="0"/>
+      </el>
+      <el name="tryPane">
+        <layout left="15" h="370" top="200" w="220"/>
+        <el name="bg">
+          <layout w="100%" h="100%"/>
+        </el>
+        <el name="label">
+          <layout top="25" hCenter="0"/>
+        </el>
+        <el name="triesList">
+          <layout bottom="50" hCenter="0"/>
+        </el>
+        <el name="triesNum">
+          <layout top="45" hCenter="0"/>
+        </el>
+      </el>
+      <el name="bg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="label">
+        <layout top="25" hCenter="0"/>
+      </el>
+      <el name="triesList">
+        <layout bottom="50" hCenter="0"/>
+      </el>
+      <el name="triesNum">
+        <layout top="45" hCenter="0"/>
+      </el>
+      <el name="fieldPane">
+        <layout h="442" right="19" top="165" w="462"/>
+        <el name="field">
+          <layout hCenter="0" vCenter="0"/>
+        </el>
+      </el>
+      <el name="field">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+      <el name="daysPane">
+        <layout right="20" top="60"/>
+      </el>
+      <el name="icon">
+        <layout left="-22" top="-40"/>
+      </el>
+    </el>
+    <el name="daysLabel">
+      <layout left="20" h="88" top="80" w="240"/>
+      <el name="title">
+        <layout right="15" vCenter="0"/>
+      </el>
+    </el>
+    <el name="title">
+      <layout right="15" vCenter="0"/>
+    </el>
+    <el name="tryPane">
+      <layout left="15" h="370" top="200" w="220"/>
+      <el name="bg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="label">
+        <layout top="25" hCenter="0"/>
+      </el>
+      <el name="triesList">
+        <layout bottom="50" hCenter="0"/>
+      </el>
+      <el name="triesNum">
+        <layout top="45" hCenter="0"/>
+      </el>
+    </el>
+    <el name="bg">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="label">
+      <layout top="25" hCenter="0"/>
+    </el>
+    <el name="triesList">
+      <layout bottom="50" hCenter="0"/>
+    </el>
+    <el name="triesNum">
+      <layout top="45" hCenter="0"/>
+    </el>
+    <el name="fieldPane">
+      <layout h="442" right="19" top="165" w="462"/>
+      <el name="field">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+    </el>
+    <el name="field">
+      <layout hCenter="0" vCenter="0"/>
+    </el>
+    <el name="daysPane">
+      <layout right="20" top="60"/>
+    </el>
+    <el name="icon">
+      <layout left="-22" top="-40"/>
+    </el>
+    <el name="DaysPane">
+      <el name="digit">
+        <layout h="80%" hCenter="0" vCenter="0" w="80%"/>
+      </el>
+      <el name="icon">
+        <layout bottom="-15" right="-20"/>
+      </el>
+    </el>
+    <el name="digit">
+      <layout h="80%" hCenter="0" vCenter="0" w="80%"/>
+    </el>
+    <el name="icon">
+      <layout bottom="-15" right="-20"/>
+    </el>
+    <el name="DailyBonusDialog">
+      <el name="daysPane">
+        <layout h="140" left="35" top="100" right="35"/>
+        <el name="bg">
+          <layout h="100%" w="100%"/>
+        </el>
+        <el name="title">
+          <layout hCenter="0" top="-15"/>
+        </el>
+        <el name="daysPane">
+          <layout hCenter="0" vCenter="0"/>
+        </el>
+      </el>
+      <el name="bg">
+        <layout h="100%" w="100%"/>
+      </el>
+      <el name="title">
+        <layout hCenter="0" top="-15"/>
+      </el>
+      <el name="daysPane">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+      <el name="prizePane">
+        <layout h="140" left="35" top="280" right="35"/>
+        <el name="bg">
+          <layout h="100%" w="100%"/>
+        </el>
+        <el name="iconContainer">
+          <layout h="100%" w="135"/>
+          <el name="icon">
+            <layout h="75%" right="10" top="15" w="75%"/>
+          </el>
+          <el name="digit">
+            <layout h="40%" right="10" top="15" w="40%"/>
+          </el>
+        </el>
+        <el name="icon">
+          <layout h="75%" right="10" top="15" w="75%"/>
+        </el>
+        <el name="digit">
+          <layout h="40%" right="10" top="15" w="40%"/>
+        </el>
+        <el name="button">
+          <layout bottom="-15" hCenter="40"/>
+        </el>
+        <el name="label">
+          <layout h="93" hCenter="40" vCenter="-4" w="300"/>
+        </el>
+      </el>
+      <el name="bg">
+        <layout h="100%" w="100%"/>
+      </el>
+      <el name="iconContainer">
+        <layout h="100%" w="135"/>
+        <el name="icon">
+          <layout h="75%" right="10" top="15" w="75%"/>
+        </el>
+        <el name="digit">
+          <layout h="40%" right="10" top="15" w="40%"/>
+        </el>
+      </el>
+      <el name="icon">
+        <layout h="75%" right="10" top="15" w="75%"/>
+      </el>
+      <el name="digit">
+        <layout h="40%" right="10" top="15" w="40%"/>
+      </el>
+      <el name="button">
+        <layout bottom="-15" hCenter="40"/>
+      </el>
+      <el name="label">
+        <layout h="93" hCenter="40" vCenter="-4" w="300"/>
+      </el>
+      <el name="icon">
+        <layout left="-22" top="-40"/>
+      </el>
+    </el>
+    <el name="daysPane">
+      <layout h="140" left="35" top="100" right="35"/>
+      <el name="bg">
+        <layout h="100%" w="100%"/>
+      </el>
+      <el name="title">
+        <layout hCenter="0" top="-15"/>
+      </el>
+      <el name="daysPane">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+    </el>
+    <el name="bg">
+      <layout h="100%" w="100%"/>
+    </el>
+    <el name="title">
+      <layout hCenter="0" top="-15"/>
+    </el>
+    <el name="daysPane">
+      <layout hCenter="0" vCenter="0"/>
+    </el>
+    <el name="prizePane">
+      <layout h="140" left="35" top="280" right="35"/>
+      <el name="bg">
+        <layout h="100%" w="100%"/>
+      </el>
+      <el name="iconContainer">
+        <layout h="100%" w="135"/>
+        <el name="icon">
+          <layout h="75%" right="10" top="15" w="75%"/>
+        </el>
+        <el name="digit">
+          <layout h="40%" right="10" top="15" w="40%"/>
+        </el>
+      </el>
+      <el name="icon">
+        <layout h="75%" right="10" top="15" w="75%"/>
+      </el>
+      <el name="digit">
+        <layout h="40%" right="10" top="15" w="40%"/>
+      </el>
+      <el name="button">
+        <layout bottom="-15" hCenter="40"/>
+      </el>
+      <el name="label">
+        <layout h="93" hCenter="40" vCenter="-4" w="300"/>
+      </el>
+    </el>
+    <el name="bg">
+      <layout h="100%" w="100%"/>
+    </el>
+    <el name="iconContainer">
+      <layout h="100%" w="135"/>
+      <el name="icon">
+        <layout h="75%" right="10" top="15" w="75%"/>
+      </el>
+      <el name="digit">
+        <layout h="40%" right="10" top="15" w="40%"/>
+      </el>
+    </el>
+    <el name="icon">
+      <layout h="75%" right="10" top="15" w="75%"/>
+    </el>
+    <el name="digit">
+      <layout h="40%" right="10" top="15" w="40%"/>
+    </el>
+    <el name="button">
+      <layout bottom="-15" hCenter="40"/>
+    </el>
+    <el name="label">
+      <layout h="93" hCenter="40" vCenter="-4" w="300"/>
+    </el>
+    <el name="icon">
+      <layout left="-22" top="-40"/>
+    </el>
+    <el name="FriendSharePanel">
+      <el name="DialogBg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="frEnergy">
+        <layout left="10" top="9" w="80" h="80"/>
+      </el>
+      <el name="label">
+        <layout left="94" top="10" right="8" h="44"/>
+      </el>
+      <el name="box">
+        <layout top="57" hCenter="43"/>
+      </el>
+    </el>
+    <el name="DialogBg">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="frEnergy">
+      <layout left="10" top="9" w="80" h="80"/>
+    </el>
+    <el name="label">
+      <layout left="94" top="10" right="8" h="44"/>
+    </el>
+    <el name="box">
+      <layout top="57" hCenter="43"/>
+    </el>
+    <el name="FriendNavPanel">
+      <el name="DialogBg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="label">
+        <layout left="10" top="5"/>
+      </el>
+      <el name="box">
+        <layout bottom="5" hCenter="0"/>
+      </el>
+    </el>
+    <el name="DialogBg">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="label">
+      <layout left="10" top="5"/>
+    </el>
+    <el name="box">
+      <layout bottom="5" hCenter="0"/>
+    </el>
+    <el name="AvatarPanel">
+      <el name="bg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="nbg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="nAvatarFg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="avatarSkin_create">
+        <layout left="2" top="2" right="2" bottom="2"/>
+      </el>
+      <el name="navatarSkin">
+        <layout left="4" top="5" right="5" bottom="4"/>
+      </el>
+      <el name="glare2">
+        <layout left="2" top="2" right="2" bottom="2"/>
+      </el>
+      <el name="glare3">
+        <layout left="2" top="2" right="2"/>
+      </el>
+      <el name="nAvatarBevel">
+        <layout left="3" top="3" right="-3" bottom="-3"/>
+      </el>
+    </el>
+    <el name="bg">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="nbg">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="nAvatarFg">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="avatarSkin_create">
+      <layout left="2" top="2" right="2" bottom="2"/>
+    </el>
+    <el name="navatarSkin">
+      <layout left="4" top="5" right="5" bottom="4"/>
+    </el>
+    <el name="glare2">
+      <layout left="2" top="2" right="2" bottom="2"/>
+    </el>
+    <el name="glare3">
+      <layout left="2" top="2" right="2"/>
+    </el>
+    <el name="nAvatarBevel">
+      <layout left="3" top="3" right="-3" bottom="-3"/>
+    </el>
+    <el name="ComboPanel">
+      <layout top="49" hCenter="-79"/>
+      <el name="pb">
+        <layout hCenter="-1" bottom="12"/>
+      </el>
+      <el name="label">
+        <layout hCenter="-1" top="5"/>
+      </el>
+      <el name="comboClip">
+        <layout left="5" vCenter="0"/>
+      </el>
+      <el name="lbStatus">
+        <layout hCenter="-2" tio="11"/>
+      </el>
+    </el>
+    <el name="pb">
+      <layout hCenter="-1" bottom="12"/>
+    </el>
+    <el name="label">
+      <layout hCenter="-1" top="5"/>
+    </el>
+    <el name="comboClip">
+      <layout left="5" vCenter="0"/>
+    </el>
+    <el name="lbStatus">
+      <layout hCenter="-2" tio="11"/>
+    </el>
+    <el name="HintPanel">
+      <el name="label">
+        <layout left="13" top="10" w="280"/>
+      </el>
+    </el>
+    <el name="label">
+      <layout left="13" top="10" w="280"/>
+    </el>
+    <el name="WOProgressBar">
+      <el name="Thumb">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+      <el name="Glare">
+        <layout hCenter="0" vCenter="-4"/>
+      </el>
+    </el>
+    <el name="Thumb">
+      <layout hCenter="0" vCenter="0"/>
+    </el>
+    <el name="Glare">
+      <layout hCenter="0" vCenter="-4"/>
+    </el>
+    <el name="ProfessorDialog">
+      <el name="targetBg">
+        <layout left="16" right="16" top="60" bottom="32"/>
+      </el>
+      <el name="imgBg">
+        <layout left="24" vCenter="13"/>
+      </el>
+      <el name="img">
+        <layout left="28" vCenter="0"/>
+      </el>
+      <el name="label">
+        <layout left="226" right="42" top="76" bottom="60"/>
+      </el>
+      <el name="bt">
+        <layout hCenter="0" bottom="9"/>
+      </el>
+    </el>
+    <el name="targetBg">
+      <layout left="16" right="16" top="60" bottom="32"/>
+    </el>
+    <el name="imgBg">
+      <layout left="24" vCenter="13"/>
+    </el>
+    <el name="img">
+      <layout left="28" vCenter="0"/>
+    </el>
+    <el name="label">
+      <layout left="226" right="42" top="76" bottom="60"/>
+    </el>
+    <el name="bt">
+      <layout hCenter="0" bottom="9"/>
+    </el>
+    <el name="StoryDialog">
+      <el name="targetBg">
+        <layout left="16" right="16" top="60" bottom="32"/>
+      </el>
+      <el name="imgBg">
+        <layout left="24" vCenter="13"/>
+      </el>
+      <el name="img">
+        <layout left="28" vCenter="0"/>
+      </el>
+      <el name="label">
+        <layout left="226" right="42" top="76" bottom="60"/>
+      </el>
+      <el name="bt">
+        <layout hCenter="0" bottom="9"/>
+      </el>
+    </el>
+    <el name="targetBg">
+      <layout left="16" right="16" top="60" bottom="32"/>
+    </el>
+    <el name="imgBg">
+      <layout left="24" vCenter="13"/>
+    </el>
+    <el name="img">
+      <layout left="28" vCenter="0"/>
+    </el>
+    <el name="label">
+      <layout left="226" right="42" top="76" bottom="60"/>
+    </el>
+    <el name="bt">
+      <layout hCenter="0" bottom="9"/>
+    </el>
+    <el name="CardDialog">
+      <el name="skin">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+      <el name="box">
+        <layout hCenter="0" bottom="0"/>
+      </el>
+    </el>
+    <el name="skin">
+      <layout hCenter="0" vCenter="0"/>
+    </el>
+    <el name="box">
+      <layout hCenter="0" bottom="0"/>
+    </el>
+    <el name="QuestFinishDialog">
+      <el name="title">
+        <layout hCenter="0" top="11"/>
+      </el>
+      <el name="label">
+        <layout left="10" right="10" top="60"/>
+      </el>
+      <el name="targetBg">
+        <layout w="350" h="72" hCenter="0" top="96"/>
+      </el>
+      <el name="prizes">
+        <layout left="52" right="56" h="72" top="96"/>
+      </el>
+      <el name="finish">
+        <layout left="44" top="180"/>
+      </el>
+      <el name="star">
+        <layout left="-17" top="-12"/>
+      </el>
+      <el name="button">
+        <layout hCenter="0" bottom="16"/>
+      </el>
+    </el>
+    <el name="title">
+      <layout hCenter="0" top="11"/>
+    </el>
+    <el name="label">
+      <layout left="10" right="10" top="60"/>
+    </el>
+    <el name="targetBg">
+      <layout w="350" h="72" hCenter="0" top="96"/>
+    </el>
+    <el name="prizes">
+      <layout left="52" right="56" h="72" top="96"/>
+    </el>
+    <el name="finish">
+      <layout left="44" top="180"/>
+    </el>
+    <el name="star">
+      <layout left="-17" top="-12"/>
+    </el>
+    <el name="button">
+      <layout hCenter="0" bottom="16"/>
+    </el>
+    <el name="CollectionPreviewPanel">
+      <layout left="8" bottom="175"/>
+      <el name="label">
+        <layout left="36" right="36" top="3"/>
+      </el>
+      <el name="item">
+        <layout left="12" top="17"/>
+      </el>
+      <el name="skin">
+        <layout left="14" top="19"/>
+      </el>
+      <el name="skinlabel">
+        <layout bottom="2" left="42" w="14" h="14"/>
+      </el>
+    </el>
+    <el name="label">
+      <layout left="36" right="36" top="3"/>
+    </el>
+    <el name="item">
+      <layout left="12" top="17"/>
+    </el>
+    <el name="skin">
+      <layout left="14" top="19"/>
+    </el>
+    <el name="skinlabel">
+      <layout bottom="2" left="42" w="14" h="14"/>
+    </el>
+    <el name="QuestMediator">
+      <el name="GoldArrow">
+        <layout left="32" top="26"/>
+      </el>
+      <el name="QuestArrowHybrid">
+        <layout left="70" top="38"/>
+      </el>
+      <el name="hybridStudyArrow">
+        <layout top="13"/>
+      </el>
+      <el name="hybridStudy2Arrow">
+        <layout left="3" top="8"/>
+      </el>
+      <el name="warehouseArrow">
+        <layout top="2" left="60"/>
+      </el>
+      <el name="wareArrow">
+        <layout top="13" left="15"/>
+      </el>
+      <el name="shopArrow">
+        <layout top="2" left="60"/>
+      </el>
+      <el name="labArrow">
+        <layout top="2" left="60"/>
+      </el>
+      <el name="dialogArrow">
+        <layout top="38" left="44"/>
+      </el>
+      <el name="makeBeegun">
+        <layout left="25" top="16"/>
+      </el>
+      <el name="look_around">
+        <layout left="70" top="4"/>
+      </el>
+      <el name="warehouseSell">
+        <layout left="32" top="22"/>
+      </el>
+    </el>
+    <el name="GoldArrow">
+      <layout left="32" top="26"/>
+    </el>
+    <el name="QuestArrowHybrid">
+      <layout left="70" top="38"/>
+    </el>
+    <el name="hybridStudyArrow">
+      <layout top="13"/>
+    </el>
+    <el name="hybridStudy2Arrow">
+      <layout left="3" top="8"/>
+    </el>
+    <el name="warehouseArrow">
+      <layout top="2" left="60"/>
+    </el>
+    <el name="wareArrow">
+      <layout top="13" left="15"/>
+    </el>
+    <el name="shopArrow">
+      <layout top="2" left="60"/>
+    </el>
+    <el name="labArrow">
+      <layout top="2" left="60"/>
+    </el>
+    <el name="dialogArrow">
+      <layout top="38" left="44"/>
+    </el>
+    <el name="makeBeegun">
+      <layout left="25" top="16"/>
+    </el>
+    <el name="look_around">
+      <layout left="70" top="4"/>
+    </el>
+    <el name="warehouseSell">
+      <layout left="32" top="22"/>
+    </el>
+    <el name="tabPanel">
+      <el name="btn">
+        <layout w="100%" vCenter="0"/>
+      </el>
+    </el>
+    <el name="btn">
+      <layout w="100%" vCenter="0"/>
+    </el>
+    <el name="CounterPanel">
+      <el name="skin">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="label">
+        <layout left="2" right="2" top="1" bottom="1"/>
+      </el>
+      <el name="icon">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+    </el>
+    <el name="skin">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="label">
+      <layout left="2" right="2" top="1" bottom="1"/>
+    </el>
+    <el name="icon">
+      <layout hCenter="0" vCenter="0"/>
+    </el>
+    <el name="UIFactory">
+      <el name="checkSkin">
+        <layout vCenter="-3" left="1" w="24" h="24"/>
+      </el>
+      <el name="preccTextButton">
+        <layout left="2" right="6" vCenter="-1"/>
+      </el>
+      <el name="PB">
+        <el name="bgC">
+          <layout vCenter="0"/>
+        </el>
+        <el name="track">
+          <layout vCenter="1"/>
+        </el>
+        <el name="bgR">
+          <layout right="0"/>
+        </el>
+        <el name="glare">
+          <layout vCenter="-3"/>
+        </el>
+      </el>
+      <el name="bgC">
+        <layout vCenter="0"/>
+      </el>
+      <el name="track">
+        <layout vCenter="1"/>
+      </el>
+      <el name="bgR">
+        <layout right="0"/>
+      </el>
+      <el name="glare">
+        <layout vCenter="-3"/>
+      </el>
+    </el>
+    <el name="checkSkin">
+      <layout vCenter="-3" left="1" w="24" h="24"/>
+    </el>
+    <el name="preccTextButton">
+      <layout left="2" right="6" vCenter="-1"/>
+    </el>
+    <el name="PB">
+      <el name="bgC">
+        <layout vCenter="0"/>
+      </el>
+      <el name="track">
+        <layout vCenter="1"/>
+      </el>
+      <el name="bgR">
+        <layout right="0"/>
+      </el>
+      <el name="glare">
+        <layout vCenter="-3"/>
+      </el>
+    </el>
+    <el name="bgC">
+      <layout vCenter="0"/>
+    </el>
+    <el name="track">
+      <layout vCenter="1"/>
+    </el>
+    <el name="bgR">
+      <layout right="0"/>
+    </el>
+    <el name="glare">
+      <layout vCenter="-3"/>
+    </el>
+    <el name="QuestBtPanel">
+      <el name="counter">
+        <layout left="-4" bottom="-4"/>
+      </el>
+      <el name="icon">
+        <layout w="20" left="-3" bottom="-1"/>
+      </el>
+      <el name="bt">
+        <layout bottom="-1" right="-4" w="1"/>
+      </el>
+      <el name="btAll">
+        <layout bottom="-4" left="-4"/>
+      </el>
+      <el name="clipSkin">
+        <layout right="2" vCenter="0"/>
+      </el>
+      <el name="clipLabel">
+        <layout top="1" left="3" w="70" h="25"/>
+      </el>
+    </el>
+    <el name="counter">
+      <layout left="-4" bottom="-4"/>
+    </el>
+    <el name="icon">
+      <layout w="20" left="-3" bottom="-1"/>
+    </el>
+    <el name="bt">
+      <layout bottom="-1" right="-4" w="1"/>
+    </el>
+    <el name="btAll">
+      <layout bottom="-4" left="-4"/>
+    </el>
+    <el name="clipSkin">
+      <layout right="2" vCenter="0"/>
+    </el>
+    <el name="clipLabel">
+      <layout top="1" left="3" w="70" h="25"/>
+    </el>
+    <el name="UserPanel">
+      <el name="box">
+        <layout top="10" right="0"/>
+        <el name="daylyBonus">
+          <layout h="70" w="70"/>
+        </el>
+      </el>
+      <el name="daylyBonus">
+        <layout h="70" w="70"/>
+      </el>
+      <el name="questBtPanel">
+        <layout top="6" bottom="80"/>
+      </el>
+      <el name="daylyBonus">
+        <layout h="50%" top="0" right="2" w="50"/>
+      </el>
+      <el name="dGold">
+        <layout w="72" h="67"/>
+        <el name="icon">
+          <layout hCenter="-6" bottom="5"/>
+        </el>
+      </el>
+      <el name="icon">
+        <layout hCenter="-6" bottom="5"/>
+      </el>
+      <el name="frHelp">
+        <layout hCenter="0" bottom="4"/>
+      </el>
+    </el>
+    <el name="box">
+      <layout top="10" right="0"/>
+      <el name="daylyBonus">
+        <layout h="70" w="70"/>
+      </el>
+    </el>
+    <el name="daylyBonus">
+      <layout h="70" w="70"/>
+    </el>
+    <el name="questBtPanel">
+      <layout top="6" bottom="80"/>
+    </el>
+    <el name="daylyBonus">
+      <layout h="50%" top="0" right="2" w="50"/>
+    </el>
+    <el name="dGold">
+      <layout w="72" h="67"/>
+      <el name="icon">
+        <layout hCenter="-6" bottom="5"/>
+      </el>
+    </el>
+    <el name="icon">
+      <layout hCenter="-6" bottom="5"/>
+    </el>
+    <el name="frHelp">
+      <layout hCenter="0" bottom="4"/>
+    </el>
+    <el name="QuestTargetPanel">
+      <el name="icon">
+        <layout left="4" top="3"/>
+      </el>
+      <el name="label">
+        <layout left="135" top="16" right="80"/>
+      </el>
+      <el name="count">
+        <layout right="0" top="20" w="74"/>
+      </el>
+      <el name="separator">
+        <layout right="-24" bottom="-20"/>
+      </el>
+      <el name="btBox">
+        <layout bottom="6" right="-8"/>
+      </el>
+    </el>
+    <el name="icon">
+      <layout left="4" top="3"/>
+    </el>
+    <el name="label">
+      <layout left="135" top="16" right="80"/>
+    </el>
+    <el name="count">
+      <layout right="0" top="20" w="74"/>
+    </el>
+    <el name="separator">
+      <layout right="-24" bottom="-20"/>
+    </el>
+    <el name="btBox">
+      <layout bottom="6" right="-8"/>
+    </el>
+    <el name="QuestDialog">
+      <el name="LogoBg">
+        <layout left="-7" top="-47"/>
+      </el>
+      <el name="Logo">
+        <layout left="-5" top="-45"/>
+      </el>
+      <el name="panel">
+        <layout hCenter="0" top="44"/>
+      </el>
+    </el>
+    <el name="LogoBg">
+      <layout left="-7" top="-47"/>
+    </el>
+    <el name="Logo">
+      <layout left="-5" top="-45"/>
+    </el>
+    <el name="panel">
+      <layout hCenter="0" top="44"/>
+    </el>
+    <el name="QuestItemRenderer">
+      <el name="icon">
+        <layout left="16" right="14" top="9" bottom="26"/>
+      </el>
+      <el name="label">
+        <layout lefr="4" right="4" bottom="2" h="38"/>
+      </el>
+      <el name="line">
+        <layout top="-4" left="-14" w="40" h="40"/>
+      </el>
+    </el>
+    <el name="icon">
+      <layout left="16" right="14" top="9" bottom="26"/>
+    </el>
+    <el name="label">
+      <layout lefr="4" right="4" bottom="2" h="38"/>
+    </el>
+    <el name="line">
+      <layout top="-4" left="-14" w="40" h="40"/>
+    </el>
+    <el name="QuestPanel">
+      <el name="bg">
+        <layout hCenter="0" top="74"/>
+      </el>
+      <el name="targetBg">
+        <layout right="10" top="86"/>
+      </el>
+      <el name="title">
+        <layout w="100%" top="10"/>
+      </el>
+      <el name="desc">
+        <layout w="100%" top="39" h="31"/>
+      </el>
+      <el name="quest_hint">
+        <layout left="14" right="14" h="52" top="476"/>
+      </el>
+      <el name="skip">
+        <layout right="10" top="442"/>
+      </el>
+      <el name="all">
+        <layout bottom="9" right="-62"/>
+      </el>
+      <el name="ok">
+        <layout hCenter="0" bottom="2"/>
+      </el>
+      <el name="targetBox">
+        <layout hCenter="-18" top="94"/>
+      </el>
+      <el name="btComplete">
+        <layout right="10" top="442"/>
+      </el>
+      <el name="hintLbl">
+        <layout left="14" top="476"/>
+      </el>
+    </el>
+    <el name="bg">
+      <layout hCenter="0" top="74"/>
+    </el>
+    <el name="targetBg">
+      <layout right="10" top="86"/>
+    </el>
+    <el name="title">
+      <layout w="100%" top="10"/>
+    </el>
+    <el name="desc">
+      <layout w="100%" top="39" h="31"/>
+    </el>
+    <el name="quest_hint">
+      <layout left="14" right="14" h="52" top="476"/>
+    </el>
+    <el name="skip">
+      <layout right="10" top="442"/>
+    </el>
+    <el name="all">
+      <layout bottom="9" right="-62"/>
+    </el>
+    <el name="ok">
+      <layout hCenter="0" bottom="2"/>
+    </el>
+    <el name="targetBox">
+      <layout hCenter="-18" top="94"/>
+    </el>
+    <el name="btComplete">
+      <layout right="10" top="442"/>
+    </el>
+    <el name="hintLbl">
+      <layout left="14" top="476"/>
+    </el>
+    <el name="QuestListDialog">
+      <el name="LogoBg">
+        <layout left="-7" top="-47"/>
+      </el>
+      <el name="Logo">
+        <layout left="-5" top="-45"/>
+      </el>
+      <el name="panel">
+        <layout left="158" top="48"/>
+      </el>
+      <el name="listPanel">
+        <layout left="30" top="96"/>
+      </el>
+      <el name="btPrev">
+        <layout left="56" top="58"/>
+      </el>
+      <el name="btNext">
+        <layout left="56" top="563"/>
+      </el>
+    </el>
+    <el name="LogoBg">
+      <layout left="-7" top="-47"/>
+    </el>
+    <el name="Logo">
+      <layout left="-5" top="-45"/>
+    </el>
+    <el name="panel">
+      <layout left="158" top="48"/>
+    </el>
+    <el name="listPanel">
+      <layout left="30" top="96"/>
+    </el>
+    <el name="btPrev">
+      <layout left="56" top="58"/>
+    </el>
+    <el name="btNext">
+      <layout left="56" top="563"/>
+    </el>
+    <el name="LoadPanel">
+      <layout w="100%" h="100%"/>
+      <el name="shape">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="MessageDialogBg">
+        <layout w="150" h="140" hCenter="0" vCenter="0"/>
+      </el>
+      <el name="label">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+    </el>
+    <el name="shape">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="MessageDialogBg">
+      <layout w="150" h="140" hCenter="0" vCenter="0"/>
+    </el>
+    <el name="label">
+      <layout hCenter="0" vCenter="0"/>
+    </el>
+    <el name="BuildDialog">
+      <el name="BuildLogoBg">
+        <layout left="-23" top="-25"/>
+      </el>
+      <el name="BuildLogo">
+        <layout left="-22" top="-23"/>
+      </el>
+      <el name="label">
+        <layout w="100%" top="60"/>
+      </el>
+      <el name="targets">
+        <layout top="81" left="18" right="18" h="178"/>
+      </el>
+      <el name="targetBox">
+        <layout hCenter="0" top="96"/>
+      </el>
+      <el name="btBox">
+        <layout hCenter="0" bottom="10"/>
+      </el>
+    </el>
+    <el name="BuildLogoBg">
+      <layout left="-23" top="-25"/>
+    </el>
+    <el name="BuildLogo">
+      <layout left="-22" top="-23"/>
+    </el>
+    <el name="label">
+      <layout w="100%" top="60"/>
+    </el>
+    <el name="targets">
+      <layout top="81" left="18" right="18" h="178"/>
+    </el>
+    <el name="targetBox">
+      <layout hCenter="0" top="96"/>
+    </el>
+    <el name="btBox">
+      <layout hCenter="0" bottom="10"/>
+    </el>
+    <el name="BuildTargetPanel">
+      <el name="bg">
+        <layout hCenter="0" top="7"/>
+      </el>
+      <el name="skin">
+        <layout hCenter="0" top="34" w="88" h="64"/>
+      </el>
+      <el name="BuildGlare">
+        <layout hCenter="0" top="22"/>
+      </el>
+      <el name="CounterSkin">
+        <layout hCenter="0" top="-4" w="68" h="36"/>
+      </el>
+      <el name="vlabel">
+        <layout hCenter="0" top="3" w="52" h="22"/>
+      </el>
+      <el name="BuildCollectedBg">
+        <layout hCenter="0" bottom="0" w="116"/>
+      </el>
+      <el name="collectedLabel">
+        <layout hCenter="0" bottom="6"/>
+      </el>
+      <el name="rareLabel">
+        <layout hCenter="0" top="96"/>
+      </el>
+      <el name="btBuy">
+        <layout hCenter="0" top="124"/>
+      </el>
+    </el>
+    <el name="bg">
+      <layout hCenter="0" top="7"/>
+    </el>
+    <el name="skin">
+      <layout hCenter="0" top="34" w="88" h="64"/>
+    </el>
+    <el name="BuildGlare">
+      <layout hCenter="0" top="22"/>
+    </el>
+    <el name="CounterSkin">
+      <layout hCenter="0" top="-4" w="68" h="36"/>
+    </el>
+    <el name="vlabel">
+      <layout hCenter="0" top="3" w="52" h="22"/>
+    </el>
+    <el name="BuildCollectedBg">
+      <layout hCenter="0" bottom="0" w="116"/>
+    </el>
+    <el name="collectedLabel">
+      <layout hCenter="0" bottom="6"/>
+    </el>
+    <el name="rareLabel">
+      <layout hCenter="0" top="96"/>
+    </el>
+    <el name="btBuy">
+      <layout hCenter="0" top="124"/>
+    </el>
+    <el name="Alert">
+      <el name="bg">
+        <layout left="24" vCenter="0"/>
+      </el>
+      <el name="skin">
+        <layout hCenter="-144" vCenter="0" maxW="117" minW="117"/>
+      </el>
+      <el name="vlabel">
+        <layout left="160" right="20" top="18" bottom="62"/>
+      </el>
+      <el name="vbox">
+        <layout hCenter="74" bottom="14"/>
+      </el>
+    </el>
+    <el name="bg">
+      <layout left="24" vCenter="0"/>
+    </el>
+    <el name="skin">
+      <layout hCenter="-144" vCenter="0" maxW="117" minW="117"/>
+    </el>
+    <el name="vlabel">
+      <layout left="160" right="20" top="18" bottom="62"/>
+    </el>
+    <el name="vbox">
+      <layout hCenter="74" bottom="14"/>
+    </el>
+    <el name="mainPanel">
+      <layout w="100%" h="100%"/>
+      <el name="FriendPanel">
+        <layout w="740" hCenter="0" top="96" bottom="160"/>
+        <el name="bg">
+          <layout left="40" top="7"/>
+        </el>
+        <el name="LevelPanel">
+          <layout left="188" top="48"/>
+          <el name="icon">
+            <layout left="0" right="2" vCeneter="0"/>
+          </el>
+        </el>
+        <el name="icon">
+          <layout left="0" right="2" vCeneter="0"/>
+        </el>
+        <el name="avatarPanel">
+          <layout left="8" top="6"/>
+        </el>
+        <el name="nameLabel">
+          <layout left="82" top="7" w="120"/>
+        </el>
+        <el name="comfortIcon">
+          <layout left="188"/>
+        </el>
+        <el name="comfortLabel">
+          <layout left="188" w="31" h="31"/>
+        </el>
+        <el name="btMore">
+          <layout left="14" top="88"/>
+          <el name="icon">
+            <layout right="0" bottom="0"/>
+          </el>
+        </el>
+        <el name="icon">
+          <layout right="0" bottom="0"/>
+        </el>
+        <el name="energyBox">
+          <layout left="14" top="148"/>
+        </el>
+        <el name="navPanel">
+          <layout right="95" bottom="-140" h="50"/>
+        </el>
+        <el name="sharePanel">
+          <layout right="95" bottom="-140"/>
+        </el>
+      </el>
+      <el name="bg">
+        <layout left="40" top="7"/>
+      </el>
+      <el name="LevelPanel">
+        <layout left="188" top="48"/>
+        <el name="icon">
+          <layout left="0" right="2" vCeneter="0"/>
+        </el>
+      </el>
+      <el name="icon">
+        <layout left="0" right="2" vCeneter="0"/>
+      </el>
+      <el name="avatarPanel">
+        <layout left="8" top="6"/>
+      </el>
+      <el name="nameLabel">
+        <layout left="82" top="7" w="120"/>
+      </el>
+      <el name="comfortIcon">
+        <layout left="188"/>
+      </el>
+      <el name="comfortLabel">
+        <layout left="188" w="31" h="31"/>
+      </el>
+      <el name="btMore">
+        <layout left="14" top="88"/>
+        <el name="icon">
+          <layout right="0" bottom="0"/>
+        </el>
+      </el>
+      <el name="icon">
+        <layout right="0" bottom="0"/>
+      </el>
+      <el name="energyBox">
+        <layout left="14" top="148"/>
+      </el>
+      <el name="navPanel">
+        <layout right="95" bottom="-140" h="50"/>
+      </el>
+      <el name="sharePanel">
+        <layout right="95" bottom="-140"/>
+      </el>
+      <el name="userPanel">
+        <layout left="10" right="10" top="96" bottom="160"/>
+      </el>
+    </el>
+    <el name="FriendPanel">
+      <layout w="740" hCenter="0" top="96" bottom="160"/>
+      <el name="bg">
+        <layout left="40" top="7"/>
+      </el>
+      <el name="LevelPanel">
+        <layout left="188" top="48"/>
+        <el name="icon">
+          <layout left="0" right="2" vCeneter="0"/>
+        </el>
+      </el>
+      <el name="icon">
+        <layout left="0" right="2" vCeneter="0"/>
+      </el>
+      <el name="avatarPanel">
+        <layout left="8" top="6"/>
+      </el>
+      <el name="nameLabel">
+        <layout left="82" top="7" w="120"/>
+      </el>
+      <el name="comfortIcon">
+        <layout left="188"/>
+      </el>
+      <el name="comfortLabel">
+        <layout left="188" w="31" h="31"/>
+      </el>
+      <el name="btMore">
+        <layout left="14" top="88"/>
+        <el name="icon">
+          <layout right="0" bottom="0"/>
+        </el>
+      </el>
+      <el name="icon">
+        <layout right="0" bottom="0"/>
+      </el>
+      <el name="energyBox">
+        <layout left="14" top="148"/>
+      </el>
+      <el name="navPanel">
+        <layout right="95" bottom="-140" h="50"/>
+      </el>
+      <el name="sharePanel">
+        <layout right="95" bottom="-140"/>
+      </el>
+    </el>
+    <el name="bg">
+      <layout left="40" top="7"/>
+    </el>
+    <el name="LevelPanel">
+      <layout left="188" top="48"/>
+      <el name="icon">
+        <layout left="0" right="2" vCeneter="0"/>
+      </el>
+    </el>
+    <el name="icon">
+      <layout left="0" right="2" vCeneter="0"/>
+    </el>
+    <el name="avatarPanel">
+      <layout left="8" top="6"/>
+    </el>
+    <el name="nameLabel">
+      <layout left="82" top="7" w="120"/>
+    </el>
+    <el name="comfortIcon">
+      <layout left="188"/>
+    </el>
+    <el name="comfortLabel">
+      <layout left="188" w="31" h="31"/>
+    </el>
+    <el name="btMore">
+      <layout left="14" top="88"/>
+      <el name="icon">
+        <layout right="0" bottom="0"/>
+      </el>
+    </el>
+    <el name="icon">
+      <layout right="0" bottom="0"/>
+    </el>
+    <el name="energyBox">
+      <layout left="14" top="148"/>
+    </el>
+    <el name="navPanel">
+      <layout right="95" bottom="-140" h="50"/>
+    </el>
+    <el name="sharePanel">
+      <layout right="95" bottom="-140"/>
+    </el>
+    <el name="userPanel">
+      <layout left="10" right="10" top="96" bottom="160"/>
+    </el>
+    <el name="boardPanel">
+      <layout w="100%" h="100%"/>
+      <el name="woMenu">
+        <el name="bt">
+          <layout left="6" right="8" h="100%"/>
+        </el>
+      </el>
+      <el name="bt">
+        <layout left="6" right="8" h="100%"/>
+      </el>
+      <el name="btTaskBreak">
+        <el name="icon">
+          <layout hCenter="0" vCenter="0"/>
+        </el>
+      </el>
+      <el name="icon">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+      <el name="btModeBreak">
+        <layout top="5" right="5"/>
+        <el name="icon">
+          <layout hCenter="0" vCenter="0" w="80%" h="80%"/>
+        </el>
+        <el name="modeIcon">
+          <layout hCenter="0" vCenter="0" w="60%" h="60%"/>
+        </el>
+      </el>
+      <el name="icon">
+        <layout hCenter="0" vCenter="0" w="80%" h="80%"/>
+      </el>
+      <el name="modeIcon">
+        <layout hCenter="0" vCenter="0" w="60%" h="60%"/>
+      </el>
+    </el>
+    <el name="woMenu">
+      <el name="bt">
+        <layout left="6" right="8" h="100%"/>
+      </el>
+    </el>
+    <el name="bt">
+      <layout left="6" right="8" h="100%"/>
+    </el>
+    <el name="btTaskBreak">
+      <el name="icon">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+    </el>
+    <el name="icon">
+      <layout hCenter="0" vCenter="0"/>
+    </el>
+    <el name="btModeBreak">
+      <layout top="5" right="5"/>
+      <el name="icon">
+        <layout hCenter="0" vCenter="0" w="80%" h="80%"/>
+      </el>
+      <el name="modeIcon">
+        <layout hCenter="0" vCenter="0" w="60%" h="60%"/>
+      </el>
+    </el>
+    <el name="icon">
+      <layout hCenter="0" vCenter="0" w="80%" h="80%"/>
+    </el>
+    <el name="modeIcon">
+      <layout hCenter="0" vCenter="0" w="60%" h="60%"/>
+    </el>
+    <el name="topPanel">
+      <layout hCenter="0" w="760" h="100"/>
+      <el name="btPrefMenu">
+        <layout left="720" top="48"/>
+      </el>
+      <el name="bg">
+        <layout hCenter="0"/>
+      </el>
+      <el name="expPanel">
+        <layout left="15" top="6"/>
+      </el>
+      <el name="comfortPanel">
+        <layout left="15" top="46"/>
+      </el>
+      <el name="progressPanel">
+        <el name="ExPlabel">
+          <layout top="4" w="30" h="29"/>
+        </el>
+        <el name="Cmflabel">
+          <layout top="4" w="30" h="29"/>
+        </el>
+        <el name="ExPprogress">
+          <layout left="9"/>
+        </el>
+        <el name="Cmfprogress">
+          <layout left="9"/>
+        </el>
+      </el>
+      <el name="ExPlabel">
+        <layout top="4" w="30" h="29"/>
+      </el>
+      <el name="Cmflabel">
+        <layout top="4" w="30" h="29"/>
+      </el>
+      <el name="ExPprogress">
+        <layout left="9"/>
+      </el>
+      <el name="Cmfprogress">
+        <layout left="9"/>
+      </el>
+      <el name="energyPanel">
+        <layout left="197" top="6"/>
+        <el name="btMore">
+          <layout left="164"/>
+        </el>
+        <el name="track">
+          <layout left="9.05" top="9.45"/>
+        </el>
+        <el name="progressbar">
+          <layout left="20" w="131" top="11.85"/>
+          <el name="thumb">
+            <layout w="100%"/>
+          </el>
+        </el>
+        <el name="thumb">
+          <layout w="100%"/>
+        </el>
+        <el name="trackFg">
+          <layout left="14.65" top="11.15"/>
+        </el>
+        <el name="icon">
+          <layout top="2.25"/>
+        </el>
+        <el name="areaBg">
+          <layout left="138.95" top="0.8"/>
+        </el>
+        <el name="areaFg">
+          <layout left="140.45"/>
+        </el>
+        <el name="label">
+          <layout left="143" top="7" w="30" h="29"/>
+        </el>
+      </el>
+      <el name="btMore">
+        <layout left="164"/>
+      </el>
+      <el name="track">
+        <layout left="9.05" top="9.45"/>
+      </el>
+      <el name="progressbar">
+        <layout left="20" w="131" top="11.85"/>
+        <el name="thumb">
+          <layout w="100%"/>
+        </el>
+      </el>
+      <el name="thumb">
+        <layout w="100%"/>
+      </el>
+      <el name="trackFg">
+        <layout left="14.65" top="11.15"/>
+      </el>
+      <el name="icon">
+        <layout top="2.25"/>
+      </el>
+      <el name="areaBg">
+        <layout left="138.95" top="0.8"/>
+      </el>
+      <el name="areaFg">
+        <layout left="140.45"/>
+      </el>
+      <el name="label">
+        <layout left="143" top="7" w="30" h="29"/>
+      </el>
+      <el name="foodPanel">
+        <layout left="430" top="12"/>
+        <el name="label">
+          <layout left="36" right="8" vCenter="3" h="35"/>
+        </el>
+      </el>
+      <el name="label">
+        <layout left="36" right="8" vCenter="3" h="35"/>
+      </el>
+      <el name="timberPanel">
+        <layout left="430" top="50"/>
+        <el name="label">
+          <layout left="36" right="8" vCenter="3" h="32"/>
+        </el>
+      </el>
+      <el name="label">
+        <layout left="36" right="8" vCenter="3" h="32"/>
+      </el>
+      <el name="baksPanel">
+        <layout left="549" top="9"/>
+        <el name="label">
+          <layout left="30" right="0" vCenter="7" h="37"/>
+        </el>
+      </el>
+      <el name="label">
+        <layout left="30" right="0" vCenter="7" h="37"/>
+      </el>
+      <el name="goldPanel">
+        <layout left="549" top="51" w="120"/>
+        <el name="label">
+          <layout left="27" w="91" h="33" vCenter="4"/>
+        </el>
+      </el>
+      <el name="label">
+        <layout left="27" w="91" h="33" vCenter="4"/>
+      </el>
+    </el>
+    <el name="btPrefMenu">
+      <layout left="720" top="48"/>
+    </el>
+    <el name="bg">
+      <layout hCenter="0"/>
+    </el>
+    <el name="expPanel">
+      <layout left="15" top="6"/>
+    </el>
+    <el name="comfortPanel">
+      <layout left="15" top="46"/>
+    </el>
+    <el name="progressPanel">
+      <el name="ExPlabel">
+        <layout top="4" w="30" h="29"/>
+      </el>
+      <el name="Cmflabel">
+        <layout top="4" w="30" h="29"/>
+      </el>
+      <el name="ExPprogress">
+        <layout left="9"/>
+      </el>
+      <el name="Cmfprogress">
+        <layout left="9"/>
+      </el>
+    </el>
+    <el name="ExPlabel">
+      <layout top="4" w="30" h="29"/>
+    </el>
+    <el name="Cmflabel">
+      <layout top="4" w="30" h="29"/>
+    </el>
+    <el name="ExPprogress">
+      <layout left="9"/>
+    </el>
+    <el name="Cmfprogress">
+      <layout left="9"/>
+    </el>
+    <el name="energyPanel">
+      <layout left="197" top="6"/>
+      <el name="btMore">
+        <layout left="164"/>
+      </el>
+      <el name="track">
+        <layout left="9.05" top="9.45"/>
+      </el>
+      <el name="progressbar">
+        <layout left="20" w="131" top="11.85"/>
+        <el name="thumb">
+          <layout w="100%"/>
+        </el>
+      </el>
+      <el name="thumb">
+        <layout w="100%"/>
+      </el>
+      <el name="trackFg">
+        <layout left="14.65" top="11.15"/>
+      </el>
+      <el name="icon">
+        <layout top="2.25"/>
+      </el>
+      <el name="areaBg">
+        <layout left="138.95" top="0.8"/>
+      </el>
+      <el name="areaFg">
+        <layout left="140.45"/>
+      </el>
+      <el name="label">
+        <layout left="143" top="7" w="30" h="29"/>
+      </el>
+    </el>
+    <el name="btMore">
+      <layout left="164"/>
+    </el>
+    <el name="track">
+      <layout left="9.05" top="9.45"/>
+    </el>
+    <el name="progressbar">
+      <layout left="20" w="131" top="11.85"/>
+      <el name="thumb">
+        <layout w="100%"/>
+      </el>
+    </el>
+    <el name="thumb">
+      <layout w="100%"/>
+    </el>
+    <el name="trackFg">
+      <layout left="14.65" top="11.15"/>
+    </el>
+    <el name="icon">
+      <layout top="2.25"/>
+    </el>
+    <el name="areaBg">
+      <layout left="138.95" top="0.8"/>
+    </el>
+    <el name="areaFg">
+      <layout left="140.45"/>
+    </el>
+    <el name="label">
+      <layout left="143" top="7" w="30" h="29"/>
+    </el>
+    <el name="foodPanel">
+      <layout left="430" top="12"/>
+      <el name="label">
+        <layout left="36" right="8" vCenter="3" h="35"/>
+      </el>
+    </el>
+    <el name="label">
+      <layout left="36" right="8" vCenter="3" h="35"/>
+    </el>
+    <el name="timberPanel">
+      <layout left="430" top="50"/>
+      <el name="label">
+        <layout left="36" right="8" vCenter="3" h="32"/>
+      </el>
+    </el>
+    <el name="label">
+      <layout left="36" right="8" vCenter="3" h="32"/>
+    </el>
+    <el name="baksPanel">
+      <layout left="549" top="9"/>
+      <el name="label">
+        <layout left="30" right="0" vCenter="7" h="37"/>
+      </el>
+    </el>
+    <el name="label">
+      <layout left="30" right="0" vCenter="7" h="37"/>
+    </el>
+    <el name="goldPanel">
+      <layout left="549" top="51" w="120"/>
+      <el name="label">
+        <layout left="27" w="91" h="33" vCenter="4"/>
+      </el>
+    </el>
+    <el name="label">
+      <layout left="27" w="91" h="33" vCenter="4"/>
+    </el>
+    <el name="bottomPanel">
+      <layout hCenter="0" bottom="-3"/>
+      <el name="cntPane">
+        <layout right="-3" top="-11"/>
+      </el>
+      <el name="bg">
+        <layout bottom="0" hCenter="0"/>
+      </el>
+      <el name="FriendBg">
+        <layout bottom="-76" hCenter="0"/>
+      </el>
+      <el name="btnLabel">
+        <layout w="100%" top="15" right="8"/>
+      </el>
+      <el name="btsBox">
+        <layout hCenter="0" top="-40"/>
+      </el>
+      <el name="btHome">
+        <layout right="20" bottom="12"/>
+        <el name="icon">
+          <layout right="8" vCenter="7"/>
+        </el>
+      </el>
+      <el name="icon">
+        <layout right="8" vCenter="7"/>
+      </el>
+    </el>
+    <el name="cntPane">
+      <layout right="-3" top="-11"/>
+    </el>
+    <el name="bg">
+      <layout bottom="0" hCenter="0"/>
+    </el>
+    <el name="FriendBg">
+      <layout bottom="-76" hCenter="0"/>
+    </el>
+    <el name="btnLabel">
+      <layout w="100%" top="15" right="8"/>
+    </el>
+    <el name="btsBox">
+      <layout hCenter="0" top="-40"/>
+    </el>
+    <el name="btHome">
+      <layout right="20" bottom="12"/>
+      <el name="icon">
+        <layout right="8" vCenter="7"/>
+      </el>
+    </el>
+    <el name="icon">
+      <layout right="8" vCenter="7"/>
+    </el>
+    <el name="dialogPanel">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="btMore">
+      <layout left="2" vCenter="0" right="0"/>
+    </el>
+    <el name="dialog">
+      <el name="bg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="title">
+        <layout left="2" top="1" right="1"/>
+      </el>
+      <el name="statusbar">
+        <layout bottom="3" left="1"/>
+      </el>
+      <el name="logo">
+        <layout left="-16" top="-23"/>
+      </el>
+      <el name="prevBtn">
+        <layout vCenter="0" left="-14"/>
+      </el>
+      <el name="nextBtn">
+        <layout vCenter="0" right="-14"/>
+      </el>
+      <el name="navPanel">
+        <layout hCenter="0" bottom="8"/>
+        <el name="button">
+          <layout left="2" right="3" vCenter="0"/>
+        </el>
+      </el>
+      <el name="button">
+        <layout left="2" right="3" vCenter="0"/>
+      </el>
+    </el>
+    <el name="bg">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="title">
+      <layout left="2" top="1" right="1"/>
+    </el>
+    <el name="statusbar">
+      <layout bottom="3" left="1"/>
+    </el>
+    <el name="logo">
+      <layout left="-16" top="-23"/>
+    </el>
+    <el name="prevBtn">
+      <layout vCenter="0" left="-14"/>
+    </el>
+    <el name="nextBtn">
+      <layout vCenter="0" right="-14"/>
+    </el>
+    <el name="navPanel">
+      <layout hCenter="0" bottom="8"/>
+      <el name="button">
+        <layout left="2" right="3" vCenter="0"/>
+      </el>
+    </el>
+    <el name="button">
+      <layout left="2" right="3" vCenter="0"/>
+    </el>
+    <el name="msgDialog">
+      <el name="title">
+        <layout w="100%" h="100%"/>
+        <el name="text">
+          <layout hCenter="0" top="-11"/>
+        </el>
+      </el>
+      <el name="text">
+        <layout hCenter="0" top="-11"/>
+      </el>
+    </el>
+    <el name="title">
+      <layout w="100%" h="100%"/>
+      <el name="text">
+        <layout hCenter="0" top="-11"/>
+      </el>
+    </el>
+    <el name="text">
+      <layout hCenter="0" top="-11"/>
+    </el>
+    <el name="shopDialog">
+      <el name="titleBox">
+        <layout left="100" h="50"/>
+      </el>
+      <el name="logoBg">
+        <layout left="-5" top="-42"/>
+      </el>
+      <el name="logo">
+        <layout left="-3" top="-39"/>
+      </el>
+      <el name="tabs">
+        <layout left="10" top="45"/>
+      </el>
+      <el name="list">
+        <layout top="124" left="21" right="21"/>
+      </el>
+      <el name="renderer">
+        <el name="bg">
+          <layout left="9" bottom="50"/>
+        </el>
+        <el name="desc">
+          <layout left="5" right="5" top="166" bottom="0"/>
+        </el>
+        <el name="box">
+          <layout vCenter="0"/>
+        </el>
+        <el name="eventIcon">
+          <layout left="6" top="18"/>
+        </el>
+        <el name="specials">
+          <layout left="6" top="18"/>
+        </el>
+        <el name="label">
+          <layout left="5" right="5" top="-13" h="34"/>
+        </el>
+        <el name="lock">
+          <layout left="-7" top="99"/>
+        </el>
+        <el name="costIcon">
+          <layout left="9" bottom="50" h="32"/>
+        </el>
+        <el name="saleCost">
+          <layout hCenter="2" bottom="50" w="100"/>
+        </el>
+        <el name="costs">
+          <layout w="124" top="127" hCenter="0"/>
+        </el>
+        <el name="bt">
+          <layout hCenter="0" top="24"/>
+        </el>
+        <el name="lvl">
+          <layout top="15" right="6"/>
+        </el>
+        <el name="btIcon">
+          <layout vCenter="0" hCenter="0"/>
+        </el>
+        <el name="unlockBt">
+          <layout hCenter="0" bottom="35"/>
+        </el>
+      </el>
+      <el name="bg">
+        <layout left="9" bottom="50"/>
+      </el>
+      <el name="desc">
+        <layout left="5" right="5" top="166" bottom="0"/>
+      </el>
+      <el name="box">
+        <layout vCenter="0"/>
+      </el>
+      <el name="eventIcon">
+        <layout left="6" top="18"/>
+      </el>
+      <el name="specials">
+        <layout left="6" top="18"/>
+      </el>
+      <el name="label">
+        <layout left="5" right="5" top="-13" h="34"/>
+      </el>
+      <el name="lock">
+        <layout left="-7" top="99"/>
+      </el>
+      <el name="costIcon">
+        <layout left="9" bottom="50" h="32"/>
+      </el>
+      <el name="saleCost">
+        <layout hCenter="2" bottom="50" w="100"/>
+      </el>
+      <el name="costs">
+        <layout w="124" top="127" hCenter="0"/>
+      </el>
+      <el name="bt">
+        <layout hCenter="0" top="24"/>
+      </el>
+      <el name="lvl">
+        <layout top="15" right="6"/>
+      </el>
+      <el name="btIcon">
+        <layout vCenter="0" hCenter="0"/>
+      </el>
+      <el name="unlockBt">
+        <layout hCenter="0" bottom="35"/>
+      </el>
+    </el>
+    <el name="titleBox">
+      <layout left="100" h="50"/>
+    </el>
+    <el name="logoBg">
+      <layout left="-5" top="-42"/>
+    </el>
+    <el name="logo">
+      <layout left="-3" top="-39"/>
+    </el>
+    <el name="tabs">
+      <layout left="10" top="45"/>
+    </el>
+    <el name="list">
+      <layout top="124" left="21" right="21"/>
+    </el>
+    <el name="renderer">
+      <el name="bg">
+        <layout left="9" bottom="50"/>
+      </el>
+      <el name="desc">
+        <layout left="5" right="5" top="166" bottom="0"/>
+      </el>
+      <el name="box">
+        <layout vCenter="0"/>
+      </el>
+      <el name="eventIcon">
+        <layout left="6" top="18"/>
+      </el>
+      <el name="specials">
+        <layout left="6" top="18"/>
+      </el>
+      <el name="label">
+        <layout left="5" right="5" top="-13" h="34"/>
+      </el>
+      <el name="lock">
+        <layout left="-7" top="99"/>
+      </el>
+      <el name="costIcon">
+        <layout left="9" bottom="50" h="32"/>
+      </el>
+      <el name="saleCost">
+        <layout hCenter="2" bottom="50" w="100"/>
+      </el>
+      <el name="costs">
+        <layout w="124" top="127" hCenter="0"/>
+      </el>
+      <el name="bt">
+        <layout hCenter="0" top="24"/>
+      </el>
+      <el name="lvl">
+        <layout top="15" right="6"/>
+      </el>
+      <el name="btIcon">
+        <layout vCenter="0" hCenter="0"/>
+      </el>
+      <el name="unlockBt">
+        <layout hCenter="0" bottom="35"/>
+      </el>
+    </el>
+    <el name="bg">
+      <layout left="9" bottom="50"/>
+    </el>
+    <el name="desc">
+      <layout left="5" right="5" top="166" bottom="0"/>
+    </el>
+    <el name="box">
+      <layout vCenter="0"/>
+    </el>
+    <el name="eventIcon">
+      <layout left="6" top="18"/>
+    </el>
+    <el name="specials">
+      <layout left="6" top="18"/>
+    </el>
+    <el name="label">
+      <layout left="5" right="5" top="-13" h="34"/>
+    </el>
+    <el name="lock">
+      <layout left="-7" top="99"/>
+    </el>
+    <el name="costIcon">
+      <layout left="9" bottom="50" h="32"/>
+    </el>
+    <el name="saleCost">
+      <layout hCenter="2" bottom="50" w="100"/>
+    </el>
+    <el name="costs">
+      <layout w="124" top="127" hCenter="0"/>
+    </el>
+    <el name="bt">
+      <layout hCenter="0" top="24"/>
+    </el>
+    <el name="lvl">
+      <layout top="15" right="6"/>
+    </el>
+    <el name="btIcon">
+      <layout vCenter="0" hCenter="0"/>
+    </el>
+    <el name="unlockBt">
+      <layout hCenter="0" bottom="35"/>
+    </el>
+    <el name="warehouseDialog">
+      <el name="tabs">
+        <layout left="10" top="45"/>
+      </el>
+      <el name="headerBox">
+        <layout left="100" h="50"/>
+      </el>
+      <el name="logoBack">
+        <layout left="-12" top="-42"/>
+      </el>
+      <el name="logoFront">
+        <layout left="11" top="-39"/>
+      </el>
+      <el name="list">
+        <layout left="20" top="94" right="20"/>
+      </el>
+      <el name="navPane">
+        <layout hCenter="0" bottom="8"/>
+      </el>
+      <el name="renderer">
+        <el name="box">
+          <layout vCenter="0"/>
+        </el>
+        <el name="label">
+          <layout left="5" right="5" top="-13" h="34"/>
+        </el>
+        <el name="btnsBox">
+          <layout hCenter="0" bottom="0"/>
+        </el>
+        <el name="costLbl">
+          <layout hCenter="0" w="120" top="120"/>
+        </el>
+        <el name="numPane">
+          <layout hCenter="0" top="141"/>
+        </el>
+      </el>
+      <el name="box">
+        <layout vCenter="0"/>
+      </el>
+      <el name="label">
+        <layout left="5" right="5" top="-13" h="34"/>
+      </el>
+      <el name="btnsBox">
+        <layout hCenter="0" bottom="0"/>
+      </el>
+      <el name="costLbl">
+        <layout hCenter="0" w="120" top="120"/>
+      </el>
+      <el name="numPane">
+        <layout hCenter="0" top="141"/>
+      </el>
+      <el name="lbEmpty">
+        <layout left="16" right="16" vCenter="6"/>
+      </el>
+    </el>
+    <el name="tabs">
+      <layout left="10" top="45"/>
+    </el>
+    <el name="headerBox">
+      <layout left="100" h="50"/>
+    </el>
+    <el name="logoBack">
+      <layout left="-12" top="-42"/>
+    </el>
+    <el name="logoFront">
+      <layout left="11" top="-39"/>
+    </el>
+    <el name="list">
+      <layout left="20" top="94" right="20"/>
+    </el>
+    <el name="navPane">
+      <layout hCenter="0" bottom="8"/>
+    </el>
+    <el name="renderer">
+      <el name="box">
+        <layout vCenter="0"/>
+      </el>
+      <el name="label">
+        <layout left="5" right="5" top="-13" h="34"/>
+      </el>
+      <el name="btnsBox">
+        <layout hCenter="0" bottom="0"/>
+      </el>
+      <el name="costLbl">
+        <layout hCenter="0" w="120" top="120"/>
+      </el>
+      <el name="numPane">
+        <layout hCenter="0" top="141"/>
+      </el>
+    </el>
+    <el name="box">
+      <layout vCenter="0"/>
+    </el>
+    <el name="label">
+      <layout left="5" right="5" top="-13" h="34"/>
+    </el>
+    <el name="btnsBox">
+      <layout hCenter="0" bottom="0"/>
+    </el>
+    <el name="costLbl">
+      <layout hCenter="0" w="120" top="120"/>
+    </el>
+    <el name="numPane">
+      <layout hCenter="0" top="141"/>
+    </el>
+    <el name="lbEmpty">
+      <layout left="16" right="16" vCenter="6"/>
+    </el>
+    <el name="levelPanel">
+      <el name="bg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="lbl">
+        <layout left="0" right="2" top="7"/>
+      </el>
+    </el>
+    <el name="bg">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="lbl">
+      <layout left="0" right="2" top="7"/>
+    </el>
+    <el name="numericPanel">
+      <el name="spinnerBg">
+        <layout bottom="3" left="3" right="3" top="3"/>
+      </el>
+      <el name="numericBg">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+      <el name="decBtx2">
+        <layout vCenter="0" w="16" h="15"/>
+      </el>
+      <el name="decBt">
+        <layout left="20" w="14" h="20"/>
+      </el>
+      <el name="incBt">
+        <layout right="20" w="14" h="20"/>
+      </el>
+      <el name="incBtx2">
+        <layout right="0" vCenter="0" w="16" h="15"/>
+      </el>
+      <el name="lbl">
+        <layout vCenter="1" w="100%"/>
+      </el>
+    </el>
+    <el name="spinnerBg">
+      <layout bottom="3" left="3" right="3" top="3"/>
+    </el>
+    <el name="numericBg">
+      <layout hCenter="0" vCenter="0"/>
+    </el>
+    <el name="decBtx2">
+      <layout vCenter="0" w="16" h="15"/>
+    </el>
+    <el name="decBt">
+      <layout left="20" w="14" h="20"/>
+    </el>
+    <el name="incBt">
+      <layout right="20" w="14" h="20"/>
+    </el>
+    <el name="incBtx2">
+      <layout right="0" vCenter="0" w="16" h="15"/>
+    </el>
+    <el name="lbl">
+      <layout vCenter="1" w="100%"/>
+    </el>
+    <el name="messageDialog">
+      <el name="closeBtn">
+        <layout bottom="12" hCenter="0"/>
+      </el>
+    </el>
+    <el name="closeBtn">
+      <layout bottom="12" hCenter="0"/>
+    </el>
+    <el name="collectionDialog">
+      <el name="logoBack">
+        <layout left="-10" top="-42"/>
+      </el>
+      <el name="logoFront">
+        <layout left="-8" top="-39"/>
+      </el>
+      <el name="listPane">
+        <layout top="52" w="100%"/>
+      </el>
+      <el name="navPane">
+        <layout hCenter="0" bottom="8"/>
+      </el>
+      <el name="elems">
+        <layout hCenter="-1" top="33"/>
+      </el>
+      <el name="renderer">
+        <el name="lbBonus">
+          <layout hCenter="0" bottom="18" w="370" h="28"/>
+        </el>
+        <el name="collectBg">
+          <layout left="30" top="184" h="36"/>
+        </el>
+        <el name="lbCollect">
+          <layout left="38" top="193"/>
+        </el>
+        <el name="helpSkin">
+          <layout right="20" w="36" h="36" top="6"/>
+        </el>
+        <el name="header">
+          <layout top="4" hCenter="0"/>
+        </el>
+        <el name="eventSkin">
+          <layout left="14" top="6"/>
+        </el>
+        <el name="btBonus">
+          <layout right="20" bottom="2"/>
+        </el>
+      </el>
+      <el name="lbBonus">
+        <layout hCenter="0" bottom="18" w="370" h="28"/>
+      </el>
+      <el name="collectBg">
+        <layout left="30" top="184" h="36"/>
+      </el>
+      <el name="lbCollect">
+        <layout left="38" top="193"/>
+      </el>
+      <el name="helpSkin">
+        <layout right="20" w="36" h="36" top="6"/>
+      </el>
+      <el name="header">
+        <layout top="4" hCenter="0"/>
+      </el>
+      <el name="eventSkin">
+        <layout left="14" top="6"/>
+      </el>
+      <el name="btBonus">
+        <layout right="20" bottom="2"/>
+      </el>
+      <el name="elementRenderer">
+        <el name="iconSkin">
+          <layout hCenter="0" top="34"/>
+        </el>
+        <el name="countBg">
+          <layout left="1" bottom="-8"/>
+        </el>
+        <el name="lbCount">
+          <layout left="4" bottom="-8" w="37" h="41"/>
+        </el>
+        <el name="lbTitle">
+          <layout left="1" right="1" top="3" h="36"/>
+        </el>
+      </el>
+      <el name="iconSkin">
+        <layout hCenter="0" top="34"/>
+      </el>
+      <el name="countBg">
+        <layout left="1" bottom="-8"/>
+      </el>
+      <el name="lbCount">
+        <layout left="4" bottom="-8" w="37" h="41"/>
+      </el>
+      <el name="lbTitle">
+        <layout left="1" right="1" top="3" h="36"/>
+      </el>
+    </el>
+    <el name="logoBack">
+      <layout left="-10" top="-42"/>
+    </el>
+    <el name="logoFront">
+      <layout left="-8" top="-39"/>
+    </el>
+    <el name="listPane">
+      <layout top="52" w="100%"/>
+    </el>
+    <el name="navPane">
+      <layout hCenter="0" bottom="8"/>
+    </el>
+    <el name="elems">
+      <layout hCenter="-1" top="33"/>
+    </el>
+    <el name="renderer">
+      <el name="lbBonus">
+        <layout hCenter="0" bottom="18" w="370" h="28"/>
+      </el>
+      <el name="collectBg">
+        <layout left="30" top="184" h="36"/>
+      </el>
+      <el name="lbCollect">
+        <layout left="38" top="193"/>
+      </el>
+      <el name="helpSkin">
+        <layout right="20" w="36" h="36" top="6"/>
+      </el>
+      <el name="header">
+        <layout top="4" hCenter="0"/>
+      </el>
+      <el name="eventSkin">
+        <layout left="14" top="6"/>
+      </el>
+      <el name="btBonus">
+        <layout right="20" bottom="2"/>
+      </el>
+    </el>
+    <el name="lbBonus">
+      <layout hCenter="0" bottom="18" w="370" h="28"/>
+    </el>
+    <el name="collectBg">
+      <layout left="30" top="184" h="36"/>
+    </el>
+    <el name="lbCollect">
+      <layout left="38" top="193"/>
+    </el>
+    <el name="helpSkin">
+      <layout right="20" w="36" h="36" top="6"/>
+    </el>
+    <el name="header">
+      <layout top="4" hCenter="0"/>
+    </el>
+    <el name="eventSkin">
+      <layout left="14" top="6"/>
+    </el>
+    <el name="btBonus">
+      <layout right="20" bottom="2"/>
+    </el>
+    <el name="elementRenderer">
+      <el name="iconSkin">
+        <layout hCenter="0" top="34"/>
+      </el>
+      <el name="countBg">
+        <layout left="1" bottom="-8"/>
+      </el>
+      <el name="lbCount">
+        <layout left="4" bottom="-8" w="37" h="41"/>
+      </el>
+      <el name="lbTitle">
+        <layout left="1" right="1" top="3" h="36"/>
+      </el>
+    </el>
+    <el name="iconSkin">
+      <layout hCenter="0" top="34"/>
+    </el>
+    <el name="countBg">
+      <layout left="1" bottom="-8"/>
+    </el>
+    <el name="lbCount">
+      <layout left="4" bottom="-8" w="37" h="41"/>
+    </el>
+    <el name="lbTitle">
+      <layout left="1" right="1" top="3" h="36"/>
+    </el>
+    <el name="labDialog">
+      <el name="logo">
+        <layout top="-43" left="-30"/>
+      </el>
+      <el name="tabs">
+        <layout left="10" top="45"/>
+      </el>
+      <el name="listPane">
+        <layout top="96" w="100%"/>
+      </el>
+      <el name="navPane">
+        <layout hCenter="0" bottom="8"/>
+      </el>
+      <el name="lbEmpty">
+        <layout left="16" right="16" vCenter="6"/>
+      </el>
+      <el name="studyBtn">
+        <layout right="8" top="45"/>
+      </el>
+      <el name="renderer">
+        <el name="border">
+          <layout left="13" top="30"/>
+        </el>
+        <el name="titleBgSkin">
+          <layout hCenter="0"/>
+        </el>
+        <el name="bgSkin">
+          <layout hCenter="0" bottom="0"/>
+        </el>
+        <el name="LabFormulaBg">
+          <layout hCenter="0" bottom="5"/>
+        </el>
+        <el name="LabBolt">
+          <layout left="18" top="35"/>
+        </el>
+        <el name="LabLamp">
+          <layout hCenter="-264" top="-29"/>
+        </el>
+        <el name="LabLampFlipX">
+          <layout hCenter="264" top="-29"/>
+        </el>
+        <el name="titleBox">
+          <layout top="4" hCenter="0"/>
+        </el>
+        <el name="leadSkin">
+          <el name="1">
+            <layout hCenter="9" top="-9"/>
+          </el>
+          <el name="2">
+            <layout hCenter="-3" top="-11"/>
+          </el>
+        </el>
+        <el name="1">
+          <layout hCenter="9" top="-9"/>
+        </el>
+        <el name="2">
+          <layout hCenter="-3" top="-11"/>
+        </el>
+        <el name="ingr">
+          <el name="baksBg">
+            <layout hCenter="1" top="2"/>
+          </el>
+          <el name="baksFg">
+            <layout hCenter="0"/>
+          </el>
+          <el name="counterSkin">
+            <layout hCenter="0" top="-17" w="68" h="36"/>
+          </el>
+          <el name="count">
+            <layout hCenter="0" w="52" top="-10" h="22"/>
+          </el>
+          <el name="collectedLbl">
+            <layout hCenter="0" bottom="-27"/>
+          </el>
+          <el name="collectedLbl">
+            <layout hCenter="0" bottom="-27"/>
+          </el>
+          <el name="buyBt">
+            <layout hCenter="0" bottom="-30"/>
+          </el>
+        </el>
+        <el name="baksBg">
+          <layout hCenter="1" top="2"/>
+        </el>
+        <el name="baksFg">
+          <layout hCenter="0"/>
+        </el>
+        <el name="counterSkin">
+          <layout hCenter="0" top="-17" w="68" h="36"/>
+        </el>
+        <el name="count">
+          <layout hCenter="0" w="52" top="-10" h="22"/>
+        </el>
+        <el name="collectedLbl">
+          <layout hCenter="0" bottom="-27"/>
+        </el>
+        <el name="collectedLbl">
+          <layout hCenter="0" bottom="-27"/>
+        </el>
+        <el name="buyBt">
+          <layout hCenter="0" bottom="-30"/>
+        </el>
+        <el name="res">
+          <el name="bg">
+            <layout hCenter="0"/>
+          </el>
+          <el name="skin">
+            <layout left="24" right="25" top="11" bottom="21"/>
+          </el>
+          <el name="btIcon">
+            <layout left="1" top="-3"/>
+          </el>
+          <el name="bt">
+            <layout right="-6" top="-13"/>
+          </el>
+          <el name="sdp">
+            <layout right="-4" top="-13"/>
+          </el>
+          <el name="craftTimeLbl">
+            <layout hCenter="0" bottom="-25"/>
+          </el>
+          <el name="cancelBt">
+            <layout hCenter="0" bottom="-33"/>
+          </el>
+        </el>
+        <el name="bg">
+          <layout hCenter="0"/>
+        </el>
+        <el name="skin">
+          <layout left="24" right="25" top="11" bottom="21"/>
+        </el>
+        <el name="btIcon">
+          <layout left="1" top="-3"/>
+        </el>
+        <el name="bt">
+          <layout right="-6" top="-13"/>
+        </el>
+        <el name="sdp">
+          <layout right="-4" top="-13"/>
+        </el>
+        <el name="craftTimeLbl">
+          <layout hCenter="0" bottom="-25"/>
+        </el>
+        <el name="cancelBt">
+          <layout hCenter="0" bottom="-33"/>
+        </el>
+        <el name="pb">
+          <layout hCenter="-80" bottom="7" maxW="500"/>
+        </el>
+        <el name="lbStatus">
+          <el name="buildLevelLock">
+            <layout hCenter="0" bottom="16"/>
+          </el>
+          <el name="endCraft">
+            <layout hCenter="0" bottom="14"/>
+          </el>
+        </el>
+        <el name="buildLevelLock">
+          <layout hCenter="0" bottom="16"/>
+        </el>
+        <el name="endCraft">
+          <layout hCenter="0" bottom="14"/>
+        </el>
+      </el>
+      <el name="border">
+        <layout left="13" top="30"/>
+      </el>
+      <el name="titleBgSkin">
+        <layout hCenter="0"/>
+      </el>
+      <el name="bgSkin">
+        <layout hCenter="0" bottom="0"/>
+      </el>
+      <el name="LabFormulaBg">
+        <layout hCenter="0" bottom="5"/>
+      </el>
+      <el name="LabBolt">
+        <layout left="18" top="35"/>
+      </el>
+      <el name="LabLamp">
+        <layout hCenter="-264" top="-29"/>
+      </el>
+      <el name="LabLampFlipX">
+        <layout hCenter="264" top="-29"/>
+      </el>
+      <el name="titleBox">
+        <layout top="4" hCenter="0"/>
+      </el>
+      <el name="leadSkin">
+        <el name="1">
+          <layout hCenter="9" top="-9"/>
+        </el>
+        <el name="2">
+          <layout hCenter="-3" top="-11"/>
+        </el>
+      </el>
+      <el name="1">
+        <layout hCenter="9" top="-9"/>
+      </el>
+      <el name="2">
+        <layout hCenter="-3" top="-11"/>
+      </el>
+      <el name="ingr">
+        <el name="baksBg">
+          <layout hCenter="1" top="2"/>
+        </el>
+        <el name="baksFg">
+          <layout hCenter="0"/>
+        </el>
+        <el name="counterSkin">
+          <layout hCenter="0" top="-17" w="68" h="36"/>
+        </el>
+        <el name="count">
+          <layout hCenter="0" w="52" top="-10" h="22"/>
+        </el>
+        <el name="collectedLbl">
+          <layout hCenter="0" bottom="-27"/>
+        </el>
+        <el name="collectedLbl">
+          <layout hCenter="0" bottom="-27"/>
+        </el>
+        <el name="buyBt">
+          <layout hCenter="0" bottom="-30"/>
+        </el>
+      </el>
+      <el name="baksBg">
+        <layout hCenter="1" top="2"/>
+      </el>
+      <el name="baksFg">
+        <layout hCenter="0"/>
+      </el>
+      <el name="counterSkin">
+        <layout hCenter="0" top="-17" w="68" h="36"/>
+      </el>
+      <el name="count">
+        <layout hCenter="0" w="52" top="-10" h="22"/>
+      </el>
+      <el name="collectedLbl">
+        <layout hCenter="0" bottom="-27"/>
+      </el>
+      <el name="collectedLbl">
+        <layout hCenter="0" bottom="-27"/>
+      </el>
+      <el name="buyBt">
+        <layout hCenter="0" bottom="-30"/>
+      </el>
+      <el name="res">
+        <el name="bg">
+          <layout hCenter="0"/>
+        </el>
+        <el name="skin">
+          <layout left="24" right="25" top="11" bottom="21"/>
+        </el>
+        <el name="btIcon">
+          <layout left="1" top="-3"/>
+        </el>
+        <el name="bt">
+          <layout right="-6" top="-13"/>
+        </el>
+        <el name="sdp">
+          <layout right="-4" top="-13"/>
+        </el>
+        <el name="craftTimeLbl">
+          <layout hCenter="0" bottom="-25"/>
+        </el>
+        <el name="cancelBt">
+          <layout hCenter="0" bottom="-33"/>
+        </el>
+      </el>
+      <el name="bg">
+        <layout hCenter="0"/>
+      </el>
+      <el name="skin">
+        <layout left="24" right="25" top="11" bottom="21"/>
+      </el>
+      <el name="btIcon">
+        <layout left="1" top="-3"/>
+      </el>
+      <el name="bt">
+        <layout right="-6" top="-13"/>
+      </el>
+      <el name="sdp">
+        <layout right="-4" top="-13"/>
+      </el>
+      <el name="craftTimeLbl">
+        <layout hCenter="0" bottom="-25"/>
+      </el>
+      <el name="cancelBt">
+        <layout hCenter="0" bottom="-33"/>
+      </el>
+      <el name="pb">
+        <layout hCenter="-80" bottom="7" maxW="500"/>
+      </el>
+      <el name="lbStatus">
+        <el name="buildLevelLock">
+          <layout hCenter="0" bottom="16"/>
+        </el>
+        <el name="endCraft">
+          <layout hCenter="0" bottom="14"/>
+        </el>
+      </el>
+      <el name="buildLevelLock">
+        <layout hCenter="0" bottom="16"/>
+      </el>
+      <el name="endCraft">
+        <layout hCenter="0" bottom="14"/>
+      </el>
+      <el name="btCnt">
+        <layout right="-5" bottom="-10"/>
+      </el>
+    </el>
+    <el name="logo">
+      <layout top="-43" left="-30"/>
+    </el>
+    <el name="tabs">
+      <layout left="10" top="45"/>
+    </el>
+    <el name="listPane">
+      <layout top="96" w="100%"/>
+    </el>
+    <el name="navPane">
+      <layout hCenter="0" bottom="8"/>
+    </el>
+    <el name="lbEmpty">
+      <layout left="16" right="16" vCenter="6"/>
+    </el>
+    <el name="studyBtn">
+      <layout right="8" top="45"/>
+    </el>
+    <el name="renderer">
+      <el name="border">
+        <layout left="13" top="30"/>
+      </el>
+      <el name="titleBgSkin">
+        <layout hCenter="0"/>
+      </el>
+      <el name="bgSkin">
+        <layout hCenter="0" bottom="0"/>
+      </el>
+      <el name="LabFormulaBg">
+        <layout hCenter="0" bottom="5"/>
+      </el>
+      <el name="LabBolt">
+        <layout left="18" top="35"/>
+      </el>
+      <el name="LabLamp">
+        <layout hCenter="-264" top="-29"/>
+      </el>
+      <el name="LabLampFlipX">
+        <layout hCenter="264" top="-29"/>
+      </el>
+      <el name="titleBox">
+        <layout top="4" hCenter="0"/>
+      </el>
+      <el name="leadSkin">
+        <el name="1">
+          <layout hCenter="9" top="-9"/>
+        </el>
+        <el name="2">
+          <layout hCenter="-3" top="-11"/>
+        </el>
+      </el>
+      <el name="1">
+        <layout hCenter="9" top="-9"/>
+      </el>
+      <el name="2">
+        <layout hCenter="-3" top="-11"/>
+      </el>
+      <el name="ingr">
+        <el name="baksBg">
+          <layout hCenter="1" top="2"/>
+        </el>
+        <el name="baksFg">
+          <layout hCenter="0"/>
+        </el>
+        <el name="counterSkin">
+          <layout hCenter="0" top="-17" w="68" h="36"/>
+        </el>
+        <el name="count">
+          <layout hCenter="0" w="52" top="-10" h="22"/>
+        </el>
+        <el name="collectedLbl">
+          <layout hCenter="0" bottom="-27"/>
+        </el>
+        <el name="collectedLbl">
+          <layout hCenter="0" bottom="-27"/>
+        </el>
+        <el name="buyBt">
+          <layout hCenter="0" bottom="-30"/>
+        </el>
+      </el>
+      <el name="baksBg">
+        <layout hCenter="1" top="2"/>
+      </el>
+      <el name="baksFg">
+        <layout hCenter="0"/>
+      </el>
+      <el name="counterSkin">
+        <layout hCenter="0" top="-17" w="68" h="36"/>
+      </el>
+      <el name="count">
+        <layout hCenter="0" w="52" top="-10" h="22"/>
+      </el>
+      <el name="collectedLbl">
+        <layout hCenter="0" bottom="-27"/>
+      </el>
+      <el name="collectedLbl">
+        <layout hCenter="0" bottom="-27"/>
+      </el>
+      <el name="buyBt">
+        <layout hCenter="0" bottom="-30"/>
+      </el>
+      <el name="res">
+        <el name="bg">
+          <layout hCenter="0"/>
+        </el>
+        <el name="skin">
+          <layout left="24" right="25" top="11" bottom="21"/>
+        </el>
+        <el name="btIcon">
+          <layout left="1" top="-3"/>
+        </el>
+        <el name="bt">
+          <layout right="-6" top="-13"/>
+        </el>
+        <el name="sdp">
+          <layout right="-4" top="-13"/>
+        </el>
+        <el name="craftTimeLbl">
+          <layout hCenter="0" bottom="-25"/>
+        </el>
+        <el name="cancelBt">
+          <layout hCenter="0" bottom="-33"/>
+        </el>
+      </el>
+      <el name="bg">
+        <layout hCenter="0"/>
+      </el>
+      <el name="skin">
+        <layout left="24" right="25" top="11" bottom="21"/>
+      </el>
+      <el name="btIcon">
+        <layout left="1" top="-3"/>
+      </el>
+      <el name="bt">
+        <layout right="-6" top="-13"/>
+      </el>
+      <el name="sdp">
+        <layout right="-4" top="-13"/>
+      </el>
+      <el name="craftTimeLbl">
+        <layout hCenter="0" bottom="-25"/>
+      </el>
+      <el name="cancelBt">
+        <layout hCenter="0" bottom="-33"/>
+      </el>
+      <el name="pb">
+        <layout hCenter="-80" bottom="7" maxW="500"/>
+      </el>
+      <el name="lbStatus">
+        <el name="buildLevelLock">
+          <layout hCenter="0" bottom="16"/>
+        </el>
+        <el name="endCraft">
+          <layout hCenter="0" bottom="14"/>
+        </el>
+      </el>
+      <el name="buildLevelLock">
+        <layout hCenter="0" bottom="16"/>
+      </el>
+      <el name="endCraft">
+        <layout hCenter="0" bottom="14"/>
+      </el>
+    </el>
+    <el name="border">
+      <layout left="13" top="30"/>
+    </el>
+    <el name="titleBgSkin">
+      <layout hCenter="0"/>
+    </el>
+    <el name="bgSkin">
+      <layout hCenter="0" bottom="0"/>
+    </el>
+    <el name="LabFormulaBg">
+      <layout hCenter="0" bottom="5"/>
+    </el>
+    <el name="LabBolt">
+      <layout left="18" top="35"/>
+    </el>
+    <el name="LabLamp">
+      <layout hCenter="-264" top="-29"/>
+    </el>
+    <el name="LabLampFlipX">
+      <layout hCenter="264" top="-29"/>
+    </el>
+    <el name="titleBox">
+      <layout top="4" hCenter="0"/>
+    </el>
+    <el name="leadSkin">
+      <el name="1">
+        <layout hCenter="9" top="-9"/>
+      </el>
+      <el name="2">
+        <layout hCenter="-3" top="-11"/>
+      </el>
+    </el>
+    <el name="1">
+      <layout hCenter="9" top="-9"/>
+    </el>
+    <el name="2">
+      <layout hCenter="-3" top="-11"/>
+    </el>
+    <el name="ingr">
+      <el name="baksBg">
+        <layout hCenter="1" top="2"/>
+      </el>
+      <el name="baksFg">
+        <layout hCenter="0"/>
+      </el>
+      <el name="counterSkin">
+        <layout hCenter="0" top="-17" w="68" h="36"/>
+      </el>
+      <el name="count">
+        <layout hCenter="0" w="52" top="-10" h="22"/>
+      </el>
+      <el name="collectedLbl">
+        <layout hCenter="0" bottom="-27"/>
+      </el>
+      <el name="collectedLbl">
+        <layout hCenter="0" bottom="-27"/>
+      </el>
+      <el name="buyBt">
+        <layout hCenter="0" bottom="-30"/>
+      </el>
+    </el>
+    <el name="baksBg">
+      <layout hCenter="1" top="2"/>
+    </el>
+    <el name="baksFg">
+      <layout hCenter="0"/>
+    </el>
+    <el name="counterSkin">
+      <layout hCenter="0" top="-17" w="68" h="36"/>
+    </el>
+    <el name="count">
+      <layout hCenter="0" w="52" top="-10" h="22"/>
+    </el>
+    <el name="collectedLbl">
+      <layout hCenter="0" bottom="-27"/>
+    </el>
+    <el name="collectedLbl">
+      <layout hCenter="0" bottom="-27"/>
+    </el>
+    <el name="buyBt">
+      <layout hCenter="0" bottom="-30"/>
+    </el>
+    <el name="res">
+      <el name="bg">
+        <layout hCenter="0"/>
+      </el>
+      <el name="skin">
+        <layout left="24" right="25" top="11" bottom="21"/>
+      </el>
+      <el name="btIcon">
+        <layout left="1" top="-3"/>
+      </el>
+      <el name="bt">
+        <layout right="-6" top="-13"/>
+      </el>
+      <el name="sdp">
+        <layout right="-4" top="-13"/>
+      </el>
+      <el name="craftTimeLbl">
+        <layout hCenter="0" bottom="-25"/>
+      </el>
+      <el name="cancelBt">
+        <layout hCenter="0" bottom="-33"/>
+      </el>
+    </el>
+    <el name="bg">
+      <layout hCenter="0"/>
+    </el>
+    <el name="skin">
+      <layout left="24" right="25" top="11" bottom="21"/>
+    </el>
+    <el name="btIcon">
+      <layout left="1" top="-3"/>
+    </el>
+    <el name="bt">
+      <layout right="-6" top="-13"/>
+    </el>
+    <el name="sdp">
+      <layout right="-4" top="-13"/>
+    </el>
+    <el name="craftTimeLbl">
+      <layout hCenter="0" bottom="-25"/>
+    </el>
+    <el name="cancelBt">
+      <layout hCenter="0" bottom="-33"/>
+    </el>
+    <el name="pb">
+      <layout hCenter="-80" bottom="7" maxW="500"/>
+    </el>
+    <el name="lbStatus">
+      <el name="buildLevelLock">
+        <layout hCenter="0" bottom="16"/>
+      </el>
+      <el name="endCraft">
+        <layout hCenter="0" bottom="14"/>
+      </el>
+    </el>
+    <el name="buildLevelLock">
+      <layout hCenter="0" bottom="16"/>
+    </el>
+    <el name="endCraft">
+      <layout hCenter="0" bottom="14"/>
+    </el>
+    <el name="btCnt">
+      <layout right="-5" bottom="-10"/>
+    </el>
+    <el name="baseDialog">
+      <el name="topSnow">
+        <layout top="-27"/>
+      </el>
+      <el name="bottomSnow">
+        <layout bottom="-1"/>
+      </el>
+      <el name="closeButtons">
+        <el name="hidden">
+          <layout right="-10" top="-6" w="26" h="26"/>
+        </el>
+        <el name="visible">
+          <layout right="0" top="5" h="46"/>
+        </el>
+      </el>
+      <el name="hidden">
+        <layout right="-10" top="-6" w="26" h="26"/>
+      </el>
+      <el name="visible">
+        <layout right="0" top="5" h="46"/>
+      </el>
+      <el name="messageBg">
+        <layout h="100%" w="100%"/>
+      </el>
+    </el>
+    <el name="topSnow">
+      <layout top="-27"/>
+    </el>
+    <el name="bottomSnow">
+      <layout bottom="-1"/>
+    </el>
+    <el name="closeButtons">
+      <el name="hidden">
+        <layout right="-10" top="-6" w="26" h="26"/>
+      </el>
+      <el name="visible">
+        <layout right="0" top="5" h="46"/>
+      </el>
+    </el>
+    <el name="hidden">
+      <layout right="-10" top="-6" w="26" h="26"/>
+    </el>
+    <el name="visible">
+      <layout right="0" top="5" h="46"/>
+    </el>
+    <el name="messageBg">
+      <layout h="100%" w="100%"/>
+    </el>
+    <el name="studyDegreePanel">
+      <el name="lbl">
+        <layout left="1" top="18" w="20" h="16"/>
+      </el>
+    </el>
+    <el name="lbl">
+      <layout left="1" top="18" w="20" h="16"/>
+    </el>
+    <el name="studyStartDialog">
+      <el name="logo">
+        <layout top="-43" left="-30"/>
+      </el>
+      <el name="qtargetBg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="canvas">
+        <layout w="100%" h="162"/>
+        <el name="box">
+          <el name="withReqs">
+            <layout hCenter="0" top="39"/>
+          </el>
+          <el name="withoutReqs">
+            <layout hCenter="0" top="34"/>
+          </el>
+        </el>
+        <el name="withReqs">
+          <layout hCenter="0" top="39"/>
+        </el>
+        <el name="withoutReqs">
+          <layout hCenter="0" top="34"/>
+        </el>
+        <el name="lbl">
+          <layout hCenter="0" top="10"/>
+        </el>
+      </el>
+      <el name="box">
+        <el name="withReqs">
+          <layout hCenter="0" top="39"/>
+        </el>
+        <el name="withoutReqs">
+          <layout hCenter="0" top="34"/>
+        </el>
+      </el>
+      <el name="withReqs">
+        <layout hCenter="0" top="39"/>
+      </el>
+      <el name="withoutReqs">
+        <layout hCenter="0" top="34"/>
+      </el>
+      <el name="lbl">
+        <layout hCenter="0" top="10"/>
+      </el>
+      <el name="box">
+        <layout left="10" right="10" top="54"/>
+      </el>
+      <el name="btBox">
+        <layout right="14" bottom="15"/>
+      </el>
+    </el>
+    <el name="logo">
+      <layout top="-43" left="-30"/>
+    </el>
+    <el name="qtargetBg">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="canvas">
+      <layout w="100%" h="162"/>
+      <el name="box">
+        <el name="withReqs">
+          <layout hCenter="0" top="39"/>
+        </el>
+        <el name="withoutReqs">
+          <layout hCenter="0" top="34"/>
+        </el>
+      </el>
+      <el name="withReqs">
+        <layout hCenter="0" top="39"/>
+      </el>
+      <el name="withoutReqs">
+        <layout hCenter="0" top="34"/>
+      </el>
+      <el name="lbl">
+        <layout hCenter="0" top="10"/>
+      </el>
+    </el>
+    <el name="box">
+      <el name="withReqs">
+        <layout hCenter="0" top="39"/>
+      </el>
+      <el name="withoutReqs">
+        <layout hCenter="0" top="34"/>
+      </el>
+    </el>
+    <el name="withReqs">
+      <layout hCenter="0" top="39"/>
+    </el>
+    <el name="withoutReqs">
+      <layout hCenter="0" top="34"/>
+    </el>
+    <el name="lbl">
+      <layout hCenter="0" top="10"/>
+    </el>
+    <el name="box">
+      <layout left="10" right="10" top="54"/>
+    </el>
+    <el name="btBox">
+      <layout right="14" bottom="15"/>
+    </el>
+    <el name="frmlStudyRndr">
+      <el name="skin">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="bg">
+        <layout top="5" bottom="5" hCenter="0"/>
+      </el>
+      <el name="boltTop">
+        <layout top="5" left="6"/>
+      </el>
+      <el name="boltBottom">
+        <layout top="-23" left="6"/>
+      </el>
+      <el name="box">
+        <layout hCenter="0" vCenter="1"/>
+      </el>
+      <el name="execTime">
+        <layout hCenter="0" bottom="5"/>
+      </el>
+      <el name="titleBg">
+        <layout hCenter="0"/>
+      </el>
+      <el name="titleBox">
+        <layout top="4" hCenter="0"/>
+      </el>
+      <el name="canvas">
+        <el name="withTitle">
+          <layout top="28"/>
+        </el>
+        <el name="withoutTitle">
+          <layout top="0"/>
+        </el>
+      </el>
+      <el name="withTitle">
+        <layout top="28"/>
+      </el>
+      <el name="withoutTitle">
+        <layout top="0"/>
+      </el>
+    </el>
+    <el name="skin">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="bg">
+      <layout top="5" bottom="5" hCenter="0"/>
+    </el>
+    <el name="boltTop">
+      <layout top="5" left="6"/>
+    </el>
+    <el name="boltBottom">
+      <layout top="-23" left="6"/>
+    </el>
+    <el name="box">
+      <layout hCenter="0" vCenter="1"/>
+    </el>
+    <el name="execTime">
+      <layout hCenter="0" bottom="5"/>
+    </el>
+    <el name="titleBg">
+      <layout hCenter="0"/>
+    </el>
+    <el name="titleBox">
+      <layout top="4" hCenter="0"/>
+    </el>
+    <el name="canvas">
+      <el name="withTitle">
+        <layout top="28"/>
+      </el>
+      <el name="withoutTitle">
+        <layout top="0"/>
+      </el>
+    </el>
+    <el name="withTitle">
+      <layout top="28"/>
+    </el>
+    <el name="withoutTitle">
+      <layout top="0"/>
+    </el>
+    <el name="studyCostRndr">
+      <el name="bg">
+        <layout hCenter="0" top="7"/>
+      </el>
+      <el name="itemSkin">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+      <el name="buildGlare">
+        <layout hCenter="0" top="22"/>
+      </el>
+      <el name="counterBg">
+        <layout hCenter="0" w="68" h="36" top="-4"/>
+      </el>
+      <el name="counterLbl">
+        <layout w="52" top="3" h="22" hCenter="0"/>
+      </el>
+      <el name="btBuy">
+        <layout hCenter="0" bottom="2"/>
+      </el>
+    </el>
+    <el name="bg">
+      <layout hCenter="0" top="7"/>
+    </el>
+    <el name="itemSkin">
+      <layout hCenter="0" vCenter="0"/>
+    </el>
+    <el name="buildGlare">
+      <layout hCenter="0" top="22"/>
+    </el>
+    <el name="counterBg">
+      <layout hCenter="0" w="68" h="36" top="-4"/>
+    </el>
+    <el name="counterLbl">
+      <layout w="52" top="3" h="22" hCenter="0"/>
+    </el>
+    <el name="btBuy">
+      <layout hCenter="0" bottom="2"/>
+    </el>
+    <el name="studyReqRndr">
+      <el name="bg">
+        <layout hCenter="1" top="2"/>
+      </el>
+      <el name="lvlPane">
+        <layout left="0" right="2" vCenter="0"/>
+      </el>
+      <el name="layout">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+      <el name="degreePane">
+        <layout left="-9" top="-7"/>
+      </el>
+      <el name="studyBtn">
+        <layout hCenter="0" bottom="-8"/>
+      </el>
+    </el>
+    <el name="bg">
+      <layout hCenter="1" top="2"/>
+    </el>
+    <el name="lvlPane">
+      <layout left="0" right="2" vCenter="0"/>
+    </el>
+    <el name="layout">
+      <layout hCenter="0" vCenter="0"/>
+    </el>
+    <el name="degreePane">
+      <layout left="-9" top="-7"/>
+    </el>
+    <el name="studyBtn">
+      <layout hCenter="0" bottom="-8"/>
+    </el>
+    <el name="labPg">
+      <el name="bgR">
+        <layout right="0"/>
+      </el>
+      <el name="bubbleSkin">
+        <layout top="7"/>
+      </el>
+    </el>
+    <el name="bgR">
+      <layout right="0"/>
+    </el>
+    <el name="bubbleSkin">
+      <layout top="7"/>
+    </el>
+    <el name="studyProgressDialog">
+      <el name="logo">
+        <layout top="-43" left="-30"/>
+      </el>
+      <el name="pb">
+        <layout left="10" right="10"/>
+      </el>
+      <el name="box">
+        <layout left="10" right="10" top="54"/>
+      </el>
+      <el name="btBox">
+        <layout right="14" bottom="15"/>
+      </el>
+    </el>
+    <el name="logo">
+      <layout top="-43" left="-30"/>
+    </el>
+    <el name="pb">
+      <layout left="10" right="10"/>
+    </el>
+    <el name="box">
+      <layout left="10" right="10" top="54"/>
+    </el>
+    <el name="btBox">
+      <layout right="14" bottom="15"/>
+    </el>
+    <el name="studyTreeDialog">
+      <layout w="100%" h="100%"/>
+      <el name="logo">
+        <layout top="-43" left="-30"/>
+      </el>
+      <el name="treeSkin">
+        <layout vCenter="0"/>
+      </el>
+    </el>
+    <el name="logo">
+      <layout top="-43" left="-30"/>
+    </el>
+    <el name="treeSkin">
+      <layout vCenter="0"/>
+    </el>
+    <el name="studyRenderer">
+      <el name="bg">
+        <layout hCenter="1" top="20"/>
+      </el>
+      <el name="icon">
+        <layout left="16" right="16" top="34" bottom="22"/>
+      </el>
+      <el name="fg">
+        <layout hCenter="0" top="18"/>
+      </el>
+      <el name="degree">
+        <layout left="-6" top="9"/>
+      </el>
+      <el name="kindLbl">
+        <layout left="-16" right="-17" top="-7" h="22"/>
+      </el>
+      <el name="wait">
+        <layout right="-7" top="16"/>
+      </el>
+      <el name="lock">
+        <layout left="-18" top="78" w="50" h="50"/>
+      </el>
+      <el name="level">
+        <layout bottom="2" right="-12"/>
+        <el name="lbl">
+          <layout left="0" right="2" vCenter="0"/>
+        </el>
+      </el>
+      <el name="lbl">
+        <layout left="0" right="2" vCenter="0"/>
+      </el>
+      <el name="bt">
+        <layout hCenter="0" bottom="-5"/>
+      </el>
+    </el>
+    <el name="bg">
+      <layout hCenter="1" top="20"/>
+    </el>
+    <el name="icon">
+      <layout left="16" right="16" top="34" bottom="22"/>
+    </el>
+    <el name="fg">
+      <layout hCenter="0" top="18"/>
+    </el>
+    <el name="degree">
+      <layout left="-6" top="9"/>
+    </el>
+    <el name="kindLbl">
+      <layout left="-16" right="-17" top="-7" h="22"/>
+    </el>
+    <el name="wait">
+      <layout right="-7" top="16"/>
+    </el>
+    <el name="lock">
+      <layout left="-18" top="78" w="50" h="50"/>
+    </el>
+    <el name="level">
+      <layout bottom="2" right="-12"/>
+      <el name="lbl">
+        <layout left="0" right="2" vCenter="0"/>
+      </el>
+    </el>
+    <el name="lbl">
+      <layout left="0" right="2" vCenter="0"/>
+    </el>
+    <el name="bt">
+      <layout hCenter="0" bottom="-5"/>
+    </el>
+    <el name="adminDialog">
+      <el name="title">
+        <layout hCenter="0" top="-11"/>
+      </el>
+      <el name="box">
+        <layout hCenter="0" vCenter="7"/>
+      </el>
+    </el>
+    <el name="title">
+      <layout hCenter="0" top="-11"/>
+    </el>
+    <el name="box">
+      <layout hCenter="0" vCenter="7"/>
+    </el>
+    <el name="woPane">
+      <el name="btsBox">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+      <el name="bt">
+        <layout w="49" h="49"/>
+        <el name="icon">
+          <layout hCenter="0" vCenter="0"/>
+        </el>
+      </el>
+      <el name="icon">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+    </el>
+    <el name="btsBox">
+      <layout hCenter="0" vCenter="0"/>
+    </el>
+    <el name="bt">
+      <layout w="49" h="49"/>
+      <el name="icon">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+    </el>
+    <el name="icon">
+      <layout hCenter="0" vCenter="0"/>
+    </el>
+    <el name="giftDialog">
+      <el name="logoBg">
+        <layout left="-33" top="-44"/>
+      </el>
+      <el name="logo">
+        <layout left="-25" top="-39"/>
+      </el>
+      <el name="tabs">
+        <layout left="43" top="45"/>
+      </el>
+      <el name="canvas">
+        <layout bottom="0" left="0" right="0" top="50"/>
+      </el>
+      <el name="getCanvas">
+        <el name="lp">
+          <layout top="20" left="3" right="3"/>
+        </el>
+      </el>
+      <el name="lp">
+        <layout top="20" left="3" right="3"/>
+      </el>
+      <el name="getRndr">
+        <el name="giftSkin">
+          <layout hCenter="0" vCenter="0"/>
+        </el>
+        <el name="giftSkinBg">
+          <layout w="100%" h="100%"/>
+        </el>
+        <el name="giftSkinContainer">
+          <layout left="75" vCenter="10" w="105" h="105"/>
+        </el>
+        <el name="giftCnt">
+          <layout hCenter="0" vCenter="0" width="100%" height="100%"/>
+        </el>
+        <el name="giftCntContainer">
+          <layout left="55" top="105"/>
+        </el>
+        <el name="giftName">
+          <layout left="50" top="10" w="145" h="25"/>
+        </el>
+        <el name="frndAp">
+          <layout hCenter="0" vCenter="10"/>
+        </el>
+        <el name="frndName">
+          <layout hCenter="0" top="30"/>
+        </el>
+        <el name="acptBt">
+          <layout right="50" top="30"/>
+        </el>
+        <el name="thksBt">
+          <layout right="50" bottom="30"/>
+        </el>
+      </el>
+      <el name="giftSkin">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+      <el name="giftSkinBg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="giftSkinContainer">
+        <layout left="75" vCenter="10" w="105" h="105"/>
+      </el>
+      <el name="giftCnt">
+        <layout hCenter="0" vCenter="0" width="100%" height="100%"/>
+      </el>
+      <el name="giftCntContainer">
+        <layout left="55" top="105"/>
+      </el>
+      <el name="giftName">
+        <layout left="50" top="10" w="145" h="25"/>
+      </el>
+      <el name="frndAp">
+        <layout hCenter="0" vCenter="10"/>
+      </el>
+      <el name="frndName">
+        <layout hCenter="0" top="30"/>
+      </el>
+      <el name="acptBt">
+        <layout right="50" top="30"/>
+      </el>
+      <el name="thksBt">
+        <layout right="50" bottom="30"/>
+      </el>
+      <el name="freeCanvas">
+        <el name="tp">
+          <layout top="50" left="20" right="20"/>
+        </el>
+        <el name="wishlist">
+          <layout bottom="50" left="20" right="20" top="395"/>
+        </el>
+        <el name="renderer">
+          <el name="giveBt">
+            <layout hCenter="0" vCenter="0"/>
+            <el name="icon">
+              <layout hCenter="0" vCenter="0"/>
+            </el>
+          </el>
+          <el name="icon">
+            <layout hCenter="0" vCenter="0"/>
+          </el>
+          <el name="nameLbl">
+            <layout left="0" right="0" top="0"/>
+          </el>
+          <el name="toWlBt">
+            <layout left="5" vCenter="55"/>
+          </el>
+          <el name="cntLbl">
+            <layout top="16" hCenter="0"/>
+          </el>
+          <el name="evSkin">
+            <layout top="15"/>
+          </el>
+          <el name="moneyLbl">
+            <layout bottom="9" right="27" w="86" h="36"/>
+          </el>
+        </el>
+        <el name="giveBt">
+          <layout hCenter="0" vCenter="0"/>
+          <el name="icon">
+            <layout hCenter="0" vCenter="0"/>
+          </el>
+        </el>
+        <el name="icon">
+          <layout hCenter="0" vCenter="0"/>
+        </el>
+        <el name="nameLbl">
+          <layout left="0" right="0" top="0"/>
+        </el>
+        <el name="toWlBt">
+          <layout left="5" vCenter="55"/>
+        </el>
+        <el name="cntLbl">
+          <layout top="16" hCenter="0"/>
+        </el>
+        <el name="evSkin">
+          <layout top="15"/>
+        </el>
+        <el name="moneyLbl">
+          <layout bottom="9" right="27" w="86" h="36"/>
+        </el>
+      </el>
+      <el name="tp">
+        <layout top="50" left="20" right="20"/>
+      </el>
+      <el name="wishlist">
+        <layout bottom="50" left="20" right="20" top="395"/>
+      </el>
+      <el name="renderer">
+        <el name="giveBt">
+          <layout hCenter="0" vCenter="0"/>
+          <el name="icon">
+            <layout hCenter="0" vCenter="0"/>
+          </el>
+        </el>
+        <el name="icon">
+          <layout hCenter="0" vCenter="0"/>
+        </el>
+        <el name="nameLbl">
+          <layout left="0" right="0" top="0"/>
+        </el>
+        <el name="toWlBt">
+          <layout left="5" vCenter="55"/>
+        </el>
+        <el name="cntLbl">
+          <layout top="16" hCenter="0"/>
+        </el>
+        <el name="evSkin">
+          <layout top="15"/>
+        </el>
+        <el name="moneyLbl">
+          <layout bottom="9" right="27" w="86" h="36"/>
+        </el>
+      </el>
+      <el name="giveBt">
+        <layout hCenter="0" vCenter="0"/>
+        <el name="icon">
+          <layout hCenter="0" vCenter="0"/>
+        </el>
+      </el>
+      <el name="icon">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+      <el name="nameLbl">
+        <layout left="0" right="0" top="0"/>
+      </el>
+      <el name="toWlBt">
+        <layout left="5" vCenter="55"/>
+      </el>
+      <el name="cntLbl">
+        <layout top="16" hCenter="0"/>
+      </el>
+      <el name="evSkin">
+        <layout top="15"/>
+      </el>
+      <el name="moneyLbl">
+        <layout bottom="9" right="27" w="86" h="36"/>
+      </el>
+      <el name="friendsCanvas">
+        <el name="tp">
+          <layout bottom="50" left="20" right="20"/>
+        </el>
+        <el name="giftsFlow">
+          <layout hCenter="0" top="35"/>
+          <el name="renderer">
+            <el name="bg">
+              <layout w="100%" h="100%"/>
+            </el>
+            <el name="icon">
+              <layout hCenter="0" vCenter="0"/>
+            </el>
+          </el>
+          <el name="bg">
+            <layout w="100%" h="100%"/>
+          </el>
+          <el name="icon">
+            <layout hCenter="0" vCenter="0"/>
+          </el>
+        </el>
+        <el name="renderer">
+          <el name="bg">
+            <layout w="100%" h="100%"/>
+          </el>
+          <el name="icon">
+            <layout hCenter="0" vCenter="0"/>
+          </el>
+        </el>
+        <el name="bg">
+          <layout w="100%" h="100%"/>
+        </el>
+        <el name="icon">
+          <layout hCenter="0" vCenter="0"/>
+        </el>
+      </el>
+      <el name="tp">
+        <layout bottom="50" left="20" right="20"/>
+      </el>
+      <el name="giftsFlow">
+        <layout hCenter="0" top="35"/>
+        <el name="renderer">
+          <el name="bg">
+            <layout w="100%" h="100%"/>
+          </el>
+          <el name="icon">
+            <layout hCenter="0" vCenter="0"/>
+          </el>
+        </el>
+        <el name="bg">
+          <layout w="100%" h="100%"/>
+        </el>
+        <el name="icon">
+          <layout hCenter="0" vCenter="0"/>
+        </el>
+      </el>
+      <el name="renderer">
+        <el name="bg">
+          <layout w="100%" h="100%"/>
+        </el>
+        <el name="icon">
+          <layout hCenter="0" vCenter="0"/>
+        </el>
+      </el>
+      <el name="bg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="icon">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+    </el>
+    <el name="logoBg">
+      <layout left="-33" top="-44"/>
+    </el>
+    <el name="logo">
+      <layout left="-25" top="-39"/>
+    </el>
+    <el name="tabs">
+      <layout left="43" top="45"/>
+    </el>
+    <el name="canvas">
+      <layout bottom="0" left="0" right="0" top="50"/>
+    </el>
+    <el name="getCanvas">
+      <el name="lp">
+        <layout top="20" left="3" right="3"/>
+      </el>
+    </el>
+    <el name="lp">
+      <layout top="20" left="3" right="3"/>
+    </el>
+    <el name="getRndr">
+      <el name="giftSkin">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+      <el name="giftSkinBg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="giftSkinContainer">
+        <layout left="75" vCenter="10" w="105" h="105"/>
+      </el>
+      <el name="giftCnt">
+        <layout hCenter="0" vCenter="0" width="100%" height="100%"/>
+      </el>
+      <el name="giftCntContainer">
+        <layout left="55" top="105"/>
+      </el>
+      <el name="giftName">
+        <layout left="50" top="10" w="145" h="25"/>
+      </el>
+      <el name="frndAp">
+        <layout hCenter="0" vCenter="10"/>
+      </el>
+      <el name="frndName">
+        <layout hCenter="0" top="30"/>
+      </el>
+      <el name="acptBt">
+        <layout right="50" top="30"/>
+      </el>
+      <el name="thksBt">
+        <layout right="50" bottom="30"/>
+      </el>
+    </el>
+    <el name="giftSkin">
+      <layout hCenter="0" vCenter="0"/>
+    </el>
+    <el name="giftSkinBg">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="giftSkinContainer">
+      <layout left="75" vCenter="10" w="105" h="105"/>
+    </el>
+    <el name="giftCnt">
+      <layout hCenter="0" vCenter="0" width="100%" height="100%"/>
+    </el>
+    <el name="giftCntContainer">
+      <layout left="55" top="105"/>
+    </el>
+    <el name="giftName">
+      <layout left="50" top="10" w="145" h="25"/>
+    </el>
+    <el name="frndAp">
+      <layout hCenter="0" vCenter="10"/>
+    </el>
+    <el name="frndName">
+      <layout hCenter="0" top="30"/>
+    </el>
+    <el name="acptBt">
+      <layout right="50" top="30"/>
+    </el>
+    <el name="thksBt">
+      <layout right="50" bottom="30"/>
+    </el>
+    <el name="freeCanvas">
+      <el name="tp">
+        <layout top="50" left="20" right="20"/>
+      </el>
+      <el name="wishlist">
+        <layout bottom="50" left="20" right="20" top="395"/>
+      </el>
+      <el name="renderer">
+        <el name="giveBt">
+          <layout hCenter="0" vCenter="0"/>
+          <el name="icon">
+            <layout hCenter="0" vCenter="0"/>
+          </el>
+        </el>
+        <el name="icon">
+          <layout hCenter="0" vCenter="0"/>
+        </el>
+        <el name="nameLbl">
+          <layout left="0" right="0" top="0"/>
+        </el>
+        <el name="toWlBt">
+          <layout left="5" vCenter="55"/>
+        </el>
+        <el name="cntLbl">
+          <layout top="16" hCenter="0"/>
+        </el>
+        <el name="evSkin">
+          <layout top="15"/>
+        </el>
+        <el name="moneyLbl">
+          <layout bottom="9" right="27" w="86" h="36"/>
+        </el>
+      </el>
+      <el name="giveBt">
+        <layout hCenter="0" vCenter="0"/>
+        <el name="icon">
+          <layout hCenter="0" vCenter="0"/>
+        </el>
+      </el>
+      <el name="icon">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+      <el name="nameLbl">
+        <layout left="0" right="0" top="0"/>
+      </el>
+      <el name="toWlBt">
+        <layout left="5" vCenter="55"/>
+      </el>
+      <el name="cntLbl">
+        <layout top="16" hCenter="0"/>
+      </el>
+      <el name="evSkin">
+        <layout top="15"/>
+      </el>
+      <el name="moneyLbl">
+        <layout bottom="9" right="27" w="86" h="36"/>
+      </el>
+    </el>
+    <el name="tp">
+      <layout top="50" left="20" right="20"/>
+    </el>
+    <el name="wishlist">
+      <layout bottom="50" left="20" right="20" top="395"/>
+    </el>
+    <el name="renderer">
+      <el name="giveBt">
+        <layout hCenter="0" vCenter="0"/>
+        <el name="icon">
+          <layout hCenter="0" vCenter="0"/>
+        </el>
+      </el>
+      <el name="icon">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+      <el name="nameLbl">
+        <layout left="0" right="0" top="0"/>
+      </el>
+      <el name="toWlBt">
+        <layout left="5" vCenter="55"/>
+      </el>
+      <el name="cntLbl">
+        <layout top="16" hCenter="0"/>
+      </el>
+      <el name="evSkin">
+        <layout top="15"/>
+      </el>
+      <el name="moneyLbl">
+        <layout bottom="9" right="27" w="86" h="36"/>
+      </el>
+    </el>
+    <el name="giveBt">
+      <layout hCenter="0" vCenter="0"/>
+      <el name="icon">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+    </el>
+    <el name="icon">
+      <layout hCenter="0" vCenter="0"/>
+    </el>
+    <el name="nameLbl">
+      <layout left="0" right="0" top="0"/>
+    </el>
+    <el name="toWlBt">
+      <layout left="5" vCenter="55"/>
+    </el>
+    <el name="cntLbl">
+      <layout top="16" hCenter="0"/>
+    </el>
+    <el name="evSkin">
+      <layout top="15"/>
+    </el>
+    <el name="moneyLbl">
+      <layout bottom="9" right="27" w="86" h="36"/>
+    </el>
+    <el name="friendsCanvas">
+      <el name="tp">
+        <layout bottom="50" left="20" right="20"/>
+      </el>
+      <el name="giftsFlow">
+        <layout hCenter="0" top="35"/>
+        <el name="renderer">
+          <el name="bg">
+            <layout w="100%" h="100%"/>
+          </el>
+          <el name="icon">
+            <layout hCenter="0" vCenter="0"/>
+          </el>
+        </el>
+        <el name="bg">
+          <layout w="100%" h="100%"/>
+        </el>
+        <el name="icon">
+          <layout hCenter="0" vCenter="0"/>
+        </el>
+      </el>
+      <el name="renderer">
+        <el name="bg">
+          <layout w="100%" h="100%"/>
+        </el>
+        <el name="icon">
+          <layout hCenter="0" vCenter="0"/>
+        </el>
+      </el>
+      <el name="bg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="icon">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+    </el>
+    <el name="tp">
+      <layout bottom="50" left="20" right="20"/>
+    </el>
+    <el name="giftsFlow">
+      <layout hCenter="0" top="35"/>
+      <el name="renderer">
+        <el name="bg">
+          <layout w="100%" h="100%"/>
+        </el>
+        <el name="icon">
+          <layout hCenter="0" vCenter="0"/>
+        </el>
+      </el>
+      <el name="bg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="icon">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+    </el>
+    <el name="renderer">
+      <el name="bg">
+        <layout w="100%" h="100%"/>
+      </el>
+      <el name="icon">
+        <layout hCenter="0" vCenter="0"/>
+      </el>
+    </el>
+    <el name="bg">
+      <layout w="100%" h="100%"/>
+    </el>
+    <el name="icon">
+      <layout hCenter="0" vCenter="0"/>
+    </el>
+    <el name="navConnector">
+      <el name="lbEmpty">
+        <layout left="16" right="16" vCenter="6"/>
+      </el>
+      <el name="nav">
+        <layout bottom="0" hCenter="0"/>
+      </el>
+    </el>
+    <el name="lbEmpty">
+      <layout left="16" right="16" vCenter="6"/>
+    </el>
+    <el name="nav">
+      <layout bottom="0" hCenter="0"/>
+    </el>
+    <el name="askDialog">
+      <el name="logo">
+        <layout left="-11" top="-55"/>
+      </el>
+      <el name="tp">
+        <layout bottom="50" left="20" right="20"/>
+      </el>
+      <el name="canvas">
+        <layout bottom="-5" left="0" right="0" top="30"/>
+      </el>
+      <el name="askLbl">
+        <layout top="35" hCenter="0"/>
+      </el>
+    </el>
+    <el name="logo">
+      <layout left="-11" top="-55"/>
+    </el>
+    <el name="tp">
+      <layout bottom="50" left="20" right="20"/>
+    </el>
+    <el name="canvas">
+      <layout bottom="-5" left="0" right="0" top="30"/>
+    </el>
+    <el name="askLbl">
+      <layout top="35" hCenter="0"/>
+    </el>
+    <el name="levelup">
+      <el name="logo">
+        <layout left="-10" top="-29"/>
+      </el>
+      <el name="levelbg">
+        <layout hCenter="0" w="360" h="70" top="80"/>
+      </el>
+      <el name="prizebg">
+        <layout hCenter="0" w="360" h="140" top="175"/>
+      </el>
+      <el name="prizeimg">
+        <layout left="26" top="195"/>
+      </el>
+      <el name="lvlbox">
+        <layout top="90" hCenter="0"/>
+      </el>
+      <el name="prizelbl">
+        <layout hCenter="-143" vCenter="51"/>
+      </el>
+      <el name="bonus">
+        <layout hCenter="42" top="175" w="246" h="126"/>
+      </el>
+      <el name="bt">
+        <layout hCenter="0" bottom="13"/>
+      </el>
+    </el>
+    <el name="logo">
+      <layout left="-10" top="-29"/>
+    </el>
+    <el name="levelbg">
+      <layout hCenter="0" w="360" h="70" top="80"/>
+    </el>
+    <el name="prizebg">
+      <layout hCenter="0" w="360" h="140" top="175"/>
+    </el>
+    <el name="prizeimg">
+      <layout left="26" top="195"/>
+    </el>
+    <el name="lvlbox">
+      <layout top="90" hCenter="0"/>
+    </el>
+    <el name="prizelbl">
+      <layout hCenter="-143" vCenter="51"/>
+    </el>
+    <el name="bonus">
+      <layout hCenter="42" top="175" w="246" h="126"/>
+    </el>
+    <el name="bt">
+      <layout hCenter="0" bottom="13"/>
+    </el>
+  </el>
+</els>
