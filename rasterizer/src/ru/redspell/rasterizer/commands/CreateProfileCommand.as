@@ -1,7 +1,7 @@
 package ru.redspell.rasterizer.commands {
-	import com.maccherone.json.JSON;
+    import com.maccherone.json.JSON;
 
-	import flash.filesystem.File;
+    import flash.filesystem.File;
 	import flash.filesystem.FileMode;
 	import flash.filesystem.FileStream;
 
@@ -25,7 +25,7 @@ package ru.redspell.rasterizer.commands {
 
 				var s:FileStream = new FileStream();
 				s.open(Facade.projDir.resolvePath(Config.PROFILES_FILENAME), FileMode.WRITE);
-				s.writeUTFBytes(JSON.encode(Facade.profiles.source.slice(1)));
+				s.writeUTFBytes(com.maccherone.json.JSON.encode(Facade.profiles.source.slice(1)));
 				s.close();
 			}
 		}

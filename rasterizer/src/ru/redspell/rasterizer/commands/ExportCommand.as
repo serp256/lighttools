@@ -55,8 +55,6 @@ package ru.redspell.rasterizer.commands {
 			var scales:Object = cls.scales;
 			var profile:Profile = Facade.profile;
 
-			trace(clsName, scales.hasOwnProperty(profile.label) ? scales[profile.label] : profile.scale);
-
 			flatten.fromDisplayObject(instance, scales.hasOwnProperty(profile.label) ? scales[profile.label] : profile.scale);
 
 			try {

@@ -1,5 +1,5 @@
 package ru.redspell.rasterizer.commands {
-	import com.adobe.serialization.json.JSON;
+	import com.maccherone.json.JSON;
 
 	import flash.filesystem.FileMode;
 	import flash.filesystem.FileStream;
@@ -22,7 +22,7 @@ package ru.redspell.rasterizer.commands {
 			if (meta.hasOwnProperty(_pack.name) && !Utils.objIsEmpty(meta[_pack.name])) {
 				var fs:FileStream = new FileStream();
 				fs.open(Facade.projDir.resolvePath(_pack.name).resolvePath(Config.META_FILENAME), FileMode.WRITE);
-				fs.writeUTFBytes(JSON.encode(meta[_pack.name]));
+				fs.writeUTFBytes(com.maccherone.json.JSON.encode(meta[_pack.name]));
 				fs.close();
 			}
 		}

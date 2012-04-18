@@ -3,14 +3,16 @@
 <?php
     $dom = new DOMDocument('1.0', 'utf-8');
     $dom->loadXML(file_get_contents('layout.xml'));
-    $dom->formatOutput = true;
+    $out = new DOMDocument('1.0', 'utf-8');
+    $out->formatOutput = true;
 
     function conv($src) {
         GLOBAL $dom;
+        GLOBAL $out;
 
-        $layout = $dom->createElement('layout');    
+        $layout = $out->createElement('layout');    
         
-        $retval = $dom->createElement('el');
+        $retval = $out->createElement('el');
         $retval->setAttribute('name', $src->getAttribute('name')); 
     
         foreach ($src->attributes as $attrName => $attr) {
@@ -23,9 +25,11 @@
             $retval->appendChild($layout);
         }
         
-        $els = $src->getElementsByTagName('el');
+        foreach ($src->childNodes as $el) {
+            if ($el->nodeType != XML_ELEMENT_NODE) {
+                continue;
+            }            
 
-        foreach ($els as $el) {
             $el = conv($el);
             $retval->appendChild($el);
         }
@@ -33,8 +37,8 @@
         return $retval;
     }
 
-    $outRoot = $dom->createElement('els');
+    $outRoot = $out->createElement('els');
     $outRoot->appendChild(conv($dom->getElementsByTagName('layout')->item(0)));
     
-    echo $dom->saveXML($outRoot);
+    echo $out->saveXML($outRoot);
 ?>
