@@ -1,7 +1,8 @@
 package ru.redspell.rasterizer.export {
 	import com.adobe.serialization.json.JSON;
+    import com.maccherone.json.JSON;
 
-	import flash.filesystem.File;
+    import flash.filesystem.File;
 	import flash.filesystem.FileMode;
 	import flash.filesystem.FileStream;
 
@@ -25,7 +26,7 @@ package ru.redspell.rasterizer.export {
 			var fs:FileStream = new FileStream();
 
 			fs.open(metaFile, FileMode.WRITE);
-			fs.writeUTFBytes(JSON.encode(meta));
+			fs.writeUTFBytes(com.maccherone.json.JSON.encode(meta));
 			fs.close();
 		}
 

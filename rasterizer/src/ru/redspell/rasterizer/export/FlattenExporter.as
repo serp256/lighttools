@@ -46,6 +46,11 @@ package ru.redspell.rasterizer.export {
 				} else {
 					var box:FlattenSprite = child as FlattenSprite;
 
+                    trace(box.name);
+                    trace('\t', box.transform.matrix.a, box.transform.matrix.d);
+                    trace('\t', box.transform.matrix.tx, box.transform.matrix.ty);
+                    trace('\t', box.x, box.y);
+
 					childs.push({
 						name:box.name,
 						x:box.transform.matrix.tx,

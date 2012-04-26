@@ -763,12 +763,13 @@ value do_work isXml separate fmt indir suffix outdir =
           ]
         )
         end imgs;
-        let imgname = Printf.sprintf "%d%s.png" idx suffix in
+        let imgbasename = Printf.sprintf "%d%s" idx suffix in 
+        let imgname = imgbasename ^ ".png"  in
         (
           Images.save (outdir // imgname) (Some Images.Png) [] (Images.Rgba32 texture);
           match fmt with
-          [ FPvr -> Utils.pvr_png (outdir // (string_of_int idx))
-          | FPlx plt -> Utils.plx_png plt (outdir // (string_of_int idx))
+          [ FPvr -> Utils.pvr_png (outdir // imgbasename)
+          | FPlx plt -> Utils.plx_png plt (outdir // imgbasename)
           | FPng -> ()
           ];
           imgname;

@@ -1,7 +1,7 @@
 package ru.redspell.rasterizer.commands {
-	import com.maccherone.json.JSON;
+    import com.maccherone.json.JSON;
 
-	import flash.events.Event;
+    import flash.events.Event;
 	import flash.filesystem.File;
 	import flash.filesystem.FileMode;
 	import flash.filesystem.FileStream;
@@ -51,7 +51,7 @@ package ru.redspell.rasterizer.commands {
 					cls.animated = clsMeta.hasOwnProperty('animated') ? clsMeta.animated : true;
 					cls.scales = clsMeta.hasOwnProperty('scales') ? clsMeta.scales : {};
 
-					trace(swf.path, cls.name, JSON.encode(clsMeta.scales));
+					trace(swf.path, cls.name, com.maccherone.json.JSON.encode(clsMeta.scales));
 				}
 			}
 
@@ -68,7 +68,7 @@ package ru.redspell.rasterizer.commands {
 			if (metaFile.exists) {
 				var fs:FileStream = new FileStream();
 				fs.open(metaFile, FileMode.READ);
-				metaObj = JSON.decode(fs.readUTFBytes(fs.bytesAvailable));
+				metaObj = com.maccherone.json.JSON.decode(fs.readUTFBytes(fs.bytesAvailable));
 				fs.close();
 			}
 
@@ -155,7 +155,7 @@ package ru.redspell.rasterizer.commands {
 				var profsSrc:Array;
 
 				s.open(profsFile, FileMode.READ);
-				profsSrc = JSON.decode(s.readUTFBytes(s.bytesAvailable));
+				profsSrc = com.maccherone.json.JSON.decode(s.readUTFBytes(s.bytesAvailable));
 				s.close();
 
 				for each (var profSrc:Object in profsSrc) {
