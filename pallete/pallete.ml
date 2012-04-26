@@ -114,6 +114,8 @@ value rec palletes () =
       ]
   end;
 
+value string_of_color clr = let open Color in Printf.sprintf "%x%x%x,a=%x" clr.color.r clr.color.g clr.color.b clr.alpha;
+
 (* *)
 value process_file file = 
   let () = Printf.printf "--> PROCESS '%s'\n%!" file in
@@ -146,12 +148,12 @@ value process_file file =
               IO.write_ui16 index h;
               image_iter begin fun x y clr ->
                 (
-                  let idx = Hashtbl.find remapTable clr
-                  in
+                  let idx = Hashtbl.find remapTable clr in
                   (
                     if !make_preview 
                     then
                       let clr = DynArray.get pallete idx in
+                      let () = Printf.printf "color: %s\n%!" (string_of_color clr) in
                       Rgba32.set preview x y clr
                     else ();
                     let x = idx mod pw in

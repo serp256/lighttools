@@ -31,7 +31,7 @@ value image_iter f img =
       match img with 
       [ Images.Rgb24  i24 -> 
         let elt = (Rgb24.get i24 x y) in
-        { Color.Rgba.color = elt; alpha = 1 }
+        { Color.Rgba.color = elt; alpha = 255 }
       | Images.Rgba32 i32 -> Rgba32.get i32 x y
       | _   -> failwith "Unsupported format"
       ]
