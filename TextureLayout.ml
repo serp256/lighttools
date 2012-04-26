@@ -370,7 +370,7 @@ value rec layout_page ~type_rects ~sqr rects w h =
           *)
         ]
       in 
-      if w' > !max_size 
+      if h' > !max_size 
       then (* не в местили в максимальный размер. возвращаем страницу *)
         (!max_size, !max_size, placed, rest)
       else
