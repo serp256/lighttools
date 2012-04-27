@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					   xmlns:s="library://ns.adobe.com/flex/spark" 
+					   xmlns:mx="library://ns.adobe.com/flex/mx" backgroundColor="#EEEEEE" width="540" height="480">
+	<fx:Style source="checkQuests.css"/>
+
+	<fx:Script>
+		<![CDATA[
+			import com.maccherone.json.JSON;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			
+			private var conf:Object;
+			
+			// клик по кнопке Проверить
+			protected function btCheck_clickHandler(event:MouseEvent):void
+			{
+				var dp:Array = new Array();
+				for (var qname:String in conf) {
+					//trace(qname);
+					//var targets:Array = conf[qname].targets as Array;
+					for each (var target:Object in conf[qname].targets) {
+						if (target.action == null || target.action == '' || !(target.action is String)) {
+							dp.push(qname+':    '+target.name);
+						}
+					}
+				}
+				list.dataProvider = new ArrayCollection(dp);
+				status = 'проверка закончена';
+			}
+			
+			// клик по кнопке Загрузить конфиг 
+			protected function btLoad_clickHandler(event:MouseEvent):void
+			{
+				status = 'загрузка...';
+				
+				var f:File = new File();
+				f.addEventListener(Event.SELECT, onSelectConf);
+				f.browseForOpen('Выберите конфиг', [new FileFilter('Conf-файлы', '*.conf')]);
+				
+			/*	var f:File = new File('.json');
+				
+				var str:String = fs.readUTFBytes(fs.bytesAvailable);
+				fs.close();*/
+			}
+			
+			private function onSelectConf(event:Event):void {
+				var f:File = event.currentTarget as File;
+				f.removeEventListener(Event.SELECT, onSelectConf);
+				tiPath.text = f.url;
+				
+				var fs:FileStream = new FileStream();
+				fs.open(f, FileMode.READ);
+				
+				conf = getJSON(f.url);
+				
+				list.dataProvider = new ArrayCollection();
+				status = 'конфиг загружен';
+			}
+			
+			// получение данных из json-файла
+			private function getJSON(url:String):Object {
+				var fs:FileStream = new FileStream();
+				fs.open(new File(url), FileMode.READ);
+				var str:String = fs.readUTFBytes(fs.bytesAvailable);
+				fs.close();
+				
+				var obj:Object;
+				try {
+					obj =JSON.decode(str);
+					if (obj is String) {
+						Alert.show('Не разобрался JSON: ' + url, 'Ошибка');
+						obj = new Object();
+					}
+				} catch (error:Error) {
+					Alert.show('Не разобрался JSON: ' + url, 'Ошибка');
+				}
+				
+				return obj;
+			}
+
+		]]>
+	</fx:Script>
+
+	<fx:Declarations>
+		<!-- Разместить невизуальные элементы (например, службы или объекты значений) -->
+	</fx:Declarations>
+	<s:Button y="71" label="Проверить" width="189" height="31" id="btCheck" horizontalCenter="-23" click="btCheck_clickHandler(event)"/>
+	<s:List height="320" id="list" contentBackgroundColor="#FFFFFF" y="139" left="20" right="20"></s:List>
+	<s:Label y="119" text="Квесты без экшна:" left="20"/>
+	<s:Button y="30" label="..." width="43" height="24" id="btLoad" click="btLoad_clickHandler(event)" right="20"/>
+	<s:TextInput y="30" width="452" height="24" left="21" id="tiPath"/>
+	<s:Label x="21" y="10" text="Выберите конфиг:"/>
+</s:WindowedApplication>
