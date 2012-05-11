@@ -10,6 +10,13 @@ value (=*=) k v = k =|= string_of_int v;
 
 value bgcolor = {Color.color = {Color.r = 0; g = 0; b = 0}; alpha = 0};
 
+value jfloat = fun [ `Float s -> s | _ -> failwith "not a float" ];
+value jint = fun [ `Int s -> s | _ -> failwith "not a float" ];
+value jnumber = fun [ `Int s -> float s | `Float f -> f | _ -> failwith "not a float" ];
+value jobject = fun [ `Assoc s -> s | _ -> failwith "not an object" ];
+value jstring = fun [ `String s -> s | _ -> failwith "not a string" ];
+value jlist = fun [ `List s -> s | _ -> failwith "not a list" ];
+
 
 module Rectangle = struct
 
@@ -156,10 +163,10 @@ value add_image path =
 
 
 value add_child_image  dirname mobj = 
-  let path = dirname // (Json_type.Browse.string (List.assoc "file" mobj)) in
+  let path = dirname // (jstring (List.assoc "file" mobj)) in
   add_image path;
 
-value getpos jsinfo = let open Json_type.Browse in {x=number (List.assoc "x" jsinfo);y=number (List.assoc "y" jsinfo)};
+value getpos jsinfo = {x= jnumber (List.assoc "x" jsinfo);y=jnumber (List.assoc "y" jsinfo)};
 
 (* можно при добавлении картинок палить что они такие-же только разница в альфе - это легко 
  * а в группировке есть засада, что мы можем не понять что это одно и тоже так как мы с чем-то слепим и будет не круто
@@ -167,48 +174,46 @@ value getpos jsinfo = let open Json_type.Browse in {x=number (List.assoc "x" jsi
 
 (* value calc_diff oldchildrens newchildrens =  *)
 
+
 value rec process_children dirname children = 
-  let open Json_type.Browse in
   let lst = 
-    list begin fun child ->
-      let child = objekt child in
-      let ctype =  string (List.assoc "type" child) in
+    List.map begin fun child ->
+      let child = jobject child in
+      let ctype =  jstring (List.assoc "type" child) in
       let pos = getpos child in
       match ctype with
-      [ "box" -> `box (pos,string (List.assoc "name" child))
+      [ "box" -> `box (pos,jstring (List.assoc "name" child))
       | _ ->
-        let name = try Some (string (List.assoc "name" child)) with [ Not_found -> None ] in
+        let name = try Some (jstring (List.assoc "name" child)) with [ Not_found -> None ] in
         let id = 
           match ctype with
           [ "image" -> (add_child_image dirname child)
-          | "clip" | "sprite" -> process_dir (dirname // (string (List.assoc "dir" child)))
+          | "clip" | "sprite" -> process_dir (dirname // (jstring (List.assoc "dir" child)))
           | _ -> assert False
           ]
         in
         `chld (id,name,pos)
       ]
-    end children
+    end (jlist children)
   in
   DynArray.of_list lst
 and process_dir dirname = (* найти мету в этой директории и от нее плясать *)
   let () = printf "process directory: %s\n%!" dirname in
-  let meta = Json_io.load_json (dirname // "meta.json") in
-  let open Json_type.Browse in
-  let mobj = objekt meta in
-  match string (List.assoc "type" mobj) with
+  let mobj = jobject (Ojson.from_file (dirname // "meta.json") ) in
+  match jstring (List.assoc "type" mobj) with
   [ "image" -> add_child_image dirname mobj
   | "sprite" -> 
       let children = process_children dirname (List.assoc "children" mobj) in
       push_item (`sprite children)
   | "clip" ->
       let lframes = 
-        list begin fun frame ->
-          let frame = objekt frame in 
-          let label = try Some (string (List.assoc "label" frame)) with [ Not_found -> None ] in
+        List.map begin fun frame ->
+          let frame = jobject frame in 
+          let label = try Some (jstring (List.assoc "label" frame)) with [ Not_found -> None ] in
           let children = process_children dirname (List.assoc "children" frame) in
           let () = DynArray.filter (fun [ `chld _ -> True | _ -> False ]) children in
           {label;commands=None;children;duration=1}
-        end (List.assoc "frames" mobj)
+        end (jlist (List.assoc "frames" mobj))
       in
       (* вычислим duration *)
       let frames = DynArray.create () in
@@ -1169,6 +1174,7 @@ value () =
         ("-o",Arg.Set_string outdir,"output directory") ; 
         ("-xml",Arg.Set xml, "lib in xml format") ; 
         ("-sep",Arg.Set separate,"each symbol in separate texture");
+        ("-maxt",Arg.Int (fun v -> TextureLayout.max_size.val := v),"max texture size");
         ("-pvr",Arg.Set pvr,"make pvr");
         ("-plt",Arg.String (fun s -> plt.val := Some s),"make pallete textures");
       ] 
