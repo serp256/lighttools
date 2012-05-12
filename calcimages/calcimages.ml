@@ -58,7 +58,7 @@ value calc_file fn ((cnt,size) as res) =
           let plx = iname ^ ".plx" in
           if Sys.file_exists plx
           then
-            let gzin = TCommon.gzip_input plx in
+            let gzin = Utils.gzip_input plx in
             (
               ignore (IO.read_byte gzin);
               let w = IO.read_ui16 gzin
