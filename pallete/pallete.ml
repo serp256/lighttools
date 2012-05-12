@@ -7,6 +7,7 @@ value zclr = {Color.color={Color.r=0;g=0;b=0}; alpha=0;};
 value make_preview = ref False;
 value only_colors = ref False;
 
+value first_pallete = ref 0;
 
 
 value image_iter = Utils.image_iter;
@@ -83,7 +84,7 @@ value save_pallete pallete outputf =
 
 
 value rec palletes () = 
-  let i = ref ~-1 in
+  let i = ref (!first_pallete - 1) in
   let finished = ref False in
   Enum.from begin fun () ->
     if !finished then raise Enum.No_more_elements
@@ -177,7 +178,14 @@ value process_file file =
 value () = 
   let files = RefList.empty () in
   (
-    Arg.parse [("-c",Arg.Set only_colors,"show only cnt colors in images");("-plt",Arg.Set_string pfolder,"pallete folder");("-p",Arg.Set make_preview,"make preview")] (fun s -> RefList.push files s) "";
+    Arg.parse 
+      [
+        ("-c",Arg.Set only_colors,"show only cnt colors in images");
+        ("-plt",Arg.Set_string pfolder,"pallete folder");
+        ("-p",Arg.Set make_preview,"make preview");
+        ("-fp",Arg.Set_int first_pallete,"first_pallete")
+      ] 
+      (fun s -> RefList.push files s) "";
     if RefList.is_empty files
     then failwith ("select images")
     else
