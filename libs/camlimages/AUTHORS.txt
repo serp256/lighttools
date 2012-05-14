@@ -1,0 +1,7 @@
+(* OASIS_START *)
+(* DO NOT EDIT (digest: c62b63aacc721b8eed59a772bc691eee) *)
+Authors of camlimages
+François Pessaux   projet Cristal   INRIA Rocquencourt
+Pierre Weis   projet Cristal   INRIA Rocquencourt
+Jun Furuse   projet Cristal   INRIA Rocquencourt
+(* OASIS_STOP *)

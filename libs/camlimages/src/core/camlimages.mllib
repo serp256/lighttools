@@ -1,0 +1,31 @@
+# OASIS_START
+# DO NOT EDIT (digest: a72b691de8bb758ead8c988db8949139)
+Camlimages
+Mstring
+Color
+Info
+Image_intf
+Region
+Tmpfile
+Bitmap
+Genimage
+Rgba32
+Rgb24
+Index8
+Index16
+Cmyk32
+Images
+OColor
+OImages
+Reduce
+Geometry
+Colorhist
+Blend
+Bmp
+OBmp
+Ppm
+OPpm
+Xvthumb
+OXvthumb
+Units
+# OASIS_STOP

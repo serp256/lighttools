@@ -1,0 +1,227 @@
+OASISFormat: 0.3
+Name:        camlimages
+Version:     4.0.0
+Synopsis:    CamlImages - Objective Caml image processing library
+Authors:
+            François Pessaux   projet Cristal   INRIA Rocquencourt
+            Pierre Weis   projet Cristal   INRIA Rocquencourt
+            Jun Furuse   projet Cristal   INRIA Rocquencourt
+LicenseFile: LICENSE
+License:     LGPL-2.1 with OCaml linking exception
+BuildTools:  ocamlbuild
+FilesAB: src/core/camlimages.ml.ab
+PostConfCommand: ocaml unix.cma postconfig.ml $freetype2 $libpng $jpeg $gif $tiff $xpm $ps
+Plugins:     DevFiles (0.3), META (0.3), StdFiles (0.3)
+
+Flag gif
+  Description: GIF Support
+  Default: false
+
+Flag libpng
+  Description: PNG Support
+  Default: true
+
+Flag jpeg
+  Description: JPEG Support
+  Default: true
+
+Flag tiff
+  Description: TIFF Support
+  Default: false
+
+Flag freetype2
+  Description: Freetype2 Support
+  Default: true
+
+Flag ps
+  Description: PostScript Support
+  Default: true
+
+Flag lablgtk
+  Description: LablGTK Support
+  Default: false
+
+Flag lablgtk2
+  Description: LablGTK2 Support
+  Default: false
+
+Flag graphic
+  Description: OCaml Graphics Support
+  Default: true
+
+Flag xpm
+  Description: XPM Support
+  Default: true
+
+Library camlimages
+  Path:       src/core
+  BuildTools: ocamlbuild
+  BuildDepends: unix
+  Modules: 
+    Camlimages,
+    Mstring,
+    Color,
+    Info,
+    Image_intf,
+    Region,
+    Tmpfile,
+    Bitmap,
+    Genimage,
+    Rgba32,
+    Rgb24,
+    Index8,
+    Index16,
+    Cmyk32,
+    Images,
+    OColor,
+    OImages,
+    Reduce,
+    Geometry,
+    Colorhist,
+    Blend,
+    Bmp, OBmp,
+    Ppm, OPpm,
+    Xvthumb, OXvthumb,
+    Units
+
+Library "camlimages-gif"
+  Build$: flag(gif)
+  Install$: flag(gif)
+  FindlibName: gif
+  FindlibParent: camlimages
+  XMETADescription: GIF support for CamlImages
+  BuildDepends: camlimages
+  Path: src/gif
+  Modules: Gif, OGif
+  CSources: oversized.h, gifread.c, gifwrite.c
+
+Library "camlimages-tiff"
+  Build$: flag(tiff)
+  Install$: flag(tiff)
+  FindlibName: tiff
+  FindlibParent: camlimages
+  XMETADescription: TIFF Support for CamlImages
+  BuildDepends: camlimages
+  Path: src/tiff
+  Modules: Tiff, OTiff
+  CSources: oversized.h, tiffread.c, tiffwrite.c
+  # CCLib: -ltiff
+
+Library "camlimages-jpeg"
+  Build$: flag(jpeg)
+  Install$: flag(jpeg)
+  FindlibName: jpeg
+  FindlibParent: camlimages
+  XMETADescription: JPEG Support for CamlImages
+  BuildDepends: camlimages
+  Path: src/jpeg
+  Modules: Jpeg, OJpeg
+  CSources: oversized.h, jpegread.c, jpegwrite.c
+  # CCLib: -ljpeg
+
+Library "camlimages-png"
+  Build$: flag(libpng)
+  Install$: flag(libpng)
+  FindlibName: png
+  FindlibParent: camlimages
+  XMETADescription: PNG Support for CamlImages
+  Builddepends: camlimages
+  Path: src/png
+  Modules: Png, OPng
+  CSources: oversized.h, pngread.c, pngwrite.c
+  # CCLib: -lpng -lz
+
+Library "camlimages-freetype2"
+  Build$: flag(freetype2)
+  Install$: flag(freetype2)
+  FindlibName: freetype
+  FindlibParent: camlimages
+  XMETADescription: Freetype2 Support for CamlImages
+  BuildDepends: camlimages
+  Path: src/freetype
+  Modules: 
+    Fttext,
+    Ftlow,
+    Jis_table,
+    Jis_unicode,
+    Freetype, OFreetype
+  CSources: ftintf.c
+  # CCLib: -lfreetype
+
+Library "camlimages-ps"
+  Build$: flag(ps)
+  Install$: flag(ps)
+  FindlibName: ps
+  FindlibParent: camlimages
+  XMETADescription: PS Support for CamlImages
+  BuildDepends: camlimages
+  Path: src/ps
+  Modules: Ps, OPs
+
+Library "camlimages-graphic"
+  Build$: flag(graphic)   # && flag(pkg_graphics)
+  Install$: flag(graphic) # && flag(pkg_graphics)
+  FindlibName: graphic
+  FindlibParent: camlimages
+  XMETADescription: Ocaml Graphic Support for CamlImages
+  BuildDepends: camlimages
+  Path: src/graphics
+  Modules: Graphic_image, OGraphic
+  BuildDepends: camlimages, graphics
+
+Library "camlimages-xpm"
+  Build$: flag(xpm)
+  Install$: flag(xpm)
+  FindlibName: xpm
+  FindlibParent: camlimages
+  XMETADescription: XPM Support for CamlImages
+  BuildDepends: camlimages
+  Path: src/xpm
+  Modules: Xpm, OXpm
+  CSources: xpmread.c, xpmwrite.c
+  # CCLib: -lXpm -lX11
+
+Library "camlimages-lablgtk"
+  Build$: flag(lablgtk)   # && flag(pkg_lablgtk)
+  Install$: flag(lablgtk) # && flag(pkg_lablgtk)
+  FindlibName: lablgtk
+  FindlibParent: camlimages
+  XMETADescription: lablGTK Support for CamlImages
+  Path: src/lablgtk
+  Modules:
+    Imagegdk,
+    Ximage,
+    OXimage
+  BuildDepends: camlimages, lablgtk
+
+Library "camlimages-lablgtk2"
+  Build$: flag(lablgtk2)    # && flag(pkg_lablgtk2)
+  Install$: flag(lablgtk2)  # && flag(pkg_lablgtk2)
+  FindlibName: lablgtk2
+  FindlibParent: camlimages
+  XMETADescription: lablGTK2 Support for CamlImages
+  BuildDepends: camlimages
+  Path: src/lablgtk2
+  Modules: 
+    Imagegdk,
+    Ximage2,
+    OXimage2
+  BuildDepends: camlimages, lablgtk2
+
+Executable test
+  Build$: flag(freetype2) && flag(graphic) && flag(gif)
+  Install: false
+  Path: test/
+  Builddepends: camlimages.freetype, camlimages.graphic, camlimages.gif
+  CompiledObject: best
+  MainIs: test.ml
+
+# Test main
+#   Command: $test 
+#   TestTools: test
+
+# SourceRepository head
+#   Type: git
+#   Location: http://github.com/ermine/camlimages
+#   Browser:
+(END) 

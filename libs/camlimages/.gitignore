@@ -1,4 +1,3 @@
-OMakefile.omc
 *.cmx
 *.cmo
 *.cmi
@@ -9,3 +8,6 @@ OMakefile.omc
 *.so
 *.opt
 *.run
+_build
+setup.data
+setup.log

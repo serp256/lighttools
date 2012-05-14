@@ -1,0 +1,121 @@
+# OASIS_START
+# DO NOT EDIT (digest: 85581357a1e7aba328c0ed7f3108d66f)
+version = "4.0.0"
+description = "CamlImages - Objective Caml image processing library"
+requires = "unix"
+archive(byte) = "camlimages.cma"
+archive(byte, plugin) = "camlimages.cma"
+archive(native) = "camlimages.cmxa"
+archive(native, plugin) = "camlimages.cmxs"
+exists_if = "camlimages.cma"
+package "xpm" (
+ version = "4.0.0"
+ description = "XPM Support for CamlImages"
+ requires = "camlimages"
+ archive(byte) = "camlimages-xpm.cma"
+ archive(byte, plugin) = "camlimages-xpm.cma"
+ archive(native) = "camlimages-xpm.cmxa"
+ archive(native, plugin) = "camlimages-xpm.cmxs"
+ exists_if = "camlimages-xpm.cma"
+)
+
+package "tiff" (
+ version = "4.0.0"
+ description = "TIFF Support for CamlImages"
+ requires = "camlimages"
+ archive(byte) = "camlimages-tiff.cma"
+ archive(byte, plugin) = "camlimages-tiff.cma"
+ archive(native) = "camlimages-tiff.cmxa"
+ archive(native, plugin) = "camlimages-tiff.cmxs"
+ exists_if = "camlimages-tiff.cma"
+)
+
+package "ps" (
+ version = "4.0.0"
+ description = "PS Support for CamlImages"
+ requires = "camlimages"
+ archive(byte) = "camlimages-ps.cma"
+ archive(byte, plugin) = "camlimages-ps.cma"
+ archive(native) = "camlimages-ps.cmxa"
+ archive(native, plugin) = "camlimages-ps.cmxs"
+ exists_if = "camlimages-ps.cma"
+)
+
+package "png" (
+ version = "4.0.0"
+ description = "PNG Support for CamlImages"
+ requires = "camlimages"
+ archive(byte) = "camlimages-png.cma"
+ archive(byte, plugin) = "camlimages-png.cma"
+ archive(native) = "camlimages-png.cmxa"
+ archive(native, plugin) = "camlimages-png.cmxs"
+ exists_if = "camlimages-png.cma"
+)
+
+package "lablgtk2" (
+ version = "4.0.0"
+ description = "lablGTK2 Support for CamlImages"
+ requires = "camlimages lablgtk2"
+ archive(byte) = "camlimages-lablgtk2.cma"
+ archive(byte, plugin) = "camlimages-lablgtk2.cma"
+ archive(native) = "camlimages-lablgtk2.cmxa"
+ archive(native, plugin) = "camlimages-lablgtk2.cmxs"
+ exists_if = "camlimages-lablgtk2.cma"
+)
+
+package "lablgtk" (
+ version = "4.0.0"
+ description = "lablGTK Support for CamlImages"
+ requires = "camlimages lablgtk"
+ archive(byte) = "camlimages-lablgtk.cma"
+ archive(byte, plugin) = "camlimages-lablgtk.cma"
+ archive(native) = "camlimages-lablgtk.cmxa"
+ archive(native, plugin) = "camlimages-lablgtk.cmxs"
+ exists_if = "camlimages-lablgtk.cma"
+)
+
+package "jpeg" (
+ version = "4.0.0"
+ description = "JPEG Support for CamlImages"
+ requires = "camlimages"
+ archive(byte) = "camlimages-jpeg.cma"
+ archive(byte, plugin) = "camlimages-jpeg.cma"
+ archive(native) = "camlimages-jpeg.cmxa"
+ archive(native, plugin) = "camlimages-jpeg.cmxs"
+ exists_if = "camlimages-jpeg.cma"
+)
+
+package "graphic" (
+ version = "4.0.0"
+ description = "Ocaml Graphic Support for CamlImages"
+ requires = "camlimages graphics"
+ archive(byte) = "camlimages-graphic.cma"
+ archive(byte, plugin) = "camlimages-graphic.cma"
+ archive(native) = "camlimages-graphic.cmxa"
+ archive(native, plugin) = "camlimages-graphic.cmxs"
+ exists_if = "camlimages-graphic.cma"
+)
+
+package "gif" (
+ version = "4.0.0"
+ description = "GIF support for CamlImages"
+ requires = "camlimages"
+ archive(byte) = "camlimages-gif.cma"
+ archive(byte, plugin) = "camlimages-gif.cma"
+ archive(native) = "camlimages-gif.cmxa"
+ archive(native, plugin) = "camlimages-gif.cmxs"
+ exists_if = "camlimages-gif.cma"
+)
+
+package "freetype" (
+ version = "4.0.0"
+ description = "Freetype2 Support for CamlImages"
+ requires = "camlimages"
+ archive(byte) = "camlimages-freetype2.cma"
+ archive(byte, plugin) = "camlimages-freetype2.cma"
+ archive(native) = "camlimages-freetype2.cmxa"
+ archive(native, plugin) = "camlimages-freetype2.cmxs"
+ exists_if = "camlimages-freetype2.cma"
+)
+# OASIS_STOP
+

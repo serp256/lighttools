@@ -1,0 +1,36 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                           Objective Caml                            *)
+(*                                                                     *)
+(*            François Pessaux, projet Cristal, INRIA Rocquencourt     *)
+(*            Pierre Weis, projet Cristal, INRIA Rocquencourt          *)
+(*            Jun Furuse, projet Cristal, INRIA Rocquencourt           *)
+(*                                                                     *)
+(*  Copyright 1999-2004,                                               *)
+(*  Institut National de Recherche en Informatique et en Automatique.  *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+let version = "$(pkg_version)";;
+
+(* Supported libraries *)
+let lib_gif = $(gif);;
+let lib_png = $(libpng);;
+let lib_jpeg = $(jpeg);;
+let lib_tiff = $(tiff);;
+let lib_freetype = $(freetype2);;
+let lib_ps = $(ps);;
+let lib_xpm = $(xpm);;
+
+(* External files *)
+let path_rgb_txt = "$(path_rgb)";;
+let path_gs = "$(path_gs)";;
+
+(* They are written in ML, so always supported *)
+let lib_ppm = true;;
+let lib_bmp = true;;
+let lib_xvthumb = true;;
+
+(* Word size, used for the bitmap swapping memory management *)
+let word_size = $(word_size);;

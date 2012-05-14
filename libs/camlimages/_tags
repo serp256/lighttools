@@ -1,0 +1,127 @@
+<src/png/*.c>: pkg_libpng_cflags
+<src/png/*.a>: pkg_libpng_lflags, ocamlmklib
+<src/png/*.cm{x,}a>: pkg_libpng_lflags
+
+<src/jpeg/*.c>: pkg_libopenjpeg_cflags
+<src/jpeg/*.a>: pkg_libopenjpeg_lflags, ocamlmklib
+<src/jpeg/*.cm{x,}a>: pkg_libopenjpeg_lflags
+
+<src/gif/*.c>: pkg_gif_cflags
+<src/gif/*.a>: pkg_gif_lflags, ocamlmklib
+<src/gif/*.cm{x,}a>: pkg_gif_lflags
+
+<src/tiff/*.c>: pkg_tiff_cflags
+<src/tiff/*.a>: pkg_tiff_lflags, ocamlmklib
+<src/tiff/*.cm{x,}a>: pkg_tiff_lflags
+
+<src/xpm/*.c>: pkg_xpm_cflags
+<src/xpm/*.a>: pkg_xpm_lflags, ocamlmklib
+<src/xpm/*.cm{x,}a>: pkg_xpm_lflags
+
+<src/freetype/*.c>: pkg_freetype2_cflags
+<src/freetype/*.a>: pkg_freetype2_lflags, ocamlmklib
+<src/freetype/*.cm{x,}a>: pkg_freetype2_lflags
+
+# OASIS_START
+# DO NOT EDIT (digest: 94b766d3a23e39c3487fd1cfd43f6ebe)
+# Ignore VCS directories, you can use the same kind of rule outside 
+# OASIS_START/STOP if you want to exclude directories that contains 
+# useless stuff for the build process
+<**/.svn>: -traverse
+<**/.svn>: not_hygienic
+".bzr": -traverse
+".bzr": not_hygienic
+".hg": -traverse
+".hg": not_hygienic
+".git": -traverse
+".git": not_hygienic
+"_darcs": -traverse
+"_darcs": not_hygienic
+# Library camlimages
+"src/core/camlimages.cmxs": use_camlimages
+<src/core/*.ml{,i}>: pkg_unix
+# Library camlimages-gif
+"src/gif/camlimages-gif.cmxs": use_camlimages-gif
+<src/gif/camlimages-gif.{cma,cmxa}>: use_libcamlimages-gif_stubs
+<src/gif/*.ml{,i}>: use_camlimages
+<src/gif/*.ml{,i}>: pkg_unix
+"src/gif/gifread.c": use_camlimages
+"src/gif/gifread.c": pkg_unix
+"src/gif/gifwrite.c": use_camlimages
+"src/gif/gifwrite.c": pkg_unix
+# Library camlimages-tiff
+"src/tiff/camlimages-tiff.cmxs": use_camlimages-tiff
+<src/tiff/camlimages-tiff.{cma,cmxa}>: use_libcamlimages-tiff_stubs
+<src/tiff/*.ml{,i}>: use_camlimages
+<src/tiff/*.ml{,i}>: pkg_unix
+"src/tiff/tiffread.c": use_camlimages
+"src/tiff/tiffread.c": pkg_unix
+"src/tiff/tiffwrite.c": use_camlimages
+"src/tiff/tiffwrite.c": pkg_unix
+# Library camlimages-jpeg
+"src/jpeg/camlimages-jpeg.cmxs": use_camlimages-jpeg
+<src/jpeg/camlimages-jpeg.{cma,cmxa}>: use_libcamlimages-jpeg_stubs
+<src/jpeg/*.ml{,i}>: use_camlimages
+<src/jpeg/*.ml{,i}>: pkg_unix
+"src/jpeg/jpegread.c": use_camlimages
+"src/jpeg/jpegread.c": pkg_unix
+"src/jpeg/jpegwrite.c": use_camlimages
+"src/jpeg/jpegwrite.c": pkg_unix
+# Library camlimages-png
+"src/png/camlimages-png.cmxs": use_camlimages-png
+<src/png/camlimages-png.{cma,cmxa}>: use_libcamlimages-png_stubs
+<src/png/*.ml{,i}>: use_camlimages
+<src/png/*.ml{,i}>: pkg_unix
+"src/png/pngread.c": use_camlimages
+"src/png/pngread.c": pkg_unix
+"src/png/pngwrite.c": use_camlimages
+"src/png/pngwrite.c": pkg_unix
+# Library camlimages-freetype2
+"src/freetype/camlimages-freetype2.cmxs": use_camlimages-freetype2
+<src/freetype/camlimages-freetype2.{cma,cmxa}>: use_libcamlimages-freetype2_stubs
+<src/freetype/*.ml{,i}>: use_camlimages
+<src/freetype/*.ml{,i}>: pkg_unix
+"src/freetype/ftintf.c": use_camlimages
+"src/freetype/ftintf.c": pkg_unix
+# Library camlimages-ps
+"src/ps/camlimages-ps.cmxs": use_camlimages-ps
+<src/ps/*.ml{,i}>: use_camlimages
+<src/ps/*.ml{,i}>: pkg_unix
+# Library camlimages-graphic
+"src/graphics/camlimages-graphic.cmxs": use_camlimages-graphic
+<src/graphics/*.ml{,i}>: use_camlimages
+<src/graphics/*.ml{,i}>: pkg_graphics
+<src/graphics/*.ml{,i}>: pkg_unix
+# Library camlimages-xpm
+"src/xpm/camlimages-xpm.cmxs": use_camlimages-xpm
+<src/xpm/camlimages-xpm.{cma,cmxa}>: use_libcamlimages-xpm_stubs
+<src/xpm/*.ml{,i}>: use_camlimages
+<src/xpm/*.ml{,i}>: pkg_unix
+"src/xpm/xpmread.c": use_camlimages
+"src/xpm/xpmread.c": pkg_unix
+"src/xpm/xpmwrite.c": use_camlimages
+"src/xpm/xpmwrite.c": pkg_unix
+# Library camlimages-lablgtk
+"src/lablgtk/camlimages-lablgtk.cmxs": use_camlimages-lablgtk
+<src/lablgtk/*.ml{,i}>: use_camlimages
+<src/lablgtk/*.ml{,i}>: pkg_lablgtk
+<src/lablgtk/*.ml{,i}>: pkg_unix
+# Library camlimages-lablgtk2
+"src/lablgtk2/camlimages-lablgtk2.cmxs": use_camlimages-lablgtk2
+<src/lablgtk2/*.ml{,i}>: use_camlimages
+<src/lablgtk2/*.ml{,i}>: pkg_lablgtk2
+<src/lablgtk2/*.ml{,i}>: pkg_unix
+# Executable test
+<test/test.{native,byte}>: use_camlimages-graphic
+<test/test.{native,byte}>: use_camlimages-freetype2
+<test/test.{native,byte}>: use_camlimages-gif
+<test/test.{native,byte}>: use_camlimages
+<test/test.{native,byte}>: pkg_graphics
+<test/test.{native,byte}>: pkg_unix
+<test/*.ml{,i}>: use_camlimages-graphic
+<test/*.ml{,i}>: use_camlimages-freetype2
+<test/*.ml{,i}>: use_camlimages-gif
+<test/*.ml{,i}>: use_camlimages
+<test/*.ml{,i}>: pkg_graphics
+<test/*.ml{,i}>: pkg_unix
+# OASIS_STOP
