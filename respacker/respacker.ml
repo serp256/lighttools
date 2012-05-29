@@ -1167,6 +1167,8 @@ value () =
   let pvr = ref False in
   let plt = ref None in
   let libs = ref [] in
+  let maxt_size = ref (!TextureLayout.max_size) in
+  let p_maxt_sizes = ref [] in
   (
     Arg.parse 
       [ 
@@ -1174,9 +1176,17 @@ value () =
         ("-o",Arg.Set_string outdir,"output directory") ; 
         ("-xml",Arg.Set xml, "lib in xml format") ; 
         ("-sep",Arg.Set separate,"each symbol in separate texture");
-        ("-maxt",Arg.Int (fun v -> TextureLayout.max_size.val := v),"max texture size");
+        ("-maxt",Arg.Int (fun v -> maxt_size.val := v),"max texture size");
         ("-pvr",Arg.Set pvr,"make pvr");
         ("-plt",Arg.String (fun s -> plt.val := Some s),"make pallete textures");
+        ("-pmaxt",
+          Arg.Tuple 
+            [
+              Arg.String (fun pname -> p_maxt_sizes.val := [ (pname,0) :: !p_maxt_sizes]); 
+              Arg.Int (fun s -> p_maxt_sizes.val := [ (fst (List.hd !p_maxt_sizes),s) :: (List.tl !p_maxt_sizes)] )
+            ],
+          "tex size for concrete profile"
+        )
       ] 
       (fun id -> libs.val := [id :: !libs]) "usage msg";
     match !libs with
@@ -1219,6 +1229,11 @@ value () =
             if Sys.file_exists indir
             then 
               (
+                let maxt_size = 
+                  try
+                    List.assoc profile !p_maxt_sizes
+                  with [ Not_found -> !maxt_size ] in
+                TextureLayout.max_size.val := maxt_size;
                 let suffix = match profile with [ "default" -> "" | _ -> profile ]
                 and outdir = !outdir // lib in
                 do_work !xml !separate fmt indir suffix outdir;
