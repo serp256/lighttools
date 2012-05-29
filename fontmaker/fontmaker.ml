@@ -134,11 +134,14 @@ else
     if !fontFile = "" then bad_arg "font file"
     else ();
 
+value str_of_float v = 
+  snd ( ExtString.String.replace ~str:(string_of_float v) ~sub:"." ~by:"");
+
 (* Printf.printf "chars: [%s] = %d\n%!" !pattern (BatUTF8.length !pattern); *)
 let t = Freetype.init () in
 let (face,face_info) = Freetype.new_face t !fontFile 0 in
 let chars = Hashtbl.create 1 in
-let postfix = if !scale = 1. then "" else "x" ^ (string_of_int (int_of_float !scale)) in
+let postfix = if !scale = 1. then "" else "x" ^ (str_of_float !scale) in
 let fname = Filename.chop_extension (Filename.basename !fontFile) in
 let resfname =  fname ^ postfix ^  ".fnt" in
 let resfname = match !output with [ None -> resfname | Some dir -> Filename.concat dir resfname ] in
