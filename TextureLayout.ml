@@ -448,8 +448,8 @@ value rec layout_multipage ~type_rects ~sqr ~npot rects pages =
     end rects
   in
   let (w, h, placed, rest) = 
-    match npot with
-    [ False -> layout_page ~type_rects ~sqr rects !min_size !min_size 
+    match sqr || (not npot)  with
+    [ True -> layout_page ~type_rects ~sqr rects !min_size !min_size 
     | _ ->  layout_page_npot ~type_rects rects !max_size !max_size (!max_size / 2) (!max_size / 2) `none
     ]
   in 
