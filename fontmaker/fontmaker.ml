@@ -18,6 +18,7 @@ value (=*=) k v = k =|= string_of_int v;
 
 value pattern = ref "";
 value fontFile = ref "";
+value suffix = ref "";
 value sizes = ref [ ]; (* add support for multisize *)
 value color = {Color.r = 255; g = 255; b = 255};
 value dpi = ref 72;
@@ -121,7 +122,8 @@ Arg.parse
     ("-alpha",Arg.Set alpha_texture,"make alpha texture");
     ("-o",Arg.String (fun s -> output.val := Some s),"output dir");
     ("-scale", Arg.Float (fun s -> scale.val := s ), "scale factor");
-    ("-xml", Arg.Set xml, "xml format" ) 
+    ("-xml", Arg.Set xml, "xml format" ) ;
+    ("-suf", Arg.Set_string suffix, "suffix");
   ] 
   (fun f -> fontFile.val := f) "Usage msg";
 
@@ -141,7 +143,13 @@ value str_of_float v =
 let t = Freetype.init () in
 let (face,face_info) = Freetype.new_face t !fontFile 0 in
 let chars = Hashtbl.create 1 in
-let postfix = if !scale = 1. then "" else "x" ^ (str_of_float !scale) in
+let postfix = 
+  match !suffix with
+  [ "" ->
+      if !scale = 1. then "" else "x" ^ (str_of_float !scale) 
+  | _ -> !suffix 
+  ]
+in
 let fname = Filename.chop_extension (Filename.basename !fontFile) in
 let resfname =  fname ^ postfix ^  ".fnt" in
 let resfname = match !output with [ None -> resfname | Some dir -> Filename.concat dir resfname ] in
