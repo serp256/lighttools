@@ -13,6 +13,7 @@ value gen_pvr = ref False;
 value is_xml = ref False;
 value dirname = ref None;
 value fp = ref False;
+value npot = ref False;
 
 value nocrop = ref "";
 value nocropHash:Hashtbl.t string unit = Hashtbl.create 3;
@@ -188,7 +189,7 @@ value (=&=) k v = k =|= string_of_bool v;
 (* *)
 value createAtlas () = 
   let () = TextureLayout.rotate.val := False in
-  let pages = TextureLayout.layout ~type_rects:!type_rect ~sqr:!gen_pvr (Hashtbl.fold (fun k v acc -> [(k,v) :: acc]) imageRects []) in
+  let pages = TextureLayout.layout ~type_rects:!type_rect ~sqr:!gen_pvr ~npot:!npot (Hashtbl.fold (fun k v acc -> [(k,v) :: acc]) imageRects []) in
   let i = ref 0 in
   let meta = 
     List.map begin fun (w,h,rects) -> 
@@ -316,6 +317,7 @@ value () =
         ("-t",Arg.String (fun s -> let t = match s with [ "vert" -> `vert | "hor" -> `hor | "rand" -> `rand | "maxrect" -> `maxrect |  _ -> failwith "unknown type rect" ] in type_rect.val := t),"type rect for insert images");
         ("-p",Arg.Set gen_pvr,"generate pvr file");
         ("-xml",Arg.Set is_xml,"meta in xml format");
+        ("-npot", Arg.Set npot, "Not power of 2");
       ]
       (fun dn -> match !dirname with [ None -> dirname.val := Some dn | Some _ -> failwith "You must specify only one directory" ])
       "---"
