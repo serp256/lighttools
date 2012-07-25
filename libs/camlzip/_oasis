@@ -1,0 +1,16 @@
+OASISFormat: 0.2
+Name:        ocamlzip
+Version:     1.04-oasis1
+Synopsis:    An OCaml library for access to zip and gzip files
+Authors:     Xavier Leroy
+License:     LGPL-2.1
+LicenseFile: LICENSE
+Plugins:     META (0.2)
+
+Library zip
+  Path:        .
+  BuildTools:  ocamlbuild
+  Modules:     Zip,Gzip,Zlib
+  CSources:    zlibstubs.c
+  CCLib:       -lz
+  XMETAEnable: true
