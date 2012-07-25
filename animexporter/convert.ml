@@ -327,7 +327,7 @@ value convert idTex  imgs =
   List.iter (fun (dir, images) -> convert_dir dir (List.rev images)) images;
 
   
-value postfixs = [ "_ex"; "_sh" ];
+value postfixs = [ "_sh" ];
 
 value run () =
   let _ = Sys.command (Printf.sprintf "cp -f %s/info_objects.xml %s" !inp_dir !outdir) in
