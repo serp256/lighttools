@@ -109,6 +109,7 @@ package ru.redspell.rasterizer.commands {
 
 				if (!Utils.objIsEmpty(packMeta)) {
 					pack.checked = packMeta.hasOwnProperty('checked') ? packMeta.checked : true;
+                    pack.scales = packMeta.hasOwnProperty('scales') ? packMeta.scales : {};
 					meta[pack.name] = packMeta;
 				}
 

@@ -5,20 +5,21 @@
 	xmlns:mx="library://ns.adobe.com/flex/mx">
 
 	<fx:Script><![CDATA[
-		import com.adobe.serialization.json.JSON;
-
 		import ru.redspell.rasterizer.models.Profile;
-		import ru.redspell.rasterizer.models.SwfClass;
+		import ru.redspell.rasterizer.models.SwfsPack;
 		import ru.redspell.rasterizer.utils.Utils;
 
 		override public function set data(value:Object):void {
 			super.data = value;
 
-			if (value == null) {
+			var pack:SwfsPack = value as SwfsPack;
+
+			if (pack == null) {
 				return;
 			}
 
-			label = String(Utils.getClsScale(value as SwfClass));
+			var scales:Object = pack.scales;
+			label = String(Utils.getPackScale(pack));
 		}
-	]]></fx:Script>
+		]]></fx:Script>
 </s:DefaultGridItemRenderer>

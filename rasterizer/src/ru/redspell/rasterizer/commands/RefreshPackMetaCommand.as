@@ -26,7 +26,18 @@ package ru.redspell.rasterizer.commands {
 				packMeta.checked = false;
 			}
 
-			super.unsafeExecute();
+            if (Utils.objIsEmpty(_pack.scales)) {
+                delete packMeta.scales;
+            } else {
+                packMeta.scales = _pack.scales;
+                trace('ok');
+            }
+
+            for (var key:String in packMeta) {
+                trace(key, packMeta[key]);
+            }
+
+            super.unsafeExecute();
 		}
 	}
 }
