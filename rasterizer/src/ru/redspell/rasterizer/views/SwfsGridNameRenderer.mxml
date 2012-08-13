@@ -22,10 +22,10 @@
 
 				if (swf != null) {
 					swf.scales[Facade.profile.label] = factor;
-					Facade.runCommand(Facade.commandsFactory.getRefreshSwfMetaCommand(swf));
 				}
 			}
 
+			Facade.runCommand(Facade.commandsFactory.getRefreshPackMetaCommand(swf.pack));
 			(dataGrid.dataProvider as ArrayCollection).refresh();
 		}
 

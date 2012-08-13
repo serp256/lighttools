@@ -20,14 +20,12 @@ package ru.redspell.rasterizer.commands {
 			var packMeta:Object = meta[_pack.name];
 
 			if (_pack.checked) {
-                trace('ok');
 				delete packMeta.checked;
 			} else {
 				packMeta.checked = false;
 			}
 
             if (Utils.objIsEmpty(_pack.scales)) {
-                trace('ok1');
                 delete packMeta.scales;
             } else {
                 packMeta.scales = _pack.scales;
@@ -38,7 +36,6 @@ package ru.redspell.rasterizer.commands {
             }
 
             if (Utils.objIsEmpty(packMeta)) {
-                trace('ok2');
                 delete meta[_pack.name];
             }
 
