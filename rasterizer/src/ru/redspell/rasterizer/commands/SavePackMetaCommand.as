@@ -1,7 +1,9 @@
 package ru.redspell.rasterizer.commands {
 	import com.maccherone.json.JSON;
 
-	import flash.filesystem.FileMode;
+    import flash.filesystem.File;
+
+    import flash.filesystem.FileMode;
 	import flash.filesystem.FileStream;
 
 	import ru.nazarov.asmvc.command.AbstractCommand;
@@ -18,13 +20,16 @@ package ru.redspell.rasterizer.commands {
 
 		override public function unsafeExecute():void {
 			var meta:Object = Facade.proj.meta;
+            var metaFile:File = Facade.projDir.resolvePath(_pack.name).resolvePath(Config.META_FILENAME);
 
 			if (meta.hasOwnProperty(_pack.name) && !Utils.objIsEmpty(meta[_pack.name])) {
 				var fs:FileStream = new FileStream();
-				fs.open(Facade.projDir.resolvePath(_pack.name).resolvePath(Config.META_FILENAME), FileMode.WRITE);
+				fs.open(metaFile, FileMode.WRITE);
 				fs.writeUTFBytes(com.maccherone.json.JSON.encode(meta[_pack.name]));
 				fs.close();
-			}
+			} else if (metaFile.exists) {
+                metaFile.deleteFile();
+            }
 		}
 	}
 }

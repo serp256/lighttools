@@ -5,11 +5,29 @@
 	xmlns:mx="library://ns.adobe.com/flex/mx">
 
 	<fx:Script><![CDATA[
+		import mx.controls.Alert;
 		import mx.events.FlexNativeMenuEvent;
 
 		import ru.redspell.rasterizer.models.Swf;
 
 		import spark.components.DataGrid;
+		import spark.components.gridClasses.CellPosition;
+
+		protected function scaleSwfs(factor:Number):void {
+			var dataGrid:DataGrid = grid.dataGrid;
+			var swfs:Vector.<Object> = dataGrid.selectedItems ? dataGrid.selectedItems : new <Object>[data];
+
+			for each (var item:Object in swfs) {
+				var swf:Swf = item as Swf;
+
+				if (swf != null) {
+					swf.scales[Facade.profile.label] = factor;
+					Facade.runCommand(Facade.commandsFactory.getRefreshSwfMetaCommand(swf));
+				}
+			}
+
+			(dataGrid.dataProvider as ArrayCollection).refresh();
+		}
 
 		public function menu_itemClickHandler(event:FlexNativeMenuEvent):void {
 			var dataGrid:DataGrid = grid.dataGrid;
@@ -17,12 +35,19 @@
 			switch (event.item.action) {
 				case SwfsGrid.REMOVE:
 					if (dataGrid.selectedItems) {
-						for each (var swf:Object in dataGrid.selectedItems) {
-							Facade.runCommand(Facade.commandsFactory.getRemoveSwfCommand(swf as Swf));
+						for each (var item:Object in dataGrid.selectedItems) {
+							Facade.runCommand(Facade.commandsFactory.getRemoveSwfCommand(item as Swf));
 						}
 					} else {
 						Facade.runCommand(Facade.commandsFactory.getRemoveSwfCommand(data as Swf));
 					}
+
+					break;
+
+				case SwfsGrid.SCALE:
+					var win:SwfsScaleWindow = new SwfsScaleWindow();
+					win.okClickHandler = scaleSwfs;
+					Facade.app.showPopup(win);
 
 					break;
 
@@ -42,6 +67,7 @@
 				<mx:ArrayCollection>
 					<fx:Object label="Add" action="{SwfsGrid.ADD}"/>
 					<fx:Object label="Remove" action="{SwfsGrid.REMOVE}"/>
+					<fx:Object label="Scale" action="{SwfsGrid.SCALE}"/>
 				</mx:ArrayCollection>
 			</mx:dataProvider>
 		</mx:FlexNativeMenu>

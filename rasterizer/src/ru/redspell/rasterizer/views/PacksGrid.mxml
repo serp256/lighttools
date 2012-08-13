@@ -69,7 +69,7 @@
 			<s:GridColumn
 				headerText="Scale"
 				width="50"
-				itemRenderer="ru.redspell.rasterizer.views.PackScaleItemRenderer"
+				itemRenderer="ru.redspell.rasterizer.views.PackScaleRenderer"
 				itemEditor="ru.redspell.rasterizer.views.PackScaleItemEditor"/>
 		</mx:ArrayCollection>
 	</view:columns>

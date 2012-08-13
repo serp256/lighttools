@@ -20,6 +20,7 @@ package ru.redspell.rasterizer.models {
 		public var path:String;
 		public var animated:Boolean;
 		public var pack:SwfsPack;
+        public var scales:Object = {};
 		protected var _useGetDefinitions:Boolean;
 
 		public function addClass(cls:SwfClass):void {

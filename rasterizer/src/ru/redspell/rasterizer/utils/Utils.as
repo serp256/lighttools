@@ -2,6 +2,7 @@ package ru.redspell.rasterizer.utils {
 	import flash.display.DisplayObjectContainer;
 
     import ru.redspell.rasterizer.models.Profile;
+    import ru.redspell.rasterizer.models.Swf;
     import ru.redspell.rasterizer.models.SwfClass;
 
     import ru.redspell.rasterizer.models.SwfsPack;
@@ -69,12 +70,20 @@ package ru.redspell.rasterizer.utils {
             return scales.hasOwnProperty(profLbl) ? Number(scales[profLbl]) : prof.scale;
         }
 
+        public static function getSwfScale(swf:Swf):Number {
+            var scales:Object = swf.scales;
+            var prof:Profile = Facade.profile;
+            var profLbl:String = prof.label;
+
+            return scales.hasOwnProperty(profLbl) ? Number(scales[profLbl]) : getPackScale(swf.pack);
+        }
+
         public static function getClsScale(cls:SwfClass):Number {
             var scales:Object = cls.scales;
             var prof:Profile = Facade.profile;
             var profLbl:String = prof.label;
 
-            return scales.hasOwnProperty(profLbl) ? Number(scales[profLbl]) : getPackScale(cls.swf.pack);
+            return scales.hasOwnProperty(profLbl) ? Number(scales[profLbl]) : getSwfScale(cls.swf);
         }
 	}
 }
