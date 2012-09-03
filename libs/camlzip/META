@@ -1,0 +1,11 @@
+# OASIS_START
+# DO NOT EDIT (digest: 0c00d43c3f2b07729a173f1efd15f951)
+version = "1.04-oasis1"
+description = "An OCaml library for access to zip and gzip files"
+archive(byte) = "zip.cma"
+archive(byte, plugin) = "zip.cma"
+archive(native) = "zip.cmxa"
+archive(native, plugin) = "zip.cmxs"
+exists_if = "zip.cma"
+# OASIS_STOP
+

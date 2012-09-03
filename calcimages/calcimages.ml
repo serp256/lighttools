@@ -6,7 +6,7 @@ value verbose = ref False;
 value recursive = ref False;
 value nop = ref False;
 value suffix = ref None;
-value esuffix = ref None;
+value esuffix = ref [];
 
 value rec nextPowerOfTwo number =
   let rec loop result = 
@@ -61,8 +61,8 @@ value check_suffix name =
   match res with
   [ True ->
     match !esuffix with
-    [ Some es -> not (ExtString.String.ends_with name es)
-    | None -> True
+    [ [] -> True
+    | lst -> not (List.exists (fun es -> ExtString.String.ends_with name es) lst)
     ]
   | False -> False
   ];
@@ -157,7 +157,7 @@ let () = Arg.parse
     ("-nop",Arg.Set nop,"use NextPowerTwo");
     ("-pvr",Arg.Set pvr, "pvr mode");
     ("-suffix",Arg.String (fun s -> suffix.val := Some s),"set suffix");
-    ("-esuffix",Arg.String (fun es -> esuffix.val := Some es),"exclude suffix")
+    ("-esuffix",Arg.String (fun es -> esuffix.val := [ es :: !esuffix ] ),"exclude suffix")
   ] 
   (fun s -> dirs.val := [ s :: !dirs]) "usage" in
 let (cnt,size) = List.fold_left calc_dir (0,0) !dirs in

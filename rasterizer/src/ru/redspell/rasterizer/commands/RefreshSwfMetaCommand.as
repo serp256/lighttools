@@ -1,6 +1,7 @@
 package ru.redspell.rasterizer.commands {
 	import ru.redspell.rasterizer.models.Swf;
-	import ru.redspell.rasterizer.utils.Utils;
+    import ru.redspell.rasterizer.utils.Utils;
+    import ru.redspell.rasterizer.utils.Utils;
 
 	public class RefreshSwfMetaCommand extends SavePackMetaRunnerCommand {
 		protected var _swf:Swf;
@@ -29,19 +30,25 @@ package ru.redspell.rasterizer.commands {
 
 			if (_swf.animated) {
 				delete swfMeta.animated;
-
-				if (Utils.objIsEmpty(swfMeta)) {
-					delete packMeta[swf];
-				}
-
-				if (Utils.objIsEmpty(packMeta)) {
-					delete meta[pack];
-				}
 			} else {
 				swfMeta.animated = false;
 			}
 
-			super.unsafeExecute();
+            if (Utils.objIsEmpty(_swf.scales)) {
+                delete swfMeta.scales;
+            } else {
+                swfMeta.scales = _swf.scales;
+            }
+
+            if (Utils.objIsEmpty(swfMeta)) {
+                delete packMeta[swf];
+            }
+
+            if (Utils.objIsEmpty(packMeta)) {
+                delete meta[pack];
+            }
+
+            super.unsafeExecute();
 		}
 	}
 }

@@ -1,5 +1,7 @@
 package ru.redspell.rasterizer.commands {
-	import ru.nazarov.asmvc.command.AbstractCommand;
+    import mx.collections.ArrayCollection;
+
+    import ru.nazarov.asmvc.command.AbstractCommand;
 	import ru.redspell.rasterizer.models.Profile;
 	import ru.redspell.rasterizer.models.Swf;
 
@@ -14,13 +16,24 @@ package ru.redspell.rasterizer.commands {
 			Facade.profile = _profile;
 
 			var app:Rasterizer = Facade.app;
-			var dp:Swf = app.classesGrid.dataProvider as Swf;
 
 			app.setProfileLbl(_profile.label);
 
-			if (dp != null) {
-				dp.refresh();
-			}
+            var packs:ArrayCollection = app.packsList.dataProvider as ArrayCollection;
+            var swfs:ArrayCollection = app.swfsList.dataProvider as ArrayCollection;
+            var classes:ArrayCollection = app.classesGrid.dataProvider as ArrayCollection;
+
+            if (packs != null) {
+                packs.refresh();
+            }
+
+            if (swfs != null) {
+                swfs.refresh();
+            }
+
+            if (classes != null) {
+                classes.refresh();
+            }
 		}
 	}
 }

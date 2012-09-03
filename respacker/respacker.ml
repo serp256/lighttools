@@ -17,6 +17,8 @@ value jobject = fun [ `Assoc s -> s | _ -> failwith "not an object" ];
 value jstring = fun [ `String s -> s | _ -> failwith "not a string" ];
 value jlist = fun [ `List s -> s | _ -> failwith "not a list" ];
 
+value npot = ref False;
+
 
 module Rectangle = struct
 
@@ -753,7 +755,7 @@ value do_work isXml separate fmt indir suffix outdir =
   optimize_sprites();
   make_clip_commands ();
   let pack_textures starts_with images = 
-    let pages = TextureLayout.layout ~type_rects:`maxrect ~sqr:(fmt = FPvr) images in
+    let pages = TextureLayout.layout ~type_rects:`maxrect ~sqr:(fmt = FPvr) ~npot:!npot images in
     List.mapi begin fun i (w,h,imgs) ->
       let idx = i + starts_with in
       let texture = Rgba32.make w h bgcolor in
@@ -1186,7 +1188,8 @@ value () =
               Arg.Int (fun s -> p_maxt_sizes.val := [ (fst (List.hd !p_maxt_sizes),s) :: (List.tl !p_maxt_sizes)] )
             ],
           "tex size for concrete profile"
-        )
+        );
+        ("-npot",Arg.Set npot, "Not power of 2");
       ] 
       (fun id -> libs.val := [id :: !libs]) "usage msg";
     match !libs with

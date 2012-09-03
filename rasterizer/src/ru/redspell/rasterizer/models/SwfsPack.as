@@ -5,6 +5,7 @@ package ru.redspell.rasterizer.models {
 		public var name:String;
 		public var proj:Project;
 		public var checked:Boolean;
+        public var scales:Object = {};
 
 		public function addSwf(swf:Swf):void {
 			swf.pack = this;

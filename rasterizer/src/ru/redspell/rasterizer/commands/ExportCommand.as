@@ -52,10 +52,7 @@ package ru.redspell.rasterizer.commands {
 			Utils.traceObj(instance as DisplayObjectContainer);
 
 			var flatten:IFlatten = (instance is MovieClip) && animated ? new FlattenMovieClip() : new FlattenSprite();
-			var scales:Object = cls.scales;
-			var profile:Profile = Facade.profile;
-
-			flatten.fromDisplayObject(instance, scales.hasOwnProperty(profile.label) ? scales[profile.label] : profile.scale);
+			flatten.fromDisplayObject(instance, Utils.getClsScale(cls));
 
 			try {
 				var exporter:IExporter = new FlattenExporter();

@@ -1,4 +1,4 @@
-<*.ml>: package(camlp4),syntax(camlp4r),package(camlimages.core),package(camlzip),package(extlib)
+<*.ml>: package(camlp4),syntax(camlp4r),package(camlimages),package(zip),package(extlib)
 <TextureLayout.ml>: package(extlib)
-<respacker.{ml,byte,native}>: package(extlib),package(extlib),package(camlimages.png),package(ojson),package(xmlm),package(camlzip),package(str)
+<respacker.{ml,byte,native}>: package(extlib),package(extlib),package(camlimages.png),package(ojson),package(xmlm),package(zip),package(str),linkall
 true: debug

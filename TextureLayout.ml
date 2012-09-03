@@ -363,11 +363,6 @@ value rec layout_page ~type_rects ~sqr rects w h =
             [ True -> (w * 2, h)
             | _ -> (!min_size, h*2)
             ]
-(*
-          if w > h 
-          then (w, (h*2))
-          else ((w*2), h)
-          *)
         ]
       in 
       if h' > !max_size 
@@ -377,33 +372,98 @@ value rec layout_page ~type_rects ~sqr rects w h =
         layout_page ~type_rects ~sqr rects w' h'
   ];
 
+value min_diff = 1;
+
+value rec layout_page_npot ~type_rects rects w h dw dh changeH = 
+  let mainrect = { x = 0; y = 0; w; h; isRotate = False  } in
+  let () = Printf.printf "Layout page x:%d y:%d w:%d h:%d; dw:%d; dh:%d \n%!" 0 0 w h dw dh in
+  let (placed, rest) = 
+    match type_rects with
+    [ `maxrect ->
+        let (placed, _, rest) = maxrects rects [] [mainrect] [] in
+        (placed, rest)
+    | _ -> tryLayout ~type_rects rects [] [mainrect] [] 
+    ]
+  in
+  match rest with 
+  [ [] ->
+      let () = Printf.printf "All in rect : w : %d; h : %d; dw : %d; dh : %d \n%!" w h dw dh in 
+      match dw = min_diff && dh = min_diff with
+      [ True -> (w, h, placed, rest) (* разместили все *)
+      | _ -> 
+          let (w', h', changeH) =
+            match w < h  with
+            [ True -> 
+                match dh = min_diff with
+                [ True -> (w -dw, h, `width)
+                | _ -> (w, h - dh, `height)
+                ]
+            | _ ->
+                match dw = min_diff with
+                [ True -> (w, h - dh, `height)
+                | _ -> (w-dw,h,`width)
+                ]
+            ]
+          in
+          layout_page_npot ~type_rects rects w' h' dw dh changeH
+      ]
+  | _  -> 
+      match w = !max_size && h = !max_size with
+      [ True -> (w,h, placed, rest)
+      | _ -> 
+          let (w',h', dw', dh', changeH') =
+            match changeH with
+            [ `width -> 
+                match dw = min_diff with
+                [ True -> ( w, h , dw, dh / 2, `none)
+                | _ -> (w + dw, h, dw / 2, dh, `none)
+                ]
+            | `height -> 
+                match dh = min_diff with
+                [ True -> (w, h, dw / 2, dh, `none)
+                | _ -> (w, h + dh, dw, dh / 2, `none)
+                ]
+            | `none -> 
+                match dw > dh with
+                [ True -> (w, h, dw /2, dh, `none)
+                | _ -> (w, h, dw, dh /2, `none)
+                ]
+            ]
+          in
+          layout_page_npot ~type_rects rects w' h' dw' dh' changeH'
+      ]
+  ];
 
 (* размещаем на нескольких страницах *)
-value rec layout_multipage ~type_rects ~sqr rects pages = 
+value rec layout_multipage ~type_rects ~sqr ~npot rects pages = 
+  let rects = 
+    List.sort 
+      ~cmp:begin fun (_,i1)  (_,i2) -> 
+        let (w1,h1) = Images.size i1
+        and (w2,h2) = Images.size i2 in
+        let s1 = w1*h1 and s2 = w2*h2 in
+        if s1 = s2 then 0
+        else if s1 > s2 then -1
+        else 1
+    end rects
+  in
   let (w, h, placed, rest) = 
-    layout_page ~type_rects ~sqr
-      (List.sort 
-        ~cmp:begin fun (_,i1)  (_,i2) -> 
-          let (w1,h1) = Images.size i1
-          and (w2,h2) = Images.size i2 in
-          let s1 = w1*h1 and s2 = w2*h2 in
-          if s1 = s2 then 0
-          else if s1 > s2 then -1
-          else 1
-      end rects
-    ) !min_size !min_size 
+    match sqr || (not npot)  with
+    [ True -> layout_page ~type_rects ~sqr rects !min_size !min_size 
+    | _ ->  layout_page_npot ~type_rects rects !max_size !max_size (!max_size / 2) (!max_size / 2) `none
+    ]
   in 
   match rest with 
   [ [] -> [ (w,h,placed) :: pages]
-  | _  -> layout_multipage ~type_rects ~sqr rest [(w,h,placed) :: pages]
+  | _  -> layout_multipage ~type_rects ~sqr ~npot rest [(w,h,placed) :: pages]
   ];
 
 
 (* 
  возвращает список страниц. каждая страница не больше 2048x2048
 *)
-value layout ?(type_rects=`maxrect) ?(sqr=True) rects =
+value layout ?(type_rects=`maxrect) ?(sqr=True) ?(npot=False) rects =
   (
     Random.self_init ();
-    layout_multipage ~type_rects ~sqr rects [];
+    layout_multipage ~type_rects ~sqr ~npot rects [];
   );
