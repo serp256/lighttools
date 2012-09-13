@@ -3,8 +3,6 @@ open Sys;
 open ExtString;
 open Printf;
 
-type index = Hashtbl.t string (int * int);
-
 value inDir = ref ".";
 value outDir = ref ".";
 value indexBuf = IO.output_string ();
@@ -47,11 +45,11 @@ value rec processFile ?(indent="") filename =
 					(
 						addEntry filename offset size;
 
-						if (String.ends_with filename ".pvr") || (String.ends_with filename ".plx") then
+(* 						if (String.ends_with filename ".pvr") || (String.ends_with filename ".plx") then
 							let filename = (Filename.chop_extension filename) ^ ".png" in
 								let () = printf "%sappending addition entry %s\n" indent filename in
 									addEntry filename offset size
-						else ();
+						else (); *)
 					);
 					
 					let fileContent = String.create size in
@@ -70,7 +68,6 @@ value buildExpansion () =
 	(
 		if String.ends_with !inDir "/" then () else inDir.val := !inDir ^ "/";
 		processFile !inDir;
-
 
 		let outDir = !outDir in
 			let outFilename = if String.ends_with outDir "/" then outDir ^ expansionDefFilename else outDir in
