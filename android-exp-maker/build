@@ -1,0 +1,7 @@
+#!/bin/bash
+
+case $1 in
+        clean) rm eit & ocamlbuild -clean  ;;
+        aem) ocamlbuild -use-ocamlfind aem.native ;;
+        eit) gcc -o eit eit.c ;;
+esac
