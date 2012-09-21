@@ -2,10 +2,14 @@
 <s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
 					   xmlns:s="library://ns.adobe.com/flex/spark"
 					   xmlns:mx="library://ns.adobe.com/flex/mx"
-					   width="500" height="400">
+					   width="500" height="224">
 	
 	<fx:Script>
 		<![CDATA[
+			import mx.controls.Alert;
+			import mx.graphics.codec.PNGEncoder;
+			
+			private var png:PNGEncoder = new PNGEncoder();
 			private var folderUrl:String; // путь папки
 			private var classes:Array;  // списки классов swf-ок
 			private var liArray:Array;  // of LoaderInfo каждой картинки
@@ -35,11 +39,10 @@
 		
 				folderUrl = (event.files[0].parent as File).url;
 				tiPath.text = folderUrl; 
-			//	changesInstances = new Vector.<String>();
-				
+			
 				for each (f in event.files) {
 					urls.push(f.url);
-					fnames.push(f.name);
+					fnames.push(f.name.substr(0, f.name.indexOf('.')));
 				}
 		
 				loadSwf();
@@ -55,9 +58,6 @@
 			private function onLoadComplete(event:Event):void {
 				
 				trace('onLoadComplete', index, urls[index]);
-				
-				// сохраняем имена классов swf-ки
-				//var swfName:String = (listSwfs.dataProvider as ArrayCollection).getItemAt(index) as String;
 				var li:LoaderInfo = event.target as LoaderInfo;
 				var fname:String = fnames[index];
 				liArray[fname] = li;
@@ -78,12 +78,34 @@
 			
 			protected function btConvert_clickHandler(event:MouseEvent):void
 			{
-				for (var swfName:String in liArray) { // по файлам
-					var li:LoaderInfo = liArray[swfName];
-					var cName:String = classes[swfName];
+				for (var fname:String in liArray) { // по файлам
+					var li:LoaderInfo = liArray[fname];
+					var cName:String = classes[fname]; // имя класса
+					var Cls:Class = li.applicationDomain.getDefinition(cName) as Class; // класс
+					var content:DisplayObject = new Cls(); //экземпляр
+					convert(content, fname);
+				}
+				status = 'конвертация завершена';
+			}
+			
+			private function convert(content:DisplayObject, fname:String):void {
+				var shift:uint = 1;
+								
+				var bd:BitmapData = new BitmapData(content.width +shift, content.height + shift, true, 0x000000);
+				bd.draw(content, null, new ColorTransform(1,1,1, content.alpha),null, null, true);
 					
+				var ba:ByteArray = png.encode(bd); 
+				
+				try {
+					var fs:FileStream = new FileStream();
+					fs.open(new File(folderUrl+'/pngs/'+fname+'.png'), FileMode.WRITE);
+					fs.writeBytes(ba);
+					fs.close();
+				} catch (error:Error){ 
+					Alert.show('Ошибка записи файла\n'+(folderUrl+'/'+fname), 'Ошибка');
 				}
 			}
+			 
 			
 		]]>
 	</fx:Script>
@@ -94,20 +116,14 @@
 	</fx:Declarations>
 	
 
-	<s:VGroup left="20" right="20" top="20" height="80">
-		<s:Label text="Выберите тип ресурсов:"/>
-		<s:VGroup x="19" y="94">
-			<s:RadioButton label="swf" groupName="rgMode" selected="true"/>
-			<s:RadioButton label="png" groupName="rgMode"/>
-		</s:VGroup>
-	</s:VGroup>
-	<s:HGroup y="101" left="20" right="20" height="32" verticalAlign="bottom">
+	<s:HGroup left="20" right="20" top="50" height="50" verticalAlign="bottom">
+		<s:VGroup width="100%">
 			<s:Label text="Выберите папку:"/>
 			<s:TextInput id="tiPath" x="43" y="58" width="100%"/>
-		
+		</s:VGroup>
 		<s:Button id="btPath" x="602" y="58" width="35" label="..."
 				  click="btPath_clickHandler(event)"/>
 	</s:HGroup>
-	<s:Button id="btConvert" y="165" label="Конвертировать" click="btConvert_clickHandler(event)"
-			  enabled="false" horizontalCenter="0"/>
+	<s:Button id="btConvert" y="140" label="Конвертировать" click="btConvert_clickHandler(event)"
+			  enabled="false" horizontalCenter="-1"/>
 </s:WindowedApplication>
