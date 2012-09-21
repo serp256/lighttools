@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	width="300" height="90" title="Scale selected swfs">
+
+	<fx:Script><![CDATA[
+		import mx.managers.PopUpManager;
+
+		protected var okHandler:Function;
+
+		public function set okClickHandler(handler:Function):void {
+			okHandler = handler;
+		}
+
+		protected function callOkHandler():void {
+			PopUpManager.removePopUp(this);
+
+			if (okHandler != null) {
+				okHandler.call(null, Number(scale.text));
+			}
+		}
+	]]></fx:Script>
+
+	<s:HGroup verticalAlign="middle" horizontalAlign="center" width="100%" height="100%">
+		<s:Label text="Scale factor:"/><s:TextInput id="scale" width="50" restrict="0-9."/><s:Button label="ok" width="50" click="callOkHandler()"/>
+	</s:HGroup>
+</s:TitleWindow>

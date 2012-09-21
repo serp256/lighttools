@@ -109,6 +109,7 @@ package ru.redspell.rasterizer.commands {
 
 				if (!Utils.objIsEmpty(packMeta)) {
 					pack.checked = packMeta.hasOwnProperty('checked') ? packMeta.checked : true;
+                    pack.scales = packMeta.hasOwnProperty('scales') ? packMeta.scales : {};
 					meta[pack.name] = packMeta;
 				}
 
@@ -122,6 +123,7 @@ package ru.redspell.rasterizer.commands {
 					if (packMeta && packMeta.hasOwnProperty(swf.filename)) {
 						var swfMeta:Object = packMeta[swf.filename];
 						swf.animated = swfMeta.hasOwnProperty('animated') ? swfMeta.aninated : true;
+                        swf.scales = swfMeta.hasOwnProperty('scales') ? swfMeta.scales : {};
 					}
 
 					trace('loaing swf', swf.path);

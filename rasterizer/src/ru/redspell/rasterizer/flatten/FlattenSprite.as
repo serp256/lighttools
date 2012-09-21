@@ -85,6 +85,12 @@ package ru.redspell.rasterizer.flatten {
 
         protected function applyMatrix(obj:DisplayObject, mtx:Matrix, color:ColorTransform):FlattenImage {
             var rect:Rectangle = getTransformedBounds(obj.getRect(obj), mtx);
+
+            trace("obj.getRect(obj)", obj.getRect(obj));
+            trace("mtx", mtx);
+            trace("rect", rect);
+            trace("Math.ceil(rect.width), Math.ceil(rect.height)", Math.ceil(rect.width), Math.ceil(rect.height));
+
             var objBmpData:FlattenImage = new FlattenImage(Math.ceil(rect.width), Math.ceil(rect.height), true, 0x00000000);
             var m:Matrix = mtx.clone();
 

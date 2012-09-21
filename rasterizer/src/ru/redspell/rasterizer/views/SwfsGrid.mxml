@@ -4,7 +4,8 @@
 	xmlns:s="library://ns.adobe.com/flex/spark"
 	xmlns:mx="library://ns.adobe.com/flex/mx"
 	xmlns:view="ru.redspell.rasterizer.views.*"
-	selectionMode="multipleRows">
+	selectionMode="multipleRows"
+	editable="true">
 
 	<fx:Script><![CDATA[
 		import mx.collections.IList;
@@ -17,6 +18,7 @@
 
 		public static const ADD:String = 'swfsList_add';
 		public static const REMOVE:String = 'swfsList_remove';
+		public static const SCALE:String = 'swfsList_scale';
 
 		public function menu_itemClickHandler(event:FlexNativeMenuEvent):void {
 			switch (event.item.action) {
@@ -41,12 +43,19 @@
 			<s:GridColumn
 				dataField="filename"
 				headerText="Swf"
-				itemRenderer="ru.redspell.rasterizer.views.SwfsGridNameRenderer"/>
+				itemRenderer="ru.redspell.rasterizer.views.SwfsGridNameRenderer"
+				editable="false"/>
+			<s:GridColumn
+				headerText="Scale"
+				width="50"
+				itemRenderer="ru.redspell.rasterizer.views.SwfScaleRenderer"
+				itemEditor="ru.redspell.rasterizer.views.SwfScaleEditor"/>
 			<view:CheckboxGridColumn
 				dataField="animated"
 				headerText="Anim."
 				changed="Facade.runCommand(Facade.commandsFactory.getRefreshSwfMetaCommand(event.item as Swf))"
-				width="55"/>
+				width="55"
+				editable="false"/>
 		</s:ArrayCollection>
 	</view:columns>
 

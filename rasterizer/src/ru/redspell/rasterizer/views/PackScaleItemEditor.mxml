@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<s:DefaultGridItemEditor
+	xmlns:fx="http://ns.adobe.com/mxml/2009"
+	xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx">
+
+	<fx:Script><![CDATA[
+		import ru.redspell.rasterizer.models.Profile;
+		import ru.redspell.rasterizer.models.SwfsPack;
+		import ru.redspell.rasterizer.utils.Utils;
+
+		override protected function validate():Boolean {
+			return (Number(value) > 0) && super.validate();
+		}
+
+		override public function save():Boolean {
+			var pack:SwfsPack = data as SwfsPack;
+
+			if (data == null) {
+				return false;
+			}
+
+			var prof:Profile = Facade.profile;
+			var scales:Object = pack.scales;
+			var newVal:Number = Number(value);
+
+			if (scales.hasOwnProperty(prof.label) && (newVal == prof.scale)) {
+				delete scales[prof.label];
+			} else {
+				scales[prof.label] = newVal;
+			}
+
+			for (var key:String in scales) {
+				trace(key);
+			}
+
+			Facade.runCommand(Facade.commandsFactory.getRefreshPackMetaCommand(pack));
+
+			return true;
+		}
+		]]></fx:Script>
+</s:DefaultGridItemEditor>

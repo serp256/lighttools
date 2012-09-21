@@ -9,6 +9,8 @@ package ru.redspell.rasterizer.commands {
 		}
 
 		override public function unsafeExecute():void {
+            trace('ok', _pack.checked, _pack.scales);
+
 			var meta:Object = Facade.proj.meta;
 
 			if (!meta.hasOwnProperty(_pack.name)) {
@@ -19,14 +21,25 @@ package ru.redspell.rasterizer.commands {
 
 			if (_pack.checked) {
 				delete packMeta.checked;
-				if (Utils.objIsEmpty(packMeta)) {
-					delete meta[_pack.name];
-				}
 			} else {
 				packMeta.checked = false;
 			}
 
-			super.unsafeExecute();
+            if (Utils.objIsEmpty(_pack.scales)) {
+                delete packMeta.scales;
+            } else {
+                packMeta.scales = _pack.scales;
+            }
+
+            for (var key:String in packMeta) {
+                trace(key, packMeta[key]);
+            }
+
+            if (Utils.objIsEmpty(packMeta)) {
+                delete meta[_pack.name];
+            }
+
+            super.unsafeExecute();
 		}
 	}
 }

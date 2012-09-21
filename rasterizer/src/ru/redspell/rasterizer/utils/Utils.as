@@ -1,7 +1,13 @@
 package ru.redspell.rasterizer.utils {
 	import flash.display.DisplayObjectContainer;
 
-	public class Utils {
+    import ru.redspell.rasterizer.models.Profile;
+    import ru.redspell.rasterizer.models.Swf;
+    import ru.redspell.rasterizer.models.SwfClass;
+
+    import ru.redspell.rasterizer.models.SwfsPack;
+
+    public class Utils {
 		public static function traceObj(obj:DisplayObjectContainer, indentSize:uint = 0):void {
 			var indent:String = '';
 
@@ -55,5 +61,29 @@ package ru.redspell.rasterizer.utils {
 
 			return true;
 		}
+
+        public static function getPackScale(pack:SwfsPack):Number {
+            var scales:Object = pack.scales;
+            var prof:Profile = Facade.profile;
+            var profLbl:String = prof.label;
+
+            return scales.hasOwnProperty(profLbl) ? Number(scales[profLbl]) : prof.scale;
+        }
+
+        public static function getSwfScale(swf:Swf):Number {
+            var scales:Object = swf.scales;
+            var prof:Profile = Facade.profile;
+            var profLbl:String = prof.label;
+
+            return scales.hasOwnProperty(profLbl) ? Number(scales[profLbl]) : getPackScale(swf.pack);
+        }
+
+        public static function getClsScale(cls:SwfClass):Number {
+            var scales:Object = cls.scales;
+            var prof:Profile = Facade.profile;
+            var profLbl:String = prof.label;
+
+            return scales.hasOwnProperty(profLbl) ? Number(scales[profLbl]) : getSwfScale(cls.swf);
+        }
 	}
 }
