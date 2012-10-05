@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+					   xmlns:s="library://ns.adobe.com/flex/spark"
+					   xmlns:mx="library://ns.adobe.com/flex/mx"
+					   width="500" height="224">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.graphics.codec.PNGEncoder;
+			
+			private var png:PNGEncoder = new PNGEncoder();
+			private var folderUrl:String; // путь папки
+			private var classes:Array;  // списки классов swf-ок
+			private var liArray:Array;  // of LoaderInfo каждой картинки
+			private var urls:Array;		// пути картинок
+			private var fnames:Array;   // названия картинок
+			private var index:uint = 0;
+						
+			protected function btPath_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				var f:File = new File();
+				f.addEventListener(FileListEvent.SELECT_MULTIPLE, onSelect);
+				f.browseForOpenMultiple('Выберите файлы', [new FileFilter('SWF-файлы', '*.swf')]);
+			}
+			
+			private function onSelect(event:FileListEvent):void {	
+				status = 'загрузка...';
+				
+				var f:File = event.currentTarget as File;
+				f.removeEventListener(FileListEvent.SELECT_MULTIPLE, onSelect);
+				
+				classes = [];
+				liArray = [];
+				urls = [];
+				fnames = [];
+				index = 0;
+		
+				folderUrl = (event.files[0].parent as File).url;
+				tiPath.text = folderUrl; 
+			
+				for each (f in event.files) {
+					urls.push(f.url);
+					fnames.push(f.name.substr(0, f.name.indexOf('.')));
+				}
+		
+				loadSwf();
+			}
+			
+			private function loadSwf():void {
+				var loader:Loader = new Loader();
+				loader.contentLoaderInfo.addEventListener(Event.COMPLETE, onLoadComplete);
+				loader.load(new URLRequest(urls[index]));
+			}
+			
+			// swf загружена
+			private function onLoadComplete(event:Event):void {
+				
+				trace('onLoadComplete', index, urls[index]);
+				var li:LoaderInfo = event.target as LoaderInfo;
+				var fname:String = fnames[index];
+				liArray[fname] = li;
+				
+				var names:Array= getDefinitionNames(li);
+				if (names && names.length > 0) {
+					classes[fname] = names[0]; 
+				}
+				
+				index++;
+				if (index < urls.length) {
+					loadSwf();
+				} else {
+					status = "загрузка завершена";
+					btConvert.enabled = true;
+				}
+			}
+			
+			protected function btConvert_clickHandler(event:MouseEvent):void
+			{
+				for (var fname:String in liArray) { // по файлам
+					var li:LoaderInfo = liArray[fname];
+					var cName:String = classes[fname]; // имя класса
+					var Cls:Class = li.applicationDomain.getDefinition(cName) as Class; // класс
+					var content:DisplayObject = new Cls(); //экземпляр
+					convert(content, fname);
+				}
+				status = 'конвертация завершена';
+			}
+			
+			private function convert(content:DisplayObject, fname:String):void {
+				var shift:uint = 1;
+								
+				var bd:BitmapData = new BitmapData(content.width +shift, content.height + shift, true, 0x000000);
+				bd.draw(content, null, new ColorTransform(1,1,1, content.alpha),null, null, true);
+					
+				var ba:ByteArray = png.encode(bd); 
+				
+				try {
+					var fs:FileStream = new FileStream();
+					fs.open(new File(folderUrl+'/pngs/'+fname+'.png'), FileMode.WRITE);
+					fs.writeBytes(ba);
+					fs.close();
+				} catch (error:Error){ 
+					Alert.show('Ошибка записи файла\n'+(folderUrl+'/'+fname), 'Ошибка');
+				}
+			}
+			 
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<s:RadioButtonGroup id="rgMode"/>
+		<!-- Разместить невизуальные элементы (например, службы или объекты значений) -->
+	</fx:Declarations>
+	
+
+	<s:HGroup left="20" right="20" top="50" height="50" verticalAlign="bottom">
+		<s:VGroup width="100%">
+			<s:Label text="Выберите папку:"/>
+			<s:TextInput id="tiPath" x="43" y="58" width="100%"/>
+		</s:VGroup>
+		<s:Button id="btPath" x="602" y="58" width="35" label="..."
+				  click="btPath_clickHandler(event)"/>
+	</s:HGroup>
+	<s:Button id="btConvert" y="140" label="Конвертировать" click="btConvert_clickHandler(event)"
+			  enabled="false" horizontalCenter="-1"/>
+</s:WindowedApplication>
