@@ -36,6 +36,7 @@ value write_utf out str=
 value inp_dir = ref "input"; 
 value outdir = ref "output";
 value gen_pvr = ref False;
+value gen_dxt = ref False;
 value start_num = ref 0;
 value scale = ref 1.;
 
@@ -395,9 +396,10 @@ value run () =
         let save_img = !outdir /// (string_of_int cnt) ^ (get_postfix ()) in
           (
             Images.save (save_img ^ ".png") (Some Images.Png) [] new_img;
+
             match !gen_pvr with
             [ True -> Utils.pvr_png save_img
-            | _ -> ()
+            | _ -> if !gen_dxt then Utils.dxt_png save_img else ()
             ]
           );
       )
@@ -414,6 +416,7 @@ value () =
         ("-inp",Arg.Set_string inp_dir,"input directory");
         ("-o",Arg.Set_string outdir, "output directory");
         ("-pvr",Arg.Set gen_pvr,"generate pvr file");
+        ("-dxt",Arg.Set gen_pvr,"generate dxt file");        
         ("-n",Arg.Set_int start_num,"set first name texture ");
         ("-p",Arg.Set_int TextureLayout.countEmptyPixels, "count Empty pixels between images");
         ("-min",Arg.Set_int MaxRects.min_size, "Min size texture");

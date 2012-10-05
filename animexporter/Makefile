@@ -49,6 +49,9 @@ lib:
 	./convert.native -inp 1 -o ~/Devel/mobile-farm/Resources/library -pvr
 	./convert.native -inp 2 -n 100500 -min 512 -o ~/Devel/mobile-farm/Resources/library -pvr
 	./convert.native -inp 3 -n 1000 -o ~/Devel/mobile-farm/Resources/library -pvr
+	./convert.native -inp 1 -o ~/Devel/mobile-farm/Resources/library -dxt
+	./convert.native -inp 2 -n 100500 -min 512 -o ~/Devel/mobile-farm/Resources/library -dxt
+	./convert.native -inp 3 -n 1000 -o ~/Devel/mobile-farm/Resources/library -dxt
 
 100500:
 	./convert.native -inp 2 -n 100500 -min 512 -scale ${SCALE} -o ~/Devel/mobile-farm/Resources/library -pvr

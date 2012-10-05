@@ -56,8 +56,6 @@ value gzip_input fname =
     ~input:(fun buf pos len -> Gzip.input gzin buf pos len)
     ~close:(fun () -> Gzip.close_in gzin);
 
-
-
 value pvr_png img = 
   let cmd = Printf.sprintf "PVRTexTool -yflip0 -fOGLPVRTC4 -premultalpha -pvrtcbest -i%s.png -o %s.pvr" img img in
   (
@@ -67,6 +65,16 @@ value pvr_png img =
     | _ -> failwith (Printf.sprintf "Failed pvr %s.png" img)
     ];
   );
+
+value dxt_png img = 
+  let cmd = Printf.sprintf "nvcompress -nomips -fast -bc3 %s.png %s.dds" img img in
+  (
+    Printf.printf "%s\n%!" cmd;
+    match Sys.command cmd with
+    [ 0 -> ()
+    | _ -> failwith (Printf.sprintf "Failed dxt %s.png" img)
+    ];
+  );  
 
 value plx_png plt img = 
   let cmd = Printf.sprintf "pallete -plt %s %s.png" plt img in
