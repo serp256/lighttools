@@ -775,7 +775,11 @@ value do_work isXml separate fmt indir suffix outdir =
         (
           Images.save (outdir // imgname) (Some Images.Png) [] (Images.Rgba32 texture);
           match fmt with
-          [ FPvr -> Utils.pvr_png (outdir // imgbasename)
+          [ FPvr ->
+            (
+              Utils.dxt_png (outdir // imgbasename);
+              Utils.pvr_png (outdir // imgbasename);
+            )
           | FPlx plt -> Utils.plx_png plt (outdir // imgbasename)
           | FPng -> ()
           ];

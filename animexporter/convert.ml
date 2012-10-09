@@ -416,7 +416,7 @@ value () =
         ("-inp",Arg.Set_string inp_dir,"input directory");
         ("-o",Arg.Set_string outdir, "output directory");
         ("-pvr",Arg.Set gen_pvr,"generate pvr file");
-        ("-dxt",Arg.Set gen_pvr,"generate dxt file");        
+        ("-dxt",Arg.Set gen_dxt,"generate dxt file");        
         ("-n",Arg.Set_int start_num,"set first name texture ");
         ("-p",Arg.Set_int TextureLayout.countEmptyPixels, "count Empty pixels between images");
         ("-min",Arg.Set_int MaxRects.min_size, "Min size texture");
