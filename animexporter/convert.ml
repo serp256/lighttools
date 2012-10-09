@@ -399,8 +399,10 @@ value run () =
 
             match !gen_pvr with
             [ True -> Utils.pvr_png save_img
-            | _ -> if !gen_dxt then Utils.dxt_png save_img else ()
-            ]
+            | _ -> ()
+            ];
+
+            if !gen_dxt then Utils.dxt_png save_img else ();
           );
       )
   end textures;

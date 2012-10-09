@@ -47,20 +47,15 @@ prepare-input:
 clean-output:
 	rm -r ${LIB_DIR}/*
 
-lib-pvr:
+lib-compressed:
 	./convert.native -inp 1 -scale ${SCALE} -o ${LIB_DIR} -pvr
 	./convert.native -inp 2 -n 100500 -min 512 -scale ${SCALE} -o ${LIB_DIR} -pvr
 	./convert.native -inp 3 -n 1000 -scale ${SCALE} -o ${LIB_DIR} -pvr
-	./convert.native -inp 1 -o ${LIB_DIR} -pvr
-	./convert.native -inp 2 -n 100500 -min 512 -o ${LIB_DIR} -pvr
-	./convert.native -inp 3 -n 1000 -o ${LIB_DIR} -pvr
+	./convert.native -inp 1 -o ${LIB_DIR} -pvr -dxt
+	./convert.native -inp 2 -n 100500 -min 512 -o ${LIB_DIR} -pvr -dxt
+	./convert.native -inp 3 -n 1000 -o ${LIB_DIR} -pvr -dxt
 
-lib-dxt:
-	./convert.native -inp 1 -o ${LIB_DIR} -dxt
-	./convert.native -inp 2 -n 100500 -min 512 -o ${LIB_DIR} -dxt
-	./convert.native -inp 3 -n 1000 -o ${LIB_DIR} -dxt
-
-lib: prepare-input clean-output lib-pvr lib-dxt
+lib: prepare-input clean-output lib-compressed
 
 
 100500:
