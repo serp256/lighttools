@@ -70,7 +70,6 @@ value genAssets suffix =
 			printf "\n\n[ generating assets for suffix %s... ]\n%!" suffix;
 			myassert (Sys.command ("rsync -avL --include-from=" ^ rsyncDir ^ "android-assets.include" ^ suffixFilter ^ " --exclude-from=" ^ rsyncDir ^ "android-assets.exclude --delete --delete-excluded " ^ resDir ^ " " ^ assetsDir) = 0) "rsync failed when copying assets";
 		);
-			
 
 value genMainExpansion suffix =
 	let expDir = expansionsDir ^ suffix ^ "/main"	

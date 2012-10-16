@@ -1,2 +1,2 @@
 <*.ml>: package(camlp4),syntax(camlp4r), package(extlib)
-<aem.native>: package(extlib)
+<*.{byte,native}>: package(extlib)

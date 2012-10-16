@@ -2,6 +2,6 @@
 
 case $1 in
         clean) rm eit & ocamlbuild -clean  ;;
-        aem) ocamlbuild -use-ocamlfind aem.native ;;
+        aem) ocamlbuild -use-ocamlfind aem.byte ;;
         eit) gcc -o eit eit.c ;;
 esac
