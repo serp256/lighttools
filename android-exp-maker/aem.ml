@@ -109,7 +109,6 @@ value buildPatch () =
                         let curContent = Buffer.create bufLen
                         and newContent = Buffer.create bufLen
                         and indexAppendix = ref []
-                        (* and removeFromIndex = ref [] *)
                         and dataOffset = posInp () in
                             let rec processFile ?(indent="") filename =
                                 try
@@ -129,17 +128,14 @@ value buildPatch () =
                                                     let _inpChan = open_in filename in
                                                     (
                                                         let newSize = in_channel_length _inpChan in
-                                                            if newSize <> curSize then
-                                                                removeFromIndex.val := [ entryIdx :: !removeFromIndex ]
+                                                            if newSize <> curSize then ()
                                                             else
                                                             (
                                                                 Buffer.clear newContent;
                                                                 Buffer.add_channel newContent _inpChan newSize;
 
-                                                                if Buffer.contents curContent <> Buffer.contents newContent then
-                                                                    Hashtbl.remove 
-                                                                    (* removeFromIndex.val := [ entryIdx :: !removeFromIndex ] *)
-                                                                else ();
+                                                                if Buffer.contents curContent <> Buffer.contents newContent then ()
+                                                                else Hashtbl.remove index relativeFname;
                                                             );
 
                                                         close_in _inpChan;
@@ -158,7 +154,9 @@ value buildPatch () =
                                 
 
                                 printf "remove list:\n";
-                                List.iter (fun idx -> printf "%d\n" idx) !removeFromIndex;
+
+                                Hashtbl.iter (fun fname _ -> printf "rm %s\n" fname) index;
+                                (* List.iter (fun idx -> printf "%d\n" idx) !removeFromIndex; *)
                             );
                     );
 
