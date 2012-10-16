@@ -58,7 +58,7 @@ value archiveDir = androidDir ^ "archive/";
 value genManifest suffix =
 	let manifestConfig = manifestsDir ^ suffix ^ ".xml" in
 	(
-		printf "\n\n[ generating manifest for suffix %s... ]\n\n%!" suffix;
+		printf "\n\n[ generating manifest for suffix %s... ]\n%!" suffix;
 		myassert (Sys.file_exists manifestConfig) (sprintf "cannot find manifest config for suffix %s" suffix);
 		myassert (Sys.command ("xsltproc -o " ^ androidDir ^ "AndroidManifest.xml --xinclude --xincludestyle " ^ manifestsDir ^ "manifest.xslt " ^ manifestConfig) = 0) "xsltproc failed";
 	);
@@ -67,7 +67,7 @@ value genAssets suffix =
 	let suffixFilter = rsyncDir ^ "android-" ^ suffix ^ "-assets.filter" in
 		let suffixFilter = if Sys.file_exists suffixFilter then " --filter='. " ^ suffixFilter ^ "'" else "" in
 		(
-			printf "\n\n[ generating assets for suffix %s... ]\n\n%!" suffix;
+			printf "\n\n[ generating assets for suffix %s... ]\n%!" suffix;
 			myassert (Sys.command ("rsync -avL --include-from=" ^ rsyncDir ^ "android-assets.include" ^ suffixFilter ^ " --exclude-from=" ^ rsyncDir ^ "android-assets.exclude --delete --delete-excluded " ^ resDir ^ " " ^ assetsDir) = 0) "rsync failed when copying assets";
 		);
 			
@@ -77,7 +77,7 @@ value genMainExpansion suffix =
 	and suffixFilter = rsyncDir ^ "android-" ^ suffix ^ "-expansions.filter" in
 		let suffixFilter = if Sys.file_exists suffixFilter then " --filter='. " ^ suffixFilter ^ "'" else "" in
 		(
-			printf "\n\n[ generating expansions for suffix %s... ]\n\n%!" suffix;
+			printf "\n\n[ generating expansions for suffix %s... ]\n%!" suffix;
 			mkdir expDir;
 			myassert (Sys.command ("rsync -avL --filter='protect locale/*/sounds' --filter='protect sounds' --include-from=" ^ rsyncDir ^ "android-expansions.include" ^ suffixFilter ^ " --exclude-from=" ^ rsyncDir ^ "android-expansions.exclude --delete --delete-excluded " ^ resDir ^ " " ^ expDir) = 0) "rsync failed when copying expansions";
 			myassert (Sys.command ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ resDir ^ "sounds_android/default/ " ^ expDir ^ "/sounds/") = 0) "rsync failed when copying default sounds";
@@ -89,7 +89,7 @@ value genMainExpansion suffix =
 value compileApk suffix =
 	let target = if !release then "android-release" else "android" in
 	(
-		printf "\n\n[ compiling apk for suffix %s... ]\n\n%!" suffix;
+		printf "\n\n[ compiling apk for suffix %s... ]\n%!" suffix;
 		myassert (Sys.command ("make -f " ^ makefilePath ^ " " ^ target) = 0) "make failed when compiling apk";
 	);
 
@@ -104,7 +104,7 @@ value archiveApk suffix =
 	in
 		let apkArchiveDir = archiveDir ^ suffix ^ "/" ^ ver in
 		(
-			printf "\n\n[ archiving version %s for suffix %s... ]\n\n%!" ver suffix;
+			printf "\n\n[ archiving version %s for suffix %s... ]\n%!" ver suffix;
 
 			mkdir apkArchiveDir;
 
@@ -116,8 +116,8 @@ List.iter (fun suffix ->
 	(
 		printf "processing suffix %s...\n%!" suffix;
 
-		if !manifest || !all then genManifest suffix else ();
-		if !assets || !all then genAssets suffix else ();
+		if !manifest || !apk || !all then genManifest suffix else ();
+		if !assets || !apk || !all then genAssets suffix else ();
 		if !expansions || !all then genMainExpansion suffix else ();
 		if !apk || !all then compileApk suffix else ();
 		if !archive || !all then archiveApk suffix else ();
