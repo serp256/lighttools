@@ -4,6 +4,7 @@ open ExtString;
 open Printf;
 
 value bufLen = 104857600;
+value fileBuf = Buffer.create bufLen;
 value inDir = ref ".";
 value outFname = ref "expansion";
 value patchFor = ref "";
@@ -18,13 +19,20 @@ value args =
         ("-o", Set_string outFname, "output filename")
     ];
 
-value addEntry filename offset size =
+value addIndexEntry filename offset size =
 (
     incr indexEntiesNum;
     IO.write_byte indexBuf (String.length filename);
     IO.nwrite indexBuf filename;
     IO.write_i32 indexBuf offset;
     IO.write_i32 indexBuf size;
+);
+
+value addFileEntry inChan size =
+(
+    Buffer.clear fileBuf;
+    Buffer.add_channel fileBuf inChan size;
+    IO.nwrite filesBuf (Buffer.contents fileBuf);    
 );
 
 value rec processFile ?(indent="") filename =
@@ -46,13 +54,12 @@ value rec processFile ?(indent="") filename =
                     printf "file, offset %d, size %d\n" offset size;
 
                     let (_, filename) = String.replace filename !inDir "" in
-                        addEntry filename offset size;
+                        addIndexEntry filename offset size;
                     
-                    let fileContent = String.create size in
-                    (
-                        really_input inChan fileContent 0 size;
-                        IO.nwrite filesBuf fileContent;  
-                    );
+                    addFileEntry inChan size;
+(*                     Buffer.add_channel fileBuf inChan size;
+                    IO.nwrite filesBuf (Buffer.contents fileBuf);
+                    Buffer.clear fileBuf; *)
                                 
                     close_in inChan;
                 )
@@ -102,7 +109,7 @@ value buildPatch () =
                                 and size = IO.read_i32 inp in
                                 (
                                     DynArray.add indexArr (fname, offset, size);
-                                    Hashtbl.replace index fname (offset, size, i);
+                                    Hashtbl.replace index fname (offset, size, i - 1);
                                 );
                         };
 
@@ -110,6 +117,7 @@ value buildPatch () =
                         and newContent = Buffer.create bufLen
                         and indexAppendix = ref []
                         and dataOffset = posInp () in
+                            (* процессим файлы, которые сейчас должны попасть в экспаншн, в indexAppendix - файлы которых не было или же те, которые поменялись, в index оставляем те, что нужно будет въебать из индекса, то есть те, которые изменились или те, которых теперь не должно быть в экспаншене *)
                             let rec processFile ?(indent="") filename =
                                 try
                                 (
@@ -118,30 +126,31 @@ value buildPatch () =
                                             Array.iter (fun childFilename -> processFile ~indent:(indent ^ "  ") (filename ^ childFilename)) (readdir filename)
                                     else
                                         let (_, relativeFname) = String.replace filename !inDir "" in
-                                            try                                            
-                                                let (offset, curSize, entryIdx) = Hashtbl.find index relativeFname in                                                
-                                                (
-                                                    seek_in inpChan (offset + dataOffset);
-                                                    Buffer.clear curContent;
-                                                    Buffer.add_channel curContent inpChan curSize;
-
-                                                    let _inpChan = open_in filename in
+                                            let addToAppendix () = indexAppendix.val := [ (filename, relativeFname) :: !indexAppendix ] in 
+                                                try                                            
+                                                    let (offset, curSize, entryIdx) = Hashtbl.find index relativeFname in                                                
                                                     (
-                                                        let newSize = in_channel_length _inpChan in
-                                                            if newSize <> curSize then ()
-                                                            else
-                                                            (
-                                                                Buffer.clear newContent;
-                                                                Buffer.add_channel newContent _inpChan newSize;
+                                                        seek_in inpChan (offset + dataOffset);
+                                                        Buffer.clear curContent;
+                                                        Buffer.add_channel curContent inpChan curSize;
 
-                                                                if Buffer.contents curContent <> Buffer.contents newContent then ()
-                                                                else Hashtbl.remove index relativeFname;
-                                                            );
+                                                        let _inpChan = open_in filename in
+                                                        (
+                                                            let newSize = in_channel_length _inpChan in
+                                                                if newSize <> curSize then addToAppendix ()
+                                                                else
+                                                                (
+                                                                    Buffer.clear newContent;
+                                                                    Buffer.add_channel newContent _inpChan newSize;
 
-                                                        close_in _inpChan;
-                                                    );
-                                                )
-                                            with [ Not_found -> indexAppendix.val := [ relativeFname :: !indexAppendix ] ];
+                                                                    if Buffer.contents curContent <> Buffer.contents newContent then addToAppendix ()
+                                                                    else Hashtbl.remove index relativeFname;
+                                                                );
+
+                                                            close_in _inpChan;
+                                                        );
+                                                    )
+                                                with [ Not_found -> addToAppendix () ];
                                 )
                                 with [ Sys_error _ -> () ]
                             in
@@ -149,19 +158,61 @@ value buildPatch () =
                                 if String.ends_with !inDir "/" then () else inDir.val := !inDir ^ "/";
                                 processFile !inDir;
 
-                                printf "appendix list:\n";
-                                List.iter (fun fname -> printf "%s\n" fname) !indexAppendix;
-                                
+                                let (_, forRemove) =
+                                    List.fold_left (fun (i, forRemove) idx ->
+                                        let idx = idx - i in                                        
+                                            let (fname, entryOffset, entrySize) = DynArray.get indexArr idx in
+                                            (
+                                                for i = idx + 1 to DynArray.length indexArr - 1 do {
+                                                    let (fname, offset, size) = DynArray.get indexArr i in
+                                                        DynArray.set indexArr i (fname, offset - entrySize, size)
+                                                };
 
-                                printf "remove list:\n";
+                                                DynArray.delete indexArr idx;
+                                                (i + 1, [ (entryOffset, entrySize) :: forRemove ]);
+                                            )
+                                    ) (0, []) (List.sort (fun idx1 idx2 -> compare idx1 idx2) (Hashtbl.fold (fun k (_, _, idx) lst -> [ idx :: lst ]) index []))
+                                in
+                                (
+                                    ignore(List.fold_left (fun offset (fname, rfname) ->
+                                        let inpChan = open_in fname in
+                                            let size = in_channel_length inpChan in
+                                            (
+                                                addFileEntry inpChan size;
+                                                close_in inpChan;
+                                                DynArray.add indexArr (rfname, offset, size);
+                                                offset + size;
+                                            );
+                                    ) (let (_, offset, size) = DynArray.last indexArr in offset + size) !indexAppendix);                                                                        
 
-                                Hashtbl.iter (fun fname _ -> printf "rm %s\n" fname) index;
-                                (* List.iter (fun idx -> printf "%d\n" idx) !removeFromIndex; *)
+                                    DynArray.iter (fun (fname, offset, size) -> addIndexEntry fname offset size) indexArr;
+
+                                    List.iter (fun (offset, size) -> printf "rm %d %d\n" offset size) (List.rev forRemove);
+                                    let outFname = !outFname
+                                    and outChan = open_out !outFname in
+                                        let (out, outLen) = IO.pos_out (IO.output_channel outChan) in
+                                        (
+                                            (* maybe need patch version in header *)
+                                            (* IO.write_byte out 0; *)
+                                            IO.write_i32 out !indexEntiesNum;
+                                            IO.nwrite out (IO.close_out indexBuf);
+                                            IO.write_i32 out (List.length forRemove);
+                                            List.iter (fun (offset, size) ->
+                                                (
+                                                    IO.write_i32 out offset;
+                                                    IO.write_i32 out size;
+                                                )
+                                            ) (List.rev forRemove);
+                                            IO.nwrite out (IO.close_out filesBuf);
+
+                                            printf "done, out file location: %s; size %d\n" outFname (outLen ());
+
+                                            IO.close_out out;
+                                            close_out outChan;
+                                        );                                    
+                                );
                             );
                     );
-
-                (* Hashtbl.iter (fun fname (offset, size) -> Printf.printf "filename %s %d %d\n" fname offset size) index; *)
-
 
                 IO.close_in inp;
                 close_in inpChan;
