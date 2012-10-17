@@ -6,31 +6,39 @@ open Printf;
 value bufLen = 104857600;
 value fileBuf = Buffer.create bufLen;
 value inDir = ref ".";
-value outFname = ref "expansion";
+value outDir = ref ".";
+value package = ref "xyu.pizda.lala";
+value version = ref 1;
 value patchFor = ref "";
-value indexBuf = IO.output_string ();
+value patch = ref "";
+value (indexBuf, indexBufLen) = IO.pos_out (IO.output_string ());
 value (filesBuf, filesBufLen) = IO.pos_out (IO.output_string ());
 value indexEntiesNum = ref 0;
 
 value args =
     [
-        ("-i", Set_string inDir, "output filename");
-        ("-p", Set_string patchFor, "generate patch for file, gived through this option, instead of full expansion");
-        ("-o", Set_string outFname, "output filename")
+        ("-i", Set_string inDir, "input directory");
+        ("-o", Set_string outDir, "output directory");
+        ("-p", Set_string patchFor, "generate patch. pass through this option previous patch filename, it should contains only index, i.e. this patch of base-expansion version");
+        ("-package", Set_string package, "application package");
+        ("-version", Set_int version, "expansion and patch version, when generate fresh expansion-patch pair, and patch version, when generate only patch")
     ];
 
-value addIndexEntry filename offset size =
+value addIndexEntry ?(main=True) filename offset size =
 (
     incr indexEntiesNum;
     IO.write_byte indexBuf (String.length filename);
     IO.nwrite indexBuf filename;
     IO.write_i32 indexBuf offset;
     IO.write_i32 indexBuf size;
+    IO.write_byte indexBuf (if main then 1 else 0);
 );
 
 value addFileEntry inChan size =
 (
     Buffer.clear fileBuf;
+    seek_in inChan 0;
+
     Buffer.add_channel fileBuf inChan size;
     IO.nwrite filesBuf (Buffer.contents fileBuf);    
 );
@@ -57,10 +65,6 @@ value rec processFile ?(indent="") filename =
                         addIndexEntry filename offset size;
                     
                     addFileEntry inChan size;
-(*                     Buffer.add_channel fileBuf inChan size;
-                    IO.nwrite filesBuf (Buffer.contents fileBuf);
-                    Buffer.clear fileBuf; *)
-                                
                     close_in inChan;
                 )
     )
@@ -70,22 +74,34 @@ value buildExpansion () =
     if is_directory !inDir then
     (
         if String.ends_with !inDir "/" then () else inDir.val := !inDir ^ "/";
+        if String.ends_with !outDir "/" then () else outDir.val := !outDir ^ "/";
+
         processFile !inDir;
 
-        let outFname = !outFname
-        and outChan = open_out !outFname in
-            let (out, outLen) = IO.pos_out (IO.output_channel outChan) in
-            (
-                IO.write_byte out 0;
-                IO.write_i32 out !indexEntiesNum;
-                IO.nwrite out (IO.close_out indexBuf);
-                IO.nwrite out (IO.close_out filesBuf);
+        let outFname = !outDir ^ "main." ^ (string_of_int !version) ^ "." ^ !package ^ ".obb" in
+            let outChan = open_out outFname in
+                let (out, outLen) = IO.pos_out (IO.output_channel outChan) in
+                (
+                    IO.nwrite out (IO.close_out filesBuf);
 
-                printf "done, out file location: %s; size %d\n" outFname (outLen ());
+                    printf "main expansion done, out file location: %s; size %d\n" outFname (outLen ());
 
-                IO.close_out out;
-                close_out outChan;
-            );
+                    IO.close_out out;
+                    close_out outChan;
+                );
+
+        let outFname = !outDir ^ "patch." ^ (string_of_int !version) ^ "." ^ !package ^ ".obb" in
+            let outChan = open_out outFname in
+                let (out, outLen) = IO.pos_out (IO.output_channel outChan) in
+                (
+                    IO.write_i32 out !indexEntiesNum;
+                    IO.nwrite out (IO.close_out indexBuf);
+
+                    printf "patch done, out file location: %s; size %d\n" outFname (outLen ());
+
+                    IO.close_out out;
+                    close_out outChan;
+                );
     )
     else
         printf "error: input should be directory";
@@ -96,130 +112,101 @@ value buildPatch () =
         and inpChan = open_in !patchFor in
             let (inp, posInp) = IO.pos_in (IO.input_channel inpChan) in
             (
-                let patchVerLen = IO.read_byte inp in
-                    ignore(IO.nread inp patchVerLen);
-
                 let idxEntriesNum = IO.read_i32 inp in
-                    let indexArr = DynArray.make idxEntriesNum in
                     (
                         for i = 1 to idxEntriesNum do {
                             let fnameLen = IO.read_byte inp in
                                 let fname = IO.nread inp fnameLen
                                 and offset = IO.read_i32 inp
-                                and size = IO.read_i32 inp in
-                                (
-                                    DynArray.add indexArr (fname, offset, size);
-                                    Hashtbl.replace index fname (offset, size, i - 1);
-                                );
+                                and size = IO.read_i32 inp
+                                and inMain = IO.read_byte inp in
+                                    if inMain = 0 then failwith "index contains entries for files from patch, it may cause some promlems, choose another expansion version as base"
+                                    else
+                                        Hashtbl.replace index fname (offset, size);
                         };
 
-                        let curContent = Buffer.create bufLen
-                        and newContent = Buffer.create bufLen
-                        and indexAppendix = ref []
-                        and dataOffset = posInp () in
-                            (* процессим файлы, которые сейчас должны попасть в экспаншн, в indexAppendix - файлы которых не было или же те, которые поменялись, в index оставляем те, что нужно будет въебать из индекса, то есть те, которые изменились или те, которых теперь не должно быть в экспаншене *)
-                            let rec processFile ?(indent="") filename =
-                                try
-                                (
-                                    if is_directory filename then
-                                        let filename = if String.ends_with filename "/" then filename else filename ^ "/" in
-                                            Array.iter (fun childFilename -> processFile ~indent:(indent ^ "  ") (filename ^ childFilename)) (readdir filename)
+                        IO.close_in inp;
+                        close_in inpChan;
+
+                        let patchname = Filename.basename !patchFor
+                        and dirname = Filename.dirname !patchFor in
+                            if not (String.starts_with patchname "patch") then failwith "wrong patch filename"
+                            else
+                                let (_, expname) = String.replace patchname "patch" "main" in
+                                    let expname = Filename.concat dirname expname in
+                                    if not (Sys.file_exists expname) then failwith "no suitable main expansion file found"
                                     else
-                                        let (_, relativeFname) = String.replace filename !inDir "" in
-                                            let addToAppendix () = indexAppendix.val := [ (filename, relativeFname) :: !indexAppendix ] in 
-                                                try                                            
-                                                    let (offset, curSize, entryIdx) = Hashtbl.find index relativeFname in                                                
-                                                    (
-                                                        seek_in inpChan (offset + dataOffset);
-                                                        Buffer.clear curContent;
-                                                        Buffer.add_channel curContent inpChan curSize;
-
-                                                        let _inpChan = open_in filename in
-                                                        (
-                                                            let newSize = in_channel_length _inpChan in
-                                                                if newSize <> curSize then addToAppendix ()
-                                                                else
+                                        let inpChan = open_in expname in
+                                            let (inp, posInp) = IO.pos_in (IO.input_channel inpChan) in
+                                                let curContent = Buffer.create bufLen
+                                                and newContent = Buffer.create bufLen in
+                                                    let addToPatch fname inpChan size = ( addIndexEntry ~main:False fname (filesBufLen ()) size; addFileEntry inpChan size; ) in
+                                                    let rec processFile ?(indent="") filename =
+                                                        try
+                                                            if is_directory filename then
+                                                                let filename = if String.ends_with filename "/" then filename else filename ^ "/" in
+                                                                    Array.iter (fun childFilename -> processFile ~indent:(indent ^ "  ") (filename ^ childFilename)) (readdir filename)
+                                                            else
+                                                                let _inpChan = open_in filename in
                                                                 (
-                                                                    Buffer.clear newContent;
-                                                                    Buffer.add_channel newContent _inpChan newSize;
+                                                                    let newSize = in_channel_length _inpChan in
+                                                                        let (_, relativeFname) = String.replace filename !inDir "" in
+                                                                            try                                            
+                                                                                let (offset, curSize) = Hashtbl.find index relativeFname in
+                                                                                    if newSize <> curSize then addToPatch relativeFname _inpChan newSize 
+                                                                                    else
+                                                                                    (
+                                                                                        seek_in inpChan (offset);
+                                                                                        Buffer.clear curContent;
+                                                                                        Buffer.add_channel curContent inpChan curSize;
 
-                                                                    if Buffer.contents curContent <> Buffer.contents newContent then addToAppendix ()
-                                                                    else Hashtbl.remove index relativeFname;
+                                                                                        Buffer.clear newContent;
+                                                                                        Buffer.add_channel newContent _inpChan newSize;
+
+                                                                                        if Buffer.contents curContent <> Buffer.contents newContent then addToPatch relativeFname _inpChan newSize
+                                                                                        else addIndexEntry relativeFname offset curSize;
+                                                                                    )
+                                                                            with [ Not_found -> addToPatch relativeFname _inpChan newSize ];
+                                                                    close_in _inpChan;
+                                                                )
+                                                        with [ Sys_error _ -> () ]
+                                                    in
+                                                    (
+                                                        if String.ends_with !inDir "/" then () else inDir.val := !inDir ^ "/";
+                                                        if String.ends_with !outDir "/" then () else outDir.val := !outDir ^ "/";
+
+                                                        processFile !inDir;
+
+                                                        IO.close_in inp;
+                                                        close_in inpChan;
+
+                                                        let outFname = Filename.concat !outDir ("patch." ^ (string_of_int !version) ^ "." ^ !package ^ ".obb") in
+                                                            let outChan = open_out outFname in
+                                                                let (out, outLen) = IO.pos_out (IO.output_channel outChan) in
+                                                                (
+                                                                    IO.write_i32 out !indexEntiesNum;
+                                                                    IO.nwrite out (IO.close_out indexBuf);
+                                                                    IO.nwrite out (IO.close_out filesBuf);
+
+                                                                    printf "patch done, out file location: %s; size %d\n" outFname (outLen ());
+
+                                                                    IO.close_out out;
+                                                                    close_out outChan;
                                                                 );
 
-                                                            close_in _inpChan;
-                                                        );
-                                                    )
-                                                with [ Not_found -> addToAppendix () ];
-                                )
-                                with [ Sys_error _ -> () ]
-                            in
-                            (
-                                if String.ends_with !inDir "/" then () else inDir.val := !inDir ^ "/";
-                                processFile !inDir;
-
-                                let (_, forRemove) =
-                                    List.fold_left (fun (i, forRemove) idx ->
-                                        let idx = idx - i in                                        
-                                            let (fname, entryOffset, entrySize) = DynArray.get indexArr idx in
-                                            (
-                                                for i = idx + 1 to DynArray.length indexArr - 1 do {
-                                                    let (fname, offset, size) = DynArray.get indexArr i in
-                                                        DynArray.set indexArr i (fname, offset - entrySize, size)
-                                                };
-
-                                                DynArray.delete indexArr idx;
-                                                (i + 1, [ (entryOffset, entrySize) :: forRemove ]);
-                                            )
-                                    ) (0, []) (List.sort (fun idx1 idx2 -> compare idx1 idx2) (Hashtbl.fold (fun k (_, _, idx) lst -> [ idx :: lst ]) index []))
-                                in
-                                (
-                                    ignore(List.fold_left (fun offset (fname, rfname) ->
-                                        let inpChan = open_in fname in
-                                            let size = in_channel_length inpChan in
-                                            (
-                                                addFileEntry inpChan size;
-                                                close_in inpChan;
-                                                DynArray.add indexArr (rfname, offset, size);
-                                                offset + size;
-                                            );
-                                    ) (let (_, offset, size) = DynArray.last indexArr in offset + size) !indexAppendix);                                                                        
-
-                                    DynArray.iter (fun (fname, offset, size) -> addIndexEntry fname offset size) indexArr;
-
-                                    List.iter (fun (offset, size) -> printf "rm %d %d\n" offset size) (List.rev forRemove);
-                                    let outFname = !outFname
-                                    and outChan = open_out !outFname in
-                                        let (out, outLen) = IO.pos_out (IO.output_channel outChan) in
-                                        (
-                                            (* maybe need patch version in header *)
-                                            (* IO.write_byte out 0; *)
-                                            IO.write_i32 out !indexEntiesNum;
-                                            IO.nwrite out (IO.close_out indexBuf);
-                                            IO.write_i32 out (List.length forRemove);
-                                            List.iter (fun (offset, size) ->
-                                                (
-                                                    IO.write_i32 out offset;
-                                                    IO.write_i32 out size;
-                                                )
-                                            ) (List.rev forRemove);
-                                            IO.nwrite out (IO.close_out filesBuf);
-
-                                            printf "done, out file location: %s; size %d\n" outFname (outLen ());
-
-                                            IO.close_out out;
-                                            close_out outChan;
-                                        );                                    
-                                );
-                            );
+                                                        let src = if Filename.is_relative expname then Filename.concat (Unix.getcwd ()) expname else expname
+                                                        and dst = Filename.concat !outDir (Filename.basename expname) in
+                                                            let dst = if Filename.is_relative dst then Filename.concat (Unix.getcwd ()) dst else dst in
+                                                            (                                                                
+                                                                try Sys.remove dst with [ Sys_error _ -> () ];
+                                                                Unix.symlink src dst;
+                                                            );
+                                                    );
                     );
-
-                IO.close_in inp;
-                close_in inpChan;
             )
     else failwith "cannot open source expansion file";
 
-parse args (fun arg -> if arg <> "" then inDir.val := arg else ())  "Lightning android expansions maker";
+parse args (fun _ -> ()) "Lightning android expansions maker";
 
 if !patchFor <> "" then
     buildPatch ()

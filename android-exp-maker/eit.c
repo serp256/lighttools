@@ -28,13 +28,15 @@ int main(int argc, char* argv[]) {
 		char* filename = malloc(filename_len + 1);
 		int32_t offset;
 		int32_t size;
+		int8_t in_main;
 
 		assert(filename_len == fread(filename, 1, filename_len, in));
 		*(filename + filename_len) = '\0';
 		assert(1 == fread(&offset, sizeof(int32_t), 1, in));
 		assert(1 == fread(&size, sizeof(int32_t), 1, in));
+		assert(1 == fread(&in_main, sizeof(int8_t), 1, in));
 
-		printf("\tfilename: %s; offset: %d; size: %d\n", filename, offset, size);
+		printf("\tfilename: %s; offset: %d; size: %d; in_main: %d\n", filename, offset, size, in_main);
 
 		free(filename);
 	}

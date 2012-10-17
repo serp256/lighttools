@@ -1,2 +1,2 @@
-<*.ml>: package(camlp4),syntax(camlp4r), package(extlib)
-<*.{byte,native}>: package(extlib)
+<*.ml>: package(extlib),package(camlp4),syntax(camlp4r),package(unix)
+<*.{byte,native}>: package(extlib),package(unix)

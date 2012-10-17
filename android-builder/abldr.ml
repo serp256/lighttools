@@ -82,7 +82,7 @@ value genMainExpansion suffix =
 			myassert (Sys.command ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ resDir ^ "sounds_android/default/ " ^ expDir ^ "/sounds/") = 0) "rsync failed when copying default sounds";
 			myassert (Sys.command ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ resDir ^ "sounds_android/en/ " ^ expDir ^ "/locale/en/sounds/") = 0) "rsync failed when copying en sounds";
 			myassert (Sys.command ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ resDir ^ "sounds_android/ru/ " ^ expDir ^ "/locale/ru/sounds/") = 0) "rsync failed when copying ru sounds";
-			myassert (Sys.command ("make -f " ^ makefilePath ^ " EXP_SUFFIX=" ^ suffix ^ " android-expansions-pack") = 0) "make failed when packing expansions";
+			myassert (Sys.command ("make -f " ^ makefilePath ^ " EXP_SUFFIX=" ^ suffix ^ " android-expansions-fresh") = 0) "make failed when packing expansions";
 		);
 
 value compileApk suffix =
@@ -108,7 +108,7 @@ value archiveApk suffix =
 			mkdir apkArchiveDir;
 
 			myassert (Sys.command ("cp `find " ^ androidDir ^ "/bin -name '*-release.apk'` " ^ apkArchiveDir) = 0) "cp failed when trying to copy apk to archive";
-			myassert (Sys.command ("cp `find " ^ expansionsDir ^ suffix ^ " -name 'main*obb'` " ^ apkArchiveDir) = 0) "cp failed when trying to copy main expansion to archive";
+			myassert (Sys.command ("cp `find " ^ expansionsDir ^ suffix ^ " -name '*obb'` " ^ apkArchiveDir) = 0) "cp failed when trying to copy main expansion to archive";
 		);
 
 List.iter (fun suffix ->
