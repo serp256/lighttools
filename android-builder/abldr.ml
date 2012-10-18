@@ -41,6 +41,7 @@ value installVer = ref "";
 value installSuffix = ref "";
 value installApk = ref False;
 value installExp = ref False;
+value withoutLib = ref False;
 
 value args = [
     ("-i", Set_string inDir, "input directory (for example, farm root directory, which contains android subdirectory)");
@@ -50,7 +51,8 @@ value args = [
     ("-exp", Set expansions, "generate expansions for suffixes");
     ("-exp-patch", Set_string patchFor, "generate expansions patch for version, passed through this option");
     ("-apk", Set apk, "compile apk for suffixes");
-    ("-release", Set release, "compile apks for release, use in addition to -apk option");
+    ("-without-lib", Set withoutLib, "compile apk without farm-lib rebuilding, use it in addition -apk option");
+    ("-release", Set release, "compile apks for release, use it in addition to -apk option");
     ("-install", Tuple [ Set installApk; Set installExp; Set_string installSuffix; Set_string installVer ], "install both apk and expansions. pass through this option single suffix-version pair. note, that version is taken from archive. example: abldr -install android_800x480 1.1.3");
     ("-install-apk", Tuple [ Set installApk; Set_string installSuffix; Set_string installVer ], "install only apk, usage same as -install");
     ("-install-exp", Tuple [ Set installExp; Set_string installSuffix; Set_string installVer ], "install only expansion, usage same as -install")
@@ -177,7 +179,10 @@ value compileApk suffix =
     let target = if !release then "android-release" else "android" in
     (
         printf "\n\n[ compiling apk for suffix %s... ]\n%!" suffix;
-        runCommand ("make -f " ^ makefilePath ^ " " ^ target) "make failed when compiling apk";
+
+        if !withoutLib then runCommand ("ant -f " ^ (Filename.concat androidDir "build.xml") ^ " release") "ant failed when compiling apk"
+        else runCommand ("make -f " ^ makefilePath ^ " " ^ target) "make failed when compiling apk";
+
         archiveApk ~expansions:False suffix;
     );
 
