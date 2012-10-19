@@ -26,6 +26,12 @@ value runCommand command errMes =
     myassert (Sys.command command = 0) errMes;
 );
 
+value findExpNames dir =
+    Array.fold_left (fun (main, patch) fname ->
+        if String.starts_with fname "main" then (fname, main)
+        else if String.starts_with fname "patch" then (main, fname) else (main, patch)
+    ) ("", "") (Sys.readdir dir);
+
 value inDir = ref ".";
 value manifests: ref (list string) = ref [];
 
@@ -36,6 +42,7 @@ value apk = ref False;
 value release = ref False;
 value package = ref "";
 value patchFor = ref "";
+value expVer = ref "";
 value suffixes = ref [];
 value installVer = ref "";
 value installSuffix = ref "";
@@ -50,6 +57,7 @@ value args = [
     ("-assets", Set assets, "generate assets for suffixes");
     ("-exp", Set expansions, "generate expansions for suffixes");
     ("-exp-patch", Set_string patchFor, "generate expansions patch for version, passed through this option");
+    ("-exp-ver", Set_string expVer, "use expansions from version, passed through this option");
     ("-apk", Set apk, "compile apk for suffixes");
     ("-without-lib", Set withoutLib, "compile apk without farm-lib rebuilding, use it in addition -apk option");
     ("-release", Set release, "compile apks for release, use it in addition to -apk option");
@@ -81,11 +89,11 @@ value genManifest suffix =
     );
 
 value genAssets suffix =
-    let suffixFilter = rsyncDir ^ "android-" ^ suffix ^ "-assets.filter" in
+    let suffixFilter = Filename.concat rsyncDir ("android-" ^ suffix ^ "-assets.filter") in
         let suffixFilter = if Sys.file_exists suffixFilter then " --filter='. " ^ suffixFilter ^ "'" else "" in
         (
             printf "\n\n[ generating assets for suffix %s... ]\n%!" suffix;
-            runCommand ("rsync -avL --include-from=" ^ (Filename.concat rsyncDir "android-assets.include") ^ suffixFilter ^ " --exclude-from=" ^ (Filename.concat rsyncDir "android-assets.exclude") ^ " --delete --delete-excluded " ^ resDir ^ " " ^ assetsDir) "rsync failed when copying assets";
+            runCommand ("rsync -avL --include-from=" ^ (Filename.concat rsyncDir "android-assets.include") ^ suffixFilter ^ " --exclude-from=" ^ (Filename.concat rsyncDir "android-assets.exclude") ^ " --delete --delete-excluded " ^ resDir ^ "/ " ^ assetsDir) "rsync failed when copying assets";
         );
 
 value archiveApk ?(apk = True) ?(expansions = True) suffix =
@@ -104,76 +112,86 @@ value archiveApk ?(apk = True) ?(expansions = True) suffix =
             if apk then
             (
                 printf "\n\n[ archiving apk version %s for suffix %s... ]\n%!" ver suffix;
+                runCommand ("rm " ^ (Filename.concat apkArchiveDir "*.apk")) "rm failed when trying to remove previous apk";
                 runCommand ("cp -Rv `find " ^ androidDir ^ "/bin -name '*-release.apk'` " ^ apkArchiveDir) "cp failed when trying to copy apk to archive";
             ) else ();
             
             if expansions then
             (
                 printf "\n\n[ archiving expansions version %s for suffix %s... ]\n%!" ver suffix;
+                runCommand ("rm " ^ (Filename.concat apkArchiveDir "*.obb")) "rm failed when trying to remove previous obbs";
                 runCommand ("cp -Rv `find " ^ (Filename.concat expansionsDir suffix) ^ " -name '*obb'` " ^ apkArchiveDir) "cp failed when trying to copy main expansion to archive";
             ) else ();
         );
 
 value genMainExpansion suffix =
-    let expDir = Filename.concat expansionsDir (Filename.concat suffix "main")
-    and suffixFilter = Filename.concat rsyncDir ("android-" ^ suffix ^ "-expansions.filter") in
-        let suffixFilter = if Sys.file_exists suffixFilter then " --filter='. " ^ suffixFilter ^ "'" else "" in
-        (
-            printf "\n\n[ generating expansions for suffix %s... ]\n%!" suffix;
-            mkdir expDir;
-            runCommand ("rsync -avL --filter='protect locale/*/sounds' --filter='protect sounds' --include-from=" ^ (Filename.concat rsyncDir "android-expansions.include") ^ suffixFilter ^ " --exclude-from=" ^ (Filename.concat rsyncDir "android-expansions.exclude") ^ " --delete --delete-excluded " ^ resDir ^ "/ " ^ expDir) "rsync failed when copying expansions";
-            runCommand ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ (Filename.concat resDir "sounds_android/default/") ^ " " ^ (Filename.concat expDir "sounds/")) "rsync failed when copying default sounds";
-            runCommand ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ (Filename.concat resDir "sounds_android/en/") ^ " " ^ (Filename.concat expDir "locale/en/sounds/")) "rsync failed when copying en sounds";
-            runCommand ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ (Filename.concat resDir "sounds_android/ru/") ^ " " ^ (Filename.concat expDir "locale/ru/sounds/")) "rsync failed when copying ru sounds";
-
-            let expsDir = Filename.concat expansionsDir suffix in
-                Array.iter (fun fname -> if String.ends_with fname ".obb" then Sys.remove (Filename.concat expsDir fname) else ()) (Sys.readdir expsDir);
-
-            let inp = open_in (Filename.concat androidDir "AndroidManifest.xml") in
-                let xmlinp = Xmlm.make_input ~strip:True (`Channel inp) in
+(
+    if !expVer <> "" then
+        let src = Filename.concat archiveDir (Filename.concat suffix !expVer)
+        and dst = Filename.concat expansionsDir suffix in
+            let (main, patch) = findExpNames src in
+                let src = if Filename.is_relative src then Filename.concat (Unix.getcwd ()) src else src
+                and dst = if Filename.is_relative dst then Filename.concat (Unix.getcwd ()) dst else dst in
                 (
-                    ignore(Xmlm.input xmlinp);
+                    runCommand ("rm " ^ (Filename.concat dst "*.obb")) "rm failed when trying to remove previous obbs";
+                    Unix.symlink (Filename.concat src main) (Filename.concat dst main);
+                    Unix.symlink (Filename.concat src patch) (Filename.concat dst patch);
+                )
+    else
+        let expDir = Filename.concat expansionsDir (Filename.concat suffix "main")
+        and suffixFilter = Filename.concat rsyncDir ("android-" ^ suffix ^ "-expansions.filter") in
+            let suffixFilter = if Sys.file_exists suffixFilter then " --filter='. " ^ suffixFilter ^ "'" else "" in
+            (
+                printf "\n\n[ generating expansions for suffix %s... ]\n%!" suffix;
+                mkdir expDir;
+                runCommand ("rsync -avL --filter='protect locale/*/sounds' --filter='protect sounds' --include-from=" ^ (Filename.concat rsyncDir "android-expansions.include") ^ suffixFilter ^ " --exclude-from=" ^ (Filename.concat rsyncDir "android-expansions.exclude") ^ " --delete --delete-excluded " ^ resDir ^ "/ " ^ expDir) "rsync failed when copying expansions";
+                runCommand ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ (Filename.concat resDir "sounds_android/default/") ^ " " ^ (Filename.concat expDir "sounds/")) "rsync failed when copying default sounds";
+                runCommand ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ (Filename.concat resDir "sounds_android/en/") ^ " " ^ (Filename.concat expDir "locale/en/sounds/")) "rsync failed when copying en sounds";
+                runCommand ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ (Filename.concat resDir "sounds_android/ru/") ^ " " ^ (Filename.concat expDir "locale/ru/sounds/")) "rsync failed when copying ru sounds";
 
-                    match Xmlm.input xmlinp with
-                    [ `El_start ((_, "manifest"), attributes) ->
-                        try
-                            let verCode = List.find_map (fun ((uri, name), v) -> if name = "versionCode" then Some v else None) attributes
-                            and expansionsDir = Filename.concat expansionsDir suffix in
-                                let command = "aem -o " ^ expansionsDir ^ "/ -i " ^ (Filename.concat expansionsDir "main") ^ " -package " ^ !package ^  " -version " ^ verCode in
-                                    let command =
-                                        if !patchFor <> "" then
-                                            let archiveDir = Filename.concat (Filename.concat archiveDir suffix) !patchFor in
-                                                try
-                                                    let patchFname = Array.find (fun fname -> String.starts_with fname "patch") (Sys.readdir archiveDir) in
-                                                        command ^ " -p " ^ (Filename.concat archiveDir patchFname)
-                                                with [ Not_found -> failwith "no base patch found in archive "]
-                                        else command
-                                    in
-                                    (
-                                        runCommand command "aem failed when packing expansion";
+                let expsDir = Filename.concat expansionsDir suffix in
+                    Array.iter (fun fname -> if String.ends_with fname ".obb" then Sys.remove (Filename.concat expsDir fname) else ()) (Sys.readdir expsDir);
 
-                                        let (main, patch) =
-                                            Array.fold_left (fun (main, patch) fname ->
-                                                if String.starts_with fname "main" then (fname, main)
-                                                else if String.starts_with fname "patch" then (main, fname) else (main, patch)
-                                            ) ("", "") (Sys.readdir expansionsDir)
+                let inp = open_in (Filename.concat androidDir "AndroidManifest.xml") in
+                    let xmlinp = Xmlm.make_input ~strip:True (`Channel inp) in
+                    (
+                        ignore(Xmlm.input xmlinp);
+
+                        match Xmlm.input xmlinp with
+                        [ `El_start ((_, "manifest"), attributes) ->
+                            try
+                                let verCode = List.find_map (fun ((uri, name), v) -> if name = "versionCode" then Some v else None) attributes
+                                and expansionsDir = Filename.concat expansionsDir suffix in
+                                    let command = "aem -o " ^ expansionsDir ^ "/ -i " ^ (Filename.concat expansionsDir "main") ^ " -package " ^ !package ^  " -version " ^ verCode in
+                                        let command =
+                                            if !patchFor <> "" then
+                                                let archiveDir = Filename.concat (Filename.concat archiveDir suffix) !patchFor in
+                                                    try
+                                                        let patchFname = Array.find (fun fname -> String.starts_with fname "patch") (Sys.readdir archiveDir) in
+                                                            command ^ " -p " ^ (Filename.concat archiveDir patchFname)
+                                                    with [ Not_found -> failwith "no base patch found in archive "]
+                                            else command
                                         in
-                                            let msize = (Unix.stat (Filename.concat expansionsDir main)).Unix.st_size
-                                            and psize = (Unix.stat (Filename.concat expansionsDir patch)).Unix.st_size
-                                            and mver = try List.hd (List.tl (String.nsplit main ".")) with [ Failure _ -> failwith "wrong main expansion name" ]                                            
-                                            and pver = try List.hd (List.tl (String.nsplit patch ".")) with [ Failure _ -> failwith "wrong expansion patch name" ] in
-                                                let out = open_out (Filename.concat androidDir "res/values/expansions.xml") in
-                                                (
-                                                    output_string out ("<?xml version=\"1.0\" encoding=\"utf-8\"?><resources><array name=\"expansions\"><item>true," ^ mver ^ "," ^ (string_of_int msize) ^ "</item><item>false," ^ pver ^ "," ^ (string_of_int psize) ^ "</item></array></resources>");
-                                                    close_out out;
-                                                    archiveApk ~apk:False suffix;
-                                                );
-                                    )
-                        with [ Not_found -> failwith "no versionCode in your manifest" ]
-                    | _ -> failwith "no manifest tag in your manifest"
-                    ];                  
+                                            runCommand command "aem failed when packing expansion"
+                            with [ Not_found -> failwith "no versionCode in your manifest" ]
+                        | _ -> failwith "no manifest tag in your manifest"
+                        ];                  
+                    );
+            );
+
+    let expansionsDir = Filename.concat expansionsDir suffix in
+        let (main, patch) = findExpNames expansionsDir in
+            let msize = (Unix.stat (Filename.concat expansionsDir main)).Unix.st_size
+            and psize = (Unix.stat (Filename.concat expansionsDir patch)).Unix.st_size
+            and mver = try List.hd (List.tl (String.nsplit main ".")) with [ Failure _ -> failwith "wrong main expansion name" ]
+            and pver = try List.hd (List.tl (String.nsplit patch ".")) with [ Failure _ -> failwith "wrong expansion patch name" ] in
+                let out = open_out (Filename.concat androidDir "res/values/expansions.xml") in
+                (
+                    output_string out ("<?xml version=\"1.0\" encoding=\"utf-8\"?><resources><array name=\"expansions\"><item>true," ^ mver ^ "," ^ (string_of_int msize) ^ "</item><item>false," ^ pver ^ "," ^ (string_of_int psize) ^ "</item></array></resources>");
+                    close_out out;
+                    archiveApk ~apk:False suffix;
                 );
-        );
+);
 
 value compileApk suffix =
     let target = if !release then "android-release" else "android" in
@@ -216,9 +234,9 @@ else
         (
             printf "processing suffix %s...\n%!" suffix;
 
-            if !manifest || !apk then genManifest suffix else ();
+            if !manifest || !patchFor <> "" || !expVer <> "" || !apk then genManifest suffix else ();
             if !assets || !apk then genAssets suffix else ();
-            if !expansions || !patchFor <> "" then genMainExpansion suffix else ();
+            if !expansions || !patchFor <> "" || !expVer <> "" then genMainExpansion suffix else ();
             if !apk then compileApk suffix else ();
         )
     ) !suffixes;
