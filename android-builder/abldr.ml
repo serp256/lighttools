@@ -112,14 +112,14 @@ value archiveApk ?(apk = True) ?(expansions = True) suffix =
             if apk then
             (
                 printf "\n\n[ archiving apk version %s for suffix %s... ]\n%!" ver suffix;
-                runCommand ("rm " ^ (Filename.concat apkArchiveDir "*.apk")) "rm failed when trying to remove previous apk";
+                runCommand ("rm -f " ^ (Filename.concat apkArchiveDir "*.apk")) "rm failed when trying to remove previous apk";
                 runCommand ("cp -Rv `find " ^ androidDir ^ "/bin -name '*-release.apk'` " ^ apkArchiveDir) "cp failed when trying to copy apk to archive";
             ) else ();
             
             if expansions then
             (
                 printf "\n\n[ archiving expansions version %s for suffix %s... ]\n%!" ver suffix;
-                runCommand ("rm " ^ (Filename.concat apkArchiveDir "*.obb")) "rm failed when trying to remove previous obbs";
+                runCommand ("rm -f " ^ (Filename.concat apkArchiveDir "*.obb")) "rm failed when trying to remove previous obbs";
                 runCommand ("cp -Rv `find " ^ (Filename.concat expansionsDir suffix) ^ " -name '*obb'` " ^ apkArchiveDir) "cp failed when trying to copy main expansion to archive";
             ) else ();
         );
@@ -133,7 +133,7 @@ value genMainExpansion suffix =
                 let src = if Filename.is_relative src then Filename.concat (Unix.getcwd ()) src else src
                 and dst = if Filename.is_relative dst then Filename.concat (Unix.getcwd ()) dst else dst in
                 (
-                    runCommand ("rm " ^ (Filename.concat dst "*.obb")) "rm failed when trying to remove previous obbs";
+                    runCommand ("rm -f " ^ (Filename.concat dst "*.obb")) "rm failed when trying to remove previous obbs";
                     Unix.symlink (Filename.concat src main) (Filename.concat dst main);
                     Unix.symlink (Filename.concat src patch) (Filename.concat dst patch);
                 )
@@ -179,23 +179,24 @@ value genMainExpansion suffix =
                     );
             );
 
-    let expansionsDir = Filename.concat expansionsDir suffix in
-        let (main, patch) = findExpNames expansionsDir in
-            let msize = (Unix.stat (Filename.concat expansionsDir main)).Unix.st_size
-            and psize = (Unix.stat (Filename.concat expansionsDir patch)).Unix.st_size
-            and mver = try List.hd (List.tl (String.nsplit main ".")) with [ Failure _ -> failwith "wrong main expansion name" ]
-            and pver = try List.hd (List.tl (String.nsplit patch ".")) with [ Failure _ -> failwith "wrong expansion patch name" ] in
-                let out = open_out (Filename.concat androidDir "res/values/expansions.xml") in
-                (
-                    output_string out ("<?xml version=\"1.0\" encoding=\"utf-8\"?><resources><array name=\"expansions\"><item>true," ^ mver ^ "," ^ (string_of_int msize) ^ "</item><item>false," ^ pver ^ "," ^ (string_of_int psize) ^ "</item></array></resources>");
-                    close_out out;
-                    archiveApk ~apk:False suffix;
-                );
+    archiveApk ~apk:False suffix;
 );
 
 value compileApk suffix =
     let target = if !release then "android-release" else "android" in
     (
+        let expansionsDir = Filename.concat expansionsDir suffix in
+            let (main, patch) = findExpNames expansionsDir in
+                let msize = (Unix.stat (Filename.concat expansionsDir main)).Unix.st_size
+                and psize = (Unix.stat (Filename.concat expansionsDir patch)).Unix.st_size
+                and mver = try List.hd (List.tl (String.nsplit main ".")) with [ Failure _ -> failwith "wrong main expansion name" ]
+                and pver = try List.hd (List.tl (String.nsplit patch ".")) with [ Failure _ -> failwith "wrong expansion patch name" ] in
+                    let out = open_out (Filename.concat androidDir "res/values/expansions.xml") in
+                    (
+                        output_string out ("<?xml version=\"1.0\" encoding=\"utf-8\"?><resources><array name=\"expansions\"><item>true," ^ mver ^ "," ^ (string_of_int msize) ^ "</item><item>false," ^ pver ^ "," ^ (string_of_int psize) ^ "</item></array></resources>");
+                        close_out out;
+                    );
+        
         printf "\n\n[ compiling apk for suffix %s... ]\n%!" suffix;
 
         if !withoutLib then runCommand ("ant -f " ^ (Filename.concat androidDir "build.xml") ^ " release") "ant failed when compiling apk"
