@@ -134,6 +134,8 @@ value genMainExpansion suffix =
                 and dst = if Filename.is_relative dst then Filename.concat (Unix.getcwd ()) dst else dst in
                 (
                     runCommand ("rm -f " ^ (Filename.concat dst "*.obb")) "rm failed when trying to remove previous obbs";
+
+                    printf "\n\n[ creating links to expansions version %s... ]\n%!" !expVer;
                     Unix.symlink (Filename.concat src main) (Filename.concat dst main);
                     Unix.symlink (Filename.concat src patch) (Filename.concat dst patch);
                 )
@@ -235,7 +237,7 @@ else
         (
             printf "processing suffix %s...\n%!" suffix;
 
-            if !manifest || !patchFor <> "" || !expVer <> "" || !apk then genManifest suffix else ();
+            if !manifest || !expansions || !patchFor <> "" || !expVer <> "" || !apk then genManifest suffix else ();
             if !assets || !apk then genAssets suffix else ();
             if !expansions || !patchFor <> "" || !expVer <> "" then genMainExpansion suffix else ();
             if !apk then compileApk suffix else ();
