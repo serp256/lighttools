@@ -60,16 +60,14 @@ value args = [
     ("-exp-ver", Set_string expVer, "use expansions from version, passed through this option");
     ("-apk", Set apk, "compile apk for suffixes");
     ("-without-lib", Set withoutLib, "compile apk without farm-lib rebuilding, use it in addition -apk option");
-    ("-release", Set release, "compile apks for release, use it in addition to -apk option");
-    ("-install", Tuple [ Set installApk; Set installExp; Set_string installSuffix; Set_string installVer ], "install both apk and expansions. pass through this option single suffix-version pair. note, that version is taken from archive. example: abldr -install android_800x480 1.1.3");
-    ("-install-apk", Tuple [ Set installApk; Set_string installSuffix; Set_string installVer ], "install only apk, usage same as -install");
-    ("-install-exp", Tuple [ Set installExp; Set_string installSuffix; Set_string installVer ], "install only expansion, usage same as -install")
+    ("-release", Set release, "compile apks for release, install from release archive, copy apk and expansions to release archive");
+    ("-install", Tuple [ Set installApk; Set installExp; Set_string installSuffix; Set_string installVer ], "install both apk and expansions. when using with -release flag, takes suffix-version pair, when without -release -- only suffix. example: abldr -install normal_hdpi_pvr or abldr -release -install normal_hdpi_pvr 1.1.3");
+    ("-install-apk", Tuple [ Set installApk; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "install only apk, usage same as -install");
+    ("-install-exp", Tuple [ Set installExp; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "install only expansion, usage same as -install")
 ];
 
-parse args (fun arg -> suffixes.val := [ arg :: !suffixes ]) "android multiple apks generator, usage [<options>] [<siffixes>...]";
+parse args (fun arg -> suffixes.val := [ arg :: !suffixes ]) "android multiple apks generator";
 suffixes.val := List.rev !suffixes;
-
-(* if String.ends_with !inDir "/" then () else inDir.val := !inDir ^ "/"; *)
 
 value androidDir = Filename.concat !inDir "android";
 value manifestsDir = Filename.concat androidDir "manifests";
@@ -78,7 +76,11 @@ value rsyncDir = Filename.concat androidDir "rsync";
 value resDir = Filename.concat !inDir "Resources";
 value assetsDir = Filename.concat androidDir "assets";
 value makefilePath = Filename.concat !inDir "Makefile";
-value archiveDir = Filename.concat androidDir "archive";
+value releaseDir = Filename.concat androidDir "release";
+value debugDir = Filename.concat androidDir "debug";
+value archiveDir suffix ver =
+    let archiveDir = Filename.concat (if !release then releaseDir else debugDir) suffix in
+        if !release then Filename.concat archiveDir ver else archiveDir;
 
 value genManifest suffix =
     let manifestConfig = Filename.concat manifestsDir (suffix ^ ".xml") in
@@ -105,7 +107,7 @@ value archiveApk ?(apk = True) ?(expansions = True) suffix =
                 ver;
             )
     in
-        let apkArchiveDir = Filename.concat (Filename.concat archiveDir suffix) ver in
+        let apkArchiveDir = archiveDir suffix ver in
         (
             mkdir apkArchiveDir;
 
@@ -124,10 +126,10 @@ value archiveApk ?(apk = True) ?(expansions = True) suffix =
             ) else ();
         );
 
-value genMainExpansion suffix =
+value genExpansion suffix =
 (
     if !expVer <> "" then
-        let src = Filename.concat archiveDir (Filename.concat suffix !expVer)
+        let src = Filename.concat releaseDir (Filename.concat suffix !expVer)
         and dst = Filename.concat expansionsDir suffix in
             let (main, patch) = findExpNames src in
                 let src = if Filename.is_relative src then Filename.concat (Unix.getcwd ()) src else src
@@ -167,7 +169,7 @@ value genMainExpansion suffix =
                                     let command = "aem -o " ^ expansionsDir ^ "/ -i " ^ (Filename.concat expansionsDir "main") ^ " -package " ^ !package ^  " -version " ^ verCode in
                                         let command =
                                             if !patchFor <> "" then
-                                                let archiveDir = Filename.concat (Filename.concat archiveDir suffix) !patchFor in
+                                                let archiveDir = Filename.concat (Filename.concat releaseDir suffix) !patchFor in
                                                     try
                                                         let patchFname = Array.find (fun fname -> String.starts_with fname "patch") (Sys.readdir archiveDir) in
                                                             command ^ " -p " ^ (Filename.concat archiveDir patchFname)
@@ -208,29 +210,34 @@ value compileApk suffix =
     );
 
 value install () =
-    let archiveDir = Filename.concat (Filename.concat archiveDir !installSuffix) !installVer in
-        let (apk, main, patch) =
-            Array.fold_left (fun (apk, main, patch) fname ->
-                if String.ends_with fname ".apk" then (fname, main, patch)
-                else if String.starts_with fname "main" then (apk, fname, patch)
-                else if String.starts_with fname "patch" then (apk, main, fname) else (apk, main, patch)
-            ) ("", "", "") (Sys.readdir archiveDir)
-        in
-            if apk = "" || main = "" || patch = "" then failwith "apk, main or patch not found"
-            else
-            (
-                if !installApk then runCommand ("adb install -r " ^ (Filename.concat archiveDir apk)) "adb failed when installing apk" else ();
+(
+    myassert (not !release || !installVer <> "") "when installing release, should pass install version";
 
-                if !installExp then
-                    let pushCommand = "storage_dir=`adb shell 'echo -n $EXTERNAL_STORAGE'` && exp_dir=$storage_dir/Android/obb/" ^ !package ^ " && adb shell \"mkdir -p $exp_dir\" && adb push " in
-                    (
-                        runCommand (pushCommand ^ (Filename.concat archiveDir main) ^ " $exp_dir/") "error while pushing main expansion";
-                        runCommand (pushCommand ^ (Filename.concat archiveDir patch) ^ " $exp_dir/") "error while pushing expansion patch";                    
-                    )
-                else ();
-            );
+    let archiveDir = archiveDir !installSuffix !installVer in
+    let () = printf "archiveDir %s\n" archiveDir in
+    let (apk, main, patch) =
+        Array.fold_left (fun (apk, main, patch) fname ->
+            if String.ends_with fname ".apk" then (fname, main, patch)
+            else if String.starts_with fname "main" then (apk, fname, patch)
+            else if String.starts_with fname "patch" then (apk, main, fname) else (apk, main, patch)
+        ) ("", "", "") (Sys.readdir archiveDir)
+    in
+        if apk = "" || main = "" || patch = "" then failwith "apk, main or patch not found"
+        else
+        (
+            if !installApk then runCommand ("adb install -r " ^ (Filename.concat archiveDir apk)) "adb failed when installing apk" else ();
 
-if !installSuffix <> "" && !installVer <> "" then
+            if !installExp then
+                let pushCommand = "storage_dir=`adb shell 'echo -n $EXTERNAL_STORAGE'` && exp_dir=$storage_dir/Android/obb/" ^ !package ^ " && adb shell \"mkdir -p $exp_dir\" && adb push " in
+                (
+                    runCommand (pushCommand ^ (Filename.concat archiveDir main) ^ " $exp_dir/") "error while pushing main expansion";
+                    runCommand (pushCommand ^ (Filename.concat archiveDir patch) ^ " $exp_dir/") "error while pushing expansion patch";                    
+                )
+            else ();
+        );
+);
+
+if !installApk || !installExp then
     install ()
 else
     List.iter (fun suffix ->
@@ -239,7 +246,7 @@ else
 
             if !manifest || !expansions || !patchFor <> "" || !expVer <> "" || !apk then genManifest suffix else ();
             if !assets || !apk then genAssets suffix else ();
-            if !expansions || !patchFor <> "" || !expVer <> "" then genMainExpansion suffix else ();
+            if !expansions || !patchFor <> "" || !expVer <> "" then genExpansion suffix else ();
             if !apk then compileApk suffix else ();
         )
     ) !suffixes;
