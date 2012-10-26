@@ -5,7 +5,12 @@
 #require "camlimages";;
 #require "camlimages.png";;
 
-let src = Images.load "0.png" [] in
+let args = ref [];;
+let argc = ref 0;;
+
+Arg.parse [] (fun arg -> ( incr argc; if !argc > 2 then failwith "alpha extractor takes only two arguments" else args := arg :: !args; )) "alpha extractor, usage: ./ae.ml <source image> <out image>";;
+
+let src = Images.load (List.hd (List.tl !args)) [] in
 	let (srcw, srch) = Images.size src in
 		let dst = Rgb24.make srcw srch { Color.Rgb.r = 0; g = 0; b = 0 } in
 			match src with
@@ -19,6 +24,6 @@ let src = Images.load "0.png" [] in
 						done;
 					done;
 
-					Images.save "0_alpha.png" (Some Images.Png) [] (Images.Rgb24 dst);
+					Images.save (List.hd !args) (Some Images.Png) [] (Images.Rgb24 dst);
 				)
 			| _ -> assert false;;
