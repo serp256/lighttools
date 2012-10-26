@@ -61,7 +61,7 @@ value args = [
     ("-apk", Set apk, "compile apk for suffixes");
     ("-without-lib", Set withoutLib, "compile apk without farm-lib rebuilding, use it in addition -apk option");
     ("-release", Set release, "compile apks for release, install from release archive, copy apk and expansions to release archive");
-    ("-install", Tuple [ Set installApk; Set installExp; Set_string installSuffix; Set_string installVer ], "install both apk and expansions. when using with -release flag, takes suffix-version pair, when without -release -- only suffix. example: abldr -install normal_hdpi_pvr or abldr -release -install normal_hdpi_pvr 1.1.3");
+    ("-install", Tuple [ Set installApk; Set installExp; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "install both apk and expansions. when using with -release flag, takes suffix-version pair, when without -release -- only suffix. example: abldr -install normal_hdpi_pvr or abldr -release -install normal_hdpi_pvr 1.1.3");
     ("-install-apk", Tuple [ Set installApk; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "install only apk, usage same as -install");
     ("-install-exp", Tuple [ Set installExp; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "install only expansion, usage same as -install")
 ];
