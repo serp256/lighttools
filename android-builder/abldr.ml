@@ -49,6 +49,7 @@ value installSuffix = ref "";
 value installApk = ref False;
 value installExp = ref False;
 value withoutLib = ref False;
+value baseExp = ref False;
 
 value args = [
     ("-i", Set_string inDir, "input directory (for example, farm root directory, which contains android subdirectory)");
@@ -56,6 +57,7 @@ value args = [
     ("-manifest", Set manifest, "generate manifest for suffixes");
     ("-assets", Set assets, "generate assets for suffixes");
     ("-exp", Set expansions, "generate expansions for suffixes");
+    ("-base-exp", Set baseExp, "create symlink, named 'base', to this version on expansions in release archive");
     ("-exp-patch", Set_string patchFor, "generate expansions patch for version, passed through this option");
     ("-exp-ver", Set_string expVer, "use expansions from version, passed through this option");
     ("-apk", Set apk, "compile apk for suffixes");
@@ -123,6 +125,15 @@ value archiveApk ?(apk = True) ?(expansions = True) suffix =
                 printf "\n\n[ archiving expansions version %s for suffix %s... ]\n%!" ver suffix;
                 runCommand ("rm -f " ^ (Filename.concat apkArchiveDir "*.obb")) "rm failed when trying to remove previous obbs";
                 runCommand ("cp -Rv `find " ^ (Filename.concat expansionsDir suffix) ^ " -name '*obb'` " ^ apkArchiveDir) "cp failed when trying to copy main expansion to archive";
+
+                if !release && !baseExp && !patchFor = "" then
+                    let base = Filename.concat (Filename.dirname apkArchiveDir) "base" in
+                        let apkArchiveDir = if Filename.is_relative apkArchiveDir then Filename.concat (Unix.getcwd()) apkArchiveDir else apkArchiveDir in
+                        (
+                            if Sys.file_exists base then Sys.remove base else ();
+                            Unix.symlink apkArchiveDir base;
+                        )                            
+                else ();
             ) else ();
         );
 
