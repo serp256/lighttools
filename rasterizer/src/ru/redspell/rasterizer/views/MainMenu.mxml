@@ -18,6 +18,7 @@
 
 		public static const OPEN:String = 'mainMenu_open';
 		public static const EXPORT:String = 'mainMenu_export';
+		public static const EXPORT_ALL:String = 'mainMenu_exportAll';
 		public static const CREATE_PROFILE:String = 'mainMenu_createProfile';
 		public static const CHOOSE_PROFILE:String = 'mainMenu_chooseProfile';
 
