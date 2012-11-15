@@ -252,6 +252,8 @@ value estimate k b pnts =
 value imgPos = ref 0;
 
 value genTmap regions frames anim =
+(*   if anim.aname <> "middle_step_1_1" then ()
+  else *)
   let frame = DynArray.get frames (List.hd anim.frames) in
   let (x, y, w, h) =
     List.fold_left (fun (x, y, w, h) layer ->
@@ -262,8 +264,10 @@ value genTmap regions frames anim =
   in
   let texImgs = Hashtbl.create 0 in
   let getTexImg texFname = try Hashtbl.find texImgs texFname with [ Not_found -> let texImg = Images.load texFname [] in ( Hashtbl.add texImgs texFname texImg; texImg; ) ] in
+  (* let frameImg = match Images.load "/Users/nazarov/Desktop/123.png" [] with [ Images.Rgba32 img -> img | _ -> assert False ] in *)
   let frameImg = Rgba32.(make (w - x) (h - y) Color.({ Rgba.color = { Rgb.r = 0xff; g = 0xff; b = 0xff }; alpha = 0 })) in
   (
+
     List.iter (fun layer ->
       let (texFname, regions) = DynArray.get regions layer.texId in
       let region = DynArray.get regions layer.recId in
@@ -279,6 +283,114 @@ value genTmap regions frames anim =
 
     let w = frameImg.Rgba32.width
     and h = frameImg.Rgba32.height in
+    let applyThreshold col row =
+      (* let () = Printf.printf "applyThreshold %d %d\n%!" col row in *)
+      Color.Rgba.(
+        let c1 = (Rgba32.get frameImg col row).alpha
+          (* if c1 <= alphaThreshold then 0 else 1 *)
+          and c2 = (Rgba32.get frameImg (col + 1) row).alpha
+          and c3 = (Rgba32.get frameImg col (row + 1)).alpha
+          and c4 = (Rgba32.get frameImg (col + 1) (row + 1)).alpha in
+            (* let () = Printf.printf "%d %d %d %d %d\n" c1 c2 c3 c4 ((c1 + c2 + c3 + c4) / 4) in *)
+            if (c1 + c2 + c3 + c4) / 4 <= alphaThreshold then 0 else 1
+      )
+    in
+    let binImg = Array.make_matrix (w - 1) (h - 1) 0 in
+    (
+          let img = Rgb24.make w h { Color.Rgb.r = 0xff; g = 0xff; b = 0xff; } in
+          (
+            for i = 0 to w - 1 do
+              for j = 0 to h - 1 do
+                let c = Rgba32.get frameImg i j in
+                  Color.Rgba.(Color.Rgb.(Rgb24.set img i j { r = c.color.r; g = c.color.g; b = c.color.b }))
+              done;
+            done;
+
+            Graphic_image.draw_image (Images.Rgb24 img) !imgPos (600 - h);
+
+            (* Graphics.set_line_width 1; *)
+            (* Graphics.set_color 0xff0000; *)
+            (* Graphics.draw_poly (Array.of_list (List.map (fun (col, row) -> (int_of_float col + !imgPos, 600 - int_of_float row)) contour)); *)
+
+            (* imgPos.val := !imgPos + w + 30; *)
+            Rgb24.destroy img;
+          ); 
+
+      for i = 0 to w - 2 do
+        for j = 0 to h - 2 do
+          binImg.(i).(j) := applyThreshold i j;
+        done;
+      done;
+      
+      let rec fill col row =
+        (
+          testCell (col + 1) row;
+          testCell col (row + 1);
+          testCell (col - 1) row;
+          testCell col (row - 1);
+        )        
+      and testCell col row = if 0 <= col && col < (w - 1) && 0 <= row && row < (h - 1) && binImg.(col).(row) = 0 then ( binImg.(col).(row) := 2; fill col row; ) else () in
+      (
+        for i = 0 to w - 2 do testCell i 0; done;
+        for i = 0 to w - 2 do testCell i (h - 2); done;
+        for i = 0 to h - 2 do testCell 0 i; done;
+        for i = 0 to h - 2 do testCell (w - 2) i; done;
+      );
+
+      for i = 0 to w - 2 do
+        for j = 0 to h - 2 do
+          if binImg.(i).(j) = 0 then binImg.(i).(j) := 1 else ()
+        done;
+      done;
+
+(*       for j = 0 to h - 2 do
+        let () =
+          for i = 0 to w - 2 do
+            Printf.printf "%d%!" binImg.(i).(j);
+          done
+        in
+          Printf.printf "\n%!";
+      done; *)
+
+      Graphics.set_line_width 1;
+      Graphics.set_color 0xff0000;
+
+      (* let () = Printf.printf "%d %d\n%!" (w - 2) (h - 2) in *)
+      for j = 0 to h - 3 do
+        for i = 0  to w - 3 do
+          (* let () = Printf.printf "%d %d\n%!" i j in *)
+          let cellType = if binImg.(i).(j) = 1 then 0x8 else 0 in
+          let cellType = if binImg.(i + 1).(j) = 1 then cellType lor 0x4 else cellType in
+          let cellType = if binImg.(i + 1).(j + 1) = 1 then cellType lor 0x2 else cellType in
+          let cellType = if binImg.(i).(j + 1) = 1 then cellType lor 0x1 else cellType in          
+          (* let (i, j) = (i * 2, j * 2) in *)
+          (* let (i, j) = (w - i, h - j) in *)
+          let j = 600 - j in
+          let i = i + !imgPos in
+            match cellType with
+            [ 0 | 15 -> ()
+            | 1 | 14 -> Graphics.draw_poly_line [| (i, j - 1); (i + 1, j - 2) |]
+            | 2 | 13 -> Graphics.draw_poly_line [| (i + 1, j - 2); (i + 2, j - 1) |]
+            | 3 | 12 -> Graphics.draw_poly_line [| (i, j - 1); (i + 2, j - 1) |]
+            | 4 | 11 -> Graphics.draw_poly_line [| (i + 1, j); (i + 2, j - 1) |]
+            | 6 | 9 -> Graphics.draw_poly_line [| (i + 1, j); (i + 1, j - 2) |]
+            | 7 | 8 -> Graphics.draw_poly_line [| (i, j - 1); (i + 1, j) |]
+            | 5 -> ( Graphics.draw_poly_line [| (i, j - 1); (i + 1, j) |]; Graphics.draw_poly_line [| (i + 1, j - 2); (i + 2, j - 1) |]; )
+            | 10 -> ( Graphics.draw_poly_line [| (i, j - 1); (i + 1, j - 2) |]; Graphics.draw_poly_line [| (i + 1, j); (i + 2, j - 1) |]; )
+            | _ -> assert False
+            ]
+        done;
+      done;
+
+      imgPos.val := !imgPos + w + 30;
+    );
+
+    Rgba32.destroy frameImg;        
+  );
+
+
+
+
 
 (*     let frameImg =
       let img = Rgba32.(make h w Color.({ Rgba.color = { Rgb.r = 0xff; g = 0xff; b = 0xff }; alpha = 0 })) in
@@ -295,7 +407,7 @@ value genTmap regions frames anim =
     in
     let (w, h) = (h, w) in
  *)    
-    let rec scanSide img w h col row colInc rowInc =
+(*     let rec scanSide img w h col row colInc rowInc =
       if row < 0 || col < 0 then None
       else if row = h || col = w then None
       else
@@ -305,36 +417,7 @@ value genTmap regions frames anim =
     in
       let scanSide = scanSide frameImg w h
       and points = ref [] in
-      (
-(*         for row = 0 to h - 1 do
-          match scanSide 0 row 1 0 with
-          [ Some pnt -> points.val := [ pnt :: !points ]
-          | _ -> ()
-          ];
-        done;
-
-        for col = 0 to w - 1 do
-          match scanSide col (h - 1) 0 ~-1 with
-          [ Some pnt -> points.val := [ pnt :: !points ]
-          | _ -> ()
-          ];
-        done; *)
-
-(*         for row = h - 1 downto 0 do
-          match scanSide (w - 1) row ~-1 0 with
-          [ Some pnt -> points.val := [ pnt :: !points ]
-          | _ -> ()
-          ]
-        done; *)
-
-        for col = w - 1 downto 0 do
-          match scanSide col 0 0 1 with
-          [ Some pnt -> points.val := [ pnt :: !points ]
-          | _ -> ()
-          ];
-        done;
-
-
+      ( *)
         (* let points = ExtList.List.unique !points in *)
         (* let points = [ (50., 50.); (60., 20.); (00., 10.); (30., 10.); (30., 40.); (40., 30.); (40., 00.) ] in *)
    (*      let points = List.sort compare !points in
@@ -368,7 +451,22 @@ value genTmap regions frames anim =
         (* let points = ExtList.List.unique ~cmp:(fun (colA, _) (colB, _) -> colA = colB) points in *)
 
 
-(*         let fstPnt = List.hd points in
+(*         for col = 0 to w - 1 do
+          match scanSide col (h - 1) 0 ~-1 with
+          [ Some pnt -> points.val := [ pnt :: !points ]
+          | _ -> ()
+          ];
+        done;
+
+        for col = w - 1 downto 0 do
+          match scanSide col 0 0 1 with
+          [ Some pnt -> points.val := [ pnt :: !points ]
+          | _ -> ()
+          ];
+        done;
+
+        let points = !points in
+        let fstPnt = List.hd points in
         let (contour, _) = 
           List.fold_left (fun (contour, approxPnts) (col, row) ->
             let (_col, _row) = List.hd contour in
@@ -381,8 +479,8 @@ value genTmap regions frames anim =
                 else
                   ([ (List.hd approxPnts) :: contour ], [])
           ) ([ fstPnt ], []) (List.tl points)        
-        in *)
-        let contour = !points in
+        in
+        (* let contour = !points in *)
         (
           Printf.printf "%d %s\n" (List.length contour) (String.concat " " (List.map (fun (col, row) -> Printf.sprintf "(%.0f,%.0f)" col row) contour));
           
@@ -401,14 +499,11 @@ value genTmap regions frames anim =
             Graphics.set_color 0xff0000;
             Graphics.draw_poly (Array.of_list (List.map (fun (col, row) -> (int_of_float col + !imgPos, 600 - int_of_float row)) contour));
 
-            imgPos.val := !imgPos + w + 30;
+            (* imgPos.val := !imgPos + w + 30; *)
             Rgb24.destroy img;
           );
-        );
-      );
+        ); *)
 
-    Rgba32.destroy frameImg;
-  );
 
 Graphics.open_graph "";
 Graphics.set_window_title "xyu";
@@ -422,7 +517,7 @@ Array.iter (fun fname ->
     (
       List.iter (fun obj ->
         let () = Printf.printf "processing object %s...\n%!" obj.oname in
-          if obj.oname = "bl_house" then
+          if obj.oname = "tr_birch" then
             List.iter (fun anim -> let () = Printf.printf "\tprocessing animation %s\n%!" anim.aname in genTmap regions frames anim) obj.anims
           else ()
       ) objs;
