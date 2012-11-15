@@ -252,8 +252,8 @@ value estimate k b pnts =
 value imgPos = ref 0;
 
 value genTmap regions frames anim =
-(*   if anim.aname <> "middle_step_1_1" then ()
-  else *)
+  if anim.aname <> "middle_step_1_1" then ()
+  else
   let frame = DynArray.get frames (List.hd anim.frames) in
   let (x, y, w, h) =
     List.fold_left (fun (x, y, w, h) layer ->
@@ -264,8 +264,7 @@ value genTmap regions frames anim =
   in
   let texImgs = Hashtbl.create 0 in
   let getTexImg texFname = try Hashtbl.find texImgs texFname with [ Not_found -> let texImg = Images.load texFname [] in ( Hashtbl.add texImgs texFname texImg; texImg; ) ] in
-  (* let frameImg = match Images.load "/Users/nazarov/Desktop/123.png" [] with [ Images.Rgba32 img -> img | _ -> assert False ] in *)
-  let frameImg = Rgba32.(make (w - x) (h - y) Color.({ Rgba.color = { Rgb.r = 0xff; g = 0xff; b = 0xff }; alpha = 0 })) in
+  let frameImg = Rgba32.(make (w - x + 4) (h - y + 4) Color.({ Rgba.color = { Rgb.r = 0xff; g = 0xff; b = 0xff }; alpha = 0 })) in (* width and height more on 4 pixels cause it helps make contour without breaks, where non-transparent pixels of original image are border *)
   (
 
     List.iter (fun layer ->
@@ -274,7 +273,7 @@ value genTmap regions frames anim =
       let texImg = getTexImg texFname in
       (
         match texImg with
-        [ Images.Rgba32 texImg -> Rgba32.map (fun colorA colorB -> Color.Rgba.merge colorA colorB) texImg region.regx region.regy frameImg (frame.fx + layer.lx - x) (frame.fy + layer.ly - y) region.regw region.regh
+        [ Images.Rgba32 texImg -> Rgba32.map (fun colorA colorB -> Color.Rgba.merge colorA colorB) texImg region.regx region.regy frameImg (frame.fx + layer.lx - x + 2) (frame.fy + layer.ly - y + 2) region.regw region.regh (* x and y more on 2 pixels cause width and height are more on 4 pixels, see previous comment*)
         | _ -> assert False
         ];
       );                
@@ -283,44 +282,33 @@ value genTmap regions frames anim =
 
     let w = frameImg.Rgba32.width
     and h = frameImg.Rgba32.height in
-    let applyThreshold col row =
-      (* let () = Printf.printf "applyThreshold %d %d\n%!" col row in *)
-      Color.Rgba.(
-        let c1 = (Rgba32.get frameImg col row).alpha
-          (* if c1 <= alphaThreshold then 0 else 1 *)
+    let binImg = Array.make_matrix (w - 1) (h - 1) 0 in
+    let img = Rgb24.make w h { Color.Rgb.r = 0xff; g = 0xff; b = 0xff; } in
+    (
+      for i = 0 to w - 1 do
+        for j = 0 to h - 1 do
+          let c = Rgba32.get frameImg i j in
+            Color.Rgba.(Color.Rgb.(Rgb24.set img i j { r = c.color.r; g = c.color.g; b = c.color.b }))
+        done;
+      done;
+
+      Graphic_image.draw_image (Images.Rgb24 img) !imgPos (600 - h);
+      Rgb24.destroy img;      
+
+      let applyThreshold col row =
+        Color.Rgba.(
+          let c1 = (Rgba32.get frameImg col row).alpha
           and c2 = (Rgba32.get frameImg (col + 1) row).alpha
           and c3 = (Rgba32.get frameImg col (row + 1)).alpha
           and c4 = (Rgba32.get frameImg (col + 1) (row + 1)).alpha in
-            (* let () = Printf.printf "%d %d %d %d %d\n" c1 c2 c3 c4 ((c1 + c2 + c3 + c4) / 4) in *)
             if (c1 + c2 + c3 + c4) / 4 <= alphaThreshold then 0 else 1
-      )
-    in
-    let binImg = Array.make_matrix (w - 1) (h - 1) 0 in
-    (
-          let img = Rgb24.make w h { Color.Rgb.r = 0xff; g = 0xff; b = 0xff; } in
-          (
-            for i = 0 to w - 1 do
-              for j = 0 to h - 1 do
-                let c = Rgba32.get frameImg i j in
-                  Color.Rgba.(Color.Rgb.(Rgb24.set img i j { r = c.color.r; g = c.color.g; b = c.color.b }))
-              done;
-            done;
-
-            Graphic_image.draw_image (Images.Rgb24 img) !imgPos (600 - h);
-
-            (* Graphics.set_line_width 1; *)
-            (* Graphics.set_color 0xff0000; *)
-            (* Graphics.draw_poly (Array.of_list (List.map (fun (col, row) -> (int_of_float col + !imgPos, 600 - int_of_float row)) contour)); *)
-
-            (* imgPos.val := !imgPos + w + 30; *)
-            Rgb24.destroy img;
-          ); 
-
-      for i = 0 to w - 2 do
-        for j = 0 to h - 2 do
-          binImg.(i).(j) := applyThreshold i j;
+        )
+      in      
+        for i = 0 to w - 2 do
+          for j = 0 to h - 2 do
+            binImg.(i).(j) := applyThreshold i j;
+          done;
         done;
-      done;
       
       let rec fill col row =
         (
@@ -355,32 +343,62 @@ value genTmap regions frames anim =
       Graphics.set_line_width 1;
       Graphics.set_color 0xff0000;
 
-      (* let () = Printf.printf "%d %d\n%!" (w - 2) (h - 2) in *)
-      for j = 0 to h - 3 do
-        for i = 0  to w - 3 do
-          (* let () = Printf.printf "%d %d\n%!" i j in *)
-          let cellType = if binImg.(i).(j) = 1 then 0x8 else 0 in
-          let cellType = if binImg.(i + 1).(j) = 1 then cellType lor 0x4 else cellType in
-          let cellType = if binImg.(i + 1).(j + 1) = 1 then cellType lor 0x2 else cellType in
-          let cellType = if binImg.(i).(j + 1) = 1 then cellType lor 0x1 else cellType in          
-          (* let (i, j) = (i * 2, j * 2) in *)
-          (* let (i, j) = (w - i, h - j) in *)
-          let j = 600 - j in
-          let i = i + !imgPos in
-            match cellType with
-            [ 0 | 15 -> ()
-            | 1 | 14 -> Graphics.draw_poly_line [| (i, j - 1); (i + 1, j - 2) |]
-            | 2 | 13 -> Graphics.draw_poly_line [| (i + 1, j - 2); (i + 2, j - 1) |]
-            | 3 | 12 -> Graphics.draw_poly_line [| (i, j - 1); (i + 2, j - 1) |]
-            | 4 | 11 -> Graphics.draw_poly_line [| (i + 1, j); (i + 2, j - 1) |]
-            | 6 | 9 -> Graphics.draw_poly_line [| (i + 1, j); (i + 1, j - 2) |]
-            | 7 | 8 -> Graphics.draw_poly_line [| (i, j - 1); (i + 1, j) |]
-            | 5 -> ( Graphics.draw_poly_line [| (i, j - 1); (i + 1, j) |]; Graphics.draw_poly_line [| (i + 1, j - 2); (i + 2, j - 1) |]; )
-            | 10 -> ( Graphics.draw_poly_line [| (i, j - 1); (i + 1, j - 2) |]; Graphics.draw_poly_line [| (i + 1, j); (i + 2, j - 1) |]; )
-            | _ -> assert False
-            ]
+      let contour = ref [] in
+      (
+        for j = 0 to h - 3 do
+          for i = 0  to w - 3 do
+            let cellType = if binImg.(i).(j) = 1 then 0x8 else 0 in
+            let cellType = if binImg.(i + 1).(j) = 1 then cellType lor 0x4 else cellType in
+            let cellType = if binImg.(i + 1).(j + 1) = 1 then cellType lor 0x2 else cellType in
+            let cellType = if binImg.(i).(j + 1) = 1 then cellType lor 0x1 else cellType in
+            (
+(*             let j = 600 - j in
+            let i = i + !imgPos in *)
+(*               match cellType with
+              [ 0 | 15 -> ()
+              | 1 | 14 -> Graphics.draw_poly_line [| (i, j - 1); (i + 1, j - 2) |]
+              | 2 | 13 -> Graphics.draw_poly_line [| (i + 1, j - 2); (i + 2, j - 1) |]
+              | 3 | 12 -> Graphics.draw_poly_line [| (i, j - 1); (i + 2, j - 1) |]
+              | 4 | 11 -> Graphics.draw_poly_line [| (i + 1, j); (i + 2, j - 1) |]
+              | 6 | 9 -> Graphics.draw_poly_line [| (i + 1, j); (i + 1, j - 2) |]
+              | 7 | 8 -> Graphics.draw_poly_line [| (i, j - 1); (i + 1, j) |]
+              | 5 -> ( Graphics.draw_poly_line [| (i, j - 1); (i + 1, j) |]; Graphics.draw_poly_line [| (i + 1, j - 2); (i + 2, j - 1) |]; )
+              | 10 -> ( Graphics.draw_poly_line [| (i, j - 1); (i + 1, j - 2) |]; Graphics.draw_poly_line [| (i + 1, j); (i + 2, j - 1) |]; )
+              | _ -> assert False
+              ] *)
+
+              match cellType with
+              [ 0 | 15 -> ()
+              | 1 | 14 -> Graphics.draw_poly_line [| (i, j + 1); (i + 1, j + 2) |]
+              | 2 | 13 -> Graphics.draw_poly_line [| (i + 1, j + 2); (i + 2, j + 1) |]
+              | 3 | 12 -> Graphics.draw_poly_line [| (i, j + 1); (i + 2, j + 1) |]
+              | 4 | 11 -> Graphics.draw_poly_line [| (i + 1, j); (i + 2, j + 1) |]
+              | 6 | 9 -> Graphics.draw_poly_line [| (i + 1, j); (i + 1, j + 2) |]
+              | 7 | 8 -> Graphics.draw_poly_line [| (i, j + 1); (i + 1, j) |]
+              | 5 -> ( Graphics.draw_poly_line [| (i, j + 1); (i + 1, j) |]; Graphics.draw_poly_line [| (i + 1, j + 2); (i + 2, j + 1) |]; )
+              | 10 -> ( Graphics.draw_poly_line [| (i, j + 1); (i + 1, j + 2) |]; Graphics.draw_poly_line [| (i + 1, j); (i + 2, j + 1) |]; )
+              | _ -> assert False
+              ];
+
+              match cellType with
+              [ 0 | 15 -> ()
+              | 1 | 14 -> contour.val := [ (i, j + 1, i + 1, j + 2) :: !contour ]
+              | 2 | 13 -> contour.val := [ (i + 1, j, i + 2, j + 1) :: !contour ]
+              | 3 | 12 -> contour.val := [ (i, j + 1, i + 2, j + 1) :: !contour ]
+              | 4 | 11 -> contour.val := [ (i + 1, j, i + 2, j + 1) :: !contour ]
+              | 6 | 9 -> contour.val := [ (i + 1, j, i + 1, j + 2) :: !contour ]
+              | 7 | 8 -> contour.val := [ (i, j + 1, i + 1, j) :: !contour ]
+              | 5 -> ( contour.val := [ (i, j + 1, i + 1, j) :: !contour ]; contour.val := [ (i + 1, j + 2, i + 2, j + 1) :: !contour ]; )
+              | 10 -> ( contour.val := [ (i, j + 1, i + 1, j + 2) :: !contour ]; contour.val := [ (i + 1, j, i + 2, j + 1) :: !contour ]; )
+              | _ -> assert False
+              ];
+            )
+          done;
         done;
-      done;
+
+        Graphics.set_color 0x00ff00;
+        List.iter (fun (x1, y1, x2, y2) -> Graphics.draw_poly_line [| (w + x1, y1); (w + x2, y2) |]) (List.rev !contour);
+      );
 
       imgPos.val := !imgPos + w + 30;
     );
