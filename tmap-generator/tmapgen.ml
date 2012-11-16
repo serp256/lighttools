@@ -242,7 +242,7 @@ value writeObjs lib objs =
 
 value alphaThreshold = 0;
 value rangeMinSize = 10;
-value lineEstimateThreshold = 3.;
+value lineEstimateThreshold = 5.;
 
 value estimate k b pnts =
   if pnts <> [] then
@@ -251,9 +251,13 @@ value estimate k b pnts =
 
 value imgPos = ref 0;
 
+type contourSement = {
+  endA: mutable (int * int);
+  endB: mutable (int * int);
+  points: mutable list (int * int);
+};
+
 value genTmap regions frames anim =
-  if anim.aname <> "middle_step_1_1" then ()
-  else
   let frame = DynArray.get frames (List.hd anim.frames) in
   let (x, y, w, h) =
     List.fold_left (fun (x, y, w, h) layer ->
@@ -331,15 +335,6 @@ value genTmap regions frames anim =
         done;
       done;
 
-(*       for j = 0 to h - 2 do
-        let () =
-          for i = 0 to w - 2 do
-            Printf.printf "%d%!" binImg.(i).(j);
-          done
-        in
-          Printf.printf "\n%!";
-      done; *)
-
       Graphics.set_line_width 1;
       Graphics.set_color 0xff0000;
 
@@ -352,52 +347,90 @@ value genTmap regions frames anim =
             let cellType = if binImg.(i + 1).(j + 1) = 1 then cellType lor 0x2 else cellType in
             let cellType = if binImg.(i).(j + 1) = 1 then cellType lor 0x1 else cellType in
             (
-(*             let j = 600 - j in
-            let i = i + !imgPos in *)
-(*               match cellType with
-              [ 0 | 15 -> ()
-              | 1 | 14 -> Graphics.draw_poly_line [| (i, j - 1); (i + 1, j - 2) |]
-              | 2 | 13 -> Graphics.draw_poly_line [| (i + 1, j - 2); (i + 2, j - 1) |]
-              | 3 | 12 -> Graphics.draw_poly_line [| (i, j - 1); (i + 2, j - 1) |]
-              | 4 | 11 -> Graphics.draw_poly_line [| (i + 1, j); (i + 2, j - 1) |]
-              | 6 | 9 -> Graphics.draw_poly_line [| (i + 1, j); (i + 1, j - 2) |]
-              | 7 | 8 -> Graphics.draw_poly_line [| (i, j - 1); (i + 1, j) |]
-              | 5 -> ( Graphics.draw_poly_line [| (i, j - 1); (i + 1, j) |]; Graphics.draw_poly_line [| (i + 1, j - 2); (i + 2, j - 1) |]; )
-              | 10 -> ( Graphics.draw_poly_line [| (i, j - 1); (i + 1, j - 2) |]; Graphics.draw_poly_line [| (i + 1, j); (i + 2, j - 1) |]; )
-              | _ -> assert False
-              ] *)
-
-              match cellType with
-              [ 0 | 15 -> ()
-              | 1 | 14 -> Graphics.draw_poly_line [| (i, j + 1); (i + 1, j + 2) |]
-              | 2 | 13 -> Graphics.draw_poly_line [| (i + 1, j + 2); (i + 2, j + 1) |]
-              | 3 | 12 -> Graphics.draw_poly_line [| (i, j + 1); (i + 2, j + 1) |]
-              | 4 | 11 -> Graphics.draw_poly_line [| (i + 1, j); (i + 2, j + 1) |]
-              | 6 | 9 -> Graphics.draw_poly_line [| (i + 1, j); (i + 1, j + 2) |]
-              | 7 | 8 -> Graphics.draw_poly_line [| (i, j + 1); (i + 1, j) |]
-              | 5 -> ( Graphics.draw_poly_line [| (i, j + 1); (i + 1, j) |]; Graphics.draw_poly_line [| (i + 1, j + 2); (i + 2, j + 1) |]; )
-              | 10 -> ( Graphics.draw_poly_line [| (i, j + 1); (i + 1, j + 2) |]; Graphics.draw_poly_line [| (i + 1, j); (i + 2, j + 1) |]; )
-              | _ -> assert False
-              ];
-
-              match cellType with
-              [ 0 | 15 -> ()
-              | 1 | 14 -> contour.val := [ (i, j + 1, i + 1, j + 2) :: !contour ]
-              | 2 | 13 -> contour.val := [ (i + 1, j, i + 2, j + 1) :: !contour ]
-              | 3 | 12 -> contour.val := [ (i, j + 1, i + 2, j + 1) :: !contour ]
-              | 4 | 11 -> contour.val := [ (i + 1, j, i + 2, j + 1) :: !contour ]
-              | 6 | 9 -> contour.val := [ (i + 1, j, i + 1, j + 2) :: !contour ]
-              | 7 | 8 -> contour.val := [ (i, j + 1, i + 1, j) :: !contour ]
-              | 5 -> ( contour.val := [ (i, j + 1, i + 1, j) :: !contour ]; contour.val := [ (i + 1, j + 2, i + 2, j + 1) :: !contour ]; )
-              | 10 -> ( contour.val := [ (i, j + 1, i + 1, j + 2) :: !contour ]; contour.val := [ (i + 1, j, i + 2, j + 1) :: !contour ]; )
-              | _ -> assert False
-              ];
+              let drawSegment x1 y1 x2 y2 =
+                (
+                  contour.val := [ (x1, y1, x2, y2) :: !contour ];
+                  (* Graphics.draw_poly_line [| (x1, y1); (x2, y2) |]; *)
+                )
+              in
+                match cellType with
+                [ 0 | 15 -> ()
+                | 1 | 14 -> drawSegment i (j + 1) (i + 1) (j + 2)
+                | 2 | 13 -> drawSegment (i + 1) (j + 2) (i + 2) (j + 1)
+                | 3 | 12 -> drawSegment i (j + 1) (i + 2) (j + 1)
+                | 4 | 11 -> drawSegment (i + 1) j (i + 2) (j + 1)
+                | 6 | 9 -> drawSegment (i + 1) j (i + 1) (j + 2)
+                | 7 | 8 -> drawSegment i (j + 1) (i + 1) j
+                | 5 -> ( drawSegment i (j + 1) (i + 1) j; drawSegment (i + 1) (j + 2) (i + 2) (j + 1); )
+                | 10 -> ( drawSegment i (j + 1) (i + 1) (j + 2); drawSegment (i + 1) j (i + 2) (j + 1); )
+                | _ -> assert False
+                ];
             )
           done;
         done;
 
-        Graphics.set_color 0x00ff00;
-        List.iter (fun (x1, y1, x2, y2) -> Graphics.draw_poly_line [| (w + x1, y1); (w + x2, y2) |]) (List.rev !contour);
+        let contour = List.map (fun (x1, y1, x2, y2) -> { endA = (x1, y1); endB = (x2, y2); points = [ (x1, y1); (x2, y2) ]}) !contour in
+        let contour = DynArray.of_list contour in
+        let line = DynArray.get contour 0 in
+        let merge = ref True in
+        (
+          while !merge do
+            merge.val := False;
+
+            let i = ref 1 in            
+              while !i < DynArray.length contour do
+                let seg = DynArray.get contour !i in
+                  if line.endA = seg.endB then
+                  (
+                    line.endA := seg.endA;
+                    line.points := [ seg.endA :: line.points ];
+                    DynArray.delete contour !i;
+                    merge.val := True;
+                  )
+                  else if line.endA = seg.endA then
+                  (
+                    line.endA := seg.endB;
+                    line.points := [ seg.endB :: line.points ];
+                    DynArray.delete contour !i;
+                    merge.val := True;
+                  )
+                  else if line.endB = seg.endB then
+                  (
+                    line.endB := seg.endA;
+                    line.points := line.points @ [ seg.endA ];
+                    DynArray.delete contour !i;
+                    merge.val := True;
+                  )                  
+                  else if line.endB = seg.endA then
+                  (
+                    line.endB := seg.endB;
+                    line.points := line.points @ [ seg.endB ];
+                    DynArray.delete contour !i;
+                    merge.val := True;
+                  )
+                  else incr i;
+              done;
+          done;
+
+          let points = List.map (fun (x, y) -> (float_of_int x, float_of_int y)) line.points in
+          let fstPnt = List.hd points in
+          let (contour, _) = 
+            List.fold_left (fun (contour, approxPnts) (col, row) ->
+              let (_col, _row) = List.hd contour in
+              let k = (row -. _row) /. (col -. _col) in
+              let b = row -. col *. k in
+                let est = estimate k b approxPnts in
+                  if est < lineEstimateThreshold then
+                    (contour, [ (col, row) :: approxPnts ])
+                  else
+                    ([ (List.hd approxPnts) :: contour ], [])
+            ) ([ fstPnt ], []) (List.tl points)        
+          in
+          (
+            Printf.printf "%d %s\n" (List.length contour) (String.concat " " (List.map (fun (x, y) -> Printf.sprintf "(%.0f, %.0f)" x y) contour));
+            Graphics.draw_poly (Array.of_list (List.map (fun (x, y) -> ((int_of_float x) + !imgPos, 600 - (int_of_float y))) contour));
+          );            
+        );
       );
 
       imgPos.val := !imgPos + w + 30;
