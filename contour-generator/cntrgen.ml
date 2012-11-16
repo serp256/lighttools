@@ -1,9 +1,12 @@
 open Arg;
 
-value indir = ref ".";
 value (//) = Filename.concat;
 
-parse [ ("-i", Set_string indir, "input dir") ] (fun _ -> ()) "";
+value indir = ref ".";
+value graph = ref False;
+value libName = ref "";
+
+Arg.parse [ ("-i", Set_string indir, "input dir"); ("-g", Set graph, "show graphic visualisation"); ("-l", Set_string libName, "generate contour for give library") ] (fun _ -> ()) "contour generator";
 
 value read_utf inp = 
   let len = IO.read_i16 inp in
@@ -246,7 +249,7 @@ value writeObjs lib objs =
 
 value alphaThreshold = 0;
 value lineEstimateThreshold = 5.;
-value minContourPntsNum = 20;
+value minContourPntsNum = 50;
 
 value estimateLine k b pnts =
   if pnts <> [] then
@@ -296,18 +299,23 @@ value genContour regions frames anim =
 
     let w = frameImg.Rgba32.width
     and h = frameImg.Rgba32.height in
-    let binImg = Array.make_matrix (w - 1) (h - 1) 0 in
-    let img = Rgb24.make w h { Color.Rgb.r = 0xff; g = 0xff; b = 0xff; } in
+    let binImg = Array.make_matrix (w - 1) (h - 1) 0 in    
     (
-      for i = 0 to w - 1 do
-        for j = 0 to h - 1 do
-          let c = Rgba32.get frameImg i j in
-            Color.Rgba.(Color.Rgb.(Rgb24.set img i j { r = c.color.r; g = c.color.g; b = c.color.b }))
-        done;
-      done;
 
-      Graphic_image.draw_image (Images.Rgb24 img) !imgPos (600 - h);
-      Rgb24.destroy img;      
+      if !graph then
+        let img = Rgb24.make w h { Color.Rgb.r = 0xff; g = 0xff; b = 0xff; } in
+        (
+          for i = 0 to w - 1 do
+            for j = 0 to h - 1 do
+              let c = Rgba32.get frameImg i j in
+                Color.Rgba.(Color.Rgb.(Rgb24.set img i j { r = c.color.r; g = c.color.g; b = c.color.b }))
+            done;
+          done;
+
+          Graphic_image.draw_image (Images.Rgb24 img) !imgPos (600 - h);
+          Rgb24.destroy img;          
+        )
+      else ();
 
       (* making binary image. in this implementation, "pixel" means block 2x2 pixels *)
       let applyThreshold col row =
@@ -349,9 +357,6 @@ value genContour regions frames anim =
           if binImg.(i).(j) = 0 then binImg.(i).(j) := 1 else ()
         done;
       done;
-
-      Graphics.set_line_width 2;
-      Graphics.set_color 0xff0000;
 
       (* calculating contour segments by iterating "contouring grid" (each cell represented by 2x2 pixels, in this implementation "pixel" means block 2x2 of real pixels, so contouring cell is block of 3x3 pixels ) *)
       let segments = ref [] in
@@ -433,25 +438,35 @@ value genContour regions frames anim =
             )
         in
         let points = List.map (fun (x, y) -> (float_of_int x, float_of_int y)) (findContour !segments) in
-        let (fstCol, fstRow) = List.hd points in
-        let (contour, _) = (* approximating contour *)
-          List.fold_left (fun (contour, approxPnts) (col, row) ->
-            let (_col, _row) = List.hd contour in
-            let k = (row -. _row) /. (col -. _col) in
-            let b = row -. col *. k in
-              let est = estimateLine k b approxPnts in
-                if est < lineEstimateThreshold then
-                  (contour, [ (col, row) :: approxPnts ])
-                else
-                  ([ (col, row) :: contour ], [])
-          ) ([ (fstCol, fstRow) ], []) (List.tl points)        
+        let contour =
+          if points = [] then []
+          else
+            let (fstCol, fstRow) = List.hd points in
+            let (contour, _) = (* approximating contour *)
+              List.fold_left (fun (contour, approxPnts) (col, row) ->
+                let (_col, _row) = List.hd contour in
+                let k = (row -. _row) /. (col -. _col) in
+                let b = row -. col *. k in
+                  let est = estimateLine k b approxPnts in
+                    if est < lineEstimateThreshold then
+                      (contour, [ (col, row) :: approxPnts ])
+                    else
+                      ([ (col, row) :: contour ], [])
+              ) ([ (fstCol, fstRow) ], []) (List.tl points)        
+            in contour
         in
         let contour = List.map (fun (x, y) -> (int_of_float x, int_of_float y)) contour in
         (
-          Printf.printf "%d %s\n" (List.length contour) (String.concat " " (List.map (fun (x, y) -> Printf.sprintf "(%d, %d)" x y) contour));
-          Graphics.draw_poly (Array.of_list (List.map (fun (x, y) -> (x + !imgPos, 600 - y)) contour));
+          (* Printf.printf "%d %s\n" (List.length contour) (String.concat " " (List.map (fun (x, y) -> Printf.sprintf "(%d, %d)" x y) contour)); *)
+          Printf.printf "%d\n%!" (List.length contour);
 
-          imgPos.val := !imgPos + w + 30;
+          if (!graph) then
+          (
+            Graphics.draw_poly (Array.of_list (List.map (fun (x, y) -> (x + !imgPos, 600 - y)) contour));
+            imgPos.val := !imgPos + w + 30;            
+          )
+          else ();
+
           Rgba32.destroy frameImg;
 
           anim.contour := contour;
@@ -460,33 +475,42 @@ value genContour regions frames anim =
     );
   );
 
-Graphics.open_graph "";
-Graphics.resize_window 1200 600;
-
-value libName = Some "bl_cowshed";
-(* value libName = None; *)
+if !graph then
+(
+  Graphics.open_graph "";
+  Graphics.resize_window 1200 600;
+  Graphics.set_line_width 2;
+  Graphics.set_color 0xff0000;
+)
+else ();
 
 Array.iter (fun fname ->
-  if fname <> "pizda" && not (ExtString.String.ends_with fname "_sh") && Sys.is_directory fname && match libName with [ Some libName -> libName = fname | _ -> True ] then
+  if fname <> "pizda" && not (ExtString.String.ends_with fname "_sh") && Sys.is_directory fname && (!libName <> "" && !libName = fname || !libName = "") then
     let objs = readObjs fname
     and frames = readFrames fname
     and regions = readTexInfo fname in
     (
-      Graphics.set_window_title fname;
+      if !graph then Graphics.set_window_title fname else ();
 
       List.iter (fun obj ->
+        if obj.oname = "bl_house" then
         let () = Printf.printf "processing object %s...\n%!" obj.oname in
-          List.iter (fun anim -> let () = Printf.printf "\tprocessing animation %s\n%!" anim.aname in genContour regions frames anim) obj.anims;            
+          List.iter (fun anim -> let () = Printf.printf "\tprocessing animation %s... %!" anim.aname in genContour regions frames anim) obj.anims
+        else ();
       ) objs;
 
-      ignore(Graphics.wait_next_event [Graphics.Key_pressed]);
-      Graphics.clear_graph ();
-      imgPos.val := 0;
+      if !graph then
+      (
+        ignore(Graphics.wait_next_event [Graphics.Key_pressed]);
+        Graphics.clear_graph ();
+        imgPos.val := 0;
+      )
+      else ();
 
-      (* writeObjs fname objs; *)
+      writeObjs fname objs;
     )
   else ()
 ) (Sys.readdir !indir);
 
-ignore(Graphics.wait_next_event [Graphics.Key_pressed]);
-Graphics.close_graph ();
+(* ignore(Graphics.wait_next_event [Graphics.Key_pressed]);
+Graphics.close_graph (); *)
