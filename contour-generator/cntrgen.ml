@@ -67,7 +67,7 @@ type anim = {
   rnum:int;
   frames:list int;
   rects:list rect;
-  ranges:DynArray.t (list int);
+  contour:mutable list (int * int);
 };
 
 value animToString anim =
@@ -172,13 +172,13 @@ value readObjs lib =
                       rects.val := [ { rx = IO.read_i16 inp; ry = IO.read_i16 inp; rw = IO.read_i16 inp; rh = IO.read_i16 inp } :: !rects ];
                     };
 
-                    let colsNum = IO.read_i16 inp in
+(*                     let colsNum = IO.read_i16 inp in
                       for i = 1 to colsNum do {
                         let rangesNum = IO.read_i16 inp in
                           for j = 1 to rangesNum do {
                             ignore(IO.read_i32 inp);  
-                          };                          
-                      };
+                          };
+                      }; *)
 
                     let fnum = IO.read_ui16 inp in
                     (
@@ -188,7 +188,7 @@ value readObjs lib =
 
                       let frames = List.rev !frames
                       and rects = List.rev !rects in
-                        anims.val := [ { aname; frameRate; fnum; rnum; frames; rects; ranges = DynArray.make 0 } :: !anims ];
+                        anims.val := [ { aname; frameRate; fnum; rnum; frames; rects; contour = [] } :: !anims ];
                     );
                   );
                 );                
@@ -226,11 +226,15 @@ value writeObjs lib objs =
           IO.write_i16 out rect.rh;
         )) anim.rects;
 
-        IO.write_ui16 out (DynArray.length anim.ranges);
+
+        IO.write_byte out (List.length anim.contour);
+        List.iter (fun (x, y) -> IO.write_i32 out ((x lsl 16) lor (y land 0xffff)) ) anim.contour;
+
+(*         IO.write_ui16 out (DynArray.length anim.ranges);
         DynArray.iter (fun colRanges -> (
           IO.write_ui16 out (List.length colRanges);
           List.iter (fun range -> IO.write_i32 out range) colRanges;
-        )) anim.ranges;
+        )) anim.ranges; *)
 
         IO.write_ui16 out anim.fnum;
         List.iter (fun frame -> IO.write_i32 out frame) anim.frames;
@@ -241,10 +245,10 @@ value writeObjs lib objs =
   );
 
 value alphaThreshold = 0;
-value rangeMinSize = 10;
 value lineEstimateThreshold = 5.;
+value minContourPntsNum = 20;
 
-value estimate k b pnts =
+value estimateLine k b pnts =
   if pnts <> [] then
     (List.fold_left (fun sum (x, y) -> sum +. sqrt ((y -. k *. x -. b) ** 2.)) 0. pnts) /. (float_of_int (List.length pnts))
   else 0.;
@@ -257,7 +261,14 @@ type contourSement = {
   points: mutable list (int * int);
 };
 
-value genTmap regions frames anim =
+(* generates contour, steps:
+ * 1) generate first frame image
+ * 2) find contour segments using "marching squares" algorithm (http://en.wikipedia.org/wiki/Marching_squares)
+ * 3) making polygon from segments
+ * 4) approximating this polygon by streight lines to minimize vertexes number
+ *)
+
+value genContour regions frames anim =
   let frame = DynArray.get frames (List.hd anim.frames) in
   let (x, y, w, h) =
     List.fold_left (fun (x, y, w, h) layer ->
@@ -270,7 +281,6 @@ value genTmap regions frames anim =
   let getTexImg texFname = try Hashtbl.find texImgs texFname with [ Not_found -> let texImg = Images.load texFname [] in ( Hashtbl.add texImgs texFname texImg; texImg; ) ] in
   let frameImg = Rgba32.(make (w - x + 4) (h - y + 4) Color.({ Rgba.color = { Rgb.r = 0xff; g = 0xff; b = 0xff }; alpha = 0 })) in (* width and height more on 4 pixels cause it helps make contour without breaks, where non-transparent pixels of original image are border *)
   (
-
     List.iter (fun layer ->
       let (texFname, regions) = DynArray.get regions layer.texId in
       let region = DynArray.get regions layer.recId in
@@ -299,6 +309,7 @@ value genTmap regions frames anim =
       Graphic_image.draw_image (Images.Rgb24 img) !imgPos (600 - h);
       Rgb24.destroy img;      
 
+      (* making binary image. in this implementation, "pixel" means block 2x2 pixels *)
       let applyThreshold col row =
         Color.Rgba.(
           let c1 = (Rgba32.get frameImg col row).alpha
@@ -314,6 +325,9 @@ value genTmap regions frames anim =
           done;
         done;
       
+      (* filling inner object holes, we need only transparent areas, which borders on frame border *)
+
+      (* filling needed areas by 2 *)
       let rec fill col row =
         (
           testCell (col + 1) row;
@@ -329,16 +343,18 @@ value genTmap regions frames anim =
         for i = 0 to h - 2 do testCell (w - 2) i; done;
       );
 
+      (* filling rest transparent areas with 1 *)
       for i = 0 to w - 2 do
         for j = 0 to h - 2 do
           if binImg.(i).(j) = 0 then binImg.(i).(j) := 1 else ()
         done;
       done;
 
-      Graphics.set_line_width 1;
+      Graphics.set_line_width 2;
       Graphics.set_color 0xff0000;
 
-      let contour = ref [] in
+      (* calculating contour segments by iterating "contouring grid" (each cell represented by 2x2 pixels, in this implementation "pixel" means block 2x2 of real pixels, so contouring cell is block of 3x3 pixels ) *)
+      let segments = ref [] in
       (
         for j = 0 to h - 3 do
           for i = 0  to w - 3 do
@@ -347,233 +363,127 @@ value genTmap regions frames anim =
             let cellType = if binImg.(i + 1).(j + 1) = 1 then cellType lor 0x2 else cellType in
             let cellType = if binImg.(i).(j + 1) = 1 then cellType lor 0x1 else cellType in
             (
-              let drawSegment x1 y1 x2 y2 =
-                (
-                  contour.val := [ (x1, y1, x2, y2) :: !contour ];
-                  (* Graphics.draw_poly_line [| (x1, y1); (x2, y2) |]; *)
-                )
-              in
+              let addSegment x1 y1 x2 y2 = segments.val := [ (x1, y1, x2, y2) :: !segments ] in
                 match cellType with
                 [ 0 | 15 -> ()
-                | 1 | 14 -> drawSegment i (j + 1) (i + 1) (j + 2)
-                | 2 | 13 -> drawSegment (i + 1) (j + 2) (i + 2) (j + 1)
-                | 3 | 12 -> drawSegment i (j + 1) (i + 2) (j + 1)
-                | 4 | 11 -> drawSegment (i + 1) j (i + 2) (j + 1)
-                | 6 | 9 -> drawSegment (i + 1) j (i + 1) (j + 2)
-                | 7 | 8 -> drawSegment i (j + 1) (i + 1) j
-                | 5 -> ( drawSegment i (j + 1) (i + 1) j; drawSegment (i + 1) (j + 2) (i + 2) (j + 1); )
-                | 10 -> ( drawSegment i (j + 1) (i + 1) (j + 2); drawSegment (i + 1) j (i + 2) (j + 1); )
+                | 1 | 14 -> addSegment i (j + 1) (i + 1) (j + 2)
+                | 2 | 13 -> addSegment (i + 1) (j + 2) (i + 2) (j + 1)
+                | 3 | 12 -> addSegment i (j + 1) (i + 2) (j + 1)
+                | 4 | 11 -> addSegment (i + 1) j (i + 2) (j + 1)
+                | 6 | 9 -> addSegment (i + 1) j (i + 1) (j + 2)
+                | 7 | 8 -> addSegment i (j + 1) (i + 1) j
+                | 5 -> ( addSegment i (j + 1) (i + 1) j; addSegment (i + 1) (j + 2) (i + 2) (j + 1); )
+                | 10 -> ( addSegment i (j + 1) (i + 1) (j + 2); addSegment (i + 1) j (i + 2) (j + 1); )
                 | _ -> assert False
                 ];
             )
           done;
         done;
 
-        let contour = List.map (fun (x1, y1, x2, y2) -> { endA = (x1, y1); endB = (x2, y2); points = [ (x1, y1); (x2, y2) ]}) !contour in
-        let contour = DynArray.of_list contour in
-        let line = DynArray.get contour 0 in
-        let merge = ref True in
-        (
-          while !merge do
-            merge.val := False;
+        (* making contour of segments set. images may contain some trash pixels and therefore more than one contour. we choose first contour, which contains more than minContourPntsNum points *)
+        let rec findContour points =
+          if points = [] then []
+          else
+            let contourLine = let (x1, y1, x2, y2) = List.hd points in { endA = (x1, y1); endB = (x2, y2); points = [ (x1, y1); (x2, y2) ]} in
+            let contour = DynArray.of_list (List.tl points) in        
+            let merge = ref True in
+            (
+              while !merge do
+                merge.val := False;
 
-            let i = ref 1 in            
-              while !i < DynArray.length contour do
-                let seg = DynArray.get contour !i in
-                  if line.endA = seg.endB then
-                  (
-                    line.endA := seg.endA;
-                    line.points := [ seg.endA :: line.points ];
-                    DynArray.delete contour !i;
-                    merge.val := True;
-                  )
-                  else if line.endA = seg.endA then
-                  (
-                    line.endA := seg.endB;
-                    line.points := [ seg.endB :: line.points ];
-                    DynArray.delete contour !i;
-                    merge.val := True;
-                  )
-                  else if line.endB = seg.endB then
-                  (
-                    line.endB := seg.endA;
-                    line.points := line.points @ [ seg.endA ];
-                    DynArray.delete contour !i;
-                    merge.val := True;
-                  )                  
-                  else if line.endB = seg.endA then
-                  (
-                    line.endB := seg.endB;
-                    line.points := line.points @ [ seg.endB ];
-                    DynArray.delete contour !i;
-                    merge.val := True;
-                  )
-                  else incr i;
+                let i = ref 1 in            
+                  while !i < DynArray.length contour do
+                    let (x1, y1, x2, y2) = DynArray.get contour !i in
+                    let pntA = (x1, y1) in
+                    let pntB = (x2, y2) in
+                      if contourLine.endA = pntB then
+                      (
+                        contourLine.endA := pntA;
+                        contourLine.points := [ pntA :: contourLine.points ];
+                        DynArray.delete contour !i;
+                        merge.val := True;
+                      )
+                      else if contourLine.endA = pntA then
+                      (
+                        contourLine.endA := pntB;
+                        contourLine.points := [ pntB :: contourLine.points ];
+                        DynArray.delete contour !i;
+                        merge.val := True;
+                      )
+                      else if contourLine.endB = pntB then
+                      (
+                        contourLine.endB := pntA;
+                        contourLine.points := contourLine.points @ [ pntA ];
+                        DynArray.delete contour !i;
+                        merge.val := True;
+                      )                  
+                      else if contourLine.endB = pntA then
+                      (
+                        contourLine.endB := pntB;
+                        contourLine.points := contourLine.points @ [ pntB ];
+                        DynArray.delete contour !i;
+                        merge.val := True;
+                      )
+                      else incr i;
+                  done;
               done;
-          done;
 
-          let points = List.map (fun (x, y) -> (float_of_int x, float_of_int y)) line.points in
-          let fstPnt = List.hd points in
-          let (contour, _) = 
-            List.fold_left (fun (contour, approxPnts) (col, row) ->
-              let (_col, _row) = List.hd contour in
-              let k = (row -. _row) /. (col -. _col) in
-              let b = row -. col *. k in
-                let est = estimate k b approxPnts in
-                  if est < lineEstimateThreshold then
-                    (contour, [ (col, row) :: approxPnts ])
-                  else
-                    ([ (List.hd approxPnts) :: contour ], [])
-            ) ([ fstPnt ], []) (List.tl points)        
-          in
-          (
-            Printf.printf "%d %s\n" (List.length contour) (String.concat " " (List.map (fun (x, y) -> Printf.sprintf "(%.0f, %.0f)" x y) contour));
-            Graphics.draw_poly (Array.of_list (List.map (fun (x, y) -> ((int_of_float x) + !imgPos, 600 - (int_of_float y))) contour));
-          );            
-        );
-      );
-
-      imgPos.val := !imgPos + w + 30;
-    );
-
-    Rgba32.destroy frameImg;        
-  );
-
-
-
-
-
-(*     let frameImg =
-      let img = Rgba32.(make h w Color.({ Rgba.color = { Rgb.r = 0xff; g = 0xff; b = 0xff }; alpha = 0 })) in
-      (
-        for i = 0 to w - 1 do
-          for j = 0 to h - 1 do
-            let c = Rgba32.get frameImg i j in
-              Rgba32.set img j i c
-              (* Color.Rgba.(Color.Rgb.(Rgb24.set img j i { r = c.color.r; g = c.color.g; b = c.color.b })) *)
-          done;
-        done;
-        img;
-      )
-    in
-    let (w, h) = (h, w) in
- *)    
-(*     let rec scanSide img w h col row colInc rowInc =
-      if row < 0 || col < 0 then None
-      else if row = h || col = w then None
-      else
-        let clr = Rgba32.get frameImg col row in
-          if clr.Color.Rgba.alpha <= alphaThreshold then scanSide img w h (col + colInc) (row + rowInc) colInc rowInc
-          else Some (float_of_int col, float_of_int row)
-    in
-      let scanSide = scanSide frameImg w h
-      and points = ref [] in
-      ( *)
-        (* let points = ExtList.List.unique !points in *)
-        (* let points = [ (50., 50.); (60., 20.); (00., 10.); (30., 10.); (30., 40.); (40., 30.); (40., 00.) ] in *)
-   (*      let points = List.sort compare !points in
-        let (colO, rowO) = List.hd points in
-        let () = Printf.printf "%.0f %.0f\n" colO rowO in
-        let points =
-          List.sort (fun (colA, rowA) (colB, rowB) ->
-            let est = (rowO -. rowA) *. colB +. (colA -. colO) *. rowB +. (colO *. rowA -. colA *. rowO) in
-              if est < 0. then 1
-              else if est > 0. then ~-1
-              else 0
-          ) (List.tl points)
+              if List.length contourLine.points < minContourPntsNum then findContour (List.tl points)
+              else contourLine.points;
+            )
         in
-        let () = Printf.printf "%d %s\n" (List.length points) (String.concat " " (List.map (fun (col, row) -> Printf.sprintf "(%.0f,%.0f)" col row) points)) in
-(*         let points =
-          List.fold_left (fun pnts pnt ->
-            match pnts with
-            [ [ last :: _ ] ->
-              let () = Printf.printf "(%.0f, %.0f), (%.0f, %.0f): %f\n" (fst pnt) (snd pnt) (fst last) (snd last) (sqrt ((fst pnt -. fst last) ** 2. +. (snd pnt -. snd last) ** 2.)) in
-                if sqrt ((fst pnt -. fst last) ** 2. +. (snd pnt -. snd last) ** 2.) < 30. then [ pnt :: pnts ] else pnts
-            | _ -> [ pnt :: pnts ]
-            ]
-          ) [] points in *)
-        let points = [ (colO, rowO) :: points ] in
- *)
-          (* Printf.printf "%d %s\n" (List.length points) (String.concat " " (List.map (fun (col, row) -> Printf.sprintf "(%.0f,%.0f)" col row) points)); *)
-
-
-
-        (* let points = List.sort (fun (colA, rowA) (colB, rowB) -> let retval = compare colA colB in if retval <> 0 then retval else ~-1 * compare rowA rowB) !points in *)
-        (* let points = ExtList.List.unique ~cmp:(fun (colA, _) (colB, _) -> colA = colB) points in *)
-
-
-(*         for col = 0 to w - 1 do
-          match scanSide col (h - 1) 0 ~-1 with
-          [ Some pnt -> points.val := [ pnt :: !points ]
-          | _ -> ()
-          ];
-        done;
-
-        for col = w - 1 downto 0 do
-          match scanSide col 0 0 1 with
-          [ Some pnt -> points.val := [ pnt :: !points ]
-          | _ -> ()
-          ];
-        done;
-
-        let points = !points in
-        let fstPnt = List.hd points in
-        let (contour, _) = 
+        let points = List.map (fun (x, y) -> (float_of_int x, float_of_int y)) (findContour !segments) in
+        let (fstCol, fstRow) = List.hd points in
+        let (contour, _) = (* approximating contour *)
           List.fold_left (fun (contour, approxPnts) (col, row) ->
             let (_col, _row) = List.hd contour in
             let k = (row -. _row) /. (col -. _col) in
             let b = row -. col *. k in
-              let est = estimate k b approxPnts in
-              (* let () = Printf.printf "est %f\n" est in *)
+              let est = estimateLine k b approxPnts in
                 if est < lineEstimateThreshold then
                   (contour, [ (col, row) :: approxPnts ])
                 else
-                  ([ (List.hd approxPnts) :: contour ], [])
-          ) ([ fstPnt ], []) (List.tl points)        
+                  ([ (col, row) :: contour ], [])
+          ) ([ (fstCol, fstRow) ], []) (List.tl points)        
         in
-        (* let contour = !points in *)
+        let contour = List.map (fun (x, y) -> (int_of_float x, int_of_float y)) contour in
         (
-          Printf.printf "%d %s\n" (List.length contour) (String.concat " " (List.map (fun (col, row) -> Printf.sprintf "(%.0f,%.0f)" col row) contour));
-          
-          let img = Rgb24.make w h { Color.Rgb.r = 0xff; g = 0xff; b = 0xff; } in
-          (
-            for i = 0 to w - 1 do
-              for j = 0 to h - 1 do
-                let c = Rgba32.get frameImg i j in
-                  Color.Rgba.(Color.Rgb.(Rgb24.set img i j { r = c.color.r; g = c.color.g; b = c.color.b }))
-              done;
-            done;
+          Printf.printf "%d %s\n" (List.length contour) (String.concat " " (List.map (fun (x, y) -> Printf.sprintf "(%d, %d)" x y) contour));
+          Graphics.draw_poly (Array.of_list (List.map (fun (x, y) -> (x + !imgPos, 600 - y)) contour));
 
-            Graphic_image.draw_image (Images.Rgb24 img) !imgPos (600 - h);
+          imgPos.val := !imgPos + w + 30;
+          Rgba32.destroy frameImg;
 
-            Graphics.set_line_width 1;
-            Graphics.set_color 0xff0000;
-            Graphics.draw_poly (Array.of_list (List.map (fun (col, row) -> (int_of_float col + !imgPos, 600 - int_of_float row)) contour));
-
-            (* imgPos.val := !imgPos + w + 30; *)
-            Rgb24.destroy img;
-          );
-        ); *)
-
+          anim.contour := contour;
+        );
+      );
+    );
+  );
 
 Graphics.open_graph "";
-Graphics.set_window_title "xyu";
-Graphics.resize_window 1800 600;
+Graphics.resize_window 1200 600;
+
+value libName = Some "bl_cowshed";
+(* value libName = None; *)
 
 Array.iter (fun fname ->
-  if fname <> "pizda" && Sys.is_directory fname then
+  if fname <> "pizda" && not (ExtString.String.ends_with fname "_sh") && Sys.is_directory fname && match libName with [ Some libName -> libName = fname | _ -> True ] then
     let objs = readObjs fname
     and frames = readFrames fname
     and regions = readTexInfo fname in
     (
+      Graphics.set_window_title fname;
+
       List.iter (fun obj ->
         let () = Printf.printf "processing object %s...\n%!" obj.oname in
-          if obj.oname = "tr_birch" then
-            List.iter (fun anim -> let () = Printf.printf "\tprocessing animation %s\n%!" anim.aname in genTmap regions frames anim) obj.anims
-          else ()
+          List.iter (fun anim -> let () = Printf.printf "\tprocessing animation %s\n%!" anim.aname in genContour regions frames anim) obj.anims;            
       ) objs;
 
-      writeObjs fname objs;
+      ignore(Graphics.wait_next_event [Graphics.Key_pressed]);
+      Graphics.clear_graph ();
+      imgPos.val := 0;
+
+      (* writeObjs fname objs; *)
     )
   else ()
 ) (Sys.readdir !indir);
