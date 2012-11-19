@@ -221,17 +221,17 @@ value writeObjs lib objs =
         write_utf out anim.aname;
         IO.write_real_i32 out (Int32.of_float anim.frameRate);
 
-        IO.write_byte out anim.rnum;
+(*         IO.write_byte out anim.rnum;
         List.iter (fun rect -> (
           IO.write_i16 out rect.rx;
           IO.write_i16 out rect.ry;
           IO.write_i16 out rect.rw;
           IO.write_i16 out rect.rh;
-        )) anim.rects;
+        )) anim.rects; *)
 
 
         IO.write_byte out (List.length anim.contour);
-        List.iter (fun (x, y) -> IO.write_i32 out ((x lsl 16) lor (y land 0xffff)) ) anim.contour;
+        List.iter (fun (x, y) -> IO.write_i32 out ((x lsl 16) lor (y land 0xffff))) anim.contour;
 
 (*         IO.write_ui16 out (DynArray.length anim.ranges);
         DynArray.iter (fun colRanges -> (
@@ -277,8 +277,8 @@ value genContour regions frames anim =
     List.fold_left (fun (x, y, w, h) layer ->
       let (_, regions) = DynArray.get regions layer.texId in
       let region = DynArray.get regions layer.recId in
-        (min x (frame.fx + layer.lx), min y (frame.fy + layer.ly), max w (frame.fx + layer.lx + region.regw), max h (frame.fy + layer.ly + region.regh))
-    ) (0, 0, 0, 0) frame.layers
+        (min x layer.lx, min y layer.ly, max w (layer.lx + region.regw), max h (layer.ly + region.regh))
+    ) (max_int, max_int, 0, 0) frame.layers
   in
   let texImgs = Hashtbl.create 0 in
   let getTexImg texFname = try Hashtbl.find texImgs texFname with [ Not_found -> let texImg = Images.load texFname [] in ( Hashtbl.add texImgs texFname texImg; texImg; ) ] in
@@ -290,7 +290,7 @@ value genContour regions frames anim =
       let texImg = getTexImg texFname in
       (
         match texImg with
-        [ Images.Rgba32 texImg -> Rgba32.map (fun colorA colorB -> Color.Rgba.merge colorA colorB) texImg region.regx region.regy frameImg (frame.fx + layer.lx - x + 2) (frame.fy + layer.ly - y + 2) region.regw region.regh (* x and y more on 2 pixels cause width and height are more on 4 pixels, see previous comment*)
+        [ Images.Rgba32 texImg -> Rgba32.map (fun colorA colorB -> Color.Rgba.merge colorA colorB) texImg region.regx region.regy frameImg (layer.lx - x + 2) (layer.ly - y + 2) region.regw region.regh (* inc x and y by 2 pixels cause width and height are more on 4 pixels, see previous comment*)
         | _ -> assert False
         ];
       );                
@@ -345,10 +345,8 @@ value genContour regions frames anim =
         )        
       and testCell col row = if 0 <= col && col < (w - 1) && 0 <= row && row < (h - 1) && binImg.(col).(row) = 0 then ( binImg.(col).(row) := 2; fill col row; ) else () in
       (
-        for i = 0 to w - 2 do testCell i 0; done;
-        for i = 0 to w - 2 do testCell i (h - 2); done;
-        for i = 0 to h - 2 do testCell 0 i; done;
-        for i = 0 to h - 2 do testCell (w - 2) i; done;
+        for i = 0 to w - 2 do testCell i 0; testCell i (h - 2); done;
+        for i = 0 to h - 2 do testCell 0 i; testCell (w - 2) i; done;
       );
 
       (* filling rest transparent areas with 1 *)
@@ -468,8 +466,7 @@ value genContour regions frames anim =
           else ();
 
           Rgba32.destroy frameImg;
-
-          anim.contour := contour;
+          anim.contour := List.map (fun (x, y) -> (max 0 (x - 2), max 0 (y - 2))) contour; (* minor correction: cause points will be represented as 32-bit ints (16-bits per coordinate), storing sign information too difficult, so negative coordinates will be rounded to 0 *)
         );
       );
     );
@@ -485,27 +482,30 @@ if !graph then
 else ();
 
 Array.iter (fun fname ->
-  if fname <> "pizda" && not (ExtString.String.ends_with fname "_sh") && Sys.is_directory fname && (!libName <> "" && !libName = fname || !libName = "") then
+  if fname <> "pizda" && Sys.is_directory fname && (!libName <> "" && !libName = fname || !libName = "") then
     let objs = readObjs fname
     and frames = readFrames fname
-    and regions = readTexInfo fname in
+    and regions = readTexInfo fname in      
     (
-      if !graph then Graphics.set_window_title fname else ();
-
-      List.iter (fun obj ->
-        if obj.oname = "bl_house" then
-        let () = Printf.printf "processing object %s...\n%!" obj.oname in
-          List.iter (fun anim -> let () = Printf.printf "\tprocessing animation %s... %!" anim.aname in genContour regions frames anim) obj.anims
-        else ();
-      ) objs;
-
-      if !graph then
+      if not (ExtString.String.ends_with fname "_sh") then
       (
-        ignore(Graphics.wait_next_event [Graphics.Key_pressed]);
-        Graphics.clear_graph ();
-        imgPos.val := 0;
+        if !graph then Graphics.set_window_title fname else ();
+
+        List.iter (fun obj ->
+          let () = Printf.printf "processing object %s...\n%!" obj.oname in
+            List.iter (fun anim -> let () = Printf.printf "\tprocessing animation %s... %!" anim.aname in genContour regions frames anim) obj.anims
+        ) objs;
+
+        if !graph then
+        (
+          ignore(Graphics.wait_next_event [Graphics.Key_pressed]);
+          Graphics.clear_graph ();
+          imgPos.val := 0;
+        )
+        else ();        
       )
-      else ();
+      else
+        Printf.printf "skip %s\n%!" fname;
 
       writeObjs fname objs;
     )
