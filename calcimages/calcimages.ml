@@ -2,21 +2,13 @@ open Images;
 open ExtList;
 
 
+value donop x = match !nop with [ True -> Utils.nextPowerOfTwo x | False -> x];
 value verbose = ref False;
 value recursive = ref False;
 value nop = ref False;
 value suffix = ref None;
 value esuffix = ref [];
 
-value rec nextPowerOfTwo number =
-  let rec loop result = 
-    if result < number 
-    then loop (result * 2)
-    else result
-  in 
-  loop 1;
-
-value donop x = match !nop with [ True -> nextPowerOfTwo x | False -> x];
 value pvr = ref False;
 
 
