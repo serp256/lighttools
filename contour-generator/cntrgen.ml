@@ -6,8 +6,15 @@ value indir = ref ".";
 value graph = ref False;
 value libName = ref "";
 value suffix = ref "";
+value readRects = ref True;
 
-Arg.parse [ ("-i", Set_string indir, "input dir"); ("-v", Set graph, "show visualisation"); ("-l", Set_string libName, "generate contour for give library"); ("-s", Set_string suffix, "search for files like 'animations<suffix>.dat', 'texInfo<suffix>.dat' and so on, where suffix -- value, passed through this option") ] (fun _ -> ()) "contour generator";
+Arg.parse [
+  ("-i", Set_string indir, "input dir");
+  ("-v", Set graph, "show visualisation");
+  ("-l", Set_string libName, "generate contour for give library");
+  ("-s", Set_string suffix, "search for files like 'animations<suffix>.dat', 'texInfo<suffix>.dat' and so on, where suffix -- value, passed through this option");
+  ("-skip-rects", Clear readRects, "skip reading rects, read contour instead (for files, which were processed by cntrgen")
+] (fun _ -> ()) "contour generator";
 
 value read_utf inp = 
   let len = IO.read_i16 inp in
@@ -172,9 +179,14 @@ value readObjs lib =
                 (
                   let rnum = IO.read_byte inp in
                   (
-                    for i = 1 to rnum do {
-                      rects.val := [ { rx = IO.read_i16 inp; ry = IO.read_i16 inp; rw = IO.read_i16 inp; rh = IO.read_i16 inp } :: !rects ];
-                    };
+                    if !readRects then
+                      for i = 1 to rnum do {
+                        rects.val := [ { rx = IO.read_i16 inp; ry = IO.read_i16 inp; rw = IO.read_i16 inp; rh = IO.read_i16 inp } :: !rects ];
+                      }
+                    else
+                      for i = 1 to rnum do
+                        ignore(IO.read_i32 inp);
+                      done;
 
                     let fnum = IO.read_ui16 inp in
                     (
@@ -201,7 +213,7 @@ value readObjs lib =
       );
 
 value writeObjs lib objs =  
-  let out = IO.output_channel (open_out (!indir // lib // "animations.dat")) in
+  let out = IO.output_channel (open_out (!indir // lib // ("animations" ^ !suffix ^ ".dat"))) in
   (
     IO.write_ui16 out (List.length objs);
 
