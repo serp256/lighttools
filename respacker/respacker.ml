@@ -588,23 +588,25 @@ value merge_images () =
 
 
 value optimize_sprites () = 
+  DEFINE optimize =
+    match DynArray.get children 0 with
+    [ `chld (id,_,pos) when pos.x = 0. && pos.y = 0. -> 
+      (
+        DynArray.set exports i (name,id); (* FIXME: check pos *)
+        item.deleted := True;
+      )
+    | `chld _ -> ()
+    | _ -> assert False 
+    ]
+  IN
   for i = 0 to DynArray.length exports - 1 do
     let (name,id) = DynArray.get exports i in
     let item = DynArray.get items id in
     match item.item with
-    [ `sprite children -> 
-      if DynArray.length children = 1 (* если тут один чайлд - то это просто картинка *)
-      then 
-        match DynArray.get children 0 with
-        [ `chld (id,_,pos) when pos.x = 0. && pos.y = 0. -> 
-          (
-            DynArray.set exports i (name,id); (* FIXME: check pos *)
-            item.deleted := True;
-          )
-        | `chld _ -> () 
-        | _ -> assert False 
-        ]
-      else ()
+    [ `sprite children when DynArray.length children = 1 -> optimize
+    | `clip frames when DynArray.length frames = 1 -> 
+        let children = (DynArray.get frames 0).children in
+        if DynArray.length children = 1 then optimize else ()
     | _ -> ()
     ]
   done;

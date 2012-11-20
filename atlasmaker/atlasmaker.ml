@@ -217,7 +217,7 @@ value createAtlas () =
                 let () = print_endline "convert 23 -> 32" in
                 Images.Rgba32 (Rgb24.to_rgba32 i)
             | _ -> assert False
-            ] 
+            ]
           in
           let (w, h) = Images.size img in
           let () = Printf.printf "Images.blit x=%d; y=%d; w=%d; h=%d; isRotate=%b \n%!" x y w h isRotate in

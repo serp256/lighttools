@@ -1,4 +1,13 @@
 
+value rec nextPowerOfTwo number =
+  let rec loop result = 
+    if result < number 
+    then loop (result * 2)
+    else result
+  in 
+  loop 1;
+
+
 value iter_2d f sx sy mx my = 
   let y = ref sy in
   while !y < my do
