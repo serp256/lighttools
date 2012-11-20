@@ -50,19 +50,25 @@ value installApk = ref False;
 value installExp = ref False;
 value withoutLib = ref False;
 value baseExp = ref False;
+value cheat = ref False;
+value noExp = ref False;
+value sounds = ref False;
 
 value args = [
     ("-i", Set_string inDir, "input directory (for example, farm root directory, which contains android subdirectory)");
     ("-package", Set_string package, "application package (for expansions maker)");
     ("-manifest", Set manifest, "generate manifest for suffixes");
     ("-assets", Set assets, "generate assets for suffixes");
+    ("-sounds", Set sounds, "include sounds into assets, use with -assets option. by default sounds included into expansions");
     ("-exp", Set expansions, "generate expansions for suffixes");
     ("-base-exp", Set baseExp, "create symlink, named 'base', to this version on expansions in release archive");
     ("-exp-patch", Set_string patchFor, "generate expansions patch for version, passed through this option");
     ("-exp-ver", Set_string expVer, "use expansions from version, passed through this option");
     ("-apk", Set apk, "compile apk for suffixes");
+    ("-no-exp", Set noExp, "application has no expansions");
     ("-without-lib", Set withoutLib, "compile apk without farm-lib rebuilding, use it in addition -apk option");
     ("-release", Set release, "compile apks for release, install from release archive, copy apk and expansions to release archive");
+    ("-cheat", Set cheat, "compile apk with cheats, only for debug version");
     ("-install", Tuple [ Set installApk; Set installExp; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "install both apk and expansions. when using with -release flag, takes suffix-version pair, when without -release -- only suffix. example: abldr -install normal_hdpi_pvr or abldr -release -install normal_hdpi_pvr 1.1.3");
     ("-install-apk", Tuple [ Set installApk; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "install only apk, usage same as -install");
     ("-install-exp", Tuple [ Set installExp; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "install only expansion, usage same as -install")
@@ -92,13 +98,63 @@ value genManifest suffix =
         runCommand ("xsltproc -o " ^ (Filename.concat androidDir "AndroidManifest.xml") ^ " --xinclude --xincludestyle " ^ (Filename.concat manifestsDir "manifest.xslt") ^ " " ^ manifestConfig) "xsltproc failed";
     );
 
+(* value rsyncArgs =
+    let argFunc argName argVal = if argVal = "" then "" else Printf.sprintf "--%s=%s" argName (Filename.concat rsyncDir argVal)
+    and srcFunc _ src = if src = "" then resDir ^ "/" else Printf.sprintf "`cat %s`" (Filename.concat rsyncDir src)
+    and dstFunc _ dst = if dst = "" then assetsDir ^ "/" else Printf.sprintf "`cat %s`" (Filename.concat rsyncDir dst) in
+        [ ("files-from", argFunc); ("include-from", argFunc); ("filter", argFunc); ("exclude-from", argFunc); ("src", srcFunc); ("dst", dstFunc) ];
+
+value kindRegexp = String.concat "\\|" (List.map (fun (argName, _) -> argName) rsyncArgs);
+
+value createRsyncPass () = List.map (fun (argName, _) -> (argName, ref "")) rsyncArgs; *)
+
+value syncSounds dst =
+    let sndDir = Filename.concat resDir "sounds_android" in
+        Array.iter (fun fname ->
+            let sndDir = Filename.concat sndDir fname in
+                if Sys.is_directory sndDir then
+                    if fname = "default" then
+                        runCommand ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ sndDir ^ "/ " ^ (Filename.concat dst "sounds/")) "rsync failed when copying default sounds"
+                    else
+                        runCommand ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ sndDir ^ "/ " ^ (Filename.concat dst ("locale/" ^ fname ^ "/sounds/"))) "rsync failed when copying en sounds"
+                else ()
+        ) (Sys.readdir sndDir);
+
 value genAssets suffix =
     let suffixFilter = Filename.concat rsyncDir ("android-" ^ suffix ^ "-assets.filter") in
-        let suffixFilter = if Sys.file_exists suffixFilter then " --filter='. " ^ suffixFilter ^ "'" else "" in
-        (
-            printf "\n\n[ generating assets for suffix %s... ]\n%!" suffix;
-            runCommand ("rsync -avL --include-from=" ^ (Filename.concat rsyncDir "android-assets.include") ^ suffixFilter ^ " --exclude-from=" ^ (Filename.concat rsyncDir "android-assets.exclude") ^ " --delete --delete-excluded " ^ resDir ^ "/ " ^ assetsDir) "rsync failed when copying assets";
-        );
+    let suffixFilter = if Sys.file_exists suffixFilter then " --filter='. " ^ suffixFilter ^ "'" else "" in
+    (
+        printf "\n\n[ generating assets for suffix %s... ]\n%!" suffix;
+
+        let sndOpts = if !sounds then " --filter='protect locale/*/sounds' --filter='protect sounds'" else "" in
+            runCommand ("rsync -avL" ^ sndOpts ^ " --include-from=" ^ (Filename.concat rsyncDir "android-assets.include") ^ suffixFilter ^ " --exclude-from=" ^ (Filename.concat rsyncDir "android-assets.exclude") ^ " --delete --delete-excluded " ^ resDir ^ "/ " ^ assetsDir) "rsync failed when copying assets";
+
+        if !sounds then
+            syncSounds assetsDir
+        else ();
+    );
+(*     let rsyncPasses = ref []
+    and regexp = Str.regexp ("^\\(" ^ suffix ^ "\\|common\\)\\.assets\\.\\([0-9]+\\)\\.\\(" ^ kindRegexp ^ "\\)$") in
+    (
+        Array.iter (fun fname ->
+            if Str.string_match regexp fname 0 then
+                let passId = int_of_string (Str.matched_group 2 fname)
+                and arg = Str.matched_group 3 fname in
+                    let rsyncPass = try List.assoc passId !rsyncPasses with [ Not_found -> let rsyncPass = createRsyncPass () in ( rsyncPasses.val := [ (passId, rsyncPass) :: !rsyncPasses ]; rsyncPass ) ] in
+                        (List.assoc arg rsyncPass).val := fname
+            else ()
+        ) (Sys.readdir rsyncDir);
+
+        List.iter (fun (_, pass) ->
+            let rsyncArgs =
+                let argsList = (List.map (fun (argName, argVal) -> (List.assoc argName rsyncArgs) argName argVal.val) pass) in
+                    String.concat " " argsList
+            in
+                runCommand ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ rsyncArgs) "rsync failed when copying assets";
+        ) (List.sort !rsyncPasses);
+    ); *)
+
+
 
 value archiveApk ?(apk = True) ?(expansions = True) suffix =
     let ver =
@@ -159,11 +215,14 @@ value genExpansion suffix =
             (
                 printf "\n\n[ generating expansions for suffix %s... ]\n%!" suffix;
                 mkdir expDir;
+
+                (* it is so bad, not universal at all *)
                 runCommand ("rsync -avL --filter='protect locale/*/sounds' --filter='protect sounds' --include-from=" ^ (Filename.concat rsyncDir "android-expansions.include") ^ suffixFilter ^ " --exclude-from=" ^ (Filename.concat rsyncDir "android-expansions.exclude") ^ " --delete --delete-excluded " ^ resDir ^ "/ " ^ expDir) "rsync failed when copying expansions";
-                runCommand ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ (Filename.concat resDir "sounds_android/default/") ^ " " ^ (Filename.concat expDir "sounds/")) "rsync failed when copying default sounds";
+                syncSounds expDir;
+(*                 runCommand ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ (Filename.concat resDir "sounds_android/default/") ^ " " ^ (Filename.concat expDir "sounds/")) "rsync failed when copying default sounds";
                 runCommand ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ (Filename.concat resDir "sounds_android/en/") ^ " " ^ (Filename.concat expDir "locale/en/sounds/")) "rsync failed when copying en sounds";
                 runCommand ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ (Filename.concat resDir "sounds_android/ru/") ^ " " ^ (Filename.concat expDir "locale/ru/sounds/")) "rsync failed when copying ru sounds";
-
+ *)
                 let expsDir = Filename.concat expansionsDir suffix in
                     Array.iter (fun fname -> if String.ends_with fname ".obb" then Sys.remove (Filename.concat expsDir fname) else ()) (Sys.readdir expsDir);
 
@@ -198,19 +257,21 @@ value genExpansion suffix =
 );
 
 value compileApk suffix =
-    let target = if !release then "android-release" else "android" in
+    let target = if !release then "android-release" else if !cheat then "android-cheat" else "android" in
     (
-        let expansionsDir = Filename.concat expansionsDir suffix in
-            let (main, patch) = findExpNames expansionsDir in
-                let msize = (Unix.stat (Filename.concat expansionsDir main)).Unix.st_size
-                and psize = (Unix.stat (Filename.concat expansionsDir patch)).Unix.st_size
-                and mver = try List.hd (List.tl (String.nsplit main ".")) with [ Failure _ -> failwith "wrong main expansion name" ]
-                and pver = try List.hd (List.tl (String.nsplit patch ".")) with [ Failure _ -> failwith "wrong expansion patch name" ] in
-                    let out = open_out (Filename.concat androidDir "res/values/expansions.xml") in
-                    (
-                        output_string out ("<?xml version=\"1.0\" encoding=\"utf-8\"?><resources><array name=\"expansions\"><item>true," ^ mver ^ "," ^ (string_of_int msize) ^ "</item><item>false," ^ pver ^ "," ^ (string_of_int psize) ^ "</item></array></resources>");
-                        close_out out;
-                    );
+        if !noExp then
+            let expansionsDir = Filename.concat expansionsDir suffix in
+                let (main, patch) = findExpNames expansionsDir in
+                    let msize = (Unix.stat (Filename.concat expansionsDir main)).Unix.st_size
+                    and psize = (Unix.stat (Filename.concat expansionsDir patch)).Unix.st_size
+                    and mver = try List.hd (List.tl (String.nsplit main ".")) with [ Failure _ -> failwith "wrong main expansion name" ]
+                    and pver = try List.hd (List.tl (String.nsplit patch ".")) with [ Failure _ -> failwith "wrong expansion patch name" ] in
+                        let out = open_out (Filename.concat androidDir "res/values/expansions.xml") in
+                        (
+                            output_string out ("<?xml version=\"1.0\" encoding=\"utf-8\"?><resources><array name=\"expansions\"><item>true," ^ mver ^ "," ^ (string_of_int msize) ^ "</item><item>false," ^ pver ^ "," ^ (string_of_int psize) ^ "</item></array></resources>");
+                            close_out out;
+                        )
+        else ();
         
         printf "\n\n[ compiling apk for suffix %s... ]\n%!" suffix;
 
@@ -233,19 +294,22 @@ value install () =
             else if String.starts_with fname "patch" then (apk, main, fname) else (apk, main, patch)
         ) ("", "", "") (Sys.readdir archiveDir)
     in
-        if apk = "" || main = "" || patch = "" then failwith "apk, main or patch not found"
-        else
-        (
-            if !installApk then runCommand ("adb install -r " ^ (Filename.concat archiveDir apk)) "adb failed when installing apk" else ();
+    (
+        if !installApk then
+            if apk = "" then  failwith "apk is missing"
+            else runCommand ("adb install -r " ^ (Filename.concat archiveDir apk)) "adb failed when installing apk"
+        else ();
 
-            if !installExp then
+        if !installExp then
+            if main = "" || patch = "" then failwith "main expansion or patch is missing"
+            else 
                 let pushCommand = "storage_dir=`adb shell 'echo -n $EXTERNAL_STORAGE'` && exp_dir=$storage_dir/Android/obb/" ^ !package ^ " && adb shell \"mkdir -p $exp_dir\" && adb push " in
                 (
                     runCommand (pushCommand ^ (Filename.concat archiveDir main) ^ " $exp_dir/") "error while pushing main expansion";
-                    runCommand (pushCommand ^ (Filename.concat archiveDir patch) ^ " $exp_dir/") "error while pushing expansion patch";                    
+                    runCommand (pushCommand ^ (Filename.concat archiveDir patch) ^ " $exp_dir/") "error while pushing expansion patch";
                 )
-            else ();
-        );
+        else ();        
+    );
 );
 
 if !installApk || !installExp then
