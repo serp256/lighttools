@@ -28,7 +28,8 @@
 		protected var dp:Array = [
 			{ label:'File', children:[
 				{ label:'Open', action:OPEN },
-				{ label:'Export', action:EXPORT }
+				{ label:'Export', action:EXPORT },
+				{ label:'Export All Profiles', action:EXPORT_ALL }
 			] },
 			{ label:'Profiles', children:[
 				{ label:'Create', action:CREATE_PROFILE },
@@ -44,6 +45,10 @@
 
 				case EXPORT:
 					Facade.runCommand(Facade.commandsFactory.getExportCommand(Facade.proj));
+					break;
+
+				case EXPORT_ALL:
+					Facade.runCommand(Facade.commandsFactory.getExportCommand(Facade.proj, Facade.profiles.source));
 					break;
 
 				case CREATE_PROFILE:

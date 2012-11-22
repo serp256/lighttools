@@ -26,14 +26,16 @@ package ru.redspell.rasterizer.commands {
 		protected var _swfIdx:int = -1;
 		protected var _clsIdx:int = -1;
 		protected var _proj:Project;
+        protected var _profiles:Array;
 		protected var _pack:SwfsPack;
 		protected var _swf:Swf;
 		protected var _packDir:File;
 		protected var _classesExported:uint = 0;
 		protected var _classesTotal:uint = 0;
 
-		public function ExportCommand(proj:Project) {
+		public function ExportCommand(proj:Project, profiles:Array = null) {
 			_proj = proj;
+            _profiles = profiles == null ? [ Facade.profile ] : profiles;
 		}
 
 		protected function exportClass(cls:SwfClass):void {
@@ -52,7 +54,7 @@ package ru.redspell.rasterizer.commands {
 			Utils.traceObj(instance as DisplayObjectContainer);
 
 			var flatten:IFlatten = (instance is MovieClip) && animated ? new FlattenMovieClip() : new FlattenSprite();
-			flatten.fromDisplayObject(instance, Utils.getClsScale(cls));
+			flatten.fromDisplayObject(instance, Utils.getClsScale(cls, _profiles[0]));
 
 			try {
 				var exporter:IExporter = new FlattenExporter();
@@ -75,8 +77,8 @@ package ru.redspell.rasterizer.commands {
 				trace('\t' + cls.name);
 
 				if (cls.checked) {
-					trace('Exporting pack ' + _pack.name + ' swf ' + _swf.path + ' class ' + cls.name + ' (' + _classesExported + '/' + _classesTotal + ')');
-					Facade.app.setStatus('Exporting pack ' + _pack.name + ' swf ' + _swf.path + ' class ' + cls.name + ' (' + _classesExported + '/' + _classesTotal + ')', false, true);
+					trace('Exporting profile ' + (_profiles[0] as Profile).label + ' pack ' + _pack.name + ' swf ' + _swf.path + ' class ' + cls.name + ' (' + _classesExported + '/' + _classesTotal + ')');
+					Facade.app.setStatus('Exporting profile ' + (_profiles[0] as Profile).label + ' pack ' + _pack.name + ' swf ' + _swf.path + ' class ' + cls.name + ' (' + _classesExported + '/' + _classesTotal + ')', false, true);
 					setTimeout(exportClass, Config.STATUS_REFRESH_TIME, cls);
 				} else {
 					exportNextClass();
@@ -107,7 +109,7 @@ package ru.redspell.rasterizer.commands {
 			if (++_packIdx < _proj.length) {
 				_pack = _proj.getItemAt(_packIdx) as SwfsPack;
 				_swfIdx = -1;
-				_packDir = Facade.projOutDir.resolvePath(Facade.profile.label).resolvePath(_pack.name);
+				_packDir = Facade.projOutDir.resolvePath((_profiles[0] as Profile).label).resolvePath(_pack.name);
 
 				if (_pack.checked) {
 					if (_packDir.exists) {
@@ -120,8 +122,12 @@ package ru.redspell.rasterizer.commands {
 				} else {
 					exportNextPack();
 				}
-			} else {
-				Facade.app.setStatus('Export complete', true);
+			} else if (_profiles.length > 1) {
+                _packIdx = -1;
+                _profiles = _profiles.slice(1);
+                exportNextPack();
+            } else {
+                Facade.app.setStatus('Export complete', true);
 			}
 		}
 
@@ -143,6 +149,8 @@ package ru.redspell.rasterizer.commands {
 					}
 				}
 			}
+
+            _classesTotal *= _profiles.length;
 		}
 
 		override public function unsafeExecute():void {
