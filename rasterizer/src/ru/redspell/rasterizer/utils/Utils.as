@@ -62,28 +62,28 @@ package ru.redspell.rasterizer.utils {
 			return true;
 		}
 
-        public static function getPackScale(pack:SwfsPack):Number {
+        public static function getPackScale(pack:SwfsPack, profile:Profile = null):Number {
             var scales:Object = pack.scales;
-            var prof:Profile = Facade.profile;
+            var prof:Profile = profile != null ? profile : Facade.profile;
             var profLbl:String = prof.label;
 
             return scales.hasOwnProperty(profLbl) ? Number(scales[profLbl]) : prof.scale;
         }
 
-        public static function getSwfScale(swf:Swf):Number {
+        public static function getSwfScale(swf:Swf, profile:Profile = null):Number {
             var scales:Object = swf.scales;
-            var prof:Profile = Facade.profile;
+            var prof:Profile = profile != null ? profile : Facade.profile;
             var profLbl:String = prof.label;
 
-            return scales.hasOwnProperty(profLbl) ? Number(scales[profLbl]) : getPackScale(swf.pack);
+            return scales.hasOwnProperty(profLbl) ? Number(scales[profLbl]) : getPackScale(swf.pack, profile);
         }
 
-        public static function getClsScale(cls:SwfClass):Number {
+        public static function getClsScale(cls:SwfClass, profile:Profile = null):Number {
             var scales:Object = cls.scales;
-            var prof:Profile = Facade.profile;
+            var prof:Profile = profile != null ? profile : Facade.profile;
             var profLbl:String = prof.label;
 
-            return scales.hasOwnProperty(profLbl) ? Number(scales[profLbl]) : getSwfScale(cls.swf);
+            return scales.hasOwnProperty(profLbl) ? Number(scales[profLbl]) : getSwfScale(cls.swf, profile);
         }
 	}
 }

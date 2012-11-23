@@ -426,6 +426,8 @@ value () =
       ]
       (fun _ -> ())
       "";
+      TextureLayout.countEmptyPixels.val := 0;
+      TextureLayout.isDegree4.val := True;
     run ();
   );
 

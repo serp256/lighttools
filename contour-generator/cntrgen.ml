@@ -5,8 +5,16 @@ value (//) = Filename.concat;
 value indir = ref ".";
 value graph = ref False;
 value libName = ref "";
+value suffix = ref "";
+value readRects = ref True;
 
-Arg.parse [ ("-i", Set_string indir, "input dir"); ("-g", Set graph, "show graphic visualisation"); ("-l", Set_string libName, "generate contour for give library") ] (fun _ -> ()) "contour generator";
+Arg.parse [
+  ("-i", Set_string indir, "input dir");
+  ("-v", Set graph, "show visualisation");
+  ("-l", Set_string libName, "generate contour for give library");
+  ("-s", Set_string suffix, "search for files like 'animations<suffix>.dat', 'texInfo<suffix>.dat' and so on, where suffix -- value, passed through this option");
+  ("-skip-rects", Clear readRects, "skip reading rects, read contour instead (for files, which were processed by cntrgen")
+] (fun _ -> ()) "contour generator";
 
 value read_utf inp = 
   let len = IO.read_i16 inp in
@@ -95,7 +103,7 @@ type region = {
 value regionToString reg = Printf.sprintf "region(regx:%d; regy:%d; regw:%d; regh:%d)" reg.regx reg.regy reg.regw reg.regh;
 
 value readTexInfo lib =
-  let inp = IO.input_channel (open_in (!indir // lib // "texInfo.dat")) in
+  let inp = IO.input_channel (open_in (!indir // lib // ("texInfo" ^ !suffix ^ ".dat"))) in
   let texNum = IO.read_i16 inp in
   let regions = DynArray.make texNum in
   (
@@ -121,7 +129,7 @@ value readTexInfo lib =
   );
 
 value readFrames lib =
-  let inp = IO.input_channel (open_in (!indir // lib // "frames.dat")) in 
+  let inp = IO.input_channel (open_in (!indir // lib // ("frames" ^ !suffix ^ ".dat"))) in 
     let cnt_frames = IO.read_i32 inp in
     let frames = DynArray.make cnt_frames in
     (
@@ -154,7 +162,7 @@ value readFrames lib =
 
 value readObjs lib =
   let objs = ref [] in
-    let inp = IO.input_channel (open_in (!indir // lib // "animations.dat")) in 
+    let inp = IO.input_channel (open_in (!indir // lib // ("animations" ^ !suffix ^ ".dat"))) in 
     let cnt_objects = IO.read_ui16 inp in
       (
         for _i = 1 to cnt_objects do {
@@ -171,17 +179,14 @@ value readObjs lib =
                 (
                   let rnum = IO.read_byte inp in
                   (
-                    for i = 1 to rnum do {
-                      rects.val := [ { rx = IO.read_i16 inp; ry = IO.read_i16 inp; rw = IO.read_i16 inp; rh = IO.read_i16 inp } :: !rects ];
-                    };
-
-(*                     let colsNum = IO.read_i16 inp in
-                      for i = 1 to colsNum do {
-                        let rangesNum = IO.read_i16 inp in
-                          for j = 1 to rangesNum do {
-                            ignore(IO.read_i32 inp);  
-                          };
-                      }; *)
+                    if !readRects then
+                      for i = 1 to rnum do {
+                        rects.val := [ { rx = IO.read_i16 inp; ry = IO.read_i16 inp; rw = IO.read_i16 inp; rh = IO.read_i16 inp } :: !rects ];
+                      }
+                    else
+                      for i = 1 to rnum do
+                        ignore(IO.read_i32 inp);
+                      done;
 
                     let fnum = IO.read_ui16 inp in
                     (
@@ -208,7 +213,7 @@ value readObjs lib =
       );
 
 value writeObjs lib objs =  
-  let out = IO.output_channel (open_out (!indir // lib // "animations.dat")) in
+  let out = IO.output_channel (open_out (!indir // lib // ("animations" ^ !suffix ^ ".dat"))) in
   (
     IO.write_ui16 out (List.length objs);
 
@@ -221,23 +226,8 @@ value writeObjs lib objs =
         write_utf out anim.aname;
         IO.write_real_i32 out (Int32.of_float anim.frameRate);
 
-(*         IO.write_byte out anim.rnum;
-        List.iter (fun rect -> (
-          IO.write_i16 out rect.rx;
-          IO.write_i16 out rect.ry;
-          IO.write_i16 out rect.rw;
-          IO.write_i16 out rect.rh;
-        )) anim.rects; *)
-
-
         IO.write_byte out (List.length anim.contour);
         List.iter (fun (x, y) -> IO.write_i32 out ((x lsl 16) lor (y land 0xffff))) anim.contour;
-
-(*         IO.write_ui16 out (DynArray.length anim.ranges);
-        DynArray.iter (fun colRanges -> (
-          IO.write_ui16 out (List.length colRanges);
-          List.iter (fun range -> IO.write_i32 out range) colRanges;
-        )) anim.ranges; *)
 
         IO.write_ui16 out anim.fnum;
         List.iter (fun frame -> IO.write_i32 out frame) anim.frames;
@@ -249,7 +239,6 @@ value writeObjs lib objs =
 
 value alphaThreshold = 0;
 value lineEstimateThreshold = 5.;
-value minContourPntsNum = 50;
 
 value estimateLine k b pnts =
   if pnts <> [] then
@@ -383,9 +372,9 @@ value genContour regions frames anim =
           done;
         done;
 
-        (* making contour of segments set. images may contain some trash pixels and therefore more than one contour. we choose first contour, which contains more than minContourPntsNum points *)
-        let rec findContour points =
-          if points = [] then []
+        (* making contour of segments set. images may contain some trash pixels and therefore more than one contour. we choose most long contour *)
+        let findContour points =
+          if points = [] then ([], [])
           else
             let contourLine = let (x1, y1, x2, y2) = List.hd points in { endA = (x1, y1); endB = (x2, y2); points = [ (x1, y1); (x2, y2) ]} in
             let contour = DynArray.of_list (List.tl points) in        
@@ -431,11 +420,17 @@ value genContour regions frames anim =
                   done;
               done;
 
-              if List.length contourLine.points < minContourPntsNum then findContour (List.tl points)
-              else contourLine.points;
+              (contourLine.points, DynArray.to_list contour);
             )
         in
-        let points = List.map (fun (x, y) -> (float_of_int x, float_of_int y)) (findContour !segments) in
+        let rec findContours points contours =
+          match points with
+          [ [] -> contours
+          | points -> let (contour, points) = findContour points in findContours points [ contour :: contours ]
+          ]
+        in
+        let contours = List.sort (fun a b -> ~-1 * (compare (List.length a) (List.length b))) (findContours !segments []) in
+        let points = List.map (fun (x, y) -> (float_of_int x, float_of_int y)) (List.hd contours) in
         let contour =
           if points = [] then []
           else
@@ -482,7 +477,7 @@ if !graph then
 else ();
 
 Array.iter (fun fname ->
-  if fname <> "pizda" && Sys.is_directory fname && (!libName <> "" && !libName = fname || !libName = "") then
+  if Sys.is_directory fname && (!libName <> "" && !libName = fname || !libName = "") then
     let objs = readObjs fname
     and frames = readFrames fname
     and regions = readTexInfo fname in      

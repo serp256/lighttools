@@ -1,0 +1,2 @@
+<*.ml>: package(extlib)
+<*.{byte,native}>: package(extlib),package(str)
