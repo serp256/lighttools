@@ -19,6 +19,7 @@ value rotate = ref True;
 type ltype = [= `vert | `hor | `rand | `maxrect ];
 
 value countEmptyPixels = ref 2;
+value isDegree4 = ref False;
 
 value point_in_rect x y rect =
   (x>= rect.x) && (y >= rect.y) && (x <= rect.x + rect.w) && (y <= rect.y + rect.h);
@@ -280,6 +281,13 @@ value rec maxrects rects placed empty unfit =
   пробуем упаковать прямоугольники в заданные пустые прямоугольники.
   возвращаем оставшиеся прямоугольники и страницы
 *)
+
+value do_degree4 x = 
+  match x mod 4 with
+  [ 0 -> x
+  | n -> x + 4 - n
+  ];
+
 value rec tryLayout ~type_rects rects placed empty unfit = 
   match rects with
   [ [] -> (placed, unfit)    (* все разместили *)
@@ -293,6 +301,12 @@ value rec tryLayout ~type_rects rects placed empty unfit =
         [ [] -> raise Not_found
         | [ c :: containers'] -> 
           let (rw,rh) = Images.size img in
+          let (rw, rh) =
+            match !isDegree4 with
+            [ True -> (do_degree4 rw, do_degree4 rh)
+            | _ -> (rw, rh)
+            ]
+          in
           if rw > c.w || rh > c.h 
           then
             putToMinimalContainer data  placed containers' [c :: used_containers]

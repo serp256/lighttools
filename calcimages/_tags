@@ -1,3 +1,3 @@
 true: debug
 <*.ml>: package(camlp4),syntax(camlp4r),package(extlib)
-<*.{ml,byte,native}>: package(extlib),package(camlimages.png),package(unix),package(zip)
+<*.{ml,byte,native}>: package(extlib),package(camlimages.png),package(unix),package(zip),linkall
