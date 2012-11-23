@@ -2,6 +2,7 @@ open Images;
 open ExtList;
 
 
+value nop = ref False;
 value donop x = match !nop with [ True -> Utils.nextPowerOfTwo x | False -> x];
 value verbose = ref False;
 value recursive = ref False;
@@ -63,9 +64,9 @@ value calc_file fn ((cnt,size) as res) =
   let iname = Filename.chop_extension fn in
   match check_suffix iname && (not (Hashtbl.mem alredy_calc iname)) with 
   [ True ->
-    let () = Hashtbl.add alredy_calc iname True in
     match Filename.check_suffix fn ".alpha" with
     [ True -> (*{{{*)
+      let () = Hashtbl.add alredy_calc iname True in
       let gzin = Utils.gzip_input fn in
       let w = IO.read_ui16 gzin in
       let h = IO.read_ui16 gzin in
@@ -74,6 +75,7 @@ value calc_file fn ((cnt,size) as res) =
     | False -> 
         match Filename.check_suffix fn ".png" || Filename.check_suffix fn ".jpg" || Filename.check_suffix fn ".plx" with
         [ True ->(*{{{*)
+          let () = Hashtbl.add alredy_calc iname True in
           try
             let (fn,s) = 
               let fpvr = iname ^ ".pvr" in

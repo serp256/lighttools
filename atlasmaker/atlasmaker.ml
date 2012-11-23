@@ -155,7 +155,8 @@ value loadFiles gdir =
         let fpath = gdir // dir // f in
         match Sys.is_directory fpath with
         [ True  ->  _readdir (dir // f)
-        | False -> readImageRect fpath f
+        | False when Filename.check_suffix f ".png" -> readImageRect fpath f
+        | _ -> ()
         ]
       with [Sys_error _ -> ()]
     end (Sys.readdir (gdir // dir))   
