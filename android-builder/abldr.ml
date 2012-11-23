@@ -259,7 +259,7 @@ value genExpansion suffix =
 value compileApk suffix =
     let target = if !release then "android-release" else if !cheat then "android-cheat" else "android" in
     (
-        if !noExp then
+        if not !noExp then
             let expansionsDir = Filename.concat expansionsDir suffix in
                 let (main, patch) = findExpNames expansionsDir in
                     let msize = (Unix.stat (Filename.concat expansionsDir main)).Unix.st_size
