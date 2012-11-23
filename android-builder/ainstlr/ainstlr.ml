@@ -1,9 +1,3 @@
-#!/usr/bin/env ocaml
-
-#use "topfind";;
-#require "extlib";;
-#require "str";;
-
 let myassert exp mes = if not exp then ( Printf.printf "\n%!"; failwith mes ) else ();;
 
 let runCommand command errMes =
