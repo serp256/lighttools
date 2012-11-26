@@ -22,7 +22,7 @@ let archiveDir = "android" // "release" // id // ver in
 		) ("", "", "") (Sys.readdir archiveDir)
 	in
 	(
-		runCommand ("adb install -r " ^ (archiveDir // apk)) "error when uploading apk";
+		(*runCommand ("adb install -r " ^ (archiveDir // apk)) "error when uploading apk";*)
 
 		if main <> "" && patch <> "" then
 			let regex = Str.regexp "main\\.[0-9]+\\.\\(.*\\).obb" in
@@ -35,12 +35,21 @@ let archiveDir = "android" // "release" // id // ver in
 								runCommand (pushCommand ^ (archiveDir // patch) ^ " $exp_dir/") "error when uploading patch expansion";
 							)
 						else
-							let pushCommand = "for /f \"tokens=*\" %o in ('adb.exe shell \"echo -n $EXTERNAL_STORAGE\"') do set storage_dir=%o &&" in
-							let pushCommand = pushCommand ^ "set exp_dir=%storage_dir%/Android/obb/" ^ package ^ " &&" in
-							let pushCommand = pushCommand ^ "adb shell \"mkdir -p %exp_dir%\" &&" in
+							let pushCommand = "for /f \"tokens=*\" %%o in ('adb.exe shell \"echo -n $EXTERNAL_STORAGE\"') do set storage_dir=%%o\n" in
+							let pushCommand = pushCommand ^ " set exp_dir=%storage_dir%/Android/obb/" ^ package ^ "\n" in
+							let pushCommand = pushCommand ^ " adb shell \"mkdir -p %exp_dir%\"\n" in
+							let uploadExp expFname errMes =
+								let out = open_out "upload_exp.bat" in
+								(
+									output_string out (pushCommand ^ "adb push " ^ (archiveDir // expFname) ^ " %exp_dir%/\n");
+									close_out out;
+									runCommand "upload_exp.bat" errMes;
+								)
+							in
 							(
-								runCommand (pushCommand ^ "adb push " ^ (archiveDir // main) ^ " %exp_dir%/") "error when uploading main expansion";
-								runCommand (pushCommand ^ "adb push " ^ (archiveDir // patch) ^ " %exp_dir%/") "error when uploading patch expansion";
+								uploadExp main "error when uploading main expansion";
+								uploadExp patch "error when uploading patch expansion";
+								Sys.remove "upload_exp.bat";
 							)
 				else failwith "wrong expansions name"
 		else ();
