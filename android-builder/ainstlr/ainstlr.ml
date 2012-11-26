@@ -28,14 +28,21 @@ let archiveDir = "android/release" // id // ver in
 			let regex = Str.regexp "main\\.[0-9]+\\.\\(.*\\).obb" in
 				if Str.string_match regex main 0 then
 					let package = Str.matched_group 0 main in
-					let pushCommand =
-						if Sys.os_type = "Win32" then "storage_dir=`adb shell 'echo -n $EXTERNAL_STORAGE'` && exp_dir=$storage_dir/Android/obb/" ^ package ^ " && adb shell \"mkdir -p $exp_dir\" && adb push "
-						else "for /f \"tokens=*\" %%o in ('adb.exe shell \"echo -n $EXTERNAL_STORAGE\"') do set storage_dir=%%o && set exp_dir=%storage_dir%/Android/obb/" ^ package ^ " && adb shell \"mkdir -p %exp_dir%\" && adb push "
-					in
-					(
-						runCommand (pushCommand ^ (archiveDir // main) ^ " $exp_dir/") "error when uploading main expansion";
-						runCommand (pushCommand ^ (archiveDir // patch) ^ " $exp_dir/") "error when uploading patch expansion";
-					)					
+						if Sys.os_type = "Unix" then
+							let pushCommand = "storage_dir=`adb shell 'echo -n $EXTERNAL_STORAGE'` && exp_dir=$storage_dir/Android/obb/" ^ package ^ " && adb shell \"mkdir -p $exp_dir\" && adb push " in
+							(
+								runCommand (pushCommand ^ (archiveDir // main) ^ " $exp_dir/") "error when uploading main expansion";
+								runCommand (pushCommand ^ (archiveDir // patch) ^ " $exp_dir/") "error when uploading patch expansion";
+							)
+						else
+							let pushCommand = "for /f \"tokens=*\" %%o in ('adb.exe shell \"echo -n $EXTERNAL_STORAGE\"') do set storage_dir=%%o\n" in
+							let pushCommand = pushCommand ^ "set exp_dir=%storage_dir%/Android/obb/" ^ package ^ "\n" in
+							let pushCommand = pushCommand ^ "adb shell \"mkdir -p %exp_dir%\"\n" in
+							let pushCommand = pushCommand ^ "adb push %s %exp_dir%/\n" in
+							(
+								runCommand (Printf.sprintf pushCommand package (archiveDir // main));
+								runCommand (Printf.sprintf pushCommand package (archiveDir // patch))
+							)
 				else failwith "wrong expansions name"
 		else ();
 	);;
