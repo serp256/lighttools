@@ -13,7 +13,7 @@ Arg.parse [] (fun arg -> args := arg :: !args) "android installer";;
 
 let ver = List.hd !args in
 let id = List.hd (List.tl !args) in
-let archiveDir = "android/release" // id // ver in
+let archiveDir = "android" // "release" // id // ver in
 	let (apk, main, patch) =
 		Array.fold_left (fun (apk, main, patch) fname ->
 			if ExtString.String.ends_with fname ".apk" then (fname, main, patch)
@@ -35,12 +35,12 @@ let archiveDir = "android/release" // id // ver in
 								runCommand (pushCommand ^ (archiveDir // patch) ^ " $exp_dir/") "error when uploading patch expansion";
 							)
 						else
-							let pushCommand = "for /f \"tokens=*\" %o in ('adb.exe shell \"echo -n $EXTERNAL_STORAGE\"') do set storage_dir=%o\n" in
-							let pushCommand = pushCommand ^ "set exp_dir=%storage_dir%/Android/obb/" ^ package ^ "\n" in
-							let pushCommand = pushCommand ^ "adb shell \"mkdir -p %exp_dir%\"\n" in
+							let pushCommand = "for /f \"tokens=*\" %o in ('adb.exe shell \"echo -n $EXTERNAL_STORAGE\"') do set storage_dir=%o &&" in
+							let pushCommand = pushCommand ^ "set exp_dir=%storage_dir%/Android/obb/" ^ package ^ " &&" in
+							let pushCommand = pushCommand ^ "adb shell \"mkdir -p %exp_dir%\" &&" in
 							(
-								runCommand (pushCommand ^ "adb push " ^ (archiveDir // main) ^ " %exp_dir%/\n") "error when uploading main expansion";
-								runCommand (pushCommand ^ "adb push " ^ (archiveDir // patch) ^ " %exp_dir%/\n") "error when uploading patch expansion";
+								runCommand (pushCommand ^ "adb push " ^ (archiveDir // main) ^ " %exp_dir%/") "error when uploading main expansion";
+								runCommand (pushCommand ^ "adb push " ^ (archiveDir // patch) ^ " %exp_dir%/") "error when uploading patch expansion";
 							)
 				else failwith "wrong expansions name"
 		else ();
