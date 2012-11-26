@@ -1,4 +1,5 @@
 open ExtList;
+open TextureLayout;
 
 value texInfo = "texInfo.dat";
 value frames = "frames.dat";
@@ -37,6 +38,7 @@ value inp_dir = ref "input";
 value outdir = ref "output";
 value gen_pvr = ref False;
 value gen_dxt = ref False;
+value degree4 = ref False;
 value start_num = ref 0;
 value scale = ref 1.;
 
@@ -143,7 +145,23 @@ value get_images dirs images  =
                 ]
             ]
           in
-          imagesByTexture img (countImage - 1) (id +1) (s + iw * ih) [ ((id,dir), image) :: images ]
+          let res_img = 
+            match !degree4 with
+            [ True -> 
+                let (iw', ih') = Images.size image in
+                let iw = do_degree4 iw' 
+                and ih = do_degree4 ih' 
+                in
+                let rgb = Rgba32.make iw ih {Color.color={Color.r=0;g=0;b=0}; alpha=0;} in
+                let res_img = Images.Rgba32 rgb in
+                  ( 
+                    Images.blit image 0 0 res_img 0 0 iw' ih';
+                    res_img
+                  )
+            | _ -> image
+            ]
+          in
+          imagesByTexture img (countImage - 1) (id +1) (s + iw * ih) [ ((id,dir), res_img) :: images ]
       ]
     in
     let rec readTexture countTex (id,s,images) =
@@ -377,7 +395,10 @@ value run () =
             List.iter begin fun (_,(sx,sy,isRotate,img)) ->
               let (iw,ih) = Images.size img in
                 try
-                  Images.blit img 0 0 new_img sx sy iw ih;
+                  (
+                    Printf.printf "Image size %d %d \n%!" iw ih;
+                    Images.blit img 0 0 new_img sx sy iw ih;
+                  )
                 with 
                   [ Invalid_argument _ -> 
                       (
@@ -422,7 +443,8 @@ value () =
         ("-n",Arg.Set_int start_num,"set first name texture ");
         ("-p",Arg.Set_int TextureLayout.countEmptyPixels, "count Empty pixels between images");
         ("-min",Arg.Set_int MaxRects.min_size, "Min size texture");
-        ("-scale", Arg.Set_float scale, "Scale factor")
+        ("-scale", Arg.Set_float scale, "Scale factor");
+        ("-degree4", Arg.Set degree4, "Use degree 4 rects");
       ]
       (fun _ -> ())
       "";
