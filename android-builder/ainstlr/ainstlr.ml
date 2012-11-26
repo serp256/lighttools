@@ -27,7 +27,7 @@ let archiveDir = "android" // "release" // id // ver in
 		if main <> "" && patch <> "" then
 			let regex = Str.regexp "main\\.[0-9]+\\.\\(.*\\).obb" in
 				if Str.string_match regex main 0 then
-					let package = Str.matched_group 0 main in
+					let package = Str.matched_group 1 main in
 						if Sys.os_type = "Unix" then
 							let pushCommand = "storage_dir=`adb shell 'echo -n $EXTERNAL_STORAGE'` && exp_dir=$storage_dir/Android/obb/" ^ package ^ " && adb shell \"mkdir -p $exp_dir\" && adb push " in
 							(
