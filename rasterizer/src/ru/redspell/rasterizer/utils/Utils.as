@@ -1,5 +1,6 @@
 package ru.redspell.rasterizer.utils {
-	import flash.display.DisplayObjectContainer;
+    import flash.display.DisplayObject;
+    import flash.display.DisplayObjectContainer;
 
     import ru.redspell.rasterizer.models.Profile;
     import ru.redspell.rasterizer.models.Swf;
@@ -17,7 +18,7 @@ package ru.redspell.rasterizer.utils {
 				var child:* = obj.getChildAt(i);
 
 				if (child) {
-					trace(indent + child + ' ' + (child.hasOwnProperty('name') ? child.name : 'noname'));
+					trace(indent + child + ' ' + (child.hasOwnProperty('name') ? child.name : 'noname') + ' ' + (child as DisplayObject).transform.matrix + ' ' + (child as DisplayObject).getRect(child as DisplayObject).toString());
 
 					if (child is DisplayObjectContainer) {
 						traceObj(child as DisplayObjectContainer, indentSize + 1);

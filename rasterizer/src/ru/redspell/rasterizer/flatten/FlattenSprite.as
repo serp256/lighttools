@@ -86,10 +86,10 @@ package ru.redspell.rasterizer.flatten {
         protected function applyMatrix(obj:DisplayObject, mtx:Matrix, color:ColorTransform):FlattenImage {
             var rect:Rectangle = getTransformedBounds(obj.getRect(obj), mtx);
 
-            trace("obj.getRect(obj)", obj.getRect(obj));
-            trace("mtx", mtx);
-            trace("rect", rect);
-            trace("Math.ceil(rect.width), Math.ceil(rect.height)", Math.ceil(rect.width), Math.ceil(rect.height));
+            //trace("obj.getRect(obj)", obj.name, obj.getRect(obj));
+            //trace("mtx", mtx);
+            //trace("rect", rect);
+            //trace("Math.ceil(rect.width), Math.ceil(rect.height)", Math.ceil(rect.width), Math.ceil(rect.height));
 
             var objBmpData:FlattenImage = new FlattenImage(Math.ceil(rect.width), Math.ceil(rect.height), true, 0x00000000);
             var m:Matrix = mtx.clone();
@@ -183,23 +183,28 @@ package ru.redspell.rasterizer.flatten {
                 }
 
 				if (!/^instance[\d]+$/.test(obj.name)) {
-                    trace(mtx);
+                    //trace(mtx);
 					mtx.scale(_scale, _scale);
 
 					var box:FlattenSprite = new FlattenSprite();
 					box.name = obj.name;
 					box.transform.matrix = mtx.clone();
 
-					trace('obj.transform.matrix', obj.transform.matrix);
-					trace('matrix', matrix);
-					trace('mtx', mtx);
+					//trace('obj.transform.matrix', obj.transform.matrix);
+					//trace('matrix', matrix);
+					//trace('mtx', mtx);
 
 					_childs.push(box);
 				}
             } else {
-                mtx = matrix.clone();
-                mtx.concat(obj.transform.matrix);
+                //mtx = matrix.clone();
+                //mtx.concat(obj.transform.matrix);
+
+                mtx = obj.transform.matrix.clone();
+                mtx.concat(matrix);
 				mtx.scale(_scale, _scale);
+
+                trace('obj', obj.parent.name, obj.getRect(obj), obj.transform.matrix, matrix, mtx);
 
                 var layer:FlattenImage = applyFilters(applyMatrix(obj, mtx, clr), filters);
                 _childs.push(layer);
@@ -249,7 +254,7 @@ package ru.redspell.rasterizer.flatten {
 		}
 
         public function fromDisplayObject(obj:DisplayObject, scale:Number = 1):IFlatten {
-			//Utils.traceObj(obj as DisplayObjectContainer);
+			Utils.traceObj(obj as DisplayObjectContainer);
 			_scale = scale;
 
             cleanMasks();
