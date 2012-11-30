@@ -14,6 +14,7 @@ value is_xml = ref False;
 value dirname = ref None;
 value fp = ref False;
 value npot = ref False;
+value alpha = ref False;
 
 value nocrop = ref "";
 value nocropHash:Hashtbl.t string unit = Hashtbl.create 3;
@@ -22,6 +23,8 @@ value type_rect = ref `maxrect;
 value emptyPx = 2;
 
 value imageRects : (Hashtbl.t string Images.t) = Hashtbl.create 55;
+(* хранит оригинальные координаты кропнутой текстуры *)
+value imageOrigins : (Hashtbl.t string (int * int)) = Hashtbl.create 55;
 
 exception Break_loop;
 
@@ -108,13 +111,16 @@ value croppedImageRect img =
           | False   -> raise Break_loop
           ]
         done        
-      with [Break_loop -> ()];      
-      Images.sub img !x !y (!w - !x) (!h - !y)
+      with [Break_loop -> ()];
+      (* возвращаем еще и координаты кропнутого прямоугольника*)
+      (Images.sub img !x !y (!w - !x) (!h - !y), (!x,!y))
     )
     
   | Images.Rgb24 i -> 
       let () = Printf.eprintf "Rgba24\n" in
-      Images.sub img 0 0 i.Rgb24.width i.Rgb24.height
+      (* возвращаем еще и координаты кропнутого прямоугольника - такие картинки
+       * пока не кропаем*)
+      (Images.sub img 0 0 i.Rgb24.width i.Rgb24.height, (0,0))
   | _ -> assert False
   ];
 
@@ -125,11 +131,13 @@ value readImageRect path fname =
   let () = Printf.eprintf "Loading %s\n%!" path in
   try 
     let image = Images.load path [] in
-    let rect = 
+    let (rect, (x,y)) = 
       try 
         let () = Hashtbl.find nocropHash fname in
         let () = Printf.eprintf "Won't crop %s\n%!" fname 
-        in image
+        in 
+        (*картинка не кропалась, поэтому координаты 0 0*)
+        (image, (0,0))
       with [ Not_found -> croppedImageRect image ] 
     in
 		let name = 
@@ -140,7 +148,11 @@ value readImageRect path fname =
 				| _ -> fname
 				]
 		in
-		Hashtbl.add imageRects name rect
+    (
+		  Hashtbl.add imageRects name rect;
+		  Hashtbl.add imageOrigins name (x,y);
+      
+    )
   with [Images.Wrong_file_type -> Printf.eprintf "Wrong file type: %s\n%!" path ];
   
 
@@ -192,16 +204,18 @@ value createAtlas () =
   let () = TextureLayout.rotate.val := False in
   let pages = TextureLayout.layout ~type_rects:!type_rect ~sqr:!gen_pvr ~npot:!npot (Hashtbl.fold (fun k v acc -> [(k,v) :: acc]) imageRects []) in
   let i = ref 0 in
+  (* меняем расширение атласа в зависимости от флага -alpha*)
+  let extension = if !alpha then ".alpha" else ".png" in
   let meta = 
     List.map begin fun (w,h,rects) -> 
     (
       let fname = 
         match List.length pages with 
-        [ 1 -> (!out_file ^ ".png")
+        [ 1 -> (!out_file ^ extension)
         | _ -> 
           (
             incr i;
-            Printf.sprintf "%s_%d.png" !out_file !i;
+            Printf.sprintf "%s_%d%s" !out_file !i extension;
           )
         ] 
       in
@@ -229,7 +243,9 @@ value createAtlas () =
         end rects
       in
       (
-        Images.save fname (Some Images.Png) [] canvas;
+       (* save as alpha *)
+        if !alpha then Utils.save_alpha canvas fname
+        else Images.save fname (Some Images.Png) [] canvas;
         {path=fname;items}
       )
     )
@@ -256,6 +272,7 @@ value createAtlas () =
             ; "w" =*= item.width
             ; "h" =*= item.height
             ; "rotate" =&= item.isRotate
+            (* TO FIX: add cropped texture posX posY *)
             ]
           ));
           Xmlm.output xmlout `El_end;
@@ -284,6 +301,13 @@ value createAtlas () =
             IO.write_ui16 binout item.width;
             IO.write_ui16 binout item.height;
             IO.write_byte binout (if item.isRotate then 1 else 0);
+            (* записываем в файл координаты кропнутой текстуры*)
+            let (x,y) =
+              Hashtbl.find imageOrigins item.name in
+              (
+                IO.write_ui16 binout x;
+                IO.write_ui16 binout y;
+              )
           )
           end atlas.items
         )
@@ -316,9 +340,10 @@ value () =
         ("-o",Arg.Set_string out_file,"output file");
         ("-nc", Arg.Set_string nocrop, "files that are not supposed to be cropped");
         ("-t",Arg.String (fun s -> let t = match s with [ "vert" -> `vert | "hor" -> `hor | "rand" -> `rand | "maxrect" -> `maxrect |  _ -> failwith "unknown type rect" ] in type_rect.val := t),"type rect for insert images");
-        ("-p",Arg.Set gen_pvr,"generate pvr file");
+        ("-pvr",Arg.Set gen_pvr,"generate pvr file");
         ("-xml",Arg.Set is_xml,"meta in xml format");
         ("-npot", Arg.Set npot, "Not power of 2");
+        ("-alpha", Arg.Set alpha, "Save as alpha");
       ]
       (fun dn -> match !dirname with [ None -> dirname.val := Some dn | Some _ -> failwith "You must specify only one directory" ])
       "---"
@@ -348,7 +373,6 @@ value () =
       else failwith "no input files"
     )
   );
-
 (* 
 TODO: Попробовать поворачивать картинки на 90 градусов.
 *)
