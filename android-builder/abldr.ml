@@ -190,7 +190,8 @@ value archiveApk ?(apk = True) ?(expansions = True) build =
           let base = Filename.concat (Filename.dirname apkArchiveDir) "base" in
             let apkArchiveDir = if Filename.is_relative apkArchiveDir then Filename.concat (Unix.getcwd()) apkArchiveDir else apkArchiveDir in
             (
-              if Sys.file_exists base then Sys.remove base else ();
+              try Sys.remove base with [ _ -> () ];
+              (* if Sys.file_exists base then Sys.remove base else (); *)
               Unix.symlink apkArchiveDir base;
             )                            
         else ();
