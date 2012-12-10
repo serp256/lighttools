@@ -2,13 +2,15 @@
 <s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
 					   xmlns:s="library://ns.adobe.com/flex/spark"
 					   xmlns:mx="library://ns.adobe.com/flex/mx"
-					   width="500" height="224">
+					   width="500" height="296">
 	
 	<fx:Script>
 		<![CDATA[
+			import flash.filters.GlowFilter;
+			
 			import mx.controls.Alert;
 			import mx.events.FileEvent;
-			import mx.graphics.codec.PNGEncoder;
+			import mx.graphics.codec.PNGEncoder;				
 			
 			private var png:PNGEncoder = new PNGEncoder();
 			private var folderUrl:String; // путь папки
@@ -18,7 +20,9 @@
 			private var fnames:Array;   // названия картинок
 			private var index:uint = 0;
 			private var bgBitmapData:BitmapData;
-			private var btShow:Button;
+			private var btShow:Button; //кнопка Перейти к папке результата
+			private var iconSize:Number; //размер векторной иконки
+			private var vCenter:Number; // смещение по Y от центра
 			
 			
 			//выбрать swf-ки
@@ -76,7 +80,7 @@
 					urls.push(f.url);
 					fnames.push(f.name.substr(0, f.name.indexOf('.')));
 				}
-								
+				
 				loadSwf();
 			}
 			
@@ -122,7 +126,13 @@
 				}
 				status="конвертация...";
 				
-				
+				// размер векторных иконок (если подложка меньше, скейлим под ее размер)
+				iconSize = Number(tiSize.text);
+				if (bgBitmapData && bgBitmapData.width < iconSize){
+					iconSize = bgBitmapData.width;
+					tiSize.text = String(iconSize);
+				}
+				vCenter = Number(ti_vCenter.text);
 				for (var fname:String in liArray) { // по файлам
 					var li:LoaderInfo = liArray[fname];
 					if (li.content is Bitmap){
@@ -153,14 +163,38 @@
 			
 			//конвертация файла
 			private function convert(content:DisplayObject, fname:String):void {
-				var shift:uint = 1;
+				var isBitmap:Boolean = content is Bitmap;
+				var shift:uint = (isBitmap) ? 0 : 4;
+				
+				// вектор можно масштабировать, если задан размер
+				if (!isBitmap && iconSize > 0){
+					content.scaleX = content.scaleY = (content.width > content.height) ? (iconSize-shift)/content.width : (iconSize-shift)/content.height;
+				}
+				if (cbGlow.selected) {
+					content.filters = [new GlowFilter(0xFFFFFF, 1, 24, 24, 1.7)];
+				}
 				
 				if (bgBitmapData) { //есть подложка
 					bd = bgBitmapData.clone();
 				} else { //нет подложки
 					var bd:BitmapData = new BitmapData(content.width +shift, content.height + shift, true, 0x000000);
 				}
-				bd.draw(content, new Matrix(1,0,0,1,(bd.width - content.width)/2, (bd.height - content.height)/2), new ColorTransform(1,1,1, content.alpha),null, null, true);
+				var m:Matrix = new Matrix();
+				m.scale(content.scaleX, content.scaleY);
+				m.tx = (bd.width - content.width)/2;
+				m.ty = (bd.height - content.height)/2 + vCenter;
+				
+				// смещаем иконку по Y относительно центра
+				if (vCenter != 0) {
+					if (m.ty < 0) {
+						m.ty = shift;
+					} else
+					if (m.ty + content.height > bgBitmapData.height) {
+						m.ty = bgBitmapData.height - content.height - shift;
+					}
+				}
+			
+				bd.draw(content, m, new ColorTransform(1,1,1, content.alpha),null, null, true);
 					
 				var ba:ByteArray = png.encode(bd);
 				
@@ -183,7 +217,7 @@
 		<!-- Разместить невизуальные элементы (например, службы или объекты значений) -->
 	</fx:Declarations>
 	
-	<s:VGroup left="20" right="20" horizontalAlign="center" verticalCenter="0">
+	<s:VGroup left="20" right="20" horizontalAlign="left" verticalCenter="0">
 		<s:HGroup width="100%" height="50" verticalAlign="bottom">
 			<s:VGroup width="100%">
 				<s:Label text="Выберите swf/png файлы:"/>
@@ -200,7 +234,17 @@
 			<s:Button id="btPath0" x="602" y="58" width="35" label="..."
 					  click="btPath0_clickHandler(event)"/>
 		</s:HGroup>
-		<s:HGroup id="gpButtons">
+		<s:HGroup width="100%" verticalAlign="bottom">
+			<s:Label text="Размер иконок (только для swf)"/>
+			<s:TextInput id="tiSize" width="50" text="160"/>
+		</s:HGroup>
+		<s:HGroup width="100%" height="23" gap="20" verticalAlign="bottom">
+			<s:Label text="vCenter (если есть подложка)    "/>
+			<s:TextInput id="ti_vCenter" width="50" text="0"/>
+		</s:HGroup>
+		<s:CheckBox id="cbGlow" label="Свечение"/>
+		<s:HGroup id="gpButtons" width="100%" gap="10" horizontalAlign="center" paddingTop="20"
+				  verticalAlign="middle">
 			<s:Button id="btConvert" y="140" label="Конвертировать" click="btConvert_clickHandler(event)"
 				  enabled="false" horizontalCenter="-1"/>
 		</s:HGroup>
