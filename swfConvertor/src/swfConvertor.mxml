@@ -7,6 +7,7 @@
 	<fx:Script>
 		<![CDATA[
 			import mx.controls.Alert;
+			import mx.events.FileEvent;
 			import mx.graphics.codec.PNGEncoder;
 			
 			private var png:PNGEncoder = new PNGEncoder();
@@ -16,15 +17,45 @@
 			private var urls:Array;		// пути картинок
 			private var fnames:Array;   // названия картинок
 			private var index:uint = 0;
-						
+			private var bgBitmapData:BitmapData;
+			private var btShow:Button;
+			
+			
+			//выбрать swf-ки
 			protected function btPath_clickHandler(event:MouseEvent):void
 			{
-				// TODO Auto-generated method stub
 				var f:File = new File();
 				f.addEventListener(FileListEvent.SELECT_MULTIPLE, onSelect);
-				f.browseForOpenMultiple('Выберите файлы', [new FileFilter('SWF-файлы', '*.swf')]);
+				f.browseForOpenMultiple('Выберите файлы', [new FileFilter('SWF-файлы, PNG-файлы', '*.swf;*.png')]);
 			}
 			
+			//выбрать подложку
+			protected function btPath0_clickHandler(event:MouseEvent):void
+			{
+				var f:File = new File();
+				f.addEventListener(Event.SELECT, onSelectBg);
+				f.browseForOpen('Выберите png-файл', [new FileFilter('png-файл', '*.png')]);
+			}
+			
+			// выбрана подложка под картинки
+			private function onSelectBg(event:Event):void {
+				var f:File = event.currentTarget as File;
+				f.removeEventListener(Event.SELECT, onSelectBg);
+				
+				tiPath0.text = f.url;
+				var loader:Loader = new Loader();
+				loader.contentLoaderInfo.addEventListener(Event.COMPLETE, onLoadBgComplete);
+				loader.load(new URLRequest(f.url));
+			}
+			
+			// загружена подложка под картинки
+			private function onLoadBgComplete(event:Event):void {
+				var li:LoaderInfo = event.target as LoaderInfo;
+				status = 'подложка загружена';
+				bgBitmapData = (li.content as Bitmap).bitmapData;
+			}
+			
+			// выбрали swf-ки, начинаем их загрузку
 			private function onSelect(event:FileListEvent):void {	
 				status = 'загрузка...';
 				
@@ -36,7 +67,8 @@
 				urls = [];
 				fnames = [];
 				index = 0;
-		
+				
+				// сохраняем пути и имена файлов
 				folderUrl = (event.files[0].parent as File).url;
 				tiPath.text = folderUrl; 
 			
@@ -44,10 +76,11 @@
 					urls.push(f.url);
 					fnames.push(f.name.substr(0, f.name.indexOf('.')));
 				}
-		
+								
 				loadSwf();
 			}
 			
+			// начинаем загрузку swf-ки
 			private function loadSwf():void {
 				var loader:Loader = new Loader();
 				loader.contentLoaderInfo.addEventListener(Event.COMPLETE, onLoadComplete);
@@ -62,9 +95,13 @@
 				var fname:String = fnames[index];
 				liArray[fname] = li;
 				
-				var names:Array= getDefinitionNames(li);
-				if (names && names.length > 0) {
-					classes[fname] = names[0]; 
+				if (li.content is Bitmap) {
+					classes[fname] = fname;
+				} else {
+					var names:Array= getDefinitionNames(li);
+					if (names && names.length > 0) {
+						classes[fname] = names[0];
+					}
 				}
 				
 				index++;
@@ -76,32 +113,63 @@
 				}
 			}
 			
+			// нажали Конвертировать
 			protected function btConvert_clickHandler(event:MouseEvent):void
 			{
+				btConvert.enabled = false;
+				if (btShow && btShow.parent == gpButtons) {
+					gpButtons.removeElement(btShow);
+				}
+				status="конвертация...";
+				
+				
 				for (var fname:String in liArray) { // по файлам
 					var li:LoaderInfo = liArray[fname];
-					var cName:String = classes[fname]; // имя класса
-					var Cls:Class = li.applicationDomain.getDefinition(cName) as Class; // класс
-					var content:DisplayObject = new Cls(); //экземпляр
+					if (li.content is Bitmap){
+						content = li.content;
+					} else {
+						var cName:String = classes[fname]; // имя класса
+						var Cls:Class = li.applicationDomain.getDefinition(cName) as Class; // класс
+						var content:DisplayObject = new Cls(); //экземпляр
+					}
 					convert(content, fname);
 				}
 				status = 'конвертация завершена';
+				btConvert.enabled = true;
+				
+				if (!btShow) {
+					btShow = new Button();
+					btShow.label = 'Перейти к папке результата';
+					btShow.addEventListener(MouseEvent.CLICK, onShowResult);
+				}
+				gpButtons.addElement(btShow);
 			}
 			
+			// показать папку с результатом
+			private function onShowResult(event:MouseEvent):void {
+				var f:File = new File(folderUrl+'/pngs');
+				f.openWithDefaultApplication();
+			}
+			
+			//конвертация файла
 			private function convert(content:DisplayObject, fname:String):void {
 				var shift:uint = 1;
-								
-				var bd:BitmapData = new BitmapData(content.width +shift, content.height + shift, true, 0x000000);
-				bd.draw(content, null, new ColorTransform(1,1,1, content.alpha),null, null, true);
+				
+				if (bgBitmapData) { //есть подложка
+					bd = bgBitmapData.clone();
+				} else { //нет подложки
+					var bd:BitmapData = new BitmapData(content.width +shift, content.height + shift, true, 0x000000);
+				}
+				bd.draw(content, new Matrix(1,0,0,1,(bd.width - content.width)/2, (bd.height - content.height)/2), new ColorTransform(1,1,1, content.alpha),null, null, true);
 					
-				var ba:ByteArray = png.encode(bd); 
+				var ba:ByteArray = png.encode(bd);
 				
 				try {
 					var fs:FileStream = new FileStream();
 					fs.open(new File(folderUrl+'/pngs/'+fname+'.png'), FileMode.WRITE);
 					fs.writeBytes(ba);
 					fs.close();
-				} catch (error:Error){ 
+				} catch (error:Error) { 
 					Alert.show('Ошибка записи файла\n'+(folderUrl+'/'+fname), 'Ошибка');
 				}
 			}
@@ -115,15 +183,26 @@
 		<!-- Разместить невизуальные элементы (например, службы или объекты значений) -->
 	</fx:Declarations>
 	
-
-	<s:HGroup left="20" right="20" top="50" height="50" verticalAlign="bottom">
-		<s:VGroup width="100%">
-			<s:Label text="Выберите папку:"/>
-			<s:TextInput id="tiPath" x="43" y="58" width="100%"/>
-		</s:VGroup>
-		<s:Button id="btPath" x="602" y="58" width="35" label="..."
-				  click="btPath_clickHandler(event)"/>
-	</s:HGroup>
-	<s:Button id="btConvert" y="140" label="Конвертировать" click="btConvert_clickHandler(event)"
-			  enabled="false" horizontalCenter="-1"/>
+	<s:VGroup left="20" right="20" horizontalAlign="center" verticalCenter="0">
+		<s:HGroup width="100%" height="50" verticalAlign="bottom">
+			<s:VGroup width="100%">
+				<s:Label text="Выберите swf/png файлы:"/>
+				<s:TextInput id="tiPath" x="43" y="58" width="100%" enabled="false"/>
+			</s:VGroup>
+			<s:Button id="btPath" x="602" y="58" width="35" label="..."
+					  click="btPath_clickHandler(event)"/>
+		</s:HGroup>
+		<s:HGroup width="100%" height="50" verticalAlign="bottom">
+			<s:VGroup width="100%">
+				<s:Label text="Выберите png-подложку:"/>
+				<s:TextInput id="tiPath0" x="43" y="58" width="100%" enabled="false"/>
+			</s:VGroup>
+			<s:Button id="btPath0" x="602" y="58" width="35" label="..."
+					  click="btPath0_clickHandler(event)"/>
+		</s:HGroup>
+		<s:HGroup id="gpButtons">
+			<s:Button id="btConvert" y="140" label="Конвертировать" click="btConvert_clickHandler(event)"
+				  enabled="false" horizontalCenter="-1"/>
+		</s:HGroup>
+	</s:VGroup>
 </s:WindowedApplication>
