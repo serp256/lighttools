@@ -47,6 +47,13 @@ package ru.redspell.rasterizer.commands {
 				clsMeta.checked = false;
 			}
 
+            if (_cls.alias == "") {
+                delete clsMeta.alias;
+            } else {
+                clsMeta.alias = _cls.alias;
+                trace('clsMeta.alias', clsMeta.alias);
+            }
+
 			if (_cls.animated) {
 				delete clsMeta.animated;
 			} else {

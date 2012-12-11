@@ -36,6 +36,11 @@
 				dataField="name"
 				editable="false"/>
 			<s:GridColumn
+				headerText="Alias"
+				dataField="alias"
+				editable="true"
+				itemEditor="ru.redspell.rasterizer.views.ClassAliasItemRenderer"/>
+			<s:GridColumn
 				headerText="Scale"
 				width="50"
 				itemRenderer="ru.redspell.rasterizer.views.ClassScaleItemRenderer"

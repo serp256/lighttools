@@ -49,6 +49,7 @@ package ru.redspell.rasterizer.commands {
 					var clsMeta:Object = swfMeta[cls.name];
 					cls.checked = clsMeta.hasOwnProperty('checked') ? clsMeta.checked : true;
 					cls.animated = clsMeta.hasOwnProperty('animated') ? clsMeta.animated : true;
+                    cls.alias = clsMeta.hasOwnProperty('alias') ? clsMeta.alias : "";
 					cls.scales = clsMeta.hasOwnProperty('scales') ? clsMeta.scales : {};
 
 					trace(swf.path, cls.name, com.maccherone.json.JSON.encode(clsMeta.scales));
