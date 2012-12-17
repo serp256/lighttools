@@ -4,7 +4,6 @@ value min_size = ref 256;
 
 
 (* размещаем на одной странице, постепенно увеличивая ее размер *)
-
 value rec layout_page init_rects' rects w h = 
   let () = Printf.printf "Layout page x:%d y:%d w:%d h:%d \n%!" 0 0 w h in
   let () = assert (w > 0) in
@@ -14,7 +13,7 @@ value rec layout_page init_rects' rects w h =
     | _ -> init_rects' 
     ]
   in
-  let (placed, empty, rest) = TextureLayout.maxrects rects [] init_rects [] in
+  let (placed, empty, rest) = TextureLayout.MaxRects.maxrects rects [] init_rects [] in
   match rest with 
   [ [] -> (w, h, placed, empty,rest) (* разместили все *)
   | _  ->
@@ -50,6 +49,7 @@ value rec layout_multipage size rects pages =
     match need_new_page with
     [ True -> 
         let (w, h, placed, empty, rest) = layout_page [] rects size size in
+        let () = assert (rest = []) in
         ( placed, rest, pages @ [ (w,h,[placed],empty, [rects]) ])
     | _ -> ( placed, [], pages)
     ];

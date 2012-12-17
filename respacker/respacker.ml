@@ -1,4 +1,8 @@
 (* Скрипт пакует данные swf потрошителя *)
+(* TODO:
+  * clip_commands - может быть некорректный после dublicate
+*)
+
 open ExtList;
 open ExtString;
 open Printf;
@@ -20,7 +24,8 @@ value jlist = fun [ `List s -> s | _ -> failwith "not a list" ];
 value npot = ref False;
 
 
-module Rectangle = struct
+type pack_mode = [ PackGroup | PackSep | PackFSep ];
+module Rectangle = struct (*{{{*)
 
   type t = {x:float; y:float; width:float; height:float;};
   value empty = {x=0.;y=0.;width=0.;height=0.};
@@ -54,7 +59,7 @@ module Rectangle = struct
 
   value to_string {x=x;y=y;width=width;height=height} = Printf.sprintf "[x=%f,y=%f,width=%f,height=%f]" x y width height;
 
-end;
+end;(*}}}*)
 
 
 type pos = {x:float;y:float};
@@ -124,35 +129,30 @@ value compare_item item1 item2 =
   | (`sprite _,`clip _) | (`clip _ ,`sprite _) -> False
   ];
 
+
+value push_new_item item =
+(
+  DynArray.add items {item_id=(DynArray.length items);item=(item :> item);deleted=False};
+  (DynArray.length items) - 1;
+);
+
 value push_item item =
   try
-    DynArray.index_of (fun {item=i} -> match i with [ `image _ -> False | (`sprite _ | `clip _ ) as el -> compare_item el item]) items
-    (*
-    match item with
-    [ `sprite _ | `clip _ -> DynArray.index_of (fun (_,i) -> compare_item i item) items
-    | `image _ -> raise Not_found
-    ]
-    *)
-  with 
-  [ Not_found ->
-    (
-      DynArray.add items {item_id=(DynArray.length items);item=(item :> item);deleted=False};
-      (DynArray.length items) - 1;
-    )
-  ];
-
+    DynArray.index_of 
+      (fun {item=i} -> 
+        match i with 
+        [ `image _ -> False 
+        | (`sprite _ | `clip _ ) as el -> compare_item el item
+        ]
+      )
+      items
+  with [ Not_found -> push_new_item item ];
 
 
 exception Finded of int;
-value add_image path = 
-  let () = Printf.fprintf stdout "%s\n" path in
-  let img = Images.load path [] in
-  try
-    Hashtbl.iter begin fun id img' ->
-      if compare_images img img'
-      then raise (Finded id)
-      else ()
-    end images;
+
+
+value push_new_image img = 
   let id = DynArray.length items 
   in
   (
@@ -161,73 +161,101 @@ value add_image path =
     Hashtbl.add images id img;
     id
   );
+
+value push_image (img: [= `image of Images.t | `path of string])  = 
+(*   let () = Printf.fprintf stdout "%s\n" path in *)
+  let img = match img with [ `image img -> img | `path path -> Images.load path [] ] in
+  try
+    Hashtbl.iter begin fun id img' ->
+      if compare_images img img'
+      then raise (Finded id)
+      else ()
+    end images;
+    push_new_image img;
   with [ Finded id -> id ];
 
 
-value add_child_image  dirname mobj = 
+value push_child_image  dirname mobj = 
   let path = dirname // (jstring (List.assoc "file" mobj)) in
-  add_image path;
+  let img = Images.load path [] in
+  try
+    Utils.image_iter begin fun _ _ {Color.alpha=alpha;_}  ->
+      if alpha > 1 then raise Exit else ()
+    end img;
+    None
+  with [ Exit -> Some (push_image (`image img)) ];
 
 value getpos jsinfo = {x= jnumber (List.assoc "x" jsinfo);y=jnumber (List.assoc "y" jsinfo)};
-
-(* можно при добавлении картинок палить что они такие-же только разница в альфе - это легко 
- * а в группировке есть засада, что мы можем не понять что это одно и тоже так как мы с чем-то слепим и будет не круто
- * *)
-
-(* value calc_diff oldchildrens newchildrens =  *)
 
 
 value rec process_children dirname children = 
   let lst = 
-    List.map begin fun child ->
+    List.filter_map begin fun child ->
       let child = jobject child in
       let ctype =  jstring (List.assoc "type" child) in
       let pos = getpos child in
       match ctype with
-      [ "box" -> `box (pos,jstring (List.assoc "name" child))
+      [ "box" -> Some (`box (pos,jstring (List.assoc "name" child)))
       | _ ->
         let name = try Some (jstring (List.assoc "name" child)) with [ Not_found -> None ] in
         let id = 
           match ctype with
-          [ "image" -> (add_child_image dirname child)
+          [ "image" -> (push_child_image dirname child)
           | "clip" | "sprite" -> process_dir (dirname // (jstring (List.assoc "dir" child)))
           | _ -> assert False
           ]
         in
-        `chld (id,name,pos)
+        match id with
+        [ Some id -> Some (`chld (id,name,pos))
+        | None  -> None
+        ]
       ]
     end (jlist children)
   in
-  DynArray.of_list lst
+  match lst with
+  [ [] -> None
+  | _ ->  Some (DynArray.of_list lst)
+  ]
 and process_dir dirname = (* найти мету в этой директории и от нее плясать *)
   let () = printf "process directory: %s\n%!" dirname in
   let mobj = jobject (Ojson.from_file (dirname // "meta.json") ) in
   match jstring (List.assoc "type" mobj) with
-  [ "image" -> add_child_image dirname mobj
+  [ "image" -> push_child_image dirname mobj
   | "sprite" -> 
       let children = process_children dirname (List.assoc "children" mobj) in
-      push_item (`sprite children)
+      match children with
+      [ Some children -> Some (push_item (`sprite children))
+      | None -> None
+      ]
   | "clip" ->
       let lframes = 
-        List.map begin fun frame ->
+        List.filter_map begin fun frame ->
           let frame = jobject frame in 
           let label = try Some (jstring (List.assoc "label" frame)) with [ Not_found -> None ] in
           let children = process_children dirname (List.assoc "children" frame) in
-          let () = DynArray.filter (fun [ `chld _ -> True | _ -> False ]) children in
-          {label;commands=None;children;duration=1}
+          match children with
+          [ Some children ->
+            let () = DynArray.filter (fun [ `chld _ -> True | _ -> False ]) children in
+            Some {label;commands=None;children;duration=1}
+          | None -> None
+          ]
         end (jlist (List.assoc "frames" mobj))
       in
       (* вычислим duration *)
-      let frames = DynArray.create () in
-      (
-        List.iter begin fun frame -> 
-          match (DynArray.length frames > 0, lazy (DynArray.last frames)) with
-          [ (True, lazy lframe ) when compare_frame lframe frame -> lframe.duration := lframe.duration + 1
-          | _ -> DynArray.add frames frame 
-          ]
-        end lframes;
-        push_item (`clip frames)
-      )
+      match lframes with
+      [ [] -> None
+      | _ -> 
+        let frames = DynArray.create () in
+        (
+          List.iter begin fun frame -> 
+            match (DynArray.length frames > 0, lazy (DynArray.last frames)) with
+            [ (True, lazy lframe ) when compare_frame lframe frame -> lframe.duration := lframe.duration + 1
+            | _ -> DynArray.add frames frame 
+            ]
+          end lframes;
+          Some (push_item (`clip frames))
+        )
+      ]
   | _ -> assert False
   ];
 
@@ -592,7 +620,7 @@ value optimize_sprites () =
     match DynArray.get children 0 with
     [ `chld (id,_,pos) when pos.x = 0. && pos.y = 0. -> 
       (
-        DynArray.set exports i (name,id); (* FIXME: check pos *)
+        DynArray.set exports i (name,id);
         item.deleted := True;
       )
     | `chld _ -> ()
@@ -606,7 +634,9 @@ value optimize_sprites () =
     [ `sprite children when DynArray.length children = 1 -> optimize
     | `clip frames when DynArray.length frames = 1 -> 
         let children = (DynArray.get frames 0).children in
-        if DynArray.length children = 1 then optimize else ()
+        if DynArray.length children = 1 
+        then optimize 
+        else DynArray.set items id {(item) with item = (`sprite children)}
     | _ -> ()
     ]
   done;
@@ -678,34 +708,31 @@ value indir = ref "input";
 value outdir = ref "output";
 
 
-value group_images () = 
-  for i = 0 to DynArray.length exports do
 
-  done;
-
-value images_by_symbols () =
-  let imgs = 
-    DynArray.fold_left begin fun res (_,id) ->
-      let item = DynArray.get items id in
-      match item.item with
-      [ `image _ -> [ [ (item.item_id,(Hashtbl.find images item.item_id)) ] :: res ]
-      | `sprite children ->
-          let imgs = 
-            DynArray.fold_left begin fun res child ->
-              match child with
-              [ `chld (id,_,_) ->
-                match (DynArray.get items id).item with
-                [ `image _ -> [ (id,Hashtbl.find images id) :: res ]
-                | _ -> assert False
-                ]
-              | _ -> res
+(* сделать список списков картинок - сгрупирровав их по символам экспорта *)
+value group_images_by_symbols () =
+  DynArray.fold_left begin fun res (_,id) ->
+    let item = DynArray.get items id in
+    match item.item with
+    [ `image _ -> [ (item.item_id,(True, [ (item.item_id,(Hashtbl.find images item.item_id)) ])) :: res ]
+    | `sprite children ->
+        let imgs = 
+          DynArray.fold_left begin fun res child ->
+            match child with
+            [ `chld (id,_,_) ->
+              match (DynArray.get items id).item with
+              [ `image _ -> [ (id,Hashtbl.find images id) :: res ]
+              | _ -> assert False
               ]
-            end [] children
-          in
-          [ imgs :: res ]
-      | `clip frames ->
-          let imgs = 
-            DynArray.fold_left begin fun res frame ->
+            | _ -> res
+            ]
+          end [] children
+        in
+        [ (item.item_id,(True,imgs)) :: res ] (* Тру здесь не всегда может быть тру, из-за боксов *)
+    | `clip frames ->
+        let imgs = 
+          DynArray.fold_left begin fun (wholly,res) frame ->
+            let res = 
               DynArray.fold_left begin fun res -> fun
                 [ `chld (id,_,_) ->
                   match (DynArray.get items id).item with
@@ -715,51 +742,165 @@ value images_by_symbols () =
                 | _ -> res
                 ]
               end res frame.children
-            end [] frames
-          in
-          [ imgs :: res ]
-      ]
-    end [] exports
-  in
-  merge imgs [] where
-    rec merge imgs res =
+            in
+            (wholly && DynArray.length frame.children = 1, res)
+          end (True,[]) frames
+        in
+        [ (item.item_id,imgs) :: res ]
+    ]
+  end [] exports;
+
+(* если группы имеют общие картинки то нужно объеденить эти группы *)
+value merge_symbol_images imgs = 
+  let imgs = List.map snd imgs in
+  let (wholly_groups,unwholly_groups) = List.partition (fun (wholly,group) -> wholly) imgs in
+  (* теперь объеденить между собой все wholly группы *)
+  let wholly_groups = 
+    let rec merge_wholly imgs res = 
       match imgs with
       [ [] -> res
-      |  [ imgs :: rest ] ->
-          let (commons,others) = 
-            List.partition begin fun imgs' ->
-              List.exists begin fun (id,_) ->
-                List.exists (fun (id',_) -> id = id') imgs'
-              end imgs
+      | [ (wholly,imgs) :: rest ] -> (* если эта группа цельная должна быть, тогда нужно найти все картинки которые она шарит *)
+          let (commons,others) =
+            List.partition begin fun (_,imgs') ->
+              List.exists (fun (id,_) -> List.exists (fun (id',_) -> id = id') imgs') imgs
             end rest
           in
-          merge others [ imgs @ (List.concat commons) :: res ]
+          merge_wholly others [ (wholly,List.unique ~cmp:(fun (id1,_) (id2,_) -> id1 = id2) (imgs @ (List.concat (List.map snd commons)))) :: res ]
       ]
-;
+    in
+    merge_wholly wholly_groups []
+  in
+  (* а теперь вытащить все картинки из не wholly групп к wholly *)
+  let unwholly_groups = 
+    List.map begin fun (wholly,imgs) ->
+      (wholly,
+        List.filter begin fun (id,_) -> 
+          not (List.exists (fun (_,imgs') -> List.exists (fun (id',_) -> id' = id) imgs') wholly_groups)
+        end imgs
+      )
+    end unwholly_groups
+  in
+  let unwholly_groups = List.filter (fun (_,imgs) -> imgs <> []) unwholly_groups in
+  (wholly_groups @ unwholly_groups);
+
+
+
+
+value dublicate_symbol_images imgs = 
+  (* бля нужно двигать сцанные ID - это пиздец как геморно нахуй, ну просто выебешься *)
+  let dublicate symbol_id img_id img =
+    let item = DynArray.get items symbol_id in
+    let new_img_id = push_new_image img in
+    (
+      match item.item with
+      [ `image _  -> 
+        let idx = DynArray.index_of (fun (_,id) -> id = symbol_id) exports in
+        DynArray.set exports idx (fst (DynArray.get exports idx),new_img_id)
+      | `sprite children -> 
+          DynArray.iteri begin fun i child ->
+            match child with
+            [ `chld (id,pos,label) when id = img_id ->
+              match (DynArray.get items id).item with
+              [ `image _ -> DynArray.set children i (`chld (new_img_id,pos,label))
+              | _ -> assert False
+              ]
+            | _ -> ()
+            ]
+          end children
+      | `clip frames -> 
+          DynArray.iter begin fun frame ->
+            DynArray.iteri begin fun i -> fun
+              [ `chld (id,pos,label) when id = img_id ->
+                match (DynArray.get items id).item with
+                [ `image _ -> DynArray.set frame.children i (`chld (new_img_id,pos,label))
+                | _ -> assert False
+                ]
+              | _ -> ()
+              ]
+            end frame.children
+          end frames
+      ];
+      new_img_id
+    )
+  in
+  let rec find_dublicates imgs res = 
+    match imgs with
+    [ [] -> res
+    | [ (item_id,(wholly,imgs)) :: rest ] ->
+        let imgs = 
+          List.map begin fun ((img_id,img) as imgp) ->
+            match List.exists (fun (_,(_,oimgs)) -> List.exists (fun (img_id',_) -> img_id' = img_id) oimgs) rest with
+            [ True -> (* бля, дубликат нужно задублицировать дичайше *)
+              (
+                let (w,h) = Images.size img in
+                Printf.printf "WARN: DUBLICATE image %d [%d:%d]\n%!" img_id w h;
+                (dublicate item_id img_id img,img)
+              )
+            | False -> imgp
+            ]
+          end imgs
+        in
+        find_dublicates rest [ (wholly,imgs) :: res ]
+    ]
+  in
+  find_dublicates imgs [];
+
+value sorted_items () =
+  let sitems = DynArray.to_array items in
+  (
+    let modified = ref True in
+    let img_idx = ref 0 in
+    while !modified do
+      let () = modified.val := False in
+      let imgs_only = ref True in
+      for i = 0 to Array.length sitems - 1 do
+        let item = sitems.(i) in
+        match item.item with
+        [ `image _ when !imgs_only -> img_idx.val := i
+        | `image _ ->
+          (
+            let () = incr img_idx in
+            for j = i downto !img_idx + 1 do
+              sitems.(j) := sitems.(j - 1);
+            done;
+            sitems.(!img_idx) := item;
+            modified.val := True;
+          )
+        | _ -> imgs_only.val := False
+        ]
+      done;
+    done;
+    sitems;
+  );
 
 type fmt = [ FPng | FPvr | FPlx of string ];
 
-value do_work isXml separate fmt indir suffix outdir =
+value do_work isXml pack_mode fmt indir suffix outdir =
 (
   Printf.printf "DOWORK: %s -> %s[%s]\n%!" indir outdir suffix;
   Array.iter begin fun fl ->
     let dirname = indir // fl in
     let (name,item_id) = 
       if Sys.is_directory dirname
-      then (fl,process_dir dirname)
+      then 
+        match process_dir dirname with
+        [ Some res -> (fl,res)
+        | None -> failwith (Printf.sprintf "Empty symbol %s" fl)
+        ]
       else 
-        let item_id = add_image dirname in
+        let item_id = push_image (`path dirname) in
         (Filename.chop_extension fl,item_id)
     in
     DynArray.add exports (name,item_id)
   end (Sys.readdir indir);
   merge_images();
+(*   print_endline "images merged"; *)
   optimize_sprites();
+(*   print_endline "sprites and clips optmized"; *)
   make_clip_commands ();
-  let pack_textures starts_with images = 
-    let pages = TextureLayout.layout ~type_rects:`maxrect ~sqr:(fmt = FPvr) ~npot:!npot images in
-    List.mapi begin fun i (w,h,imgs) ->
-      let idx = i + starts_with in
+(*   print_endline "clip commands done"; *)
+  let pack_textures pages = 
+    List.mapi begin fun idx {TextureLayout.width=w;height=h;placed_images=imgs;_} ->
       let texture = Rgba32.make w h bgcolor in
       (
         List.iter begin fun (key,(x,y,_,img)) ->
@@ -790,19 +931,41 @@ value do_work isXml separate fmt indir suffix outdir =
       )
     end pages
   in
+  let gimages = group_images_by_symbols () in
+(*   let () = print_endline "images grouped" in *)
+  let tsize = TextureLayout.(if fmt = FPvr then Sqr else match !npot with [ True -> Npot | _ -> Pot ]) in
   let textures = 
-    match separate with
-    [ True -> 
-      let images = images_by_symbols () in
-        List.fold_left begin fun res images ->
-          let textures = pack_textures (List.length res) images in
-          res @ textures
-        end [] images
-    | False ->
-        let images = Hashtbl.fold (fun id img res -> [ (id,img) :: res ]) images [] in
-        pack_textures 0 images
+    match pack_mode with
+    [ PackFSep | PackSep -> 
+      let gimages = 
+        match pack_mode with
+        [ PackFSep -> dublicate_symbol_images gimages
+        | _ -> merge_symbol_images gimages
+        ]
+      in
+      let pages = 
+        List.fold_left begin fun res (wholly,images) ->
+          match wholly with
+          [ True -> 
+            let (page,rest) = TextureLayout.layout_page ~tsize images in
+            let () = assert (rest = []) in
+            [ page :: res ]
+          | False ->
+              let pages = TextureLayout.layout ~tsize images in
+              pages @ res
+          ]
+        end [] gimages
+      in
+      pack_textures pages
+    | PackGroup ->
+       let gimages =  merge_symbol_images gimages in
+(*        let () = print_endline "images merged" in *)
+       let pages = TextureLayout.layout_max ~tsize gimages in
+(*        let () = print_endline "textures pages created" in *)
+       pack_textures pages
     ]
   in
+(*   let () = print_endline "textures created" in *)
   let group_children children = 
     let qchld = Stack.create () in
     (
@@ -828,6 +991,8 @@ value do_work isXml separate fmt indir suffix outdir =
       )
     )
   in
+  (* отсортировать items чтобы все картинки были в начале *)
+  let sitems = sorted_items () in
   match isXml with
   [ True -> (*{{{*)
     (* Теперича сохранить xml и усе *)
@@ -865,7 +1030,7 @@ value do_work isXml separate fmt indir suffix outdir =
           ]
         end (group_children children)
       in
-      DynArray.iter begin fun 
+      Array.iter begin fun 
         [ {item_id=id;item;deleted=False} -> (*{{{*)
           match item with
           [ `image info when Hashtbl.mem images id -> 
@@ -964,7 +1129,7 @@ value do_work isXml separate fmt indir suffix outdir =
           ]
         | _ -> ()
         ]
-      end items;(*}}}*)
+      end sitems;(*}}}*)
       Xmlm.output xmlout `El_end;(*}}}*)
       Xmlm.output xmlout (`El_start (("","symbols"),[])); (* write symbols {{{*)
       DynArray.iter begin fun (cls,id) ->
@@ -1061,7 +1226,7 @@ value do_work isXml separate fmt indir suffix outdir =
           ]
         end children
       in
-      DynArray.iter begin fun 
+      Array.iter begin fun 
         [ {item_id=id;item;deleted=False} ->
           match item with
           [ `image info when Hashtbl.mem images id ->
@@ -1156,7 +1321,7 @@ value do_work isXml separate fmt indir suffix outdir =
           ]
         | _ -> ()
         ]
-      end items;
+      end sitems;
       IO.write_ui16 binout (DynArray.length exports);
       DynArray.iter begin fun (cls,id) ->
         (
@@ -1171,7 +1336,7 @@ value do_work isXml separate fmt indir suffix outdir =
 
 value () = 
   let xml = ref False in
-  let separate = ref False in
+  let pack_mode = ref PackGroup in
   let pvr = ref False in
   let plt = ref None in
   let libs = ref [] in
@@ -1183,7 +1348,17 @@ value () =
         ("-i",Arg.Set_string indir,"input directory") ; 
         ("-o",Arg.Set_string outdir,"output directory") ; 
         ("-xml",Arg.Set xml, "lib in xml format") ; 
-        ("-sep",Arg.Set separate,"each symbol in separate texture");
+        ("-pack",Arg.String begin fun p ->
+          pack_mode.val := 
+            match p with
+            [ "sep" -> PackSep 
+            | "fsep" -> PackFSep 
+            | "group" -> PackGroup
+            | _ -> failwith "incorrect pack mode"
+            ]
+          end,
+          "packing mode [ sep - try to separate | group (default) - all in one | fsep - force sep may cause dublicates ]"
+        );
         ("-maxt",Arg.Int (fun v -> maxt_size.val := v),"max texture size");
         ("-pvr",Arg.Set pvr,"make pvr");
         ("-plt",Arg.String (fun s -> plt.val := Some s),"make pallete textures");
@@ -1245,7 +1420,7 @@ value () =
                 TextureLayout.max_size.val := maxt_size;
                 let suffix = match profile with [ "default" -> "" | _ -> profile ]
                 and outdir = !outdir // lib in
-                do_work !xml !separate fmt indir suffix outdir;
+                do_work !xml !pack_mode fmt indir suffix outdir;
                 (* нужно за собой прибраца *)
                 Hashtbl.clear images;
                 DynArray.clear items;
@@ -1257,28 +1432,3 @@ value () =
       )
     ]
   );
-
-(*
-----
-<lib>
-<textures><texture file=""/></textures>
-<items>
-<item id="1" type="image" texture="0" x="" y="" width="" height=""/>
-<item id="2"
-<item id="2" type="sprite">
-  <child id="3" xPos="" yPos=""/>
-  <child id="4" xPos="" yPos=""/>
-</item>
-<item id="10" type="clip">
-<frame duration="" posX="" posY="" item="3">
-<child id=2 posX posY/>
-</frame>
-<frame duration="" posX="" posY="" item="3"/>
-<frame duration="" posX="" posY="" item="3"/>
-</item>
-<exports>
-<export class="ESkins.Bg_Exp" item="2"/>
-</exports>
-</lib>
-----
-*)
