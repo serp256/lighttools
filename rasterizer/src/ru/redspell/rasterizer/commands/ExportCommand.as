@@ -39,7 +39,7 @@ package ru.redspell.rasterizer.commands {
 		}
 
 		protected function exportClass(cls:SwfClass):void {
-			var clsName:String = cls.alias != "" ? cls.alias : cls.name.replace('::', '.');
+			var clsName:String = cls.alias != null && cls.alias != "" ? cls.alias : cls.name.replace('::', '.');
 			var clsDir:File = _packDir.resolvePath(clsName);
 
 			if (clsDir.exists) {
