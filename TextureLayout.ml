@@ -108,12 +108,14 @@ module MaxRects = struct
 (*     let () = Printf.printf "MAX RECTS [%B]\n%!" isDegree4 in *)
     loop rects [] empty [] where
       rec loop rects placed empty unfit = 
-(*         let () = Printf.printf "maxrects loop [%d:%d:%d:%d]\n%!" (List.length rects) (List.length placed) (List.length empty) (List.length unfit) in *)
+(*         let () = Printf.printf "maxrects loop [%d:%d:%d:%d]\n%!" (List.length
+ *         rects) (List.length placed) (List.length empty) (List.length unfit)
+ *         in *)
         match rects with
-        [ [] -> (placed, empty, unfit)    (* все разместили *)
+        [ [] -> (List.rev placed, empty, unfit)    (* все разместили *)
         | [ ((info, img) as r) :: rects']  -> 
             match empty with 
-            [ []  -> (placed, empty, (List.append rects unfit))
+            [ []  -> (List.rev placed, empty, (List.append rects unfit))
             | _   -> 
                 let (rw,rh) = Images.size img in
                 let (rw,rh) = match isDegree4 with [ True -> (do_degree4 rw,do_degree4 rh) | False -> (rw,rh) ] in
@@ -433,14 +435,14 @@ value layout_max ?(tsize=Npot) images =
         [ [] -> 
           ([],
           [ 
-            {(page) with placed_images = placed_images @ page.placed_images; empty_rects}
+            {(page) with placed_images = page.placed_images @ placed_images; empty_rects}
             :: pages
           ])
         | _ when wholly -> (* что-то не влезло, а должно было *)
             ( rects, [ page :: pages ])
         | _ -> (* что-то не влезло ну нормально *)
           ( unfit, 
-          [ {(page) with placed_images = placed_images @ page.placed_images; empty_rects}
+          [ {(page) with placed_images = page.placed_images @ placed_images; empty_rects}
             :: pages
           ])
         ]
