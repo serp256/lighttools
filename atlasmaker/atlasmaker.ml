@@ -18,7 +18,6 @@ value alpha = ref False;
 
 value nocrop = ref "";
 value nocropHash:Hashtbl.t string unit = Hashtbl.create 3;
-value type_rect = ref `maxrect;
 
 value emptyPx = 2;
 
@@ -202,7 +201,7 @@ value (=&=) k v = k =|= string_of_bool v;
 (* *)
 value createAtlas () = 
   let () = TextureLayout.rotate.val := False in
-  let pages = TextureLayout.layout ~type_rects:!type_rect ~sqr:!gen_pvr ~npot:!npot (Hashtbl.fold (fun k v acc -> [(k,v) :: acc]) imageRects []) in
+  let pages = TextureLayout.layout ~tsize:(TextureLayout.(if !gen_pvr then Sqr else match !npot with [ True -> Npot | False -> Pot ])) (Hashtbl.fold (fun k v acc -> [(k,v) :: acc]) imageRects []) in
   let i = ref 0 in
   (* меняем расширение атласа в зависимости от флага -alpha*)
   let extension = if !alpha then ".alpha" else ".png" in
@@ -339,7 +338,8 @@ value () =
         ("-min", Arg.Set_int TextureLayout.min_size, "Max texture size");
         ("-o",Arg.Set_string out_file,"output file");
         ("-nc", Arg.Set_string nocrop, "files that are not supposed to be cropped");
-        ("-t",Arg.String (fun s -> let t = match s with [ "vert" -> `vert | "hor" -> `hor | "rand" -> `rand | "maxrect" -> `maxrect |  _ -> failwith "unknown type rect" ] in type_rect.val := t),"type rect for insert images");
+(*         ("-t",Arg.String (fun s -> let t = match s with [ "vert" -> `vert | "hor" -> `hor | "rand" -> `rand | "maxrect" -> `maxrect |  _ -> failwith "unknown type rect" ] in type_rect.val :=
+  *         t),"type rect for insert images"); *)
         ("-pvr",Arg.Set gen_pvr,"generate pvr file");
         ("-xml",Arg.Set is_xml,"meta in xml format");
         ("-npot", Arg.Set npot, "Not power of 2");

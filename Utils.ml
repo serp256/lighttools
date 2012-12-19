@@ -8,7 +8,7 @@ value rec nextPowerOfTwo number =
   loop 1;
 
 
-value iter_2d f sx sy mx my = 
+value iter_image f sx sy mx my = 
   let y = ref sy in
   while !y < my do
   (
@@ -23,6 +23,8 @@ value iter_2d f sx sy mx my =
   ) done;
   
 
+value iter_2d = iter_image;
+
 
 value gzip_output ?level fname = 
   let gzout = Gzip.open_out ?level fname in
@@ -35,7 +37,7 @@ value gzip_output ?level fname =
 (* iterate over image *)
 value image_iter f img = 
   let (w,h) = Images.size img in
-  iter_2d begin fun x y ->
+  iter_image begin fun x y ->
     let elt =
       match img with 
       [ Images.Rgb24  i24 -> 

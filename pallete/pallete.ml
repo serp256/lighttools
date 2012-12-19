@@ -5,6 +5,7 @@ value p_width = 256;
 value pallete_size = p_width * p_width;
 value (//) = Filename.concat;
 value zclr = {Color.color={Color.r=0;g=0;b=0}; alpha=0;};
+(* value rclr = {Color.color={Color.r=0;g=0;b=0}; alpha=1;}; *)
 value make_preview = ref False;
 value only_colors = ref False;
 value first_pallete = ref 0;
@@ -20,54 +21,56 @@ module Pallete = struct
     let res = Array.init p_width (fun _ -> Array.make p_width None) in
     (
       res.(0).(0) := Some zclr;
+      match !skip_pixels with
+      [ [] -> ()
+      | skip_pixels ->
+          List.iter begin fun pixel ->
+            for y = 0 to p_width - 1 do
+              res.(y).(pixel) := Some zclr;
+              res.(pixel).(y) := Some zclr;
+            done
+          end skip_pixels
+      ];
       res;
     );
 
   value add p eclr = 
     let rec loop x y = 
-      match p.(y).(x) with
-      [ None -> 
-        let (x,y) = 
-          match !skip_pixels with
-          [ [] -> (x,y)
-          | _ -> 
-              let nx = 
-                if List.mem x !skip_pixels
-                then x + 1
-                else x
-              and ny = 
-                if List.mem y !skip_pixels
-                then y + 1
-                else y
-              in
-              (
-                if nx <> x || ny <> y 
-                then p.(y).(x) := Some zclr
-                else ();
-                (nx,ny)
-              )
-          ]
-        in
-        (
-          p.(y).(x) := Some eclr;
-          Some (x,y)
-        )
-      | Some clr ->
-        let res = 
-          if clr.alpha = eclr.alpha
-          then
-            let dist = Color.Rgb.square_distance clr.color eclr.color in
-            if dist < 33 && dist >= 0 
-            then True
-            else False
-          else False
-        in
-        match res with
-        [ True -> Some (x,y)
-        | False when (x + 1) < p_width -> loop (x+1) y
-        | False when (y + 1) < p_width -> loop 0 (y + 1)
-        | False -> None
+      let cs =
+        match !skip_pixels with
+        [ [] -> None
+        | skip_pixels when List.mem y skip_pixels ->  Some (0,y+1)
+        | skip_pixels when List.mem x skip_pixels -> if x + 1 < p_width then Some (x+1,y) else Some (0,y+1)
+        | _ -> None
         ]
+      in
+      match cs with
+      [ None -> 
+          match p.(y).(x) with
+          [ None -> 
+            (
+              p.(y).(x) := Some eclr;
+              Some (x,y)
+            )
+          | Some clr ->
+            let res = 
+              if clr.alpha = eclr.alpha
+              then
+                let dist = Color.Rgb.square_distance clr.color eclr.color in
+                if dist < 33 && dist >= 0 
+                then True
+                else False
+              else False
+            in
+            match res with
+            [ True -> Some (x,y)
+            | False when (x + 1) < p_width -> loop (x+1) y
+            | False when (y + 1) < p_width -> loop 0 (y + 1)
+            | False -> None
+            ]
+          ]
+      | Some nx ny when ny < p_width -> loop nx ny
+      | _ -> None
       ]
     in
     loop 0 0;
@@ -78,7 +81,7 @@ module Pallete = struct
     let p = create () in
     (
       Utils.image_iter begin fun x y clr -> 
-        if clr <> zclr 
+        if clr <> zclr || List.mem x !skip_pixels || List.mem y !skip_pixels
         then p.(y).(x) := Some clr
         else ()
       end img;
