@@ -1,0 +1,4 @@
+true:debug
+<*.ml>: package(camlp4),syntax(camlp4r),package(camlimages),package(xmlm),package(extlib),package(str)
+<animaker.{byte,native}>: package(camlimages),package(extlib),package(extlib),package(camlimages.png),package(str),package(xmlm),linkall
+
