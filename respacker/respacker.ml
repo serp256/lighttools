@@ -114,7 +114,7 @@ value optimize_sprites () =
     [ `sprite children when DynArray.length children = 1 -> ignore(optimize)
     | `clip frames when DynArray.length frames = 1 -> 
         let children = (DynArray.get frames 0).children in
-        if DynArray.length children = 1 && not optimize
+        if (DynArray.length children = 1 && not optimize) || (DynArray.length children > 1)
         then DynArray.set items id {(item) with item = (`sprite children)}
         else ()
     | _ -> ()
