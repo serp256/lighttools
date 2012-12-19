@@ -253,7 +253,7 @@ type contourSement = {
   points: mutable list (int * int);
 };
 
-(* generates contour, steps:
+(* generate contour, steps:
  * 1) generate first frame image
  * 2) find contour segments using "marching squares" algorithm (http://en.wikipedia.org/wiki/Marching_squares)
  * 3) making polygon from segments
@@ -325,18 +325,48 @@ value genContour regions frames anim =
       (* filling inner object holes, we need only transparent areas, which borders on frame border *)
 
       (* filling needed areas by 2 *)
-      let rec fill col row =
-        (
-          testCell (col + 1) row;
-          testCell col (row + 1);
-          testCell (col - 1) row;
-          testCell col (row - 1);
-        )        
-      and testCell col row = if 0 <= col && col < (w - 1) && 0 <= row && row < (h - 1) && binImg.(col).(row) = 0 then ( binImg.(col).(row) := 2; fill col row; ) else () in
+      (* Printf.printf "w, h %d %d\n%!" w h; *)
+
+
+      let fill col row colIncr rowIncr =
+        while 0 <= !col && !col < (w - 1) && 0 <= !row && !row < (h - 1) && binImg.(!col).(!row) <> 1 do
+          binImg.(!col).(!row) := 2;
+          rowIncr row;
+          colIncr col;
+        done
+      in
       (
-        for i = 0 to w - 2 do testCell i 0; testCell i (h - 2); done;
-        for i = 0 to h - 2 do testCell 0 i; testCell (w - 2) i; done;
+        for col = 0 to w - 2 do
+          fill (ref col) (ref 0) (fun _ -> ()) incr;
+          fill (ref col) (ref (h - 2)) (fun _ -> ()) decr;
+        done;
+
+        for row = 0 to h - 2 do
+          fill (ref 0) (ref row) incr (fun _ -> ());
+          fill (ref (w - 2)) (ref row) decr (fun _ -> ());
+        done;
       );
+
+(*       let rec fill col row =
+        (
+          let col = col + 1 in if 0 <= col && col < (w - 1) && 0 <= row && row < (h - 1) && binImg.(col).(row) = 0 then ( binImg.(col).(row) := 2; fill col row; ) else ();
+          let row = row + 1 in if 0 <= col && col < (w - 1) && 0 <= row && row < (h - 1) && binImg.(col).(row) = 0 then ( binImg.(col).(row) := 2; fill col row; ) else ();
+          let col = col - 1 in if 0 <= col && col < (w - 1) && 0 <= row && row < (h - 1) && binImg.(col).(row) = 0 then ( binImg.(col).(row) := 2; fill col row; ) else ();
+          let row = row - 1 in if 0 <= col && col < (w - 1) && 0 <= row && row < (h - 1) && binImg.(col).(row) = 0 then ( binImg.(col).(row) := 2; fill col row; ) else ();
+        )
+      in
+      (
+        for i = 0 to w - 2 do fill i 0; fill i (h - 2); done;
+        for i = 0 to h - 2 do fill 0 i; fill (w - 2) i; done;
+      ); *)
+
+(*       for j = 0 to h - 2 do
+        for i = 0 to w - 2 do
+          Printf.printf "%d" binImg.(i).(j);
+        done;
+
+        Printf.printf "\n";
+      done;  *)     
 
       (* filling rest transparent areas with 1 *)
       for i = 0 to w - 2 do
@@ -461,7 +491,7 @@ value genContour regions frames anim =
           else ();
 
           Rgba32.destroy frameImg;
-          anim.contour := List.map (fun (x, y) -> (max 0 (x - 2), max 0 (y - 2))) contour; (* minor correction: cause points will be represented as 32-bit ints (16-bits per coordinate), storing sign information too difficult, so negative coordinates will be rounded to 0 *)
+          anim.contour := List.map (fun (x, y) -> (max 0 (x - 2), max 0 (y - 2))) contour; (* minor correction: cause points will be represented as 32-bit ints (16 bits per coordinate), storing sign information too difficult, so negative coordinates will be rounded to 0 *)
         );
       );
     );
