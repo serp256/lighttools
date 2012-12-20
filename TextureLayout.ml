@@ -32,11 +32,7 @@ type textureSize = [ Pot | Sqr | Npot ];
 
 value rotate = ref True;
 value countEmptyPixels = ref 2;
-value do_degree4 x = 
-  match x mod 4 with
-  [ 0 -> x
-  | n -> x + 4 - n
-  ];
+value do_degree4 x = (x + 4) - (x mod 4);
 
 module MaxRects = struct
 
@@ -488,7 +484,79 @@ value layout_max ?(tsize=Npot) images =
   end pages;
 
 (* Размещаем картинки с флажком нужно впихнуть целиком или нет, запихиваем в минимально возможные страницы *)
-(* value layout_min ?(tsize=Npot) images = ( *)
+value layout_min ?(tsize=Sqr) (images:list (bool * (list ('a * Images.t)) )) = 
+  let () = Printf.printf "layout_min: %d [%s]\n%!" (List.length images) (String.concat ";" (List.map (fun (wholly,imgs) -> Printf.sprintf "%B:%d" wholly (List.length imgs)) images)) in
+  let try_place wholly rects pages =
+    let () = print_endline "try place" in
+    List.fold_left begin fun (rects,pages) page ->
+      match rects with
+      [ [] -> ([],[ page :: pages])
+      | rects ->
+        let (placed_images,empty_rects,unfit) = MaxRects.maxrects True rects page.empty_rects  in
+        let placed_images = List.rev placed_images in
+        match unfit with
+        [ [] -> 
+          ([],
+          [ 
+            {(page) with placed_images = page.placed_images @ placed_images; empty_rects}
+            :: pages
+          ])
+        | _ when wholly -> (* что-то не влезло, а должно было *)
+            ( rects, [ page :: pages ])
+        | _ -> (* что-то не влезло ну нормально *)
+          ( unfit, 
+          [ {(page) with placed_images = page.placed_images @ placed_images; empty_rects}
+            :: pages
+          ])
+        ]
+      ]
+    end (rects,[]) pages
+  in
+  let  rec alloc_new_pages wholly unfit pages = 
+    let () = print_endline "alloc new pages" in
+    let (new_page,unfit) = layout_page_pot ~sqr:True unfit in
+    let new_page = {(new_page) with placed_images = List.rev new_page.placed_images } in
+    match unfit with
+    [ [] -> [ new_page :: pages ]
+    | _ when wholly -> failwith "can't place images wholly"
+    | _ -> 
+        match try_place False unfit pages with
+        [ ([],pages) -> [ new_page :: pages ]
+        | (unfit,pages) -> 
+            let pages = [ new_page :: pages ] in
+            alloc_new_pages False unfit pages
+        ]
+    ]
+  in
+  let pages = 
+    match images with
+    [ [] -> []
+    | [ (wholly, rects) :: images ] -> 
+        let pages = alloc_new_pages wholly rects [] in
+        List.fold_left begin fun pages (wholly,rects) ->
+          let (unfit,pages) = try_place wholly rects pages in
+          match unfit with
+          [ [] -> pages
+          | _ -> alloc_new_pages wholly unfit pages
+          ]
+        end pages images
+    ]
+  in
+  let () = 
+    Printf.printf "ALL allocated!!!! pages: %d [%s]\n%!" 
+      (List.length pages) 
+      (String.concat ";" (List.map (fun page -> Printf.sprintf "[%d:(%s)]" (List.length page.placed_images) (String.concat "," (List.map (fun (_,_) -> "SOME INFO") page.placed_images))) pages)) 
+  in
+  pages;
+  (*
+  List.map begin fun page -> 
+    (* здесь покромсать пэйджи в соответствии с алгоритмом tsize *)
+    let images = List.map (fun (info,(_,_,_,image)) -> (info,image)) page.placed_images in
+    let (page,rest) = layout_page ~tsize images in
+    let () = assert (rest = []) in
+    page
+  end pages;
+  *)
 
 
 
