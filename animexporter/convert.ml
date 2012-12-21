@@ -40,6 +40,7 @@ value gen_dxt = ref False;
 value degree4 = ref False;
 value start_num = ref 0;
 value scale = ref 1.;
+value wholly = ref False;
 
 
 value get_postfix () =
@@ -376,7 +377,19 @@ value run () =
   in
 (*  let images = [(0,"pizda", List.fold_left (fun res (_,_,img) ->  res @ img) [] images)] in *)
   let images = List.fast_sort (fun (s1,_) (s2,_) -> compare s2 s1) images in  
-  let (images:list (bool * (list ((int*string)* Images.t )))) = List.map (fun (_, images) -> (True, images)) images in
+  let (images:list (bool * (list ((int*string)* Images.t )))) = 
+    match !wholly with
+    [ True -> 
+        [ 
+          (True,
+            List.fold_left begin fun res (_,images) -> 
+              res @ images      
+            end [] images
+          )
+        ]
+    | _ -> List.map (fun (_, images) -> (True, images)) images
+    ]
+  in
   let (textures:list (TextureLayout.page (int * string))) = TextureLayout.layout_min images in
   List.iteri begin fun cnt {TextureLayout.width=w; height=h; placed_images=imgs;_} ->
     let cnt = cnt + !start_num in
@@ -435,6 +448,7 @@ value () =
         ("-min",Arg.Set_int TextureLayout.min_size, "Min size texture");
         ("-scale", Arg.Set_float scale, "Scale factor");
         ("-degree4", Arg.Set degree4, "Use degree 4 rects");
+        ("-wholly", Arg.Set wholly, "All images in 1 texture");
       ]
       (fun _ -> ())
       "";
