@@ -50,7 +50,7 @@ value installApk = ref False;
 value installExp = ref False;
 value withoutLib = ref False;
 value baseExp = ref False;
-value cheat = ref False;
+(* value cheat = ref False; *)
 value noExp = ref False;
 value sounds = ref False;
 value lib = ref False;
@@ -58,7 +58,7 @@ value allBuilds = ref False;
 
 value args = [
   ("-i", Set_string inDir, "input directory (for example, farm root directory, which contains android subdirectory)");
-  ("-package", Set_string package, "application package (for expansions maker)");
+  (* ("-package", Set_string package, "application package (for expansions maker)"); *)
   ("-manifest", Set manifest, "generate manifest for builds");
   ("-assets", Set assets, "generate assets for builds");
   ("-sounds", Set sounds, "include sounds into assets, use with -assets option. by default sounds included into expansions");
@@ -72,7 +72,7 @@ value args = [
   ("-no-exp", Set noExp, "application has no expansions");
   ("-without-lib", Set withoutLib, "compile apk without farm-lib rebuilding, use it in addition -apk option");
   ("-release", Set release, "compile apks for release, install from release archive, copy apk and expansions to release archive");
-  ("-cheat", Set cheat, "compile apk with cheats, only for debug version");
+  (* ("-cheat", Set cheat, "compile apk with cheats, only for debug version"); *)
   ("-install", Tuple [ Set installApk; Set installExp; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "install both apk and expansions. when using with -release flag, takes build-version pair, when without -release -- only build. example: abldr -install normal_hdpi_pvr or abldr -release -install normal_hdpi_pvr 1.1.3");
   ("-install-apk", Tuple [ Set installApk; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "install only apk, usage same as -install");
   ("-install-exp", Tuple [ Set installExp; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "install only expansion, usage same as -install")
@@ -81,15 +81,17 @@ value args = [
 parse args (fun arg -> builds.val := [ arg :: !builds ]) "android multiple apks generator";
 builds.val := List.rev !builds;
 
-value androidDir = Filename.concat !inDir "android";
+(* value androidDir = Filename.concat !inDir "android"; *)
+value androidDir = !inDir;
 value manifestsDir = Filename.concat androidDir "manifests";
 value expansionsDir = Filename.concat androidDir "expansions";
 value rsyncDir = Filename.concat androidDir "rsync";
-value resDir = Filename.concat !inDir "Resources";
+value resDir = Filename.concat androidDir "../Resources";
 value assetsDir = Filename.concat androidDir "assets";
-value makefilePath = Filename.concat !inDir "Makefile";
-value releaseDir = Filename.concat androidDir "release";
-value debugDir = Filename.concat androidDir "debug";
+value makefilePath = Filename.concat androidDir "Makefile";
+value archiveDir = Filename.concat androidDir "apk-archive";
+value releaseDir = Filename.concat archiveDir "release";
+value debugDir = Filename.concat archiveDir "debug";
 value archiveDir build ver =
   let archiveDir = Filename.concat (if !release then releaseDir else debugDir) build in
     if !release then Filename.concat archiveDir ver else archiveDir;
@@ -101,6 +103,35 @@ value genManifest build =
     myassert (Sys.file_exists manifestConfig) (sprintf "cannot find manifest config for build %s" build);
     runCommand ("xsltproc -o " ^ (Filename.concat androidDir "AndroidManifest.xml") ^ " --xinclude --xincludestyle " ^ (Filename.concat manifestsDir "manifest.xslt") ^ " " ^ manifestConfig) "xsltproc failed";
   );
+
+value getPackage () =
+(
+  if !package = "" then
+    let inp = open_in (Filename.concat !inDir "package.xml") in
+      let xmlinp = Xmlm.make_input ~strip:True (`Channel inp) in
+      (
+        ignore(Xmlm.input xmlinp);
+
+        let rec findPackage () =
+          if Xmlm.eoi xmlinp then failwith "package not found package.xml"
+          else
+            match Xmlm.input xmlinp with
+            [ `El_start ((_, "package"), _) ->
+              match Xmlm.input xmlinp with
+              [ `Data package -> package
+              | _ -> failwith "package not found in package.xml"
+              ]
+            | _ -> findPackage ()
+            ]
+        in
+          package.val := findPackage ();
+
+        close_in inp;
+      )
+  else ();
+  
+  !package;  
+);
 
 (* value rsyncArgs =
   let argFunc argName argVal = if argVal = "" then "" else Printf.sprintf "--%s=%s" argName (Filename.concat rsyncDir argVal)
@@ -187,12 +218,15 @@ value archiveApk ?(apk = True) ?(expansions = True) build =
         runCommand ("cp -Rv `find " ^ (Filename.concat expansionsDir build) ^ " -name '*obb'` " ^ apkArchiveDir) "cp failed when trying to copy main expansion to archive";
 
         if !release && !baseExp && !patchFor = "" then
-          let base = Filename.concat (Filename.dirname apkArchiveDir) "base" in
-            let apkArchiveDir = if Filename.is_relative apkArchiveDir then Filename.concat (Unix.getcwd()) apkArchiveDir else apkArchiveDir in
+          let baseLinkName = "base" in
+          let base = Filename.concat (Filename.dirname apkArchiveDir) baseLinkName in
+            (* let apkArchiveDir = if Filename.is_relative apkArchiveDir then Filename.concat (Unix.getcwd()) apkArchiveDir else apkArchiveDir in *)
             (
               try Sys.remove base with [ _ -> () ];
               (* if Sys.file_exists base then Sys.remove base else (); *)
-              Unix.symlink apkArchiveDir base;
+              (* Unix.symlink apkArchiveDir base; *)
+              Unix.chdir (Filename.dirname apkArchiveDir);
+              Unix.symlink ver baseLinkName;
             )                            
         else ();
       ) else ();
@@ -241,7 +275,7 @@ value genExpansion build =
               try
                 let verCode = List.find_map (fun ((uri, name), v) -> if name = "versionCode" then Some v else None) attributes
                 and expansionsDir = Filename.concat expansionsDir build in
-                  let command = "aem -o " ^ expansionsDir ^ "/ -i " ^ (Filename.concat expansionsDir "main") ^ " -package " ^ !package ^  " -version " ^ verCode in
+                  let command = "aem -o " ^ expansionsDir ^ "/ -i " ^ (Filename.concat expansionsDir "main") ^ " -package " ^ (getPackage ()) ^  " -version " ^ verCode in
                     let command =
                       if !patchFor <> "" then
                         let archiveDir = Filename.concat (Filename.concat releaseDir build) !patchFor in
@@ -262,8 +296,8 @@ value genExpansion build =
 );
 
 value compileLib () =
-  let target = if !release then "android-release" else if !cheat then "android-cheat" else "android" in
-    runCommand ("make -f " ^ makefilePath ^ " " ^ target) "make failed when compiling apk";
+  let target = if !release then "release" else "debug" in
+    runCommand ("make -f " ^ makefilePath ^ " " ^ target) "make failed when compiling lib";
 
 value compileApk build =
 (
@@ -313,7 +347,7 @@ value install () =
     if !installExp then
       if main = "" || patch = "" then failwith "main expansion or patch is missing"
       else 
-        let pushCommand = "storage_dir=`adb shell 'echo -n $EXTERNAL_STORAGE'` && adb shell \"rm $storage_dir/Android/data/" ^ !package ^ "/files/assets/a*\" && exp_dir=$storage_dir/Android/obb/" ^ !package ^ " && adb shell \"mkdir -p $exp_dir\" && adb push " in
+        let pushCommand = "storage_dir=`adb shell 'echo -n $EXTERNAL_STORAGE'` && adb shell \"rm $storage_dir/Android/data/" ^ (getPackage ()) ^ "/files/assets/a*\" && exp_dir=$storage_dir/Android/obb/" ^ (getPackage ()) ^ " && adb shell \"mkdir -p $exp_dir\" && adb push " in
         (
           runCommand (pushCommand ^ (Filename.concat archiveDir main) ^ " $exp_dir/") "error while pushing main expansion";
           runCommand (pushCommand ^ (Filename.concat archiveDir patch) ^ " $exp_dir/") "error while pushing expansion patch";
