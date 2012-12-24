@@ -1,6 +1,7 @@
 (* Скрипт пакует данные swf потрошителя *)
 (* TODO:
-  * clip_commands - может быть некорректный после dublicate
+  * clip_commands - может быть некорректный после dublicate (fsep mode)
+  * можно еще пооптимайзить символы если sep - возможно что-то врисуется как надо
 *)
 
 open ExtList;
@@ -100,8 +101,9 @@ value optimize_sprites () =
       (
         DynArray.set exports i (name,id);
         item.deleted := True;
+        True
       )
-    | `chld _ -> ()
+    | `chld _ -> False
     | _ -> assert False 
     ]
   IN
@@ -109,12 +111,12 @@ value optimize_sprites () =
     let (name,id) = DynArray.get exports i in
     let item = DynArray.get items id in
     match item.item with
-    [ `sprite children when DynArray.length children = 1 -> optimize
+    [ `sprite children when DynArray.length children = 1 -> ignore(optimize)
     | `clip frames when DynArray.length frames = 1 -> 
         let children = (DynArray.get frames 0).children in
-        if DynArray.length children = 1 
-        then optimize 
-        else DynArray.set items id {(item) with item = (`sprite children)}
+        if (DynArray.length children = 1 && not optimize) || (DynArray.length children > 1)
+        then DynArray.set items id {(item) with item = (`sprite children)}
+        else ()
     | _ -> ()
     ]
   done;

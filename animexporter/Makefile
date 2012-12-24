@@ -10,22 +10,6 @@ all:
 clean:
 	ocamlbuild -use-ocamlfind -clean
 
-lib_test:
-	rm -r -f 1/*
-	rm -r -f 2/*
-	rm -r -f 3/*
-	cp -r input/* 1/
-	mv 1/tl_* 2/
-	mv 1/bk_furrow 2/
-#	mv 1/*_ex 3/
-	rm -r -f ~/Devel/mobile-farm/Resources/library/*
-	./convert.native -inp 1 -scale ${SCALE} -o ~/Devel/mobile-farm/Resources/library
-	./convert.native -inp 2 -n 100500 -min 512 -scale ${SCALE} -o ~/Devel/mobile-farm/Resources/library
-#	./convert.native -inp 3 -n 1000 -scale ${SCALE} -o ~/Devel/mobile-farm/Resources/library
-	./convert.native -inp 1 -o ~/Devel/mobile-farm/Resources/library
-	./convert.native -inp 2 -n 100500 -min 512 -o ~/Devel/mobile-farm/Resources/library
-#	./convert.native -inp 3 -n 1000 -o ~/Devel/mobile-farm/Resources/library
-
 lib_05:
 	rm -r -f 1/*
 	rm -r -f  2/*
@@ -48,19 +32,31 @@ clean-output:
 	rm -r -f ${LIB_DIR}/*
 
 lib-compressed:
-	./convert.native -inp 2 -n 100500 -min 512 -scale ${SCALE} -o ${LIB_DIR} -pvr
+	./convert.native -inp 2 -n 100500 -wholly -scale ${SCALE} -o ${LIB_DIR} -pvr
 	./convert.native -inp 1 -degree4 -scale ${SCALE} -o ${LIB_DIR} -pvr
 #	./convert.native -inp 3 -n 1000 -scale ${SCALE} -o ${LIB_DIR} -pvr
-	./convert.native -inp 2 -n 100500 -min 512 -o ${LIB_DIR} -pvr -dxt
+	./convert.native -inp 2 -n 100500 -wholly -o ${LIB_DIR} -pvr -dxt
 	./convert.native -inp 1 -degree4 -o ${LIB_DIR} -o ${LIB_DIR} -pvr -dxt
 #	./convert.native -inp 3 -n 1000 -o ${LIB_DIR} -pvr -dxt
 
 lib: prepare-input clean-output lib-compressed
 
+lib-notcompressed:
+	./convert.native -inp 2 -wholly -n 100500 -scale ${SCALE} -o ${LIB_DIR} 
+	./convert.native -inp 1 -degree4 -scale ${SCALE} -o ${LIB_DIR} 
+	./convert.native -inp 2 -wholly -n 100500 -o ${LIB_DIR} 
+	./convert.native -inp 1 -degree4 -o ${LIB_DIR} -o ${LIB_DIR} 
+
+lib-test: prepare-input clean-output lib-notcompressed
 
 100500:
 	./convert.native -inp 2 -n 100500 -min 512 -scale ${SCALE} -o ~/Devel/mobile-farm/Resources/library -pvr
 	./convert.native -inp 2 -n 100500 -min 512 -o ~/Devel/mobile-farm/Resources/library -pvr
+
+100500-test: prepare-input
+	./convert.native -wholly -inp 2 -n 100500 -scale ${SCALE} -o ~/Devel/mobile-farm/Resources/library
+	./convert.native -wholly -inp 2 -n 100500 -o ~/Devel/mobile-farm/Resources/library 
+
 
 
 
