@@ -1,5 +1,4 @@
 open ExtList;
-open TextureLayout;
 
 value texInfo = "texInfo.dat";
 value frames = "frames.dat";
@@ -41,6 +40,7 @@ value gen_dxt = ref False;
 value degree4 = ref False;
 value start_num = ref 0;
 value scale = ref 1.;
+value wholly = ref False;
 
 
 value get_postfix () =
@@ -149,8 +149,8 @@ value get_images dirs images  =
             match !degree4 with
             [ True -> 
                 let (iw', ih') = Images.size image in
-                let iw = do_degree4 iw' 
-                and ih = do_degree4 ih' 
+                let iw = TextureLayout.do_degree4 iw' 
+                and ih = TextureLayout.do_degree4 ih' 
                 in
                 let rgb = Rgba32.make iw ih {Color.color={Color.r=0;g=0;b=0}; alpha=0;} in
                 let res_img = Images.Rgba32 rgb in
@@ -377,26 +377,32 @@ value run () =
   in
 (*  let images = [(0,"pizda", List.fold_left (fun res (_,_,img) ->  res @ img) [] images)] in *)
   let images = List.fast_sort (fun (s1,_) (s2,_) -> compare s2 s1) images in  
-  let textures = List.fold_left begin fun textures  (_,images) -> 
- (*   let () = Printf.printf "Layout %s\n%!" path in *)
-    let (placed,_, textures) = MaxRects.layout ~pages:textures images in
-    textures
-  end [] images in 
-(*  let textures = MaxRects.layout_last_page 1024 textures in *)
-  List.iteri begin fun cnt (w,h,imgs,_,_) ->
+  let (images:list (bool * (list ((int*string)* Images.t )))) = 
+    match !wholly with
+    [ True -> 
+        [ 
+          (True,
+            List.fold_left begin fun res (_,images) -> 
+              res @ images      
+            end [] images
+          )
+        ]
+    | _ -> List.map (fun (_, images) -> (True, images)) images
+    ]
+  in
+  let (textures:list (TextureLayout.page (int * string))) = TextureLayout.layout_min images in
+  List.iteri begin fun cnt {TextureLayout.width=w; height=h; placed_images=imgs;_} ->
     let cnt = cnt + !start_num in
     let rgb = Rgba32.make w h {Color.color={Color.r=0;g=0;b=0}; alpha=0;} in
     let new_img = Images.Rgba32 rgb in
       (
         Printf.printf "Save %d.png \n%!" cnt;
-        List.iter begin fun imgs -> 
-          (
             convert cnt imgs;
             List.iter begin fun (_,(sx,sy,isRotate,img)) ->
               let (iw,ih) = Images.size img in
                 try
                   (
-                    Printf.printf "Image size %d %d \n%!" iw ih;
+                    Printf.printf "Image size %d %d and pos [%d; %d] \n%!" iw ih sx sy;
                     Images.blit img 0 0 new_img sx sy iw ih;
                   )
                 with 
@@ -412,8 +418,6 @@ value run () =
                       )
                   ]
             end imgs;
-          )
-        end imgs;
         let save_img = !outdir /// (string_of_int cnt) ^ (get_postfix ()) in
           (
             Images.save (save_img ^ ".png") (Some Images.Png) [] new_img;
@@ -427,7 +431,6 @@ value run () =
           );
       )
   end textures;
-
 (*
 value () = convert "an_chicken_ex";
 *)
@@ -442,14 +445,15 @@ value () =
         ("-dxt",Arg.Set gen_dxt,"generate dxt file");        
         ("-n",Arg.Set_int start_num,"set first name texture ");
         ("-p",Arg.Set_int TextureLayout.countEmptyPixels, "count Empty pixels between images");
-        ("-min",Arg.Set_int MaxRects.min_size, "Min size texture");
+        ("-min",Arg.Set_int TextureLayout.min_size, "Min size texture");
         ("-scale", Arg.Set_float scale, "Scale factor");
         ("-degree4", Arg.Set degree4, "Use degree 4 rects");
+        ("-wholly", Arg.Set wholly, "All images in 1 texture");
       ]
       (fun _ -> ())
       "";
       TextureLayout.countEmptyPixels.val := 0;
-      TextureLayout.isDegree4.val := True;
+      TextureLayout.rotate.val := False;
     run ();
   );
 
