@@ -321,7 +321,7 @@ value symbol (libpath,textures,symbols) cls =
       if (x = 0 && y = 0 && w = iw && ih = h) then img
       else Images.sub img x y w h 
     in
-    ((0,0),img)
+    ((0,0),res)
   | Atlas tid children ->
       let img = Png.load (Filename.concat libpath textures.(tid)) [] in
       let (minx,miny,maxx,maxy) = calc_size children in

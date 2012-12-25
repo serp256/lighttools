@@ -172,8 +172,8 @@ let font = empty_font in
         Printf.printf "len imgs: %d\n%!" (List.length !imgs);
 
         let () = TextureLayout.rotate.val := False in
-        let textures = TextureLayout.layout ~type_rects:`maxrect ~sqr:False !imgs in
-        List.iteri begin fun i (w,h,imgs) ->
+        let textures = TextureLayout.layout ~tsize:TextureLayout.Npot !imgs in
+        List.iteri begin fun i {TextureLayout.width = w;height = h; placed_images = imgs} ->
           let texture = Rgba32.make w h bgcolor in
           (
             List.iter begin fun (key,(x,y,_,img)) ->
