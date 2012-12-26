@@ -13,7 +13,7 @@ Arg.parse [] (fun arg -> args := arg :: !args) "android installer";;
 
 let ver = List.hd !args in
 let id = List.hd (List.tl !args) in
-let archiveDir = "android" // "release" // id // ver in
+let archiveDir = "apk-archive" // "release" // id // ver in
 	let (apk, main, patch) =
 		Array.fold_left (fun (apk, main, patch) fname ->
 			if ExtString.String.ends_with fname ".apk" then (fname, main, patch)
@@ -22,7 +22,7 @@ let archiveDir = "android" // "release" // id // ver in
 		) ("", "", "") (Sys.readdir archiveDir)
 	in
 	(
-		(*runCommand ("adb install -r " ^ (archiveDir // apk)) "error when uploading apk";*)
+		runCommand ("adb install -r " ^ (archiveDir // apk)) "error when uploading apk";
 
 		if main <> "" && patch <> "" then
 			let regex = Str.regexp "main\\.[0-9]+\\.\\(.*\\).obb" in

@@ -225,9 +225,14 @@ value archiveApk ?(apk = True) ?(expansions = True) build =
               try Sys.remove base with [ _ -> () ];
               (* if Sys.file_exists base then Sys.remove base else (); *)
               (* Unix.symlink apkArchiveDir base; *)
-              Unix.chdir (Filename.dirname apkArchiveDir);
-              Unix.symlink ver baseLinkName;
-            )                            
+
+              let cwd = Unix.getcwd () in
+              (
+                Unix.chdir (Filename.dirname apkArchiveDir);
+                Unix.symlink ver baseLinkName;
+                Unix.chdir cwd;
+              );
+            )
         else ();
       ) else ();
     );
@@ -341,13 +346,17 @@ value install () =
   (
     if !installApk then
       if apk = "" then  failwith "apk is missing"
-      else runCommand ("adb install -r " ^ (Filename.concat archiveDir apk)) "adb failed when installing apk"
+      else
+      (
+        runCommand ("storage_dir=`adb shell 'echo -n $EXTERNAL_STORAGE'` && adb shell \"rm $storage_dir/Android/data/" ^ (getPackage ()) ^ "/files/assets/a*\"") "";
+        runCommand ("adb install -r " ^ (Filename.concat archiveDir apk)) "adb failed when installing apk";
+      )
     else ();
 
     if !installExp then
       if main = "" || patch = "" then failwith "main expansion or patch is missing"
       else 
-        let pushCommand = "storage_dir=`adb shell 'echo -n $EXTERNAL_STORAGE'` && adb shell \"rm $storage_dir/Android/data/" ^ (getPackage ()) ^ "/files/assets/a*\" && exp_dir=$storage_dir/Android/obb/" ^ (getPackage ()) ^ " && adb shell \"mkdir -p $exp_dir\" && adb push " in
+        let pushCommand = "storage_dir=`adb shell 'echo -n $EXTERNAL_STORAGE'` && exp_dir=$storage_dir/Android/obb/" ^ (getPackage ()) ^ " && adb shell \"mkdir -p $exp_dir\" && adb push " in
         (
           runCommand (pushCommand ^ (Filename.concat archiveDir main) ^ " $exp_dir/") "error while pushing main expansion";
           runCommand (pushCommand ^ (Filename.concat archiveDir patch) ^ " $exp_dir/") "error while pushing expansion patch";
