@@ -206,7 +206,7 @@ value createAtlas () =
   (* меняем расширение атласа в зависимости от флага -alpha*)
   let extension = if !alpha then ".alpha" else ".png" in
   let meta = 
-    List.map begin fun (w,h,rects) -> 
+    List.map begin fun (*(w,h,rects)*){TextureLayout.width = w;height=h;placed_images=rects} -> 
     (
       let fname = 
         match List.length pages with 
