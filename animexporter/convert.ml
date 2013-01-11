@@ -446,6 +446,7 @@ value () =
         ("-n",Arg.Set_int start_num,"set first name texture ");
         ("-p",Arg.Set_int TextureLayout.countEmptyPixels, "count Empty pixels between images");
         ("-min",Arg.Set_int TextureLayout.min_size, "Min size texture");
+        ("-max",Arg.Set_int TextureLayout.max_size, "Max size texture");
         ("-scale", Arg.Set_float scale, "Scale factor");
         ("-degree4", Arg.Set degree4, "Use degree 4 rects");
         ("-wholly", Arg.Set wholly, "All images in 1 texture");
