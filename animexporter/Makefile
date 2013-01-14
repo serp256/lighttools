@@ -57,6 +57,7 @@ lib-test: prepare-input clean-output lib-notcompressed
 
 100500-test: prepare-input
 	./convert.native -wholly -inp 2 -n 100500 -scale ${SCALE} -o ~/Devel/mobile-farm/Resources/library
+	./convert.native -wholly -inp 2 -n 100500 -scale 2 -o ~/Devel/mobile-farm/Resources/library
 	./convert.native -wholly -inp 2 -n 100500 -o ~/Devel/mobile-farm/Resources/library 
 
 

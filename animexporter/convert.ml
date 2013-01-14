@@ -423,7 +423,11 @@ value run () =
             Images.save (save_img ^ ".png") (Some Images.Png) [] new_img;
 
             match !gen_pvr with
-            [ True -> Utils.pvr_png save_img
+            [ True -> 
+                (
+                  Utils.pvr_png save_img;
+                  Utils.gzip_pvr save_img;
+                )
             | _ -> ()
             ];
 
