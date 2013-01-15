@@ -98,12 +98,12 @@ value plx_png plt img =
     ];
   );
 
-value gzip_pvr img =
-  let cmd = Printf.sprintf "gzip %s.pvr" img in
+value gzip_img img =
+  let cmd = Printf.sprintf "gzip %s" img in
   (
     Printf.printf "%s\n%!" cmd;
     match Sys.command cmd with
-    [ 0 -> ignore(Sys.command (Printf.sprintf "mv %s.pvr.gz %s.pvr" img img))
-    | _ -> failwith (Printf.sprintf "Failed gzip %s.pvr" img)
+    [ 0 -> ignore(Sys.command (Printf.sprintf "mv %s.gz %s" img img))
+    | _ -> failwith (Printf.sprintf "Failed gzip %s" img)
     ];
   );

@@ -453,12 +453,17 @@ value run () =
             [ True -> 
                 (
                   Utils.pvr_png save_img;
-                  Utils.gzip_pvr save_img;
+                  Utils.gzip_img (save_img ^ ".pvr");
                 )
             | _ -> ()
             ];
 
-            if !gen_dxt then Utils.dxt_png save_img else ();
+            if !gen_dxt then
+            (
+              Utils.dxt_png save_img;
+              Utils.gzip_img (save_img ^ ".dds");
+            )
+            else ();
           );
       )
   end textures;
