@@ -450,7 +450,11 @@ value run () =
             Images.save (save_img ^ ".png") (Some Images.Png) [] new_img;
 
             match !gen_pvr with
-            [ True -> Utils.pvr_png save_img
+            [ True -> 
+                (
+                  Utils.pvr_png save_img;
+                  Utils.gzip_pvr save_img;
+                )
             | _ -> ()
             ];
 
@@ -473,6 +477,7 @@ value () =
         ("-n",Arg.Set_int start_num,"set first name texture ");
         ("-p",Arg.Set_int TextureLayout.countEmptyPixels, "count Empty pixels between images");
         ("-min",Arg.Set_int TextureLayout.min_size, "Min size texture");
+        ("-max",Arg.Set_int TextureLayout.max_size, "Max size texture");
         ("-scale", Arg.Set_float scale, "Scale factor");
         ("-degree4", Arg.Set degree4, "Use degree 4 rects");
         ("-wholly", Arg.Set wholly, "All images in 1 texture");

@@ -304,7 +304,7 @@ end;
 
 (* размещаем на одной странице, постепенно увеличивая ее размер *)
 value layout_page_pot ~sqr rects = 
-  let () = print_endline "layout page pot" in
+  let () = print_endline ("layout page pot " ^ (string_of_int !max_size)) in
   loop !min_size !min_size where
     rec loop w h =
       let main_rect = { x = 0; y = 0; w; h; isRotate = False  } in
