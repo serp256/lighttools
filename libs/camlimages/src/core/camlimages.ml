@@ -25,7 +25,7 @@ let lib_xpm = true;;
 
 (* External files *)
 let path_rgb_txt = "none";;
-let path_gs = "/opt/local/bin/gs";;
+let path_gs = "/usr/bin/gs";;
 
 (* They are written in ML, so always supported *)
 let lib_ppm = true;;

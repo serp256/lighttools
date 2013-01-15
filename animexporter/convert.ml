@@ -144,9 +144,8 @@ value get_images dirs images  =
                 | _ -> failwith "incorrect type image"
                 ]
             | scale ->
-              let tmpdir = Filename.get_temp_dir_name () in
-              let srcFname = tmpdir /// "src" in
-              let dstFname = tmpdir /// "dst" in
+              let srcFname = Filename.temp_file "src" "" in
+              let dstFname = Filename.temp_file "dst" ""  in
               (
                 Images.save srcFname (Some Images.Png) [] image;
 
