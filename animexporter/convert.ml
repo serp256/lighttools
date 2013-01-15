@@ -418,7 +418,10 @@ value run () =
     ]
   in
   let (textures:list (TextureLayout.page (int * string))) = TextureLayout.layout_min images in
-  List.iteri begin fun cnt {TextureLayout.width=w; height=h; placed_images=imgs;_} ->
+  List.iteri begin fun cnt xyupizda ->
+    let w = xyupizda.TextureLayout.width in
+    let h = xyupizda.TextureLayout.height in
+    let imgs = xyupizda.TextureLayout.placed_images in
     let cnt = cnt + !start_num in
     let rgb = Rgba32.make w h {Color.color={Color.r=0;g=0;b=0}; alpha=0;} in
     let new_img = Images.Rgba32 rgb in
