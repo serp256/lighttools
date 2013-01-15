@@ -133,9 +133,9 @@ value get_images dirs images  =
           let image = 
             match !scale with
             [ 1. -> image
-            | _ -> 
-                let w = round ((float iw) *. !scale) 
-                and h = round ((float ih) *. !scale) 
+            | scale when scale < 1. -> 
+                let w = round ((float iw) *. scale) 
+                and h = round ((float ih) *. scale) 
                 in
                 match image with
                 [ Images.Rgb24 image -> Images.Rgb24 (Rgb24.resize None image w h)
@@ -143,6 +143,33 @@ value get_images dirs images  =
                 | Images.Cmyk32 image -> Images.Cmyk32 (Cmyk32.resize None image w h)
                 | _ -> failwith "incorrect type image"
                 ]
+            | scale ->
+              let tmpdir = Filename.get_temp_dir_name () in
+              let srcFname = tmpdir /// "src" in
+              let dstFname = tmpdir /// "dst" in
+              (
+                Images.save srcFname (Some Images.Png) [] image;
+
+                Printf.printf "convert -resize %d%% -filter catrom %s %s\n" (int_of_float (scale *. 100.)) srcFname dstFname;
+
+                if Sys.command (Printf.sprintf "convert -resize %d%% -filter catrom %s png32:%s" (int_of_float (scale *. 100.)) srcFname dstFname) <> 0 then failwith "convert returns non-zero exit code"
+                else ();
+
+                let img = Images.load dstFname [] in
+                (
+                  match img with
+                  [ Images.Index8 _ -> Printf.printf("img type: Index8\n")
+                  | Images.Rgb24 _ -> Printf.printf("img type: Rgb24\n")
+                  | Images.Index16 _ -> Printf.printf("img type: Index16\n")
+                  | Images.Rgba32 _ -> Printf.printf("img type: Rgba32\n")
+                  | Images.Cmyk32 _ -> Printf.printf("img type: Cmyk32\n")
+                  ];
+
+                  Sys.remove srcFname;
+                  Sys.remove dstFname;
+                  img;
+                );
+              )
             ]
           in
           let res_img = 
@@ -454,6 +481,10 @@ value () =
       "";
       TextureLayout.countEmptyPixels.val := 0;
       TextureLayout.rotate.val := False;
+
+    if !scale >= 2. then TextureLayout.max_size.val := 4096
+    else ();
+
     run ();
   );
 
