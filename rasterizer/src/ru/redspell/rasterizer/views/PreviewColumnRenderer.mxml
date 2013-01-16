@@ -15,14 +15,14 @@
 		import spark.components.WindowedApplication;
 
 		protected function showPreview():void {
-			var cls:SwfClass = data as SwfClass;
+			var cls:SwfClass = data.cls as SwfClass;
 			var previewWin:PreviewWindow = new PreviewWindow();
 			var src:DisplayObject = new cls.definition();
 			var flatten:IFlatten = src is MovieClip ? new FlattenMovieClip() : new FlattenSprite();
 
 			PopUpManager.addPopUp(previewWin, (FlexGlobals.topLevelApplication as WindowedApplication), true);
 			PopUpManager.centerPopUp(previewWin);
-			previewWin.preview(flatten.fromDisplayObject(src, Utils.getClsScale(cls)));
+			previewWin.preview(flatten.fromDisplayObject(src, Utils.getClsScale(cls, data.profile)));
 		}
 		]]></fx:Script>
 

@@ -27,13 +27,15 @@ package ru.redspell.rasterizer.factories {
 			return instance;
 		}
 
-		public function getSwfClass(definition:Class, name:String, checked:Boolean = true, animated:Boolean = true):SwfClass {
+		public function getSwfClass(definition:Class, name:String):SwfClass {
 			var instance:SwfClass = new SwfClass();
 
 			instance.definition = definition;
 			instance.name = name;
-			instance.checked = checked;
-			instance.animated = animated;
+            instance.checks = {};
+            instance.anims = {};
+			//instance.checked = checked;
+			//instance.animated = animated;
 
 			return instance;
 		}

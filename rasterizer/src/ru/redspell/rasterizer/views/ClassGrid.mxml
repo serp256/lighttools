@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<s:DataGrid
+	xmlns:fx="http://ns.adobe.com/mxml/2009"
+	xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	xmlns:view="ru.redspell.rasterizer.views.*"
+	selectionMode="multipleRows"
+	editable="true">
+
+	<fx:Script><![CDATA[
+		import ru.redspell.rasterizer.models.ClassProfile;
+		import ru.redspell.rasterizer.models.SwfClass;
+		import ru.redspell.rasterizer.views.events.CheckboxColumnRendererEvent;
+
+		protected function checkboxColChanged(event:CheckboxColumnRendererEvent):void {
+			Facade.runCommand(Facade.commandsFactory.getRefreshClassMetaCommand((event.item as ClassProfile).cls as SwfClass));
+		}
+		]]></fx:Script>
+
+	<s:columns>
+		<s:ArrayCollection>
+			<view:CheckboxGridColumn
+				width="30"
+				dataField="checked"
+				editable="false"
+				changed="checkboxColChanged(event)"/>
+
+			<s:GridColumn
+				headerText="Profile"
+				width="150"
+				dataField="profileLabel"
+				editable="false"/>
+
+			<s:GridColumn
+				headerText="Scale"
+				width="50"
+				itemEditor="ru.redspell.rasterizer.views.ClassScaleItemEditor"
+				dataField="scale"/>
+
+			<view:CheckboxGridColumn
+				headerText="Anim."
+				dataField="animated"
+				width="55"
+				editable="false"
+				changed="checkboxColChanged(event)"/>
+
+			<s:GridColumn
+				width="50"
+				itemRenderer="ru.redspell.rasterizer.views.PreviewColumnRenderer"
+				editable="false"/>
+		</s:ArrayCollection>
+	</s:columns>
+</s:DataGrid>
