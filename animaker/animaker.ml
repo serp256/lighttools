@@ -1,13 +1,88 @@
+open Ojson;
+
 exception Break_loop;
 
 value inputDir = ref "";
 value outputDir = ref "";
 value oneMeta = ref False;
 
+(*
+ * FIXMETA****************************
+ *)
+
+exception NotFound of string;
+exception LabelNotFound of string;
+
+value toBlocks lst =
+    let rec getToThis m l acc = match l with
+        [[] -> raise (LabelNotFound m)
+        |[h :: t] ->
+                let lab = Browse.assoc_field Browse.string "label" h in
+                if lab = m
+                    then ([h :: acc],t)
+                    else getToThis m t [h :: acc]] in
+    let rec loop l a = match l with
+        [[] -> a
+        |[h :: t] ->
+                let lab = Browse.assoc_field Browse.string "label" h in
+                let (l',t') = getToThis (lab ^ "_end") t [h] in
+                loop t' [(lab,l') :: a]] in
+    loop lst [];
+
+
+value intOfName s =
+    let rec loop2 i = if i = 0
+        then i
+        else if s.[i] < '0' || s.[i] > '9'
+                then i+1
+                else loop2 (i-1) in
+    let rec loop1 i = if s.[i] = '.'
+        then (loop2 (i-1), i)
+        else loop1 (i-1) in
+    let (sI,fI) = loop1 (String.length s - 1) in
+    Scanf.sscanf (String.sub s sI (fI - sI)) "%d" (fun a -> a);
+
+value rec divAt l m a = match l with
+        [[h :: t] -> if fst h = m
+            then (h,List.append a t)
+            else divAt t m [h :: a]
+        |[] -> raise (NotFound m)];
+
+value sortBlock (m,b) =
+    let getIntName e =
+        let l = Browse.assoc_field (fun a -> List.hd (Browse.array a)) "children" e in
+        Browse.assoc_field (fun a -> intOfName (Browse.string a)) "file" l in
+    let toSort = List.map (fun a -> (getIntName a,a)) b in
+    let sorted = List.sort (fun (a,_) (b,_) -> if a > b then 1 else 0) toSort in
+    let fixLabel e l =
+        let (_,lst) = divAt (Browse.assoc e) "label" [] in
+            Build.assoc [("label", Build.string l) :: lst] in
+    let rec fixLabels l = match l with
+        [ [(_,a)] -> [fixLabel a (m ^ "_end")]
+        | [(_,h) :: t]-> [fixLabel h "" :: fixLabels t]] in
+    [fixLabel (snd (List.hd sorted)) m :: fixLabels (List.tl sorted)];
+
+value toStringL l =
+    let rec loop l ac = match l with
+        [[a] -> Printf.sprintf "%s%s]" ac (to_string a)
+        |[h :: t] -> loop t (Printf.sprintf "%s%s,\n" ac (to_string h))]in
+    loop l "[";
+
+value fixJson js = 
+    let ((slab,lst),other) = divAt (Browse.assoc js) "frames" [] in
+    let blocks =
+        let l = List.(fold_left append [] (map sortBlock (toBlocks (Browse.array lst)))) in
+        (slab,Build.array l) in
+    to_string (Build.assoc [blocks :: other]);
+
+(*
+ */FIXMETA****************************
+ *)
+
 (* Данные для meta-файла *)
 value metaWrite path meta =
 		let oc = open_out path in
-		let k = !meta in
+		let k = fixJson (from_string !meta) in
 		(
 (*				print_endline k;*)
 				output_string oc k;
@@ -169,7 +244,9 @@ value loadFiles gdir =
 														let (file, x, y) = processImage inPath outPath f in
 														(
 																if not !once then meta.val := !meta ^ ",\n" else once.val := False;
-																meta.val := !meta ^ (Printf.sprintf "{\"children\":[{\"file\":\"%s\",\"x\":%i,\"y\":%i,\"type\":\"image\",\"name\":\"%s\"}],\"type\":\"sprite\"}" file x y (getLast (!outputDir // dir)))
+																meta.val :=
+                                                                    !meta ^
+                                                                    (Printf.sprintf "{\"children\":[{\"file\":\"%s\",\"x\":%i,\"y\":%i,\"type\":\"image\"}],\"label\":\"%s\",\"type\":\"sprite\"}" file x y (getLast (!outputDir // dir)))
 														);
 														blockFlag.val := True
 												)
@@ -222,7 +299,12 @@ value loadFiles2 gdir =
 																				if not flag then ()
 																				else (
 																						if not !once then meta.val := !meta ^ ",\n" else once.val := False;
-																						meta.val := !meta ^ (Printf.sprintf "{\"children\":[{\"file\":\"%s\",\"x\":%i,\"y\":%i,\"type\":\"image\",\"name\":\"%s\"}],\"type\":\"sprite\"}" vvv_file vvv_x vvv_y vvv_name);
+																						meta.val
+                                                                                        :=
+                                                                                            !meta
+                                                                                            ^
+                                                                                            (Printf.sprintf
+                                                                                            "{\"children\":[{\"file\":\"%s\",\"x\":%i,\"y\":%i,\"type\":\"image\"}],\"label\":\"%s\",\"type\":\"sprite\"}" vvv_file vvv_x vvv_y vvv_name);
 																						isFirst.val := False 
 																				);
 
@@ -239,7 +321,9 @@ value loadFiles2 gdir =
 										if vvv_f then
 										(
 												if not !once then meta.val := !meta ^ ",\n" else once.val := False;
-												meta.val := !meta ^ (Printf.sprintf "{\"children\":[{\"file\":\"%s\",\"x\":%i,\"y\":%i,\"type\":\"image\",\"name\":\"%s\"}],\"type\":\"sprite\"}" vvv_file vvv_x vvv_y (if compare "" vvv_name <> 0 then ll else ll ^ "_end"))
+												meta.val := !meta ^
+                                                (Printf.sprintf
+                                                "{\"children\":[{\"file\":\"%s\",\"x\":%i,\"y\":%i,\"type\":\"image\"}],\"label\":\"%s\",\"type\":\"sprite\"}" vvv_file vvv_x vvv_y (if compare "" vvv_name <> 0 then ll else ll ^ "_end"))
 										) else ()
 								)
 						)

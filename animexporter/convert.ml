@@ -376,30 +376,33 @@ value postfixs = [ "_sh"; "_ex" ];
 
 value run () =
   let _ = Sys.command (Printf.sprintf "cp -f %s/info_objects.xml %s" !inp_dir !outdir) in
-  let images = 
-    Array.fold_left begin fun images path -> 
+  let (lib_names, images) = 
+    Array.fold_left begin fun (libs,images) path -> 
       let () = Printf.printf "try convert %s\n%!" path in 
       match Sys.is_directory (!inp_dir /// path) with
       [ True -> 
           let pstfx = String.sub path ((String.length path) - 3) 3  in
-          match List.mem pstfx postfixs with
-          [ True ->  images
-          | _ ->
-              let dirs = 
-                List.filter_map begin fun p ->
-                  let path = path ^ p in
-                  let dir = !inp_dir /// path in
-                  match (Sys.file_exists dir) && (Sys.is_directory dir) with
-                  [ True -> Some path
-                  | _ -> None
-                  ]
-                end [ "" :: postfixs ]
-            in
-            get_images dirs images
-          ]
-      | _ -> images 
+          (
+            [ path :: libs ],
+            match List.mem pstfx postfixs with
+            [ True ->  images
+            | _ ->
+                let dirs = 
+                  List.filter_map begin fun p ->
+                    let path = path ^ p in
+                    let dir = !inp_dir /// path in
+                    match (Sys.file_exists dir) && (Sys.is_directory dir) with
+                    [ True -> Some path
+                    | _ -> None
+                    ]
+                  end [ "" :: postfixs ]
+              in
+              get_images dirs images
+            ]
+          )
+      | _ -> (libs, images )
       ]
-    end [] (Sys.readdir !inp_dir)
+    end ([],[]) (Sys.readdir !inp_dir)
   in
 (*  let images = [(0,"pizda", List.fold_left (fun res (_,_,img) ->  res @ img) [] images)] in *)
   let images = List.fast_sort (fun (s1,_) (s2,_) -> compare s2 s1) images in  
@@ -417,58 +420,78 @@ value run () =
     ]
   in
   let (textures:list (TextureLayout.page (int * string))) = TextureLayout.layout_min images in
-  List.iteri begin fun cnt xyupizda ->
-    let w = xyupizda.TextureLayout.width in
-    let h = xyupizda.TextureLayout.height in
-    let imgs = xyupizda.TextureLayout.placed_images in
-    let cnt = cnt + !start_num in
-    let rgb = Rgba32.make w h {Color.color={Color.r=0;g=0;b=0}; alpha=0;} in
-    let new_img = Images.Rgba32 rgb in
-      (
-        Printf.printf "Save %d.png \n%!" cnt;
-            convert cnt imgs;
-            List.iter begin fun (_,(sx,sy,isRotate,img)) ->
-              let (iw,ih) = Images.size img in
-                try
-                  (
-                    Printf.printf "Image size %d %d and pos [%d; %d] \n%!" iw ih sx sy;
-                    Images.blit img 0 0 new_img sx sy iw ih;
-                  )
-                with 
-                  [ Invalid_argument _ -> 
-                      (
-                        match img with
-                        [ Images.Index8 _ -> prerr_endline "index8"
-                        | Images.Rgb24 _ -> prerr_endline "rgb24"
-                        | Images.Rgba32 _ -> prerr_endline "rgba32"
-                        | _ -> prerr_endline "other"
-                        ];
-                        raise Exit;
-                      )
-                  ]
-            end imgs;
-        let save_img = !outdir /// (string_of_int cnt) ^ (get_postfix ()) in
+    (
+      List.iteri begin fun cnt xyupizda ->
+        let w = xyupizda.TextureLayout.width in
+        let h = xyupizda.TextureLayout.height in
+        let imgs = xyupizda.TextureLayout.placed_images in
+        let cnt = cnt + !start_num in
+        let rgb = Rgba32.make w h {Color.color={Color.r=0;g=0;b=0}; alpha=0;} in
+        let new_img = Images.Rgba32 rgb in
           (
-            Images.save (save_img ^ ".png") (Some Images.Png) [] new_img;
+            Printf.printf "Save %d.png \n%!" cnt;
+                convert cnt imgs;
+                List.iter begin fun (_,(sx,sy,isRotate,img)) ->
+                  let (iw,ih) = Images.size img in
+                    try
+                      (
+                        Printf.printf "Image size %d %d and pos [%d; %d] \n%!" iw ih sx sy;
+                        Images.blit img 0 0 new_img sx sy iw ih;
+                      )
+                    with 
+                      [ Invalid_argument _ -> 
+                          (
+                            match img with
+                            [ Images.Index8 _ -> prerr_endline "index8"
+                            | Images.Rgb24 _ -> prerr_endline "rgb24"
+                            | Images.Rgba32 _ -> prerr_endline "rgba32"
+                            | _ -> prerr_endline "other"
+                            ];
+                            raise Exit;
+                          )
+                      ]
+                end imgs;
+            let save_img = !outdir /// (string_of_int cnt) ^ (get_postfix ()) in
+              (
+                Images.save (save_img ^ ".png") (Some Images.Png) [] new_img;
+                
+                match !gen_pvr with
+                [ True -> 
+                    (
+                      Utils.pvr_png save_img;
+                      Utils.gzip_img (save_img ^ ".pvr");
+                    )
+                | _ -> ()
+                ];
 
-            match !gen_pvr with
-            [ True -> 
+                if !gen_dxt then
                 (
-                  Utils.pvr_png save_img;
-                  Utils.gzip_img (save_img ^ ".pvr");
+                  Utils.dxt_png save_img;
+                  Utils.gzip_img (save_img ^ ".dds");
                 )
-            | _ -> ()
-            ];
-
-            if !gen_dxt then
-            (
-              Utils.dxt_png save_img;
-              Utils.gzip_img (save_img ^ ".dds");
-            )
-            else ();
-          );
-      )
-  end textures;
+                else ();
+              );
+          )
+      end textures;
+      Printf.printf "GENRATE COUNTERS\n%!";
+      
+      List.iter begin fun lib ->
+        let scale = 
+          match !scale with
+          [ 1. -> ""
+          | _ -> "-s " ^ (get_postfix ())
+          ]
+        in
+        let cmd = Printf.sprintf "cntrgen %s -l %s -i %s" scale lib !outdir in
+          (
+            Printf.printf "%s\n%!" cmd;
+            match Sys.command cmd with
+            [ 0 -> ()
+            | _ -> failwith "ERROR GEN COUNTER"
+            ]
+          )
+      end lib_names;
+    );
 (*
 value () = convert "an_chicken_ex";
 *)
