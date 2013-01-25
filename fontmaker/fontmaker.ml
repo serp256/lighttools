@@ -113,12 +113,15 @@ value parse_sizes str =
 value read_chars fname = pattern.val := String.strip (Std.input_file fname);
 value output = ref None;
 
+value read_sizes fname = parse_sizes (String.strip (Std.input_file fname));
+
 (* use xmlm for writing xml *)
 Arg.parse 
   [
     ("-c",Arg.Set_string pattern,"chars");
     ("-s",Arg.String parse_sizes,"sizes");
     ("-cf",Arg.String read_chars,"chars from file");
+    ("-sf",Arg.String read_sizes,"sizes from file");
     ("-alpha",Arg.Set alpha_texture,"make alpha texture");
     ("-o",Arg.String (fun s -> output.val := Some s),"output dir");
     ("-scale", Arg.Float (fun s -> scale.val := s ), "scale factor");
