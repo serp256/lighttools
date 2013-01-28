@@ -1,7 +1,7 @@
 BUILDER = ocamlbuild -use-ocamlfind -classic-display
 
 all: 
-	ocamlbuild -use-ocamlfind animaker.byte
+	ocamlbuild -use-ocamlfind main.byte
 
 %.cmo:
 	  $(BUILDER) $@
@@ -21,3 +21,4 @@ all:
 clean: 
 	ocamlbuild -clean
 	rm -rf *.byte *.native
+
