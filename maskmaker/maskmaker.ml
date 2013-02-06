@@ -126,7 +126,7 @@ value saveImgs () =
           with [_ -> !fileName]
         in
   let s = ref "{" in
-  let a = Array.make (List.length !regions) (0,0) in
+  let a = Array.make (List.length !regions) (0,0.) in
   let sum = ref 0 in
   (
   let num = ref 0 in
@@ -146,16 +146,20 @@ value saveImgs () =
                 !fileName !num) (Some Images.Png) [] canvas
 						);
             let countPx = List.length l in (
-            Array.set a !num (!num,countPx);
+            Array.set a !num (!num,float_of_int countPx);
             Printf.printf "%d\n" countPx;
-            sum.val := !sum + countPx;
+         (*   sum.val := !sum + countPx;*)
             num.val := !num + 1;
         )
 				)
     ) !regions;
-    ignore(Array.map (fun (i,el) -> s.val:= Printf.sprintf "%s\n\"%s\": %f," !s
+    
+    (*ignore(Array.map (fun (i,el) -> s.val:= Printf.sprintf "%s\n\"%s\": %f," !s
     (string_of_int i)
     ((float_of_int el) /. float_of_int(!sum))) a);
+    *)
+    ignore(Array.map (fun (i,el) -> s.val:= Printf.sprintf "%s\n\"%s\": %f," !s
+    (string_of_int i) el ) a);
     String.set (!s)(String.length !s - 1) '}';
     (*
     s.val := Printf.sprintf "%s\n}" !s;*)
@@ -323,20 +327,23 @@ value main () =
 										) !regions;
                   ); 
 
-                let out = open_out (Printf.sprintf "./Resources/textures/maps/%s.map" !fileName) in
-                  (
-                    let binout = IO.output_channel out in
+                  if !notSave then ()
+                  else
+
+                    let out = open_out (Printf.sprintf "./Resources/textures/maps/%s.map" !fileName) in
                     (
-                      IO.write_ui16 binout !img_w;
-                      IO.write_ui16 binout !img_h;
-                      for j = 0 to !img_h - 1 do
-                      for i = 0 to !img_w - 1 do
-                        IO.write_byte binout (map.(i).(j))
-                        done;
-                      done;
-                    );
-                    close_out out;
-                  )
+                      let binout = IO.output_channel out in
+                      (
+                        IO.write_ui16 binout !img_w;
+                        IO.write_ui16 binout !img_h;
+                        for j = 0 to !img_h - 1 do
+                          for i = 0 to !img_w - 1 do
+                            IO.write_byte binout (map.(i).(j))
+                          done;
+                          done;
+                            );
+                            close_out out;
+                      )
             )
             )
 				)
