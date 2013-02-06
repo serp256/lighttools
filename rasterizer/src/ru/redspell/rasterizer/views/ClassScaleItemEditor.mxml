@@ -7,6 +7,8 @@
 	<fx:Script><![CDATA[
 		import com.maccherone.json.JSON;
 
+		import ru.redspell.rasterizer.models.ClassProfile;
+
 		import ru.redspell.rasterizer.models.Profile;
 		import ru.redspell.rasterizer.models.SwfClass;
 
@@ -15,7 +17,8 @@
 		}
 
 		override public function save():Boolean {
-			var cls:SwfClass = data as SwfClass;
+			var clsProf:ClassProfile = data as ClassProfile;
+			var cls:SwfClass = clsProf.cls as SwfClass;
 
 			if (data == null) {
 				return false;
@@ -24,6 +27,8 @@
 			var prof:Profile = Facade.profile;
 			var scales:Object = cls.scales;
 			var newVal:Number = Number(value);
+
+			clsProf.scale = newVal;
 
 			if (scales.hasOwnProperty(prof.label) && (newVal == prof.scale)) {
 				delete scales[prof.label];
