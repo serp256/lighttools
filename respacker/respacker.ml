@@ -16,6 +16,7 @@ value (=*=) k v = k =|= string_of_int v;
 
 
 value npot = ref False;
+value alpha = ref False;
 
 
 open RBase;
@@ -337,8 +338,13 @@ value do_work isXml pack_mode fmt indir suffix outdir =
         )
         end imgs;
         let imgbasename = Printf.sprintf "%d%s" idx suffix in 
-        let imgname = imgbasename ^ ".png"  in
+        let extension = if !alpha then ".alpha" else ".png" in
+        let imgname = imgbasename ^ extension  in
         (
+          if !alpha then (
+            Utils.save_alpha (Images.Rgba32 texture) (outdir // imgname) 
+          )
+          else
           Images.save (outdir // imgname) (Some Images.Png) [] (Images.Rgba32 texture);
           match fmt with
           [ FPvr ->
@@ -795,6 +801,7 @@ value () =
           "tex size for concrete profile"
         );
         ("-npot",Arg.Set npot, "Not power of 2");
+        ("-alpha",Arg.Set alpha, "Save as alpha");
       ] 
       (fun id -> libs.val := [id :: !libs]) "usage msg";
     match !libs with

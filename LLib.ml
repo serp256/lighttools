@@ -48,9 +48,9 @@ type element =
   | ImageClip of ((array (cFrame iframe)) * labels)
   ];
 
-value load libpath = 
-(*   let () = debug "bin load %s" libpath in *)
-  let path = Filename.concat libpath "lib.bin" in
+value load libpath suffix = 
+  let () = debug "bin load %s" libpath in 
+  let path = Filename.concat libpath ("lib"^suffix^".bin") in
   let inp = open_resource path in
   let bininp = IO.input_channel inp in
   (
@@ -269,8 +269,8 @@ value load libpath =
   );
 
 
-value load libpath = 
-  let (textures,symbols) = load libpath in
+value load libpath suffix = 
+  let (textures,symbols) = load libpath suffix in
   (libpath,textures,symbols);
 
 value round x = 
