@@ -1,6 +1,6 @@
 #!/bin/bash
 
-OCB="ocamlbuild -classic-display -use-ocamlfind"
+OCB="ocamlbuild -classic-display -use-ocamlfind -I ~/Projects/lightning/src"
 target=respacker
 
 case $1 in
@@ -8,5 +8,3 @@ case $1 in
 	byte) $OCB ${target}.byte ;;
 	*) $OCB $target.native
 esac
-	
-#ocamlbuild -use-ocamlfind respacker.native

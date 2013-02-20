@@ -100,8 +100,63 @@ module MaxRects = struct
     | _ -> rects @ result
     ];
 
+  value rotate_img img = 
+    let (w,h) = Images.size img in
+    match img with
+    [ Images.Rgba32 img -> 
+        let image = Rgba32.create h w in
+          (
+            for i = 0 to (h-1) do
+              for j = 0 to (w-1) do
+                Rgba32.set image i j (Rgba32.get img j i)
+              done
+            done;
+            Images.Rgba32 image
+          )
+    | Images.Index8 img -> 
+        let image = Index8.create h w in
+          (
+            for i = 0 to (h-1) do
+              for j = 0 to (w-1) do
+                Index8.set image i j (Index8.get img j i)
+              done
+            done;
+            Images.Index8 image
+          )
+    | Images.Index16 img -> 
+        let image = Index16.create h w in
+          (
+            for i = 0 to (h-1) do
+              for j = 0 to (w-1) do
+                Index16.set image i j (Index16.get img j i)
+              done
+            done;
+            Images.Index16 image
+          )
+    | Images.Rgb24 img -> 
+        let image = Rgb24.create h w in
+          (
+            for i = 0 to (h-1) do
+              for j = 0 to (w-1) do
+                Rgb24.set image i j (Rgb24.get img j i)
+              done
+            done;
+            Images.Rgb24 image
+          )
+    | Images.Cmyk32 img -> 
+        let image = Cmyk32.create h w in
+          (
+            for i = 0 to (h-1) do
+              for j = 0 to (w-1) do
+                Cmyk32.set image i j (Cmyk32.get img j i)
+              done
+            done;
+            Images.Cmyk32 image
+          )
+    ];
+
   value maxrects isDegree4 rects empty = 
-(*     let () = Printf.printf "MAX RECTS [%B]\n%!" isDegree4 in *)
+    let () = Printf.printf "START MAX RECTS %d\n%!" (List.length empty) in
     loop rects [] empty [] where
       rec loop rects placed empty unfit = 
 (*         let () = Printf.printf "maxrects loop [%d:%d:%d:%d]\n%!" (List.length
@@ -177,45 +232,30 @@ module MaxRects = struct
                       | _ -> (rh,rw)
                       ]
                     in
-                    let y = c.y + rh + !countEmptyPixels in
-                    let rect1 = 
-                      match y < c.y + c.h with
-                      [ True -> Some {x = c.x; y = y; w = c.w; h = c.h - rh - !countEmptyPixels; isRotate = False } 
-                      | _ -> None
-                      ]
-                    in
-                    let x = c.x + rw + !countEmptyPixels in
-                    let rect2 = 
-                      match x < c.x + c.w with
-                      [ True -> Some { x; y = c.y; w = c.w - rw - !countEmptyPixels; h = c.h; isRotate = False  }
-                      | _ -> None
-                      ]
-                    in
+                    let nrect = {(c) with w=rw;h=rh;isRotate = False} in
                     let rec find_subrects rects res_rects = 
                       match rects with
                       [ [] -> res_rects
-                      | [ rect :: rects ] -> find_subrects rects (calc_subrect rect {x=c.x; y=c.y; w = rw; h= rh; isRotate = False } res_rects)
-                      ] 
+                      | [ rect :: rects ] -> find_subrects rects (calc_subrect rect nrect res_rects)
+                      ]
                     in
                     let containers = find_subrects containers [] in
-                    let containers =
-                      match rect1 with
-                      [ Some rect -> 
-                          (
-                            [ rect :: containers ] 
-                          )
+                    let () = Printf.printf "containers after find_subrects: " in
+                    let containers = 
+                      let y = c.y + rh + !countEmptyPixels in
+                      match y < c.y + c.h with
+                      [ True -> [ { (c) with y; h = c.h - rh - !countEmptyPixels; isRotate = False } :: containers ]
                       | _ -> containers
                       ]
                     in
                     let containers = 
-                      match rect2 with
-                      [ Some rect ->
-                          (
-                            [ rect :: containers ] 
-                          )
+                      let x = c.x + rw + !countEmptyPixels in
+                      match x < c.x + c.w with
+                      [ True -> [ { (c) with x; w = c.w - rw - !countEmptyPixels; isRotate = False  } :: containers ]
                       | _ -> containers
                       ]
                     in
+                    (* здесь может быть не совсем верно нах. *)
                     let rec filter_rects rects i res = 
                       match rects with
                       [ [] -> res
@@ -226,8 +266,7 @@ module MaxRects = struct
                                 ignore(List.findi (fun j rect -> (i <> j) && rect_in_rect r rect) containers);
                                 True
                               )
-                            with
-                              [ Not_found -> False ] 
+                            with [ Not_found -> False ] 
                           in
                           match inRect with
                           [ True -> filter_rects rects (i + 1) res
@@ -237,63 +276,11 @@ module MaxRects = struct
                     in
                     let img =
                       match c.isRotate with
-                      [ True ->
-                          let (w,h) = Images.size img in
-                          match img with
-                          [ Images.Rgba32 img -> 
-                              let image = Rgba32.create h w in
-                                (
-                                  for i = 0 to (h-1) do
-                                    for j = 0 to (w-1) do
-                                      Rgba32.set image i j (Rgba32.get img j i)
-                                    done
-                                  done;
-                                  Images.Rgba32 image
-                                )
-                          | Images.Index8 img -> 
-                              let image = Index8.create h w in
-                                (
-                                  for i = 0 to (h-1) do
-                                    for j = 0 to (w-1) do
-                                      Index8.set image i j (Index8.get img j i)
-                                    done
-                                  done;
-                                  Images.Index8 image
-                                )
-                          | Images.Index16 img -> 
-                              let image = Index16.create h w in
-                                (
-                                  for i = 0 to (h-1) do
-                                    for j = 0 to (w-1) do
-                                      Index16.set image i j (Index16.get img j i)
-                                    done
-                                  done;
-                                  Images.Index16 image
-                                )
-                          | Images.Rgb24 img -> 
-                              let image = Rgb24.create h w in
-                                (
-                                  for i = 0 to (h-1) do
-                                    for j = 0 to (w-1) do
-                                      Rgb24.set image i j (Rgb24.get img j i)
-                                    done
-                                  done;
-                                  Images.Rgb24 image
-                                )
-                          | Images.Cmyk32 img -> 
-                              let image = Cmyk32.create h w in
-                                (
-                                  for i = 0 to (h-1) do
-                                    for j = 0 to (w-1) do
-                                      Cmyk32.set image i j (Cmyk32.get img j i)
-                                    done
-                                  done;
-                                  Images.Cmyk32 image
-                                )
-                          ]
+                      [ True -> rotate_img img
                       | _ -> img
                       ]
                     in
+                    let () = Printf.printf "place %d img to %d:%d:%d:%d\n%!" info c.x c.y c.w c.h in
                     loop rects' [ (info, (c.x, c.y, c.isRotate, img)) :: placed ] (filter_rects containers 0 []) unfit
                 ]
             ]
@@ -417,7 +404,7 @@ value layout ~tsize rects =
       ];
 
 
-(* Размещаем картинки с флажком нужно впихнуть целиком или нужно, впихиваем в максимально возможные страницы *)
+(* Размещаем картинки с флажком нужно впихнуть целиком или не нужно, впихиваем в максимально возможные страницы *)
 value layout_max ?(tsize=Npot) images = 
   let () = Printf.printf "layout_max: %d [%s]\n%!" (List.length images) (String.concat ";" (List.map (fun (wholly,imgs) -> Printf.sprintf "%B:%d" wholly (List.length imgs)) images)) in
   let try_place wholly rects pages =
