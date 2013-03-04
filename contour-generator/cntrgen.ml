@@ -507,7 +507,7 @@ if !graph then
 else ();
 
 Array.iter (fun fname ->
-  if Sys.is_directory fname && (!libName <> "" && !libName = fname || !libName = "") then
+  if Sys.is_directory (!indir // fname) && (!libName <> "" && !libName = fname || !libName = "") then
     let objs = readObjs fname
     and frames = readFrames fname
     and regions = readTexInfo fname in      
