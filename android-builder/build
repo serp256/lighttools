@@ -1,2 +1,2 @@
 #!/bin/bash
-ocamlbuild -use-ocamlfind abldr.byte
+ocamlbuild -lflag "-g" -use-ocamlfind abldr.native
