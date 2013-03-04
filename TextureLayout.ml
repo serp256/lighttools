@@ -168,7 +168,9 @@ module MaxRects = struct
     ];
 
   value checkPlaced placed = 
+    (*
     let () = Printf.printf "CHECK PLACED %d\n%!" (List.length placed) in
+    *)
     List.iteri begin fun i (idi,(x,y,_,img)) -> 
       let (w,h) = Images.size img in
       let recti = {x;y;w;h;isRotate=False} in
@@ -180,7 +182,9 @@ module MaxRects = struct
             match rect_in_rect recti rectj with
             [ True ->
                 (
+                  (*
                   Printf.printf "rect1 %d : [%d; %d; %d; %d]; rect2 %d : [%d; %d; %d; %d]\n%!" idi recti.x recti.y (recti.x +recti.w) (recti.y + recti.h) idj rectj.x rectj.y (rectj.x +rectj.w) (rectj.y + rectj.h);
+                  *)
                   assert False
                 )
             | _ ->  ()
@@ -191,7 +195,9 @@ module MaxRects = struct
     end placed;
 
   value checkPlacedAndEmpty placed empty= 
+    (*
     let () = Printf.printf "CHECK PLACED AND EMPTY %d %d\n%!" (List.length placed) (List.length empty) in
+    *)
     List.iter begin fun (idi,(x,y,_,img)) -> 
       let (w,h) = Images.size img in
       let recti = {x;y;w;h;isRotate=False} in
@@ -199,7 +205,9 @@ module MaxRects = struct
         match rect_in_rect recti rectj || rect_in_rect rectj recti with
         [ True ->
             (
+              (*
               Printf.printf "rect1 %d : [%d; %d; %d; %d]; rect_empty : [%d; %d; %d; %d]\n%!" idi recti.x recti.y (recti.x +recti.w) (recti.y + recti.h) rectj.x rectj.y (rectj.x +rectj.w) (rectj.y + rectj.h);
+              *)
               assert False
             )
         | _ -> ()
@@ -336,8 +344,10 @@ module MaxRects = struct
                       ]
                     in
                       (
+                        (*
                         Printf.printf "containers after find_subrects: ";
                         Printf.printf "place %d %dx%d  img to %d:%d:%d:%d\n%!" info rw rh c.x c.y c.w c.h;
+                        *)
                         checkPlacedAndEmpty [ (info, (c.x, c.y, c.isRotate, img)) :: placed ] containers;
                         loop rects' [ (info, (c.x, c.y, c.isRotate, img)) :: placed ] (filter_rects containers 0 []) unfit
                       )
