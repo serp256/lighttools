@@ -15,6 +15,7 @@
 		import ru.nazarov.asmvc.command.ICommand;
 		import ru.nazarov.asmvc.command.IMacroCommand;
 		import ru.redspell.rasterizer.commands.SavePackMetaCommand;
+		import ru.redspell.rasterizer.models.ClassProfile;
 		import ru.redspell.rasterizer.models.Swf;
 		import ru.redspell.rasterizer.models.SwfClass;
 
@@ -123,6 +124,8 @@
 					if (saveCmd == null) {
 						saveCmd = Facade.commandsFactory.getSavePackMetaCommand((item as SwfClass).swf.pack);
 					}
+				} else if (item is ClassProfile) {
+					command = Facade.commandsFactory.getRefreshClassMetaCommand((item as ClassProfile).cls as SwfClass, false);
 				}
 
 				if (command) {
@@ -130,7 +133,9 @@
 				}
 			}
 
-			Facade.runCommand(saveCmd);
+			if (saveCmd != null) {
+				Facade.runCommand(saveCmd);
+			}
 
 			var selection:Vector.<Object> = dataGrid.selectedItems;
 
@@ -141,6 +146,7 @@
 		}
 
 		protected function dispatchChangedEvent():void {
+			trace('dispatchChangedEvent');
 			if (column is CheckboxGridColumn) {
 				column.dispatchEvent(new CheckboxColumnRendererEvent(CheckboxColumnRendererEvent.CHANGED, (column.grid.dataProvider as ArrayCollection).getItemAt(rowIndex)));
 			}

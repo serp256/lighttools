@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<s:DataGrid
+<view:ExpandableGrid
 	xmlns:fx="http://ns.adobe.com/mxml/2009"
 	xmlns:s="library://ns.adobe.com/flex/spark"
 	xmlns:mx="library://ns.adobe.com/flex/mx"
@@ -10,10 +10,17 @@
 	<fx:Script><![CDATA[
 		import mx.collections.IList;
 
+		import ru.redspell.rasterizer.models.ClassProfile;
+
+		import ru.redspell.rasterizer.models.Profile;
+
 		import ru.redspell.rasterizer.models.Swf;
 		import ru.redspell.rasterizer.models.SwfClass;
+		import ru.redspell.rasterizer.utils.Utils;
 
 		import ru.redspell.rasterizer.views.events.CheckboxColumnRendererEvent;
+
+		import spark.events.GridEvent;
 
 		override public function set dataProvider(value:IList):void {
 			super.dataProvider = value;
@@ -22,39 +29,61 @@
 		protected function checkboxColChanged(event:CheckboxColumnRendererEvent):void {
 			Facade.runCommand(Facade.commandsFactory.getRefreshClassMetaCommand(event.item as SwfClass));
 		}
-		]]></fx:Script>
 
-	<s:columns>
+		override protected function gridClickHandler(event:GridEvent):void {
+			if (_expandList && (event.rowIndex > -1)) {
+				var cls:SwfClass = dataProvider.getItemAt(event.rowIndex) as SwfClass;
+				var dp:ArrayCollection = new ArrayCollection();
+				var profiles:ArrayCollection = Facade.profiles;
+
+				for (var i:uint = 0; i < profiles.length; i++) {
+					var profile:Profile = profiles[i] as Profile;
+					var profLbl:String = profile.label;
+					var scale:Number = cls.scales.hasOwnProperty(profLbl) ? cls.scales[profLbl] : Utils.getClsScale(cls, profile);
+
+					var clsProfile:ClassProfile = new ClassProfile(!cls.checks.hasOwnProperty(profLbl) || cls.checks[profLbl], !cls.anims.hasOwnProperty(profLbl) || cls.anims[profLbl],
+																	scale, profLbl, cls, profile);
+					dp.addItem(clsProfile);
+				}
+
+				_expandList.dataProvider = dp;
+			}
+		}
+	]]></fx:Script>
+
+	<view:columns>
 		<s:ArrayCollection>
-			<view:CheckboxGridColumn
-				width="30"
-				dataField="checked"
-				editable="false"
-				changed="checkboxColChanged(event)"/>
+			<!--<view:CheckboxGridColumn-->
+				<!--width="30"-->
+				<!--dataField="checked"-->
+				<!--editable="false"-->
+				<!--changed="checkboxColChanged(event)"/>-->
 			<s:GridColumn
 				headerText="Class"
 				dataField="name"
-				editable="false"/>
+				editable="false"
+				width="160"/>
 			<s:GridColumn
 				headerText="Alias"
 				dataField="alias"
 				editable="true"
-				itemEditor="ru.redspell.rasterizer.views.ClassAliasItemRenderer"/>
-			<s:GridColumn
-				headerText="Scale"
-				width="50"
-				itemRenderer="ru.redspell.rasterizer.views.ClassScaleItemRenderer"
-				itemEditor="ru.redspell.rasterizer.views.ClassScaleItemEditor"/>
-			<view:CheckboxGridColumn
-				headerText="Anim."
-				dataField="animated"
-				changed="checkboxColChanged(event)"
-				width="55"
-				editable="false"/>
-			<s:GridColumn
-				width="80"
-				itemRenderer="ru.redspell.rasterizer.views.PreviewColumnRenderer"
-				editable="false"/>
+				itemEditor="ru.redspell.rasterizer.views.ClassAliasItemRenderer"
+				width="110"/>
+			<!--<s:GridColumn-->
+				<!--headerText="Scale"-->
+				<!--width="50"-->
+				<!--itemRenderer="ru.redspell.rasterizer.views.ClassScaleItemRenderer"-->
+				<!--itemEditor="ru.redspell.rasterizer.views.ClassScaleItemEditor"/>-->
+			<!--<view:CheckboxGridColumn-->
+				<!--headerText="Anim."-->
+				<!--dataField="animated"-->
+				<!--changed="checkboxColChanged(event)"-->
+				<!--width="55"-->
+				<!--editable="false"/>-->
+			<!--<s:GridColumn-->
+				<!--width="80"-->
+				<!--itemRenderer="ru.redspell.rasterizer.views.PreviewColumnRenderer"-->
+				<!--editable="false"/>-->
 		</s:ArrayCollection>
-	</s:columns>
-</s:DataGrid>
+	</view:columns>
+</view:ExpandableGrid>

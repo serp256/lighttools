@@ -41,24 +41,43 @@ package ru.redspell.rasterizer.commands {
 				clsMeta.scales = _cls.scales;
 			}
 
-			if (_cls.checked) {
-				delete clsMeta.checked;
-			} else {
-				clsMeta.checked = false;
-			}
+            if (Utils.objIsEmpty(_cls.checks)) {
+                delete  clsMeta.checks;
+            } else {
+                clsMeta.checks = _cls.checks;
+            }
 
-            if (_cls.alias == "") {
+            if (clsMeta.hasOwnProperty('checked')) {
+                delete clsMeta.checked;
+            }
+
+			//if (_cls.checked) {
+			//	delete clsMeta.checked;
+			//} else {
+			//	clsMeta.checked = false;
+			//}
+
+            if (_cls.alias == null || _cls.alias == "") {
                 delete clsMeta.alias;
             } else {
                 clsMeta.alias = _cls.alias;
                 trace('clsMeta.alias', clsMeta.alias);
             }
 
-			if (_cls.animated) {
-				delete clsMeta.animated;
-			} else {
-				clsMeta.animated = false;
-			}
+            if (Utils.objIsEmpty(_cls.anims)) {
+                delete  clsMeta.anims;
+            } else {
+                clsMeta.anims = _cls.anims;
+            }
+
+            if (clsMeta.hasOwnProperty('animated')) {
+                delete clsMeta.checked;
+            }
+			//if (_cls.animated) {
+			//	delete clsMeta.animated;
+			//} else {
+			//	clsMeta.animated = false;
+			//}
 
 			if (Utils.objIsEmpty(clsMeta)) {
 				delete swfMeta[cls];

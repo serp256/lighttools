@@ -30,8 +30,8 @@ package ru.redspell.rasterizer.serializers {
 
 					for each (var cls:SwfClass in swf) {
 						binary.writeUTF(cls.name);
-						binary.writeBoolean(cls.checked);
-						binary.writeBoolean(cls.animated);
+						//binary.writeBoolean(cls.checked);
+						//binary.writeBoolean(cls.animated);
 					}
 				}
 			}
@@ -64,7 +64,7 @@ package ru.redspell.rasterizer.serializers {
 					var classesNum:uint = binary.readUnsignedInt();
 
 					for (var k:uint = 0; k < classesNum; k++) {
-						var cls:SwfClass = factory.getSwfClass(null, binary.readUTF(), binary.readBoolean(), binary.readBoolean());
+						var cls:SwfClass = factory.getSwfClass(null, binary.readUTF()/*, binary.readBoolean(), binary.readBoolean())*/);
 						swf.addClass(cls);
 					}
 

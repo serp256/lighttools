@@ -47,8 +47,25 @@ package ru.redspell.rasterizer.commands {
 					}
 
 					var clsMeta:Object = swfMeta[cls.name];
-					cls.checked = clsMeta.hasOwnProperty('checked') ? clsMeta.checked : true;
-					cls.animated = clsMeta.hasOwnProperty('animated') ? clsMeta.animated : true;
+
+                    if (clsMeta.hasOwnProperty('checks')) {
+                        cls.checks = clsMeta.checks;
+                    } else if (clsMeta.hasOwnProperty('checked') && !clsMeta.checked) {
+                        for (var i:uint = 0; i < Facade.profiles.length; i++) {
+                            cls.checks[(Facade.profiles[i] as Profile).label] = false;
+                        }
+                    }
+
+                    if (clsMeta.hasOwnProperty('anims')) {
+                        cls.anims = clsMeta.anims;
+                    } else if (clsMeta.hasOwnProperty('anims') && !clsMeta.anims) {
+                        for (i = 0; i < Facade.profiles.length; i++) {
+                            cls.anims[(Facade.profiles[i] as Profile).label] = false;
+                        }
+                    }
+
+					//cls.checked = clsMeta.hasOwnProperty('checked') ? clsMeta.checked : true;
+					//cls.animated = clsMeta.hasOwnProperty('animated') ? clsMeta.animated : true;
                     cls.alias = clsMeta.hasOwnProperty('alias') ? clsMeta.alias : "";
 					cls.scales = clsMeta.hasOwnProperty('scales') ? clsMeta.scales : {};
 
@@ -123,6 +140,7 @@ package ru.redspell.rasterizer.commands {
 
 					if (packMeta && packMeta.hasOwnProperty(swf.filename)) {
 						var swfMeta:Object = packMeta[swf.filename];
+
 						swf.animated = swfMeta.hasOwnProperty('animated') ? swfMeta.aninated : true;
                         swf.scales = swfMeta.hasOwnProperty('scales') ? swfMeta.scales : {};
 					}

@@ -1,0 +1,5 @@
+<*.ml>: package(camlp4),syntax(camlp4r),package(lightning),package(camlp4.macro),package(lightning.syntax.debug),package(lightning.syntax.prop),package(str)
+true:debug
+"maskmaker.ml": package(camlimages),package(extlib)
+"LLib.ml": package(lightning),package(camlimages),package(camlimages.png)
+<maskmaker.{byte,native}>: package(lightning),package(camlimages),package(camlimages.png),package(extlib)

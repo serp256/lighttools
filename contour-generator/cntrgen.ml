@@ -270,7 +270,7 @@ value genContour regions frames anim =
     ) (max_int, max_int, 0, 0) frame.layers
   in
   let texImgs = Hashtbl.create 0 in
-  let getTexImg texFname = try Hashtbl.find texImgs texFname with [ Not_found -> let texImg = Images.load texFname [] in ( Hashtbl.add texImgs texFname texImg; texImg; ) ] in
+  let getTexImg texFname = let texFname = !indir // texFname in try Hashtbl.find texImgs texFname with [ Not_found -> let texImg = Images.load texFname [] in ( Hashtbl.add texImgs texFname texImg; texImg; ) ] in
   let frameImg = Rgba32.(make (w - x + 4) (h - y + 4) Color.({ Rgba.color = { Rgb.r = 0xff; g = 0xff; b = 0xff }; alpha = 0 })) in (* width and height more on 4 pixels cause it helps make contour without breaks, where non-transparent pixels of original image are border *)
   (
     List.iter (fun layer ->

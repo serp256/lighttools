@@ -104,44 +104,48 @@ package ru.redspell.rasterizer.flatten {
 
         protected function applyMasks():void {
             for (var m:Object in _masked) {
-                var masked:FlattenImage = m as FlattenImage;
-                var mask:FlattenImage = _masks[_masked[masked]];
+                try {
+                    var masked:FlattenImage = m as FlattenImage;
+                    var mask:FlattenImage = _masks[_masked[masked]];
 
-				trace('mask: ' + mask);
-				trace('masked: ' + masked);
+                    trace('mask: ' + mask);
+                    trace('masked: ' + masked);
 
-				if (mask == null || masked == null) {
-					continue;
-				}
+                    if (mask == null || masked == null) {
+                        continue;
+                    }
 
-                var maskedRect:Rectangle = new Rectangle(Math.round(masked.matrix.tx), Math.round(masked.matrix.ty), masked.width, masked.height);
-                var maskRect:Rectangle = new Rectangle(Math.round(mask.matrix.tx), Math.round(mask.matrix.ty), mask.width, mask.height);
-                var intersect:Rectangle = maskedRect.intersection(maskRect);
+                    var maskedRect:Rectangle = new Rectangle(Math.round(masked.matrix.tx), Math.round(masked.matrix.ty), masked.width, masked.height);
+                    var maskRect:Rectangle = new Rectangle(Math.round(mask.matrix.tx), Math.round(mask.matrix.ty), mask.width, mask.height);
+                    var intersect:Rectangle = maskedRect.intersection(maskRect);
 
-				if (intersect.isEmpty()) {
-					_childs.splice(_childs.indexOf(mask), 1);
-					_childs.splice(_childs.indexOf(masked), 1);
-					mask.dispose();
-					masked.dispose();
+                    if (intersect.isEmpty()) {
+                        _childs.splice(_childs.indexOf(mask), 1);
+                        _childs.splice(_childs.indexOf(masked), 1);
+                        mask.dispose();
+                        masked.dispose();
 
-					continue;
-				}
+                        continue;
+                    }
 
-                var srcRect:Rectangle = new Rectangle(intersect.x - maskRect.x, intersect.y - maskRect.y, intersect.width, intersect.height);
-                var dstPnt:Point = new Point(intersect.x - maskedRect.x, intersect.y - maskedRect.y);
+                    var srcRect:Rectangle = new Rectangle(intersect.x - maskRect.x, intersect.y - maskRect.y, intersect.width, intersect.height);
+                    var dstPnt:Point = new Point(intersect.x - maskedRect.x, intersect.y - maskedRect.y);
 
-                masked.threshold(mask, srcRect, dstPnt, '==', 0x00000000, 0x00000000, 0xff000000);
+                    masked.threshold(mask, srcRect, dstPnt, '==', 0x00000000, 0x00000000, 0xff000000);
 
-                var maskedFinal:FlattenImage = new FlattenImage(intersect.width, intersect.height, true, 0x00000000);
+                    var maskedFinal:FlattenImage = new FlattenImage(intersect.width, intersect.height, true, 0x00000000);
 
-                maskedFinal.copyPixels(masked, new Rectangle(dstPnt.x, dstPnt.y, intersect.width, intersect.height), new Point(0, 0));
+                    maskedFinal.copyPixels(masked, new Rectangle(dstPnt.x, dstPnt.y, intersect.width, intersect.height), new Point(0, 0));
 
-				_childs.splice(_childs.indexOf(mask), 1);
-				_childs.splice(_childs.indexOf(masked), 1, maskedFinal);
-                mask.dispose();
-                masked.dispose();
+                    _childs.splice(_childs.indexOf(mask), 1);
+                    _childs.splice(_childs.indexOf(masked), 1, maskedFinal);
+                    mask.dispose();
+                    masked.dispose();
 
-                maskedFinal.matrix = new Matrix(1, 0, 0, 1, intersect.x, intersect.y);
+                    maskedFinal.matrix = new Matrix(1, 0, 0, 1, intersect.x, intersect.y);
+                } catch (e:ArgumentError) {
+
+                }
             }
         }
 
@@ -204,6 +208,7 @@ package ru.redspell.rasterizer.flatten {
                 mtx.concat(matrix);
 				mtx.scale(_scale, _scale);
 
+                trace('obj', obj.width, obj.height);
                 trace('obj', obj.parent.name, obj.getRect(obj), obj.transform.matrix, matrix, mtx);
 
                 var layer:FlattenImage = applyFilters(applyMatrix(obj, mtx, clr), filters);

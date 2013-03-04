@@ -3,7 +3,8 @@ package ru.redspell.rasterizer.commands {
 	import flash.display.DisplayObjectContainer;
 	import flash.display.MovieClip;
 	import flash.filesystem.File;
-	import flash.utils.setTimeout;
+    import flash.profiler.profile;
+    import flash.utils.setTimeout;
 
 	import ru.nazarov.asmvc.command.AbstractCommand;
 	import ru.nazarov.asmvc.command.CommandError;
@@ -13,7 +14,8 @@ package ru.redspell.rasterizer.commands {
 	import ru.redspell.rasterizer.flatten.FlattenMovieClip;
 	import ru.redspell.rasterizer.flatten.FlattenSprite;
 	import ru.redspell.rasterizer.flatten.IFlatten;
-	import ru.redspell.rasterizer.models.Profile;
+    import ru.redspell.rasterizer.models.ClassProfile;
+    import ru.redspell.rasterizer.models.Profile;
 	import ru.redspell.rasterizer.models.Project;
 	import ru.redspell.rasterizer.models.Swf;
 	import ru.redspell.rasterizer.models.SwfClass;
@@ -49,7 +51,8 @@ package ru.redspell.rasterizer.commands {
 			clsDir.createDirectory();
 
 			var instance:DisplayObject = new cls.definition();
-			var animated:Boolean = cls.animated && cls.swf.animated;
+            var profileLbl:String = (_profiles[0] as Profile).label;
+			var animated:Boolean = !cls.anims.hasOwnProperty(profileLbl) || cls.anims[profileLbl] && cls.swf.animated;
 
 			Utils.traceObj(instance as DisplayObjectContainer);
 
@@ -73,10 +76,11 @@ package ru.redspell.rasterizer.commands {
 		protected function exportNextClass():void {
 			if (++_clsIdx < _swf.length) {
 				var cls:SwfClass = _swf.getItemAt(_clsIdx) as SwfClass;
+                var profileLbl:String = (_profiles[0] as Profile).label;
 
 				trace('\t' + cls.name);
 
-				if (cls.checked) {
+				if (!cls.checks.hasOwnProperty(profileLbl) || cls.checks[profileLbl]) {
 					trace('Exporting profile ' + (_profiles[0] as Profile).label + ' pack ' + _pack.name + ' swf ' + _swf.path + ' class ' + cls.name + ' (' + _classesExported + '/' + _classesTotal + ')');
 					Facade.app.setStatus('Exporting profile ' + (_profiles[0] as Profile).label + ' pack ' + _pack.name + ' swf ' + _swf.path + ' class ' + cls.name + ' (' + _classesExported + '/' + _classesTotal + ')', false, true);
 					setTimeout(exportClass, Config.STATUS_REFRESH_TIME, cls);
@@ -138,19 +142,19 @@ package ru.redspell.rasterizer.commands {
 				}
 
 				for each (var swf:Swf in pack) {
-					//if (!swf.checked) {
-					//	continue;
-					//}
-					//
 					for each (var cls:SwfClass in swf) {
-						if (cls.checked) {
-							_classesTotal++;
-						}
+                        var clsUnchecksNum:int = 0;
+
+                        for (var clsProfile:String in cls.checks) {
+                            if (!cls.checks[clsProfile]) {
+                                clsUnchecksNum++;
+                            }
+                        }
+
+						_classesTotal += Facade.profiles.length - clsUnchecksNum;
 					}
 				}
 			}
-
-            _classesTotal *= _profiles.length;
 		}
 
 		override public function unsafeExecute():void {

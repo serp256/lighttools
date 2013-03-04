@@ -52,16 +52,18 @@ value withoutLib = ref False;
 value baseExp = ref False;
 (* value cheat = ref False; *)
 value noExp = ref False;
-value sounds = ref False;
+value asssounds = ref False;
 value lib = ref False;
 value allBuilds = ref False;
+value nosounds = ref False;
 
 value args = [
   ("-i", Set_string inDir, "input directory (for example, farm root directory, which contains android subdirectory)");
   (* ("-package", Set_string package, "application package (for expansions maker)"); *)
   ("-manifest", Set manifest, "generate manifest for builds");
   ("-assets", Set assets, "generate assets for builds");
-  ("-sounds", Set sounds, "include sounds into assets, use with -assets option. by default sounds included into expansions");
+  ("-asssounds", Set asssounds, "include sounds into assets, use with -assets option. by default sounds included into expansions");
+  ("-nosounds", Set nosounds, "do not apply specific for sounds rsync calls");
   ("-exp", Set expansions, "generate expansions for builds");
   ("-base-exp", Set baseExp, "create symlink, named 'base', to this version on expansions in release archive");
   ("-exp-patch", Set_string patchFor, "generate expansions patch for version, passed through this option");
@@ -161,10 +163,10 @@ value genAssets build =
   (
     printf "\n\n[ generating assets for build %s... ]\n%!" build;
 
-    let sndOpts = if !sounds then " --filter='protect locale/*/sounds' --filter='protect sounds'" else "" in
+    let sndOpts = if !asssounds then " --filter='protect locale/*/sounds' --filter='protect sounds'" else "" in
       runCommand ("rsync -avL" ^ sndOpts ^ " --include-from=" ^ (Filename.concat rsyncDir "android-assets.include") ^ buildFilter ^ " --exclude-from=" ^ (Filename.concat rsyncDir "android-assets.exclude") ^ " --delete --delete-excluded " ^ resDir ^ "/ " ^ assetsDir) "rsync failed when copying assets";
 
-    if !sounds then
+    if !asssounds then
       syncSounds assetsDir
     else ();
   );
@@ -262,7 +264,11 @@ value genExpansion build =
 
         (* it is so bad, not universal at all *)
         runCommand ("rsync -avL --filter='protect locale/*/sounds' --filter='protect sounds' --include-from=" ^ (Filename.concat rsyncDir "android-expansions.include") ^ buildFilter ^ " --exclude-from=" ^ (Filename.concat rsyncDir "android-expansions.exclude") ^ " --delete --delete-excluded " ^ resDir ^ "/ " ^ expDir) "rsync failed when copying expansions";
-        syncSounds expDir;
+
+        if not !nosounds
+        then syncSounds expDir
+        else ();
+
 (*                 runCommand ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ (Filename.concat resDir "sounds_android/default/") ^ " " ^ (Filename.concat expDir "sounds/")) "rsync failed when copying default sounds";
         runCommand ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ (Filename.concat resDir "sounds_android/en/") ^ " " ^ (Filename.concat expDir "locale/en/sounds/")) "rsync failed when copying en sounds";
         runCommand ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ (Filename.concat resDir "sounds_android/ru/") ^ " " ^ (Filename.concat expDir "locale/ru/sounds/")) "rsync failed when copying ru sounds";
