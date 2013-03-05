@@ -32,12 +32,12 @@ clean-output:
 	rm -r -f ${LIB_DIR}/*
 
 lib-compressed:
-	./convert.native -inp 2 -n 100500 -wholly -scale ${SCALE} -o ${LIB_DIR} -pvr
-	./convert.native -inp 1 -degree4 -scale ${SCALE} -o ${LIB_DIR} -pvr
-#	./convert.native -inp 3 -n 1000 -scale ${SCALE} -o ${LIB_DIR} -pvr
+	./convert.native -inp 2 -n 100500 -wholly -scale 2 -o ${LIB_DIR} -pvr
+	./convert.native -inp 1 -degree4 -scale 2 -o ${LIB_DIR} -pvr
+	./convert.native -inp 2 -n 100500 -wholly -scale 0.5 -o ${LIB_DIR} -pvr
+	./convert.native -inp 1 -degree4 -scale 0.5 -o ${LIB_DIR} -pvr
 	./convert.native -inp 2 -n 100500 -wholly -o ${LIB_DIR} -pvr -dxt
-	./convert.native -inp 1 -degree4 -o ${LIB_DIR} -o ${LIB_DIR} -pvr -dxt
-#	./convert.native -inp 3 -n 1000 -o ${LIB_DIR} -pvr -dxt
+	./convert.native -inp 1 -degree4 -o ${LIB_DIR} -pvr -dxt
 
 lib: prepare-input clean-output lib-compressed
 
