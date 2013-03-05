@@ -38,10 +38,9 @@ value outdir = ref "output";
 value gen_pvr = ref False;
 value gen_dxt = ref False;
 value degree4 = ref False;
-value start_num = ref 0;
 value scale = ref 1.;
-value wholly = ref False;
 
+value json_name = ref "";
 
 value get_postfix () =
   match !scale with
@@ -340,7 +339,8 @@ value convert idTex  imgs =
             ignore(Sys.command (Printf.sprintf "cp -f %s/%s/frames.dat %s" !inp_dir dir res_dir));
             *)
             IO.write_ui16 newTexInfo 1;
-            write_utf newTexInfo ((string_of_int idTex) ^ (get_postfix ()) ^ ".png");
+          (*  write_utf newTexInfo ((string_of_int idTex) ^ (get_postfix ()) ^ ".png");*)
+            write_utf newTexInfo (idTex ^ (get_postfix ()) ^ ".png");
             IO.write_ui16 newTexInfo (List.length imgs);
             List.iteri begin fun i (urlId,(sx,sy,isRotate,img)) ->
             (
@@ -374,10 +374,93 @@ value convert idTex  imgs =
   
 value postfixs = [ "_sh"; "_ex" ];
 
-value run () =
-  let _ = Sys.command (Printf.sprintf "cp -f %s/info_objects.xml %s" !inp_dir !outdir) in
+type pack_info = 
+  {
+    name : string;
+    libs : list string;
+    wholly : bool;
+  };
+
+value get_packs libs = 
+  let libs = ref libs in
+  let read_json json =
+    match json with
+    [ `Assoc packs ->
+        (
+          List.map begin fun (name,json) -> 
+            (
+              Printf.printf "READ PACK : %S \n%!" name;
+              match json with
+              [ `Assoc params ->
+                  let wholly = 
+                    try
+                      match List.assoc "whooly" params with
+                      [ `Bool wholly -> wholly
+                      | _ -> assert False 
+                      ]
+                    with
+                      [ Not_found -> False ]
+                  in
+                  let () = Printf.printf "WHOOLY : %B\n%!" wholly in
+                  let include_libs = 
+                    let ls = List.assoc "include" params in
+                    match ls with
+                    [ `List ls ->
+                        List.fold_left begin fun res reg ->
+                          match reg with
+                          [ `String reg_str | `Intlit reg_str -> 
+                              let reg = Str.regexp reg_str in
+                              let (libs_filter,old_libs) = List.partition (fun lib -> Str.string_match reg lib 0) !libs in
+                                (
+                                  libs.val := old_libs;
+                                  libs_filter @ res 
+                                )
+                          | _ -> assert False
+                          ]
+                        end [] ls
+                    | _ -> assert False
+                    ]
+                  in
+                  let pack_libs = 
+                    try
+                      let ls = List.assoc "exclude" params in
+                      match ls with
+                      [ `List ls ->
+                          List.fold_left begin fun res reg ->
+                            match reg with
+                            [ `String reg_str | `Intlit reg_str -> 
+                                let reg = Str.regexp reg_str in
+                                let (exclude_libs,libs_filter) = List.partition (fun lib -> Str.string_match reg lib 0) include_libs in
+                                  (
+                                    Printf.printf "reg_str : %S; exclude_libs  : [%s]  \n%!" reg_str (String.concat "; " exclude_libs);
+                                    libs.val := !libs @ exclude_libs ;
+                                    libs_filter 
+                                  )
+                            | _ -> assert False
+                            ]
+                          end include_libs ls
+                      | _ -> assert False
+                      ]
+                    with
+                      [ Not_found -> include_libs ]
+                  in
+                    (
+                      {name; libs=pack_libs; wholly}
+                    )
+              | _ -> assert False 
+              ]
+            ) 
+          end packs,
+          !libs
+        )
+    | _ -> assert False 
+    ]
+  in
+  read_json (Ojson.from_file !json_name);
+
+value run_pack pack =
   let (lib_names, images) = 
-    Array.fold_left begin fun (libs,images) path -> 
+    List.fold_left begin fun (libs,images) path -> 
       let () = Printf.printf "try convert %s\n%!" path in 
       match Sys.is_directory (!inp_dir /// path) with
       [ True -> 
@@ -402,12 +485,12 @@ value run () =
           )
       | _ -> (libs, images )
       ]
-    end ([],[]) (Sys.readdir !inp_dir)
+    end ([],[]) pack.libs
   in
 (*  let images = [(0,"pizda", List.fold_left (fun res (_,_,img) ->  res @ img) [] images)] in *)
   let images = List.fast_sort (fun (s1,_) (s2,_) -> compare s2 s1) images in  
   let (images:list (bool * (list ((int*string)* Images.t )))) = 
-    match !wholly with
+    match pack.wholly with
     [ True -> 
         [ 
           (True,
@@ -425,12 +508,13 @@ value run () =
         let w = xyupizda.TextureLayout.width in
         let h = xyupizda.TextureLayout.height in
         let imgs = xyupizda.TextureLayout.placed_images in
-        let cnt = cnt + !start_num in
+      (*  let cnt = cnt + !start_num in *)
+        let name_texture = pack.name ^ "_" ^ (string_of_int cnt) in
         let rgb = Rgba32.make w h {Color.color={Color.r=0;g=0;b=0}; alpha=0;} in
         let new_img = Images.Rgba32 rgb in
           (
-            Printf.printf "Save %d.png \n%!" cnt;
-                convert cnt imgs;
+                Printf.printf "Save %s.png \n%!" name_texture;
+                convert name_texture imgs;
                 List.iter begin fun (_,(sx,sy,isRotate,img)) ->
                   let (iw,ih) = Images.size img in
                     try
@@ -451,7 +535,7 @@ value run () =
                           )
                       ]
                 end imgs;
-            let save_img = !outdir /// (string_of_int cnt) ^ (get_postfix ()) in
+            let save_img = !outdir /// name_texture  ^ (get_postfix ()) in
               (
                 Images.save (save_img ^ ".png") (Some Images.Png) [] new_img;
                 
@@ -496,6 +580,17 @@ value run () =
 value () = convert "an_chicken_ex";
 *)
 
+value run () =
+  let _ = Sys.command (Printf.sprintf "cp -f %s/info_objects.xml %s" !inp_dir !outdir) in
+  let libs = Array.to_list (Sys.readdir !inp_dir) in
+  let (packs, other_libs) = get_packs libs in
+    (
+      List.iter (fun pack -> Printf.printf "Pack %s : [%s]\n%!" pack.name (String.concat "; " pack.libs)) packs; 
+      Printf.printf "Other libs : [%s]\n%!" (String.concat "; " other_libs);
+      List.iter run_pack packs;
+      run_pack {name="main"; libs=other_libs; wholly=False}
+    );
+
 value () =
   (
     Arg.parse 
@@ -504,15 +599,13 @@ value () =
         ("-o",Arg.Set_string outdir, "output directory");
         ("-pvr",Arg.Set gen_pvr,"generate pvr file");
         ("-dxt",Arg.Set gen_dxt,"generate dxt file");        
-        ("-n",Arg.Set_int start_num,"set first name texture ");
         ("-p",Arg.Set_int TextureLayout.countEmptyPixels, "count Empty pixels between images");
         ("-min",Arg.Set_int TextureLayout.min_size, "Min size texture");
         ("-max",Arg.Set_int TextureLayout.max_size, "Max size texture");
         ("-scale", Arg.Set_float scale, "Scale factor");
         ("-degree4", Arg.Set degree4, "Use degree 4 rects");
-        ("-wholly", Arg.Set wholly, "All images in 1 texture");
       ]
-      (fun _ -> ())
+      (fun name -> json_name.val := name)
       "";
       TextureLayout.countEmptyPixels.val := 0;
       TextureLayout.rotate.val := False;
