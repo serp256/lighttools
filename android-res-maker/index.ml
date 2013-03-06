@@ -16,6 +16,7 @@ module Entry =
 value ext = ".index";
 value create () = Hashtbl.create 0;
 value iter index func = Hashtbl.iter (fun fname entry -> func fname entry) index;
+value fold index func init = Hashtbl.fold func index init;
 value add index fname entry = (
   Hashtbl.replace index fname entry;
   index;

@@ -1,27 +1,38 @@
 DEFINE ERROR(errMes) = failwith (Printf.sprintf "ERROR: %s" errMes);
 DEFINE ASSERT(cond, errMes) = if not cond then ERROR(errMes) else ();
+DEFINE LOG(mes) = Printf.printf "%s\n%!" mes;
+DEFINE LOGN(mes) = Printf.printf "%s%!" mes;
 
 value concat = ref False;
 value extract = ref False;
 value diff = ref False;
+value merge = ref False;
 value inp = ref "";
 value out = ref "";
 value fname = ref "";
 value diffFnameA = ref "";
 value diffFnameB = ref "";
+value mergeFnames = ref [];
+
+value appendToMerge fname = (
+  LOG("appendToMerge " ^ fname);
+  ASSERT(List.length !mergeFnames < 3, "cannot merge more than 3 files");
+  mergeFnames.val := [ fname :: !mergeFnames ];
+);
 
 value args = [
   ("-concat", Arg.Set concat, "");
   ("-extract", Arg.Set extract, "");
   ("-diff", Arg.Tuple [ Arg.Set diff; Arg.Set_string diffFnameA; Arg.Set_string diffFnameB ], "");
+  ("-merge", Arg.Set merge, "");
   ("-i", Arg.Set_string inp, "");
   ("-o", Arg.Set_string out, "");
   ("-fname", Arg.Set_string fname, "");
 ];
 
-Arg.parse args (fun _ -> ()) "Android resources maker";
+Arg.parse args appendToMerge "Android resources maker";
 
-(* ASSERT(!concat || !extract || !diff, "-concat, -extract or -diff option should be given to determine what to do"); *)
+ASSERT(!concat || !extract || !diff || !merge, "-concat, -extract, -diff or -merge option should be given to determine what to do");
 
 value readdir root =
   let rec _readdir dir files =
@@ -37,12 +48,13 @@ value readdir root =
   in
     _readdir root [];
 
-value concatFiles ?(fprefix = "") files out =
+value concatFiles ?(fprefix = "") files out = (
   let outChan = open_out out in
   let rec _concatFiles index files offset =
     match files with
     [ [] -> index
     | [ fname :: files ] ->
+      let () = LOGN("process '" ^ fname ^ "'...") in
       let inChan = open_in (if fprefix <> "" then Filename.concat fprefix fname else fname) in
       let inLen = in_channel_length inChan in
       let buf = Buffer.create inLen in (
@@ -50,6 +62,7 @@ value concatFiles ?(fprefix = "") files out =
         close_in inChan;
 
         Buffer.output_buffer outChan buf;
+        LOG(Printf.sprintf " done, offset %d, size %d" offset inLen);
         _concatFiles (Index.add index fname (Index.Entry.create offset inLen)) files (offset + inLen);
       )
     ]
@@ -61,23 +74,28 @@ value concatFiles ?(fprefix = "") files out =
       Marshal.to_channel outChan index [];
       close_out outChan;
     );
-  );
 
-value checkOut () = (
-  ASSERT(not (Sys.file_exists !out && Sys.is_directory !out), "output file exists and it's directory, remove at first or specify another output filename");
-  ASSERT(Sys.file_exists (Filename.dirname !out), "output filename path doesn't exists");
+    LOG("done, files written to '" ^ out ^ "', index written to '" ^ (out ^ Index.ext) ^ "'");
+  );  
+);
 
-  if Sys.file_exists !out
-  then Sys.remove !out
+value checkOutFname out = (
+  ASSERT(not (Sys.file_exists out && Sys.is_directory out), "output file exists and it's directory, remove at first or specify another output filename");
+  ASSERT(Sys.file_exists (Filename.dirname out), "output filename path doesn't exists");
+
+  if Sys.file_exists out
+  then Sys.remove out
   else ();  
 );
 
 value runConcat inp out = (
+  LOG("concatenating files from '" ^ inp ^ "'");
+
   ASSERT(inp <> "" && out <> "", "specify both input directory and output filename");
   ASSERT(Sys.file_exists inp, "input directory doesn't exists");
   ASSERT(Sys.is_directory inp, "input should be directory, not regular file");
 
-  checkOut ();
+  checkOutFname out;
   concatFiles ~fprefix:inp (readdir inp) out;
 );
 
@@ -115,13 +133,15 @@ value runExtract inp out fname =
   );
 
 value runDiff fnameA fnameB out = (
-  ASSERT(Sys.file_exists fnameA, "input file A doesn't exists");
-  ASSERT(Sys.file_exists fnameA, "input directory B doesn't exists");
-  ASSERT(not (Sys.is_directory fnameA), "input file A is directory. should be regular file");
-  ASSERT(Sys.is_directory fnameB, "input directory B is regular file. should be directory");
+  LOG("making diff between '" ^ fnameA ^ "' and files from '" ^ fnameB ^ "'");
+
+  ASSERT(Sys.file_exists fnameA, "input file " ^ fnameA ^ " doesn't exists");
+  ASSERT(Sys.file_exists fnameA, "input directory " ^ fnameB ^ " doesn't exists");
+  ASSERT(not (Sys.is_directory fnameA), "input file " ^ fnameA ^ " is directory. should be regular file");
+  ASSERT(Sys.is_directory fnameB, "input directory " ^ fnameB ^ " is regular file. should be directory");
   ASSERT(out <> "", "specify output filename");
 
-  checkOut ();
+  checkOutFname out;
 
   let indexFnameA = fnameA ^ Index.ext in (
     ASSERT(Sys.file_exists indexFnameA, "index for input file A doesn't exists");
@@ -133,18 +153,24 @@ value runDiff fnameA fnameB out = (
 
       let files =
         List.filter (fun fname ->
+          let () = LOGN("processing '" ^ fname ^ "'...") in
           try
             let entry = Index.get indexA fname in
             let size = Index.Entry.getSize entry in
             let inChanB = open_in (Filename.concat fnameB fname) in
             let inLenB = in_channel_length inChanB in
               if size <> inLenB
-              then True
+              then (
+                LOG "different sizes, include in diff";
+                True;
+              )
               else (
+                LOGN "sizes matched, checking content...";
                 seek_in inChanA (Index.Entry.getOffset entry);
 
                 let retval = Digest.(compare (channel inChanA size) (channel inChanB inLenB)) <> 0 in (
                   close_in inChanB;
+                  LOGN (if retval then "different content, include in diff" else "content identical, skip");
                   retval;
                 );
               )
@@ -158,8 +184,79 @@ value runDiff fnameA fnameB out = (
   );
 );
 
+value addBinIndexEntry buf fname offset size location =
+(
+  IO.write_byte buf (String.length fname);
+  IO.nwrite buf fname;
+  IO.write_i32 buf offset;
+  IO.write_i32 buf size;
+  IO.write_byte buf location;
+);
+
+value runMerge mergeFnames out = (
+  LOG("merging indexes for files " ^ (String.concat "," mergeFnames));
+
+  checkOutFname out;
+
+  let indexes =
+    List.map (fun fname ->
+      let fname = fname ^ Index.ext in
+      let () = ASSERT(Sys.file_exists fname, "index for '" ^ fname ^ "' doesn't exists") in
+      let inp = open_in fname in
+      let index = Marshal.from_channel inp in (        
+        close_in inp;
+        index;
+      )
+    ) mergeFnames
+  in
+  let (indexBuf, indexBufLen) = IO.pos_out (IO.output_string ()) in
+  let indexes = 
+    match indexes with
+    [ [ assetsIndex; patchIndex; mainIndex ] ->
+      let () = LOG("merging assets, patch and main expansion") in [ (assetsIndex, 0); (patchIndex, 1); (mainIndex, 2) ]
+    | [ assetsIndex; mainIndex ] ->
+      let () = LOG("merging assets and main expansions") in [ (assetsIndex, 0); (mainIndex, 2) ]
+    | [ assetsIndex ] ->
+      let () = LOG("merging only assets") in [ (assetsIndex, 0) ]
+    | _ -> ERROR("at least one index should be provided for merge")
+    ]
+  in
+  let rec merge indexes (alreadyAdded, entriesNum) =    
+    match indexes with
+    [ [ (index, location) :: indexes ] ->
+      let () = LOG("processing index with location " ^ (string_of_int location) ^ "...") in
+      let (alreadyAdded, entriesNum) =
+        Index.fold index (fun fname entry (alreadyAdded, entriesNum) ->
+          let () = LOGN("\tprocessing file '" ^ fname ^ "'...") in
+          if List.mem fname alreadyAdded
+          then
+            let () = LOG(" already in index, skip") in (alreadyAdded, entriesNum)
+          else (
+            LOG(" adding to binary index");
+            addBinIndexEntry indexBuf fname (Index.Entry.getOffset entry) (Index.Entry.getSize entry) location;
+            ([ fname :: alreadyAdded ], entriesNum + 1);
+          )
+        ) (alreadyAdded, entriesNum)
+      in
+        merge indexes (alreadyAdded, entriesNum)
+    | _ -> entriesNum
+    ]
+  in
+  let entriesNum = merge indexes ([], 0) in
+  let outChan = open_out out in
+    let (out, outLen) = IO.pos_out (IO.output_channel outChan) in
+    (
+      LOG(" done, writing binary index, enties num " ^ (string_of_int entriesNum));
+      IO.write_i32 out entriesNum;
+      IO.nwrite out (IO.close_out indexBuf);
+      IO.close_out out;
+      close_out outChan;
+    );  
+);
+
 if !concat
 then runConcat !inp !out
 else if !extract then runExtract !inp !out !fname
 else if !diff then runDiff !diffFnameA !diffFnameB !out
+else if !merge then runMerge (List.rev !mergeFnames) !out
 else ();
