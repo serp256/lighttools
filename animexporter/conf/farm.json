@@ -7,7 +7,11 @@
 				"bk_furrow"
 			]
 	},
-	"st_valentine: {
+	"mn_spider":{
+		"whooly" : true,
+		"include": [ "mn_spider" ]
+	},
+	"st_valentine":{
 		"whooly": true,
 		"include":
 			[
@@ -51,7 +55,7 @@
 		"whooly":true,
 		"include":
 			[
-				"sb_gold_pot"
+				"sb_gold_pot",
 				"sb_gold_horseshoe",
 				"dc_big_gold_pot",
 				"dc_harp",
@@ -133,7 +137,140 @@
 				"dc_playground_pear"
 			]
 	},
-	"map2":{
+	"father":{
+		"whooly":true,
+		include:
+			[
+				"sb_shirt",
+				"sb_tie",
+				"dc_hammoc",
+				"dc_workbench",
+				"dc_rose_bush",
+				"dc_barbecue",
+				"dc_auto_flowbed"
+			]
+	},
+	"summer":{
+		"whooly":true,
+		"include":
+			[
+				"sb_sunflower",
+				"sb_icecream",
+				"dc_waterfall",
+				"dc_aerostat",
+				"dc_oasis",
+				"dc_sand_castle",
+				"dc_water_tower",
+				"dc_sea_shel"
+			]
+	},
+	"autumn":{
+		"whooly":true,
+		"include":
+			[
+				"sb_hot_tea",
+				"sb_apple_tub",
+				"dc_palisade",
+				"dc_palisade_flip",
+				"dc_filled_basket",
+				"dc_leafy_arch",
+				"dc_pencil_flowerbed",
+				"dc_barometer"
+			]
+	},
+	"knowledge":{
+		"whooly":true,
+		"include":
+			[
+				"dc_bookshelf",
+				"dc_formula_board",
+				"dc_knowledge_monument",
+				"dc_newton_tree",
+				"dc_shucks"
+			]
+	},
+	"science":{
+		"whooly":true,
+		"include":
+			[
+				"an_owl"
+			]
+	},
+	"thanksday":{
+		"whooly":true,
+		"include":
+			[
+				"sb_thanksday_tomatoes",
+				"sb_thanksday_pumpkin",
+				"sb_corn",
+				"dc_vegetables_trolley",
+				"dc_turkey_statue",
+				"dc_pumpkin_flowers",
+				"dc_feast_table",
+				"dc_horn_plenty",
+				"dc_turkey_table",
+				"dc_wigwam"
+			]
+	},
+	"halloween":{
+		"whooly":true,
+		"include":
+			[
+				"an_infra_duckling",
+				"sb_potion_jam",
+				"sb_fussy_beans",
+				"sb_brooms",
+				"dc_scarecrow",
+				"dc_bagpipe",
+				"dc_ghost",
+				"dc_three_pumpkin",
+				"dc_witches_trail"
+			]
+	},
+	"new_year":{
+		"whooly":true,
+		"include":
+			[
+				"an_deer",
+				"sb_christmas_present",
+				"sb_christmas_candy",
+				"sb_christmas_orange",
+				"sb_christmas_cherry",
+				"dc_sleigh",
+				"dc_big_christmas_eve",
+				"dc_small_christmas_eve",
+				"dc_gingerbread_house",
+				"dc_snowman",
+				"dc_santa_baloon"
+			]
+	},
+	"map2_base":{
+		"include":
+			[
+				"bl_abatis",
+				"bl_anc_house",
+				"bl_anc_laboratory",
+				"bl_anc_laboratory1",
+				"bl_anc_laboratory2",
+				"bl_archst",
+				"bl_ford",
+				"bl_rockroost",
+				"bl_ship_2",
+				"bl_softfold",
+				"bl_spines",
+				"bl_teleport_anc",
+				"bl_web",
+				"st_anc_stone1",
+				"st_anc_stone2",
+				"tr_acacia",
+				"tr_baobab",
+				"tr_blood_tree",
+				"tr_palm",
+				"tr_spa",
+				"mp_anc"
+			]
+	},
+	"map2_seed_animal":{
 		"include":
 			[
 				"an_triceratops",
@@ -142,7 +279,21 @@
 				"an_tyrannosaurus",
 				"an_.*_mod2",
 				"sb_.*_mod2",
-				"sb_.*_mod3",
+				"sb_.*_mod3"
+			]
+	},
+	"map1_base":{
+		"include":
+			[
+				"bl_",
+				"st_",
+				"tr_",
+				"map_build",
+				"mp_stone1",
+				"mp_stone3"
+			],
+		"exclude":
+			[
 				"bl_abatis",
 				"bl_anc_house",
 				"bl_anc_laboratory",
@@ -165,41 +316,11 @@
 				"tr_spa"
 			]
 	},
-	"map1":{
+	"map1_seed_animal":{
 		"include":
 			[
 				"an_*",
-				"sb_.*_mod1",
-				"bl_.*",
-				"st_.*",
-				"tr_.*"
-			],
-		"exclude":
-			[
-				"an_triceratops",
-				"an_brontosaurus",
-				"an_stegosaurus",
-				"an_tyrannosaurus",
-				"bl_abatis",
-				"bl_anc_house",
-				"bl_anc_laboratory",
-				"bl_anc_laboratory1",
-				"bl_anc_laboratory2",
-				"bl_archst",
-				"bl_ford",
-				"bl_rockroost",
-				"bl_ship_2",
-				"bl_softfold",
-				"bl_spines",
-				"bl_teleport_anc",
-				"bl_web",
-				"st_anc_stone1",
-				"st_anc_stone2",
-				"tr_acacia",
-				"tr_baobab",
-				"tr_blood_tree",
-				"tr_palm",
-				"tr_spa"
+				"sb_"
 			]
 	}
 }

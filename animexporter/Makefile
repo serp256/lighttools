@@ -41,15 +41,21 @@ lib-compressed:
 
 lib: prepare-input clean-output lib-compressed
 
-lib-notcompressed:
-	./convert.native -inp 2 -wholly -n 100500 -scale ${SCALE} -o ${LIB_DIR} 
-	./convert.native -inp 1 -degree4 -scale ${SCALE} -o ${LIB_DIR} 
-	./convert.native -inp 2 -wholly -n 100500 -o ${LIB_DIR} 
-	./convert.native -inp 1 -degree4 -o ${LIB_DIR} -o ${LIB_DIR} 
-	./convert.native -max 4096 -inp 2 -wholly -n 100500 -scale 2 -o ${LIB_DIR} 
-	./convert.native -max 4096 -inp 1 -degree4 -scale 2 -o ${LIB_DIR} 
+#lib-notcompressed:
+#	./convert.native -inp 2 -wholly -n 100500 -scale ${SCALE} -o ${LIB_DIR} 
+#	./convert.native -inp 1 -degree4 -scale ${SCALE} -o ${LIB_DIR} 
+#	./convert.native -inp 2 -wholly -n 100500 -o ${LIB_DIR} 
+#	./convert.native -inp 1 -degree4 -o ${LIB_DIR} -o ${LIB_DIR} 
+#	./convert.native -max 4096 -inp 2 -wholly -n 100500 -scale 2 -o ${LIB_DIR} 
+#	./convert.native -max 4096 -inp 1 -degree4 -scale 2 -o ${LIB_DIR} 
 
-lib-test: prepare-input clean-output lib-notcompressed
+lib-notcompressed:
+	./convert.native -degree4 -scale ${SCALE} -o ${LIB_DIR} conf/farm.json
+	./convert.native -degree4  -o ${LIB_DIR} conf/farm.json
+	./convert.native -max 4096 -degree4 -scale 2 -o ${LIB_DIR} conf/farm.json
+
+#lib-test: prepare-input clean-output lib-notcompressed
+lib-test: clean-output lib-notcompressed
 
 100500:
 	./convert.native -inp 2 -n 100500 -min 512 -scale ${SCALE} -o ~/Devel/mobile-farm/Resources/library -pvr
