@@ -39,6 +39,7 @@ value gen_pvr = ref False;
 value gen_dxt = ref False;
 value degree4 = ref False;
 value scale = ref 1.;
+value without_cntr = ref False;
 
 value json_name = ref "";
 
@@ -121,6 +122,7 @@ value get_images dirs images  =
     let countTex = IO.read_ui16 texInfo in
     let () = Printf.printf "count textures : %d\n%!" countTex in
     let rec imagesByTexture img countImage id s images =
+      let () = Printf.printf "imagesByTexture count : %d; id : %d \n%!" countImage id in
       match countImage with
       [ 0 -> (id, s, images) 
       | _ ->
@@ -128,24 +130,38 @@ value get_images dirs images  =
           let sy = IO.read_ui16 texInfo in
           let iw = IO.read_ui16 texInfo in
           let ih = IO.read_ui16 texInfo in
+          let () = Printf.printf "sx : %d; sy : %d; iw : %d; ih : %d \n%!" sx sy iw ih in
           let image = Images.sub img sx sy iw ih in
+          let () = Printf.printf "Images.sub success\n%!" in
           let image = 
             match !scale with
             [ 1. -> image
+            (*
             | scale when scale < 1. -> 
                 let w = round ((float iw) *. scale) 
                 and h = round ((float ih) *. scale) 
                 in
-                match image with
-                [ Images.Rgb24 image -> Images.Rgb24 (Rgb24.resize None image w h)
-                | Images.Rgba32 image -> Images.Rgba32 (Rgba32.resize None image w h)
-                | Images.Cmyk32 image -> Images.Cmyk32 (Cmyk32.resize None image w h)
-                | _ -> failwith "incorrect type image"
-                ]
+                  (
+                    Printf.printf "START RESIZE : %dx%d\n%!" w h;
+                    let img = 
+                      match image with
+                      [ Images.Rgb24 image -> Images.Rgb24 (Rgb24.resize None image w h)
+                      | Images.Rgba32 image -> Images.Rgba32 (Rgba32.resize None image w h)
+                      | Images.Cmyk32 image -> Images.Cmyk32 (Cmyk32.resize None image w h)
+                      | _ -> failwith "incorrect type image"
+                      ]
+                    in
+                      (
+                        Printf.printf "END RESIZ : %dx%d\n%!" w h;
+                        img;
+                      )
+                  )
+                  *)
             | scale ->
               let srcFname = Filename.temp_file "src" "" in
               let dstFname = Filename.temp_file "dst" ""  in
               (
+                Printf.printf "srcFilename : %s; dstFname : %s \n%!" srcFname dstFname;
                 Images.save srcFname (Some Images.Png) [] image;
 
                 Printf.printf "convert -resize %d%% -filter catrom %s %s\n" (int_of_float (scale *. 100.)) srcFname dstFname;
@@ -190,13 +206,16 @@ value get_images dirs images  =
       ]
     in
     let rec readTexture countTex (id,s,images) =
+      let () = Printf.printf "readTexture %d \n%!" countTex in
       match countTex with
       [ 0 -> (s,images)
       | _ ->
           let name = !inp_dir /// dir /// read_utf texInfo in
           let () = Printf.printf "Try open %s\n%!" name in
           let texture = Images.load name [] in 
+          let () = Printf.printf "Texture is loaded\n%!" in
           let count = IO.read_ui16 texInfo in
+          let () = Printf.printf "Count = %d \n%!" count in 
           readTexture (countTex - 1) (imagesByTexture texture count id s images) 
       ]
     in
@@ -519,8 +538,9 @@ value run_pack pack =
                   let (iw,ih) = Images.size img in
                     try
                       (
-                        Printf.printf "Image size %d %d and pos [%d; %d] \n%!" iw ih sx sy;
+                        Printf.printf "Image size %d %d and pos [%d; %d] to img [%d; %d] \n%!" iw ih sx sy w h;
                         Images.blit img 0 0 new_img sx sy iw ih;
+                        Printf.printf "finish blit\n%!";
                       )
                     with 
                       [ Invalid_argument _ -> 
@@ -537,6 +557,7 @@ value run_pack pack =
                 end imgs;
             let save_img = !outdir /// name_texture  ^ (get_postfix ()) in
               (
+                Printf.printf "Save image %s.png\n%!;" save_img;
                 Images.save (save_img ^ ".png") (Some Images.Png) [] new_img;
                 
                 match !gen_pvr with
@@ -559,22 +580,26 @@ value run_pack pack =
       end textures;
       Printf.printf "GENRATE COUNTERS\n%!";
       
-      List.iter begin fun lib ->
-        let scale = 
-          match !scale with
-          [ 1. -> ""
-          | _ -> "-s " ^ (get_postfix ())
-          ]
-        in
-        let cmd = Printf.sprintf "cntrgen %s -l %s -i %s" scale lib !outdir in
-          (
-            Printf.printf "%s\n%!" cmd;
-            match Sys.command cmd with
-            [ 0 -> ()
-            | _ -> failwith "ERROR GEN COUNTER"
-            ]
-          )
-      end lib_names;
+      match !without_cntr with
+      [ False -> 
+          List.iter begin fun lib ->
+            let scale = 
+              match !scale with
+              [ 1. -> ""
+              | _ -> "-s " ^ (get_postfix ())
+              ]
+            in
+            let cmd = Printf.sprintf "cntrgen %s -l %s -i %s" scale lib !outdir in
+              (
+                Printf.printf "%s\n%!" cmd;
+                match Sys.command cmd with
+                [ 0 -> ()
+                | _ -> failwith "ERROR GEN COUNTER"
+                ]
+              )
+          end lib_names
+      | _ -> ()
+      ];
     );
 (*
 value () = convert "an_chicken_ex";
@@ -604,6 +629,7 @@ value () =
         ("-max",Arg.Set_int TextureLayout.max_size, "Max size texture");
         ("-scale", Arg.Set_float scale, "Scale factor");
         ("-degree4", Arg.Set degree4, "Use degree 4 rects");
+        ("-without-cntr", Arg.Set without_cntr, "Not generate counters");
       ]
       (fun name -> json_name.val := name)
       "";
