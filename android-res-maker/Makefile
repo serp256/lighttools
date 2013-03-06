@@ -1,5 +1,5 @@
 OCAMLBUILD = ocamlbuild -use-ocamlfind -lflag "-g"
-TARGET = arm.byte 
+TARGET = aresmkr.byte 
 
 arm:
 	rm -f $(TARGET)

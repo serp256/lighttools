@@ -153,7 +153,7 @@ value runDiff fnameA fnameB out = (
 
       let files =
         List.filter (fun fname ->
-          let () = LOGN("processing '" ^ fname ^ "'...") in
+          let () = LOGN("processing '" ^ fname ^ "'... ") in
           try
             let entry = Index.get indexA fname in
             let size = Index.Entry.getSize entry in
@@ -165,12 +165,12 @@ value runDiff fnameA fnameB out = (
                 True;
               )
               else (
-                LOGN "sizes matched, checking content...";
+                LOGN "sizes matched, checking content... ";
                 seek_in inChanA (Index.Entry.getOffset entry);
 
                 let retval = Digest.(compare (channel inChanA size) (channel inChanB inLenB)) <> 0 in (
                   close_in inChanB;
-                  LOGN (if retval then "different content, include in diff" else "content identical, skip");
+                  LOG (if retval then "different content, include in diff" else "content identical, skip");
                   retval;
                 );
               )

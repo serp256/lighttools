@@ -26,11 +26,54 @@ value runCommand command errMes =
   myassert (Sys.command command = 0) errMes;
 );
 
+value cleanDir path = (
+  myassert (Sys.os_type = "Unix") "android builder doesn't support non-unix systems now";
+  myassert (Sys.file_exists path) (path ^ " passed to cleanDir func doesn't exists");
+  myassert (Sys.is_directory path) (path ^ " passed to cleanDir is not directory");
+
+  runCommand ("rm -rf " ^ path ^ "/*") ("error when cleaning " ^ path);
+);
+
 value findExpNames dir =
   Array.fold_left (fun (main, patch) fname ->
-    if String.starts_with fname "main" then (fname, main)
-    else if String.starts_with fname "patch" then (main, fname) else (main, patch)
+    if String.ends_with fname ".index" then (main, patch)
+    else
+      if String.starts_with fname "main" then (fname, main)
+      else if String.starts_with fname "patch" then (main, fname) else (main, patch)
   ) ("", "") (Sys.readdir dir);
+
+value getAbsolutePath path =
+  (* let () = Printf.printf "getAbsolutePath call %s\n%!" path in  *)
+  let cwd = Unix.getcwd () in
+  let dir = Filename.dirname path in (
+    myassert (Sys.file_exists dir) ("cannot get absolute path of non-existent file '" ^ path ^ "'");
+    Unix.chdir dir;
+
+    let retval = Filename.concat (Unix.getcwd ()) (Filename.basename path) in (
+      Unix.chdir cwd;
+      (* Printf.printf "retval %s\n%!" retval; *)
+      retval;  
+    );
+  );
+
+value getRelativePath pathA pathB =
+  let pathA = List.tl (ExtString.String.nsplit (getAbsolutePath pathA) (Filename.dir_sep)) in
+  let pathB = List.tl (ExtString.String.nsplit (getAbsolutePath pathB) (Filename.dir_sep)) in
+  let rec skipCommonPath pathA pathB =
+    if pathA <> [] && pathB <> [] && List.hd pathA = List.hd pathB
+    then skipCommonPath (List.tl pathA) (List.tl pathB)
+    else (pathA, pathB)
+  in
+  let (pathA, pathB) = skipCommonPath pathA pathB in
+    (String.concat "" (List.map (fun _ -> Filename.(parent_dir_name ^ dir_sep)) pathB)) ^ (String.concat Filename.dir_sep pathA);
+
+value makeRelativeSymlink src dst =
+  let cwd = Unix.getcwd () in
+  let src = Filename.concat (getRelativePath (Filename.dirname src) (Filename.dirname dst)) (Filename.basename src) in (
+    Unix.chdir (Filename.dirname dst);
+    Unix.symlink src (Filename.basename dst);
+    Unix.chdir cwd;
+  );
 
 value inDir = ref ".";
 value manifests: ref (list string) = ref [];
@@ -86,7 +129,6 @@ builds.val := List.rev !builds;
 (* value androidDir = Filename.concat !inDir "android"; *)
 value androidDir = !inDir;
 value manifestsDir = Filename.concat androidDir "manifests";
-value expansionsDir = Filename.concat androidDir "expansions";
 value rsyncDir = Filename.concat androidDir "rsync";
 value resDir = Filename.concat androidDir "../Resources";
 value assetsDir = Filename.concat androidDir "assets";
@@ -97,6 +139,15 @@ value debugDir = Filename.concat archiveDir "debug";
 value archiveDir build ver =
   let archiveDir = Filename.concat (if !release then releaseDir else debugDir) build in
     if !release then Filename.concat archiveDir ver else archiveDir;
+
+value aresmkrDir = Filename.concat !inDir "_aresmkr";
+value assetsAresmkrDir = Filename.concat aresmkrDir "assets-raw";
+value assetsAresmkrFname = Filename.concat aresmkrDir "assets";
+
+value expAresmkrDir = Filename.concat aresmkrDir "expansions";
+value rawExpAresmkrDir = Filename.concat expAresmkrDir "raw";
+value buildRawExpAresmkrDir build = Filename.concat rawExpAresmkrDir build;
+value buildExpAresmkrDir build = Filename.concat expAresmkrDir build;
 
 value genManifest build =
   let manifestConfig = Filename.concat manifestsDir (build ^ ".xml") in
@@ -135,15 +186,7 @@ value getPackage () =
   !package;  
 );
 
-(* value rsyncArgs =
-  let argFunc argName argVal = if argVal = "" then "" else Printf.sprintf "--%s=%s" argName (Filename.concat rsyncDir argVal)
-  and srcFunc _ src = if src = "" then resDir ^ "/" else Printf.sprintf "`cat %s`" (Filename.concat rsyncDir src)
-  and dstFunc _ dst = if dst = "" then assetsDir ^ "/" else Printf.sprintf "`cat %s`" (Filename.concat rsyncDir dst) in
-    [ ("files-from", argFunc); ("include-from", argFunc); ("filter", argFunc); ("exclude-from", argFunc); ("src", srcFunc); ("dst", dstFunc) ];
-
-value kindRegexp = String.concat "\\|" (List.map (fun (argName, _) -> argName) rsyncArgs);
-
-value createRsyncPass () = List.map (fun (argName, _) -> (argName, ref "")) rsyncArgs; *)
+value expFname package ver main = (if main then "main" else "patch") ^ "." ^ ver ^ "." ^ package ^ ".obb";
 
 value syncSounds dst =
   let sndDir = Filename.concat resDir "sounds_android" in
@@ -163,35 +206,16 @@ value genAssets build =
   (
     printf "\n\n[ generating assets for build %s... ]\n%!" build;
 
+    mkdir assetsAresmkrDir;
+
     let sndOpts = if !asssounds then " --filter='protect locale/*/sounds' --filter='protect sounds'" else "" in
-      runCommand ("rsync -avL" ^ sndOpts ^ " --include-from=" ^ (Filename.concat rsyncDir "android-assets.include") ^ buildFilter ^ " --exclude-from=" ^ (Filename.concat rsyncDir "android-assets.exclude") ^ " --delete --delete-excluded " ^ resDir ^ "/ " ^ assetsDir) "rsync failed when copying assets";
+      runCommand ("rsync -avL" ^ sndOpts ^ " --include-from=" ^ (Filename.concat rsyncDir "android-assets.include") ^ buildFilter ^ " --exclude-from=" ^ (Filename.concat rsyncDir "android-assets.exclude") ^ " --delete --delete-excluded " ^ resDir ^ "/ " ^ assetsAresmkrDir) "rsync failed when copying assets";
 
-    if !asssounds then
-      syncSounds assetsDir
+    if !asssounds then syncSounds assetsAresmkrDir
     else ();
+
+    runCommand("aresmkr -concat -i " ^ assetsAresmkrDir ^ " -o " ^ assetsAresmkrFname) "android resources maker failed when making assets";
   );
-(*     let rsyncPasses = ref []
-  and regexp = Str.regexp ("^\\(" ^ build ^ "\\|common\\)\\.assets\\.\\([0-9]+\\)\\.\\(" ^ kindRegexp ^ "\\)$") in
-  (
-    Array.iter (fun fname ->
-      if Str.string_match regexp fname 0 then
-        let passId = int_of_string (Str.matched_group 2 fname)
-        and arg = Str.matched_group 3 fname in
-          let rsyncPass = try List.assoc passId !rsyncPasses with [ Not_found -> let rsyncPass = createRsyncPass () in ( rsyncPasses.val := [ (passId, rsyncPass) :: !rsyncPasses ]; rsyncPass ) ] in
-            (List.assoc arg rsyncPass).val := fname
-      else ()
-    ) (Sys.readdir rsyncDir);
-
-    List.iter (fun (_, pass) ->
-      let rsyncArgs =
-        let argsList = (List.map (fun (argName, argVal) -> (List.assoc argName rsyncArgs) argName argVal.val) pass) in
-          String.concat " " argsList
-      in
-        runCommand ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ rsyncArgs) "rsync failed when copying assets";
-    ) (List.sort !rsyncPasses);
-  ); *)
-
-
 
 value archiveApk ?(apk = True) ?(expansions = True) build =
   let ver =
@@ -216,46 +240,60 @@ value archiveApk ?(apk = True) ?(expansions = True) build =
       if expansions then
       (
         printf "\n\n[ archiving expansions version %s for build %s... ]\n%!" ver build;
-        runCommand ("rm -f " ^ (Filename.concat apkArchiveDir "*.obb")) "rm failed when trying to remove previous obbs";
-        runCommand ("cp -Rv `find " ^ (Filename.concat expansionsDir build) ^ " -name '*obb'` " ^ apkArchiveDir) "cp failed when trying to copy main expansion to archive";
+        runCommand ("rm -f " ^ (Filename.concat apkArchiveDir "*.obb*")) "rm failed when trying to remove previous obbs";
+
+        let expDir = buildExpAresmkrDir build in
+        let archiveExp fname =
+          if fname = ""
+          then ()
+          else
+            let fname = Filename.concat expDir fname in
+              if Unix.((lstat fname).st_kind = S_LNK)
+              then makeRelativeSymlink (Filename.concat expDir (Unix.readlink fname)) (Filename.concat apkArchiveDir (Filename.basename fname))
+              else runCommand ("cp -Rv " ^ fname ^ " " ^ apkArchiveDir) ("cp failed when trying to copy " ^ fname ^ " to archive")
+        in
+        let (main, patch) = findExpNames expDir in (
+          archiveExp main;
+          archiveExp patch;
+        );
+        (* runCommand ("cp -Rv `find " ^ (buildExpAresmkrDir build) ^ " -name '*obb*'` " ^ apkArchiveDir) "cp failed when trying to copy main expansion to archive"; *)
 
         if !release && !baseExp && !patchFor = "" then
-          let baseLinkName = "base" in
-          let base = Filename.concat (Filename.dirname apkArchiveDir) baseLinkName in
-            (* let apkArchiveDir = if Filename.is_relative apkArchiveDir then Filename.concat (Unix.getcwd()) apkArchiveDir else apkArchiveDir in *)
-            (
-              try Sys.remove base with [ _ -> () ];
-              (* if Sys.file_exists base then Sys.remove base else (); *)
-              (* Unix.symlink apkArchiveDir base; *)
-
-              let cwd = Unix.getcwd () in
-              (
-                Unix.chdir (Filename.dirname apkArchiveDir);
-                Unix.symlink ver baseLinkName;
-                Unix.chdir cwd;
-              );
-            )
+          let base = Filename.concat (Filename.dirname apkArchiveDir) "base" in (
+            try Sys.remove base with [ _ -> () ];
+            makeRelativeSymlink apkArchiveDir base;
+          )
         else ();
+
+        printf "[ done ]\n%!";
       ) else ();
     );
 
 value genExpansion build =
 (
   if !expVer <> "" then
-    let src = Filename.concat releaseDir (Filename.concat build !expVer)
-    and dst = Filename.concat expansionsDir build in
-      let (main, patch) = findExpNames src in
-        let src = if Filename.is_relative src then Filename.concat (Unix.getcwd ()) src else src
-        and dst = if Filename.is_relative dst then Filename.concat (Unix.getcwd ()) dst else dst in
-        (
-          runCommand ("rm -f " ^ (Filename.concat dst "*.obb")) "rm failed when trying to remove previous obbs";
+    let src = Filename.concat releaseDir (Filename.concat build !expVer) in
+    let (main, patch) = findExpNames src in
+    let dst = buildExpAresmkrDir build in
+    let makeLink fname =
+      if fname <> ""
+      then
+        let src = Filename.concat src fname in
+        let dst = Filename.concat dst fname in (
+          runCommand ("rm -f " ^ (Filename.concat (Filename.dirname dst) "*.obb*")) "rm failed when trying to remove previous obbs";
 
           printf "\n\n[ creating links to expansions version %s... ]\n%!" !expVer;
-          Unix.symlink (Filename.concat src main) (Filename.concat dst main);
-          Unix.symlink (Filename.concat src patch) (Filename.concat dst patch);
+          makeRelativeSymlink src dst;
+          makeRelativeSymlink (src ^ ".index") (dst ^ ".index");
+          printf "[ done ]\n%!";
         )
+      else ()
+    in (
+      makeLink main;
+      makeLink patch;
+    )
   else
-    let expDir = Filename.concat expansionsDir (Filename.concat build "main")
+    let expDir = (* Filename.concat expansionsDir build *)buildRawExpAresmkrDir build
     and buildFilter = Filename.concat rsyncDir ("android-" ^ build ^ "-expansions.filter") in
       let buildFilter = if Sys.file_exists buildFilter then " --filter='. " ^ buildFilter ^ "'" else "" in
       (
@@ -269,13 +307,6 @@ value genExpansion build =
         then syncSounds expDir
         else ();
 
-(*                 runCommand ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ (Filename.concat resDir "sounds_android/default/") ^ " " ^ (Filename.concat expDir "sounds/")) "rsync failed when copying default sounds";
-        runCommand ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ (Filename.concat resDir "sounds_android/en/") ^ " " ^ (Filename.concat expDir "locale/en/sounds/")) "rsync failed when copying en sounds";
-        runCommand ("rsync -avL --exclude=.DS_Store --delete --delete-excluded " ^ (Filename.concat resDir "sounds_android/ru/") ^ " " ^ (Filename.concat expDir "locale/ru/sounds/")) "rsync failed when copying ru sounds";
- *)
-        let expsDir = Filename.concat expansionsDir build in
-          Array.iter (fun fname -> if String.ends_with fname ".obb" then Sys.remove (Filename.concat expsDir fname) else ()) (Sys.readdir expsDir);
-
         let inp = open_in (Filename.concat androidDir "AndroidManifest.xml") in
           let xmlinp = Xmlm.make_input ~strip:True (`Channel inp) in
           (
@@ -284,19 +315,32 @@ value genExpansion build =
             match Xmlm.input xmlinp with
             [ `El_start ((_, "manifest"), attributes) ->
               try
-                let verCode = List.find_map (fun ((uri, name), v) -> if name = "versionCode" then Some v else None) attributes
-                and expansionsDir = Filename.concat expansionsDir build in
-                  let command = "aem -o " ^ expansionsDir ^ "/ -i " ^ (Filename.concat expansionsDir "main") ^ " -package " ^ (getPackage ()) ^  " -version " ^ verCode in
-                    let command =
-                      if !patchFor <> "" then
-                        let archiveDir = Filename.concat (Filename.concat releaseDir build) !patchFor in
-                          try
-                            let patchFname = Array.find (fun fname -> String.starts_with fname "patch") (Sys.readdir archiveDir) in
-                              command ^ " -p " ^ (Filename.concat archiveDir patchFname)
-                          with [ Not_found -> failwith "no base patch found in archive "]
-                      else command
-                    in
-                      runCommand command "aem failed when packing expansion"
+                let verCode = List.find_map (fun ((uri, name), v) -> if name = "versionCode" then Some v else None) attributes in
+                let expAresmkrDir = buildExpAresmkrDir build in (
+                  mkdir expAresmkrDir;
+                  cleanDir expAresmkrDir;
+
+                  if !patchFor <> ""
+                  then
+                    let archiveDir = Filename.concat (Filename.concat releaseDir build) !patchFor in
+                    let (patchForFname, _) = findExpNames archiveDir in
+                    let patchForPath = Filename.concat archiveDir patchForFname in (
+                      myassert (Sys.file_exists patchForPath) ("main expansion file for which patch will be made doesn't exists (" ^ patchForPath ^ ")");
+
+                      let mainExpPath = Filename.concat expAresmkrDir patchForFname in (
+                        makeRelativeSymlink patchForPath mainExpPath;
+                        makeRelativeSymlink (patchForPath ^ ".index") (mainExpPath ^ ".index");
+                      );
+
+                      let outFname = Filename.concat expAresmkrDir (expFname (getPackage ()) verCode False) in
+                      let command = "aresmkr -o " ^ outFname ^ " -diff " ^ patchForPath ^ " " ^ expDir in
+                        runCommand command ("aresmkr failed when making expansion patch for build '" ^ build ^ "' version " ^ !patchFor);
+                    )
+                  else
+                    let outFname = Filename.concat expAresmkrDir (expFname (getPackage ()) verCode True) in
+                    let command = "aresmkr -concat -i " ^ expDir ^ " -o " ^ outFname in                      
+                      runCommand command ("aresmkr failed when making main expansion for build '" ^ build ^ "'")
+                )
               with [ Not_found -> failwith "no versionCode in your manifest" ]
             | _ -> failwith "no manifest tag in your manifest"
             ];                  
@@ -312,21 +356,32 @@ value compileLib () =
 
 value compileApk build =
 (
+  cleanDir assetsDir;
+  runCommand ("cp " ^ assetsAresmkrFname ^ " " ^ assetsDir ^ Filename.dir_sep) "failed when copying concated assets into android assets directory";
+
   if not !noExp then
-    let expansionsDir = Filename.concat expansionsDir build in
-      let (main, patch) = findExpNames expansionsDir in
-        let msize = (Unix.stat (Filename.concat expansionsDir main)).Unix.st_size
-        and psize = (Unix.stat (Filename.concat expansionsDir patch)).Unix.st_size
-        and mver = try List.hd (List.tl (String.nsplit main ".")) with [ Failure _ -> failwith "wrong main expansion name" ]
-        and pver = try List.hd (List.tl (String.nsplit patch ".")) with [ Failure _ -> failwith "wrong expansion patch name" ] in
-          let out = open_out (Filename.concat androidDir "res/values/expansions.xml") in
-          (
-            printf "\n\n[ writing expansions.xml for build %s (%d, %d)... ]\n%!" build msize psize;
-                      
-            output_string out ("<?xml version=\"1.0\" encoding=\"utf-8\"?><resources><array name=\"expansions\"><item>true," ^ mver ^ "," ^ (string_of_int msize) ^ "</item><item>false," ^ pver ^ "," ^ (string_of_int psize) ^ "</item></array></resources>");
-            close_out out;
-          )
-  else ();
+    let expansionsDir = buildExpAresmkrDir build in
+    let (main, patch) = findExpNames expansionsDir in
+    let expXml fname main =
+      if fname <> ""
+      then
+        let size = (Unix.stat (Filename.concat expansionsDir fname)).Unix.st_size in
+        let ver = try List.hd (List.tl (String.nsplit fname ".")) with [ Failure _ -> failwith ("wrong expansion name '" ^ fname ^ "'") ] in
+          "<item>" ^ (if main then "true" else "false") ^ "," ^ ver ^ "," ^ (string_of_int size) ^ "</item>"
+      else ""
+    in
+    let out = open_out (Filename.concat androidDir "res/values/expansions.xml") in (
+      output_string out ("<?xml version=\"1.0\" encoding=\"utf-8\"?><resources><array name=\"expansions\">" ^ (expXml main True) ^ (expXml patch False) ^ "</array></resources>");
+      close_out out;
+
+      myassert (main <> "") "main expansion not found, if app doesn't use expansions, use -no-exp option";
+
+      let command = "aresmkr -o " ^ (Filename.concat assetsDir "index") ^ " -merge " ^ assetsAresmkrFname in
+      let command = if patch <> "" then command ^ " " ^ (Filename.concat expansionsDir patch) else command in
+        runCommand (command ^ " " ^ (Filename.concat expansionsDir main)) "failed when making assets and expansions binary index";
+    )
+  else
+    runCommand ("aresmkr -o " ^ (Filename.concat assetsDir "index") ^ " -merge " ^ assetsAresmkrFname) "failed when making assets binary index";
   
   printf "\n\n[ compiling apk for build %s... ]\n%!" build;
 
@@ -352,21 +407,20 @@ value install () =
   (
     if !installApk then
       if apk = "" then  failwith "apk is missing"
-      else
-      (
-        runCommand ("storage_dir=`adb shell 'echo -n $EXTERNAL_STORAGE'` && adb shell \"rm $storage_dir/Android/data/" ^ (getPackage ()) ^ "/files/assets/a*\"") "";
-        runCommand ("adb install -r " ^ (Filename.concat archiveDir apk)) "adb failed when installing apk";
-      )
+      else runCommand ("adb install -r " ^ (Filename.concat archiveDir apk)) "adb failed when installing apk"
     else ();
 
     if !installExp then
-      if main = "" || patch = "" then failwith "main expansion or patch is missing"
-      else 
-        let pushCommand = "storage_dir=`adb shell 'echo -n $EXTERNAL_STORAGE'` && exp_dir=$storage_dir/Android/obb/" ^ (getPackage ()) ^ " && adb shell \"mkdir -p $exp_dir\" && adb push " in
-        (
-          runCommand (pushCommand ^ (Filename.concat archiveDir main) ^ " $exp_dir/") "error while pushing main expansion";
-          runCommand (pushCommand ^ (Filename.concat archiveDir patch) ^ " $exp_dir/") "error while pushing expansion patch";
-        )
+      let installObb fname =
+        if fname <> ""
+        then
+          let pushCommand = "storage_dir=`adb shell 'echo -n $EXTERNAL_STORAGE'` && exp_dir=$storage_dir/Android/obb/" ^ (getPackage ()) ^ " && adb shell \"mkdir -p $exp_dir\" && adb push " in
+            runCommand (pushCommand ^ (Filename.concat archiveDir fname) ^ " $exp_dir/") ("error while pushing " ^ fname ^ " expansion")
+        else ()
+      in (
+        installObb main;
+        installObb patch;
+      )
     else ();        
   );
 );
@@ -391,3 +445,8 @@ else
     )
   ) !builds;    
 );
+(* 
+let pathA = "/Users/../Users/./nazarov/./Desktop/../../../../../../usr/local/bin" in
+let pathB = "../../.././../nazarov/../nazarov/./../../usr/share/misc" in
+  Printf.printf "%s\n%!" (getRelativePath pathA pathB);
+ *)
