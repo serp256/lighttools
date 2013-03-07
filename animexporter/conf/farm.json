@@ -280,6 +280,16 @@
 				"an_.*_mod2",
 				"sb_.*_mod2",
 				"sb_.*_mod3"
+			],
+		"exclude":
+			[
+				"sb_cucumber_mod2",
+				"sb_strawberry_mod2",
+				"sb_wheat_mod2",
+				"sb_melon_mod2",
+				"sb_pepper_mod2",
+				"sb_carrots_mod2",
+				"sb_eggplant_mod2",
 			]
 	},
 	"map1_base":{
