@@ -21,16 +21,26 @@ value appendToMerge fname = (
 );
 
 value args = [
-  ("-concat", Arg.Set concat, "");
-  ("-extract", Arg.Set extract, "");
-  ("-diff", Arg.Tuple [ Arg.Set diff; Arg.Set_string diffFnameA; Arg.Set_string diffFnameB ], "");
-  ("-merge", Arg.Set merge, "");
-  ("-i", Arg.Set_string inp, "");
-  ("-o", Arg.Set_string out, "");
-  ("-fname", Arg.Set_string fname, "");
+  ("-concat", Arg.Set concat, "\tmake so-called light archive (sigle file which contains files from input directory one-by-one)");
+  ("-extract", Arg.Set extract, "\textract specified file from light-archive");
+  ("-diff", Arg.Tuple [ Arg.Set diff; Arg.Set_string diffFnameA; Arg.Set_string diffFnameB ], "\tmake light archive from diff between directory content and another light archve");
+  ("-merge", Arg.Set merge, "\tperform merging of specified archives indexes");
+  ("-i", Arg.Set_string inp, "\t\tinput file or directody, depend on usage");
+  ("-o", Arg.Set_string out, "\t\toutput file");
+  ("-fname", Arg.Set_string fname, "\tusing only with -extract option, specifies file name to extract from light archive");
 ];
 
-Arg.parse args appendToMerge "Android resources maker";
+value usage = "Android resources maker, usage:\n"
+  ^ "\taresmkr -concat -i <inp-dirname> -o <out-fname> -- reads content of directory <inp-dirname> and make light archive, named <out-fname>\n"
+  ^ "\taresmkr -extract -i <light-archive> -fname <fname-to-extract> -o <out-fname> -- extract <fname-to-extract> from <light-archive> to <out-fname>\n"
+  ^ "\taresmkr -diff -o <out-fname> <light-archive> <dir> -- makes diff light-archive, determine which files are not in <light-archive> or changed since <light-archive> was made and include these files into new light-archive named <out-fname>\n"
+  ^ "\taresmkr -merge -o <out-fname> <assets-archive> -- makes binary index for single light-archive <assets-archive>, uses for apps without expansions\n"
+  ^ "\taresmkr -merge -o <out-fname> <assets-archive> <main-exp-archive> -- makes common binary index for specified light archives\n"
+  ^ "\taresmkr -merge -o <out-fname> <assets-archive> <patch-exp-archive> <main-exp-archive> -- same as previous\n"
+  ^ "\tpay attention to archives order, when merging, assets have high priority, than patch, than main expansion\n";
+
+
+Arg.parse args appendToMerge usage;
 
 ASSERT(!concat || !extract || !diff || !merge, "-concat, -extract, -diff or -merge option should be given to determine what to do");
 

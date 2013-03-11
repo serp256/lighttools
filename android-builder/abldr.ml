@@ -43,7 +43,6 @@ value findExpNames dir =
   ) ("", "") (Sys.readdir dir);
 
 value getAbsolutePath path =
-  (* let () = Printf.printf "getAbsolutePath call %s\n%!" path in  *)
   let cwd = Unix.getcwd () in
   let dir = Filename.dirname path in (
     myassert (Sys.file_exists dir) ("cannot get absolute path of non-existent file '" ^ path ^ "'");
@@ -51,7 +50,6 @@ value getAbsolutePath path =
 
     let retval = Filename.concat (Unix.getcwd ()) (Filename.basename path) in (
       Unix.chdir cwd;
-      (* Printf.printf "retval %s\n%!" retval; *)
       retval;  
     );
   );
@@ -102,7 +100,6 @@ value nosounds = ref False;
 
 value args = [
   ("-i", Set_string inDir, "input directory (for example, farm root directory, which contains android subdirectory)");
-  (* ("-package", Set_string package, "application package (for expansions maker)"); *)
   ("-manifest", Set manifest, "generate manifest for builds");
   ("-assets", Set assets, "generate assets for builds");
   ("-asssounds", Set asssounds, "include sounds into assets, use with -assets option. by default sounds included into expansions");
@@ -111,13 +108,12 @@ value args = [
   ("-base-exp", Set baseExp, "create symlink, named 'base', to this version on expansions in release archive");
   ("-exp-patch", Set_string patchFor, "generate expansions patch for version, passed through this option");
   ("-exp-ver", Set_string expVer, "use expansions from version, passed through this option");
-  ("-lib", Set lib, "build only Farm.so");
+  ("-lib", Set lib, "build only so");
   ("-all-builds", Set allBuilds, "make all builds");
   ("-apk", Set apk, "compile apk for builds");
   ("-no-exp", Set noExp, "application has no expansions");
   ("-without-lib", Set withoutLib, "compile apk without farm-lib rebuilding, use it in addition -apk option");
   ("-release", Set release, "compile apks for release, install from release archive, copy apk and expansions to release archive");
-  (* ("-cheat", Set cheat, "compile apk with cheats, only for debug version"); *)
   ("-install", Tuple [ Set installApk; Set installExp; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "install both apk and expansions. when using with -release flag, takes build-version pair, when without -release -- only build. example: abldr -install normal_hdpi_pvr or abldr -release -install normal_hdpi_pvr 1.1.3");
   ("-install-apk", Tuple [ Set installApk; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "install only apk, usage same as -install");
   ("-install-exp", Tuple [ Set installExp; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "install only expansion, usage same as -install")
@@ -256,7 +252,6 @@ value archiveApk ?(apk = True) ?(expansions = True) build =
           archiveExp main;
           archiveExp patch;
         );
-        (* runCommand ("cp -Rv `find " ^ (buildExpAresmkrDir build) ^ " -name '*obb*'` " ^ apkArchiveDir) "cp failed when trying to copy main expansion to archive"; *)
 
         if !release && !baseExp && !patchFor = "" then
           let base = Filename.concat (Filename.dirname apkArchiveDir) "base" in (
@@ -445,8 +440,3 @@ else
     )
   ) !builds;    
 );
-(* 
-let pathA = "/Users/../Users/./nazarov/./Desktop/../../../../../../usr/local/bin" in
-let pathB = "../../.././../nazarov/../nazarov/./../../usr/share/misc" in
-  Printf.printf "%s\n%!" (getRelativePath pathA pathB);
- *)
