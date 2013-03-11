@@ -122,7 +122,6 @@ value get_images dirs images  =
     let countTex = IO.read_ui16 texInfo in
     let () = Printf.printf "count textures : %d\n%!" countTex in
     let rec imagesByTexture img countImage id s images =
-      let () = Printf.printf "imagesByTexture count : %d; id : %d \n%!" countImage id in
       match countImage with
       [ 0 -> (id, s, images) 
       | _ ->
@@ -130,9 +129,7 @@ value get_images dirs images  =
           let sy = IO.read_ui16 texInfo in
           let iw = IO.read_ui16 texInfo in
           let ih = IO.read_ui16 texInfo in
-          let () = Printf.printf "sx : %d; sy : %d; iw : %d; ih : %d \n%!" sx sy iw ih in
           let image = Images.sub img sx sy iw ih in
-          let () = Printf.printf "Images.sub success\n%!" in
           let image = 
             match !scale with
             [ 1. -> image
@@ -161,7 +158,6 @@ value get_images dirs images  =
               let srcFname = Filename.temp_file "src" "" in
               let dstFname = Filename.temp_file "dst" ""  in
               (
-                Printf.printf "srcFilename : %s; dstFname : %s \n%!" srcFname dstFname;
                 Images.save srcFname (Some Images.Png) [] image;
 
                 Printf.printf "convert -resize %d%% -filter catrom %s %s\n" (int_of_float (scale *. 100.)) srcFname dstFname;
@@ -206,16 +202,13 @@ value get_images dirs images  =
       ]
     in
     let rec readTexture countTex (id,s,images) =
-      let () = Printf.printf "readTexture %d \n%!" countTex in
       match countTex with
       [ 0 -> (s,images)
       | _ ->
           let name = !inp_dir /// dir /// read_utf texInfo in
           let () = Printf.printf "Try open %s\n%!" name in
           let texture = Images.load name [] in 
-          let () = Printf.printf "Texture is loaded\n%!" in
           let count = IO.read_ui16 texInfo in
-          let () = Printf.printf "Count = %d \n%!" count in 
           readTexture (countTex - 1) (imagesByTexture texture count id s images) 
       ]
     in
@@ -408,7 +401,6 @@ value get_packs libs =
         (
           List.map begin fun (name,json) -> 
             (
-              Printf.printf "READ PACK : %S \n%!" name;
               match json with
               [ `Assoc params ->
                   let wholly = 
@@ -538,9 +530,10 @@ value run_pack pack =
                   let (iw,ih) = Images.size img in
                     try
                       (
+                        (*
                         Printf.printf "Image size %d %d and pos [%d; %d] to img [%d; %d] \n%!" iw ih sx sy w h;
+                        *)
                         Images.blit img 0 0 new_img sx sy iw ih;
-                        Printf.printf "finish blit\n%!";
                       )
                     with 
                       [ Invalid_argument _ -> 
@@ -618,6 +611,7 @@ value run () =
 
 value () =
   (
+    Gc.set {(Gc.get()) with Gc.max_overhead = 1000000};
     Arg.parse 
       [
         ("-inp",Arg.Set_string inp_dir,"input directory");
