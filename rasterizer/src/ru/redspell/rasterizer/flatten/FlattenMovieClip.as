@@ -21,7 +21,7 @@ package ru.redspell.rasterizer.flatten {
 			Utils.traceObj(clip);
 
 			for (var i:uint = 1; i <= clip.totalFrames; i++) {
-				trace(i, clip.currentLabel);
+				//trace(i, clip.currentLabel);
 
 				var frame:FlattenSprite = (new FlattenSprite()).fromDisplayObject(obj, scale) as FlattenSprite;
 
@@ -68,7 +68,7 @@ package ru.redspell.rasterizer.flatten {
 				removeChildAt(0);
 			}
 
-			trace('_________________rendering frame ' + _curFrame + '_____________________');
+			//trace('_________________rendering frame ' + _curFrame + '_____________________');
 
 			var frame:FlattenSprite = _frames[_curFrame];
 

@@ -52,12 +52,19 @@ package ru.redspell.rasterizer.commands {
 
 			var instance:DisplayObject = new cls.definition();
             var profileLbl:String = (_profiles[0] as Profile).label;
-			var animated:Boolean = !cls.anims.hasOwnProperty(profileLbl) || cls.anims[profileLbl] && cls.swf.animated;
+
+            trace('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', cls.name, cls.swf.animated);
+
+			var animated:Boolean = (!cls.anims.hasOwnProperty(profileLbl) || cls.anims[profileLbl]) && cls.swf.animated;
 
 			Utils.traceObj(instance as DisplayObjectContainer);
 
+            trace('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', (instance is MovieClip) && animated);
+
 			var flatten:IFlatten = (instance is MovieClip) && animated ? new FlattenMovieClip() : new FlattenSprite();
 			flatten.fromDisplayObject(instance, Utils.getClsScale(cls, _profiles[0]));
+
+            trace('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', (instance is MovieClip) && animated);
 
 			try {
 				var exporter:IExporter = new FlattenExporter();

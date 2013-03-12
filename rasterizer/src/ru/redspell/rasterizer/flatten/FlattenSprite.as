@@ -108,8 +108,8 @@ package ru.redspell.rasterizer.flatten {
                     var masked:FlattenImage = m as FlattenImage;
                     var mask:FlattenImage = _masks[_masked[masked]];
 
-                    trace('mask: ' + mask);
-                    trace('masked: ' + masked);
+                    //trace('mask: ' + mask);
+                    //trace('masked: ' + masked);
 
                     if (mask == null || masked == null) {
                         continue;
@@ -208,8 +208,8 @@ package ru.redspell.rasterizer.flatten {
                 mtx.concat(matrix);
 				mtx.scale(_scale, _scale);
 
-                trace('obj', obj.width, obj.height);
-                trace('obj', obj.parent.name, obj.getRect(obj), obj.transform.matrix, matrix, mtx);
+                //trace('obj', obj.width, obj.height);
+                //trace('obj', obj.parent.name, obj.getRect(obj), obj.transform.matrix, matrix, mtx);
 
                 var layer:FlattenImage = applyFilters(applyMatrix(obj, mtx, clr), filters);
                 _childs.push(layer);
