@@ -1,0 +1,3 @@
+#!/bin/bash
+
+ocamlbuild -lflags "-g" -use-ocamlfind lsync.byte

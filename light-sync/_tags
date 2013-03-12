@@ -1,0 +1,2 @@
+<*.ml>: package(extlib),package(camlp4),syntax(camlp4r),package(camlp4.macro),package(ojson)
+<*.{byte,native}>: package(extlib),package(ojson)
