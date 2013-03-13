@@ -1,0 +1,22 @@
+[
+	{
+		"path":"/",
+		"include":["Shaders", "*.png", "game-data", "snd/", "tutorial-pics"],
+		"protect":["fonts", "imgs", "ui_res"]
+	},
+
+	{
+		"path":"fonts/",
+		"exclude":["*iphone*", "*ipad*", "*ru*", "*fr*"]
+	},
+
+	{
+		"path":"imgs/",
+		"exclude":["*iphone*", "*ipad*"]
+	},
+
+	{
+		"path":"ui_res/",
+		"exclude":["ui_ru", "ui_fr", "*iphone*", "*ipad*"]
+	}
+]

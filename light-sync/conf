@@ -1,5 +1,7 @@
 [
 	{
-		"include":["imgs"]
+		"path":"rasterizer/",
+		"dst":"pidarasterizer",
+		"exclude":["ui_us"]
 	}
 ]
