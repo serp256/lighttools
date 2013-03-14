@@ -216,7 +216,7 @@ module MaxRects = struct
     end placed;
 
   value maxrects isDegree4 rects empty = 
-    let () = Printf.printf "START MAX RECTS %d\n%!" (List.length empty) in
+    let () = Printf.printf "START MAX RECTS %d %dx%d\n%!" (List.length empty) (List.hd empty).w (List.hd empty).h in    
     loop rects [] empty [] where
       rec loop rects placed empty unfit = 
 (*         let () = Printf.printf "maxrects loop [%d:%d:%d:%d]\n%!" (List.length
@@ -224,8 +224,8 @@ module MaxRects = struct
  *         in *)
         (*
         let () = checkPlacedAndEmpty placed empty in
-        *)
         let () = checkPlaced placed in 
+        *)
         match rects with
         [ [] -> (List.rev placed, empty, unfit)    (* все разместили *)
         | [ ((info, img) as r) :: rects']  -> 
@@ -347,8 +347,8 @@ module MaxRects = struct
                         (*
                         Printf.printf "containers after find_subrects: ";
                         Printf.printf "place %d %dx%d  img to %d:%d:%d:%d\n%!" info rw rh c.x c.y c.w c.h;
-                        *)
                         checkPlacedAndEmpty [ (info, (c.x, c.y, c.isRotate, img)) :: placed ] containers;
+                        *)
                         loop rects' [ (info, (c.x, c.y, c.isRotate, img)) :: placed ] (filter_rects containers 0 []) unfit
                       )
                 ]
