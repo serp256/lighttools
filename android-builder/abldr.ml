@@ -147,14 +147,14 @@ value rawExpAresmkrDir = Filename.concat expAresmkrDir "raw";
 value buildRawExpAresmkrDir build = Filename.concat rawExpAresmkrDir build;
 value buildExpAresmkrDir build = Filename.concat expAresmkrDir build;
 
-value lsynkDir = "lsynk";
-value lsynkCommon = "common";
-value _lsynkAssets = lsynkDir // "assets";
-value _lsynkExp = lsynkDir // "expansions";
-value lsynkAssets build = _lsynkAssets // build;
-value lsynkExp build = _lsynkExp // build;
-value lsynkCommonAssets = _lsynkAssets // lsynkCommon;
-value lsynkCommonExp = _lsynkExp // lsynkCommon;
+value lsyncDir = "lsync";
+value lsyncCommon = "common";
+value _lsyncAssets = lsyncDir // "assets";
+value _lsyncExp = lsyncDir // "expansions";
+value lsyncAssets build = _lsyncAssets // build;
+value lsyncExp build = _lsyncExp // build;
+value lsyncCommonAssets = _lsyncAssets // lsyncCommon;
+value lsyncCommonExp = _lsyncExp // lsyncCommon;
 
 value genManifest build =
   let manifestConfig = Filename.concat manifestsDir (build ^ ".xml") in
@@ -208,22 +208,22 @@ value syncSounds dst =
     ) (Sys.readdir sndDir);
 
 value genAssets build =
-  let buildFilter = Filename.concat rsyncDir ("android-" ^ build ^ "-assets.filter") in
-  let buildFilter = if Sys.file_exists buildFilter then " --filter='. " ^ buildFilter ^ "'" else "" in
+(*   let buildFilter = Filename.concat rsyncDir ("android-" ^ build ^ "-assets.filter") in
+  let buildFilter = if Sys.file_exists buildFilter then " --filter='. " ^ buildFilter ^ "'" else "" in *)
   (
     printf "\n\n[ generating assets for build %s... ]\n%!" build;
 
     mkdir assetsAresmkrDir;
 
-    Printf.printf "%s: %s\n%!" lsynkCommonAssets (String.concat "," (Array.to_list (Sys.readdir lsynkCommonAssets)));
-    Printf.printf "%s: %s\n%!" (lsynkAssets build) (String.concat "," (Array.to_list (Sys.readdir (lsynkAssets build))));
+(*     Printf.printf "%s: %s\n%!" lsyncCommonAssets (String.concat "," (Array.to_list (Sys.readdir lsyncCommonAssets)));
+    Printf.printf "%s: %s\n%!" (lsyncAssets build) (String.concat "," (Array.to_list (Sys.readdir (lsyncAssets build)))); *)
 
-    let commonAss = try Array.map (fun fname -> lsynkCommonAssets // fname) (Sys.readdir lsynkCommonAssets) with [ _ -> [||] ] in
-    let buildAssDir = lsynkAssets build in
+    let commonAss = try Array.map (fun fname -> lsyncCommonAssets // fname) (Sys.readdir lsyncCommonAssets) with [ _ -> [||] ] in
+    let buildAssDir = lsyncAssets build in
     let buildAss = try Array.map (fun fname -> buildAssDir // fname) (Sys.readdir buildAssDir) with [ _ -> [||] ] in
-    let lsynkRules = Array.to_list (ExtArray.Array.filter (fun fname -> Sys.file_exists fname && not (Sys.is_directory fname)) (Array.concat [ commonAss; buildAss ])) in (
-      runCommand ("lsync -i " ^ resDir ^ " -o " ^ assetsAresmkrDir ^ " " ^ (String.concat " " lsynkRules)) "lsynk failed when copying assets";
-    );
+    let lsyncRules = Array.to_list (ExtArray.Array.filter (fun fname -> Sys.file_exists fname && not (Sys.is_directory fname)) (Array.concat [ commonAss; buildAss ])) in
+    let lsyncRules = List.filter (fun rulesFname -> not (ExtString.String.ends_with rulesFname ".m4.include")) lsyncRules in
+      runCommand ("lsync -i " ^ resDir ^ " -o " ^ assetsAresmkrDir ^ " " ^ (String.concat " " lsyncRules)) "lsync failed when copying assets";
 
 (*     let sndOpts = if !asssounds then " --filter='protect locale/*/sounds' --filter='protect sounds'" else "" in
       runCommand ("rsync -avL" ^ sndOpts ^ " --include-from=" ^ (Filename.concat rsyncDir "android-assets.include") ^ buildFilter ^ " --exclude-from=" ^ (Filename.concat rsyncDir "android-assets.exclude") ^ " --delete --delete-excluded " ^ resDir ^ "/ " ^ assetsAresmkrDir) "rsync failed when copying assets"; *)

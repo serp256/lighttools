@@ -28,29 +28,25 @@ type filterType = [ Include | Exclude | Protect ];
 type rule = {
   path:string;
   dst:string;
-  filter:list string;
+  filters:list string;
   filterType:filterType;
   protect:list string;
 };
 
 List.iter (fun rulesFname ->
+  let (rulesFname, rmRulesFile) = 
+    if ExtString.String.ends_with rulesFname ".m4"
+    then
+      let processedRulesFname = Filename.chop_extension rulesFname in
+      let cmd = Printf.sprintf "m4 -I %s %s > %s" (Filename.dirname rulesFname) rulesFname processedRulesFname in (
+        LOG(Printf.sprintf "\n[ m4 process %s... ]" rulesFname);
+        RUN(cmd, "m4 failed when processing '" ^ rulesFname ^ "'");
+        (processedRulesFname, True);
+      )
+    else (rulesFname, False)
+  in
+
   let rulesJson = try from_file rulesFname with [ _ -> ERROR("wrong rules file '" ^ rulesFname ^ "' format") ] in
-
-  let parseFiltersJson filtersJson =
-    try
-      List.map (fun (filterName, filterJson) ->
-                  (filterName, try Browse.list (fun filterItemJson -> Browse.string filterItemJson) filterJson with [ _ -> ERROR("wrong '" ^ filterName ^ "' filter format")])
-                ) (Browse.assoc filtersJson)
-    with [ _ -> ERROR("wrong 'filters' format") ]
-  in
-  let filters =
-    match Browse.assoc_field_opt parseFiltersJson "filters" rulesJson with
-    [ Some filters -> filters
-    | _ -> []
-    ]
-  in
-
-  let pathsJson = try Browse.assoc_field (fun pathsJson -> pathsJson) "paths" rulesJson with [ _ -> ERROR("'paths' property required, but not provided in file '" ^ rulesFname ^ "'") ] in
   let rulesCnt = ref 0 in
   let rules =
     Browse.list (fun rule ->
@@ -60,7 +56,7 @@ List.iter (fun rulesFname ->
       let incld = try Some (Browse.list (fun path -> Browse.string path) (List.assoc "include" props)) with [ Not_found -> None | _ -> ERROR("wrong 'include' format for path '" ^ path ^ "'") ] in
       let excld = try Some (Browse.list (fun path -> Browse.string path) (List.assoc "exclude" props)) with [ Not_found -> None | _ -> ERROR("wrong 'exclude' format for path '" ^ path ^ "'") ] in
       let protect = try Browse.list (fun path -> Browse.string path) (List.assoc "protect" props) with [ Not_found -> [] | _ -> ERROR("wrong 'protect' property format for path '" ^ path ^ "'") ] in
-      let (filter, filterType) =
+      let (filters, filterType) =
         match (incld, excld) with
         [ (Some _, Some _) -> ERROR("both include and exclude filtering not permited(specified for path '" ^ path ^ "')")
         | (Some incld, None) -> (incld, Include)
@@ -69,9 +65,9 @@ List.iter (fun rulesFname ->
         ]
       in (
         incr rulesCnt;
-        { path; dst; filter; filterType; protect };
+        { path; dst; filters; filterType; protect };
       )
-    ) pathsJson
+    ) rulesJson
   in
 
   let filterTypeStr filterType = match filterType with [ Include -> "+" | Exclude -> "-" | Protect -> "P" ] in
@@ -91,21 +87,17 @@ List.iter (fun rulesFname ->
       if filterType = Include
       then filtersStr ^ " --filter=\"- **\""
       else filtersStr
-  in
-  let namedFilterRegex = Str.regexp "^{\\(.*\\)}$" in
+  in (
     List.iter (fun rule ->
-      let (filterNames, explicitFilters) = List.partition (fun filter -> Str.string_match namedFilterRegex filter 0) rule.filter in
-      let namedFilters = List.map (fun filterName ->
-                                    let _ = Str.string_match namedFilterRegex filterName 0 in
-                                    let filterName = try Str.matched_group 1 filterName with [ Not_found -> ERROR("cannot match filter name from '" ^ filterName ^ "'") ] in
-                                      try List.assoc filterName filters with [ Not_found -> ERROR("named filter '" ^ filterName ^ "' not found") ]
-                                  ) filterNames
-      in
-      let filters = explicitFilters @ (List.concat namedFilters) in
       let inp = if rule.path = "/" then !inp ^ "/" else !inp // rule.path in
       let out = if rule.dst = "/" then !out ^ "/" else !out // rule.dst in
-      let cmd = Printf.sprintf "rsync --delete-excluded -rLptgoDv %s %s %s %s" (makeFilter rule.dst rule.protect Protect) (makeFilter rule.path filters rule.filterType) inp out in
-        RUN(cmd,("rsync failed when processing rule for path '" ^ rule.path ^ "'"))
-    ) rules
+      let cmd = Printf.sprintf "rsync --delete-excluded -rLptgoDv %s %s %s %s" (makeFilter rule.dst rule.protect Protect) (makeFilter rule.path rule.filters rule.filterType) inp out in (
+        LOG("\n");
+        RUN(cmd,("rsync failed when processing rule for path '" ^ rule.path ^ "'"));
+      )
+    ) rules;
+
+    if rmRulesFile then Sys.remove rulesFname else ();    
+  )
 ) !rulesFiles;
   
