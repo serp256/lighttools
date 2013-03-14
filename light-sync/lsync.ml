@@ -81,11 +81,10 @@ List.iter (fun rulesFname ->
                                                       if filterType = Include
                                                       then
                                                         let path = !inp // path // filter in
-                                                        let filter =
                                                           if Sys.file_exists path && Sys.is_directory path
-                                                          then filter ^ (if ExtString.String.ends_with filter "/" then "**" else "/**")
-                                                          else filter in
-                                                            Printf.sprintf "%s --filter=\"%s %s\"" filtersStr (filterTypeStr filterType) filter                                                      
+                                                          then
+                                                            Printf.sprintf "--filter=\"%s %s\" %s" (filterTypeStr filterType) (filter ^ (if ExtString.String.ends_with filter "/" then "**" else "/**")) filtersStr
+                                                          else filtersStr
                                                       else filtersStr
                                         ) filters)
     in

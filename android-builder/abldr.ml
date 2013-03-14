@@ -122,6 +122,8 @@ value args = [
 parse args (fun arg -> builds.val := [ arg :: !builds ]) "android multiple apks generator";
 builds.val := List.rev !builds;
 
+value (//) = Filename.concat;
+
 (* value androidDir = Filename.concat !inDir "android"; *)
 value androidDir = !inDir;
 value manifestsDir = Filename.concat androidDir "manifests";
@@ -144,6 +146,15 @@ value expAresmkrDir = Filename.concat aresmkrDir "expansions";
 value rawExpAresmkrDir = Filename.concat expAresmkrDir "raw";
 value buildRawExpAresmkrDir build = Filename.concat rawExpAresmkrDir build;
 value buildExpAresmkrDir build = Filename.concat expAresmkrDir build;
+
+value lsynkDir = "lsynk";
+value lsynkCommon = "common";
+value _lsynkAssets = lsynkDir // "assets";
+value _lsynkExp = lsynkDir // "expansions";
+value lsynkAssets build = _lsynkAssets // build;
+value lsynkExp build = _lsynkExp // build;
+value lsynkCommonAssets = _lsynkAssets // lsynkCommon;
+value lsynkCommonExp = _lsynkExp // lsynkCommon;
 
 value genManifest build =
   let manifestConfig = Filename.concat manifestsDir (build ^ ".xml") in
@@ -204,11 +215,21 @@ value genAssets build =
 
     mkdir assetsAresmkrDir;
 
-    let sndOpts = if !asssounds then " --filter='protect locale/*/sounds' --filter='protect sounds'" else "" in
-      runCommand ("rsync -avL" ^ sndOpts ^ " --include-from=" ^ (Filename.concat rsyncDir "android-assets.include") ^ buildFilter ^ " --exclude-from=" ^ (Filename.concat rsyncDir "android-assets.exclude") ^ " --delete --delete-excluded " ^ resDir ^ "/ " ^ assetsAresmkrDir) "rsync failed when copying assets";
+    Printf.printf "%s: %s\n%!" lsynkCommonAssets (String.concat "," (Array.to_list (Sys.readdir lsynkCommonAssets)));
+    Printf.printf "%s: %s\n%!" (lsynkAssets build) (String.concat "," (Array.to_list (Sys.readdir (lsynkAssets build))));
 
-    if !asssounds then syncSounds assetsAresmkrDir
-    else ();
+    let commonAss = try Array.map (fun fname -> lsynkCommonAssets // fname) (Sys.readdir lsynkCommonAssets) with [ _ -> [||] ] in
+    let buildAssDir = lsynkAssets build in
+    let buildAss = try Array.map (fun fname -> buildAssDir // fname) (Sys.readdir buildAssDir) with [ _ -> [||] ] in
+    let lsynkRules = Array.to_list (ExtArray.Array.filter (fun fname -> Sys.file_exists fname && not (Sys.is_directory fname)) (Array.concat [ commonAss; buildAss ])) in (
+      runCommand ("lsync -i " ^ resDir ^ " -o " ^ assetsAresmkrDir ^ " " ^ (String.concat " " lsynkRules)) "lsynk failed when copying assets";
+    );
+
+(*     let sndOpts = if !asssounds then " --filter='protect locale/*/sounds' --filter='protect sounds'" else "" in
+      runCommand ("rsync -avL" ^ sndOpts ^ " --include-from=" ^ (Filename.concat rsyncDir "android-assets.include") ^ buildFilter ^ " --exclude-from=" ^ (Filename.concat rsyncDir "android-assets.exclude") ^ " --delete --delete-excluded " ^ resDir ^ "/ " ^ assetsAresmkrDir) "rsync failed when copying assets"; *)
+
+(*     if !asssounds then syncSounds assetsAresmkrDir
+    else (); *)
 
     runCommand("aresmkr -concat -i " ^ assetsAresmkrDir ^ " -o " ^ assetsAresmkrFname) "android resources maker failed when making assets";
   );
