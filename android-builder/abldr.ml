@@ -222,7 +222,7 @@ value genAssets build =
     let buildAssDir = lsyncAssets build in
     let buildAss = try Array.map (fun fname -> buildAssDir // fname) (Sys.readdir buildAssDir) with [ _ -> [||] ] in
     let lsyncRules = Array.to_list (ExtArray.Array.filter (fun fname -> Sys.file_exists fname && not (Sys.is_directory fname)) (Array.concat [ commonAss; buildAss ])) in
-    let lsyncRules = List.filter (fun rulesFname -> not (ExtString.String.ends_with rulesFname ".m4.include")) lsyncRules in
+    let lsyncRules = List.filter (fun rulesFname -> not ExtString.String.(starts_with rulesFname "." || ends_with rulesFname ".m4.include")) lsyncRules in
       runCommand ("lsync -i " ^ resDir ^ " -o " ^ assetsAresmkrDir ^ " " ^ (String.concat " " lsyncRules)) "lsync failed when copying assets";
 
 (*     let sndOpts = if !asssounds then " --filter='protect locale/*/sounds' --filter='protect sounds'" else "" in
@@ -320,7 +320,7 @@ value genExpansion build =
     let buildExpDir = lsyncExp build in
     let buildExp = try Array.map (fun fname -> buildExpDir // fname) (Sys.readdir buildExpDir) with [ _ -> [||] ] in
     let lsyncRules = Array.to_list (ExtArray.Array.filter (fun fname -> Sys.file_exists fname && not (Sys.is_directory fname)) (Array.concat [ commonExp; buildExp ])) in
-    let lsyncRules = List.filter (fun rulesFname -> not (ExtString.String.ends_with rulesFname ".m4.include")) lsyncRules in
+    let lsyncRules = List.filter (fun rulesFname -> not ExtString.String.(starts_with rulesFname "." || ends_with rulesFname ".m4.include")) lsyncRules in
       runCommand ("lsync -i " ^ resDir ^ " -o " ^ expDir ^ " " ^ (String.concat " " lsyncRules)) "lsync failed when copying expansions";
 
         (* it is so bad, not universal at all *)
