@@ -309,19 +309,26 @@ value genExpansion build =
       makeLink patch;
     )
   else
-    let expDir = (* Filename.concat expansionsDir build *)buildRawExpAresmkrDir build
-    and buildFilter = Filename.concat rsyncDir ("android-" ^ build ^ "-expansions.filter") in
-      let buildFilter = if Sys.file_exists buildFilter then " --filter='. " ^ buildFilter ^ "'" else "" in
+    let expDir = (* Filename.concat expansionsDir build *)buildRawExpAresmkrDir build in
+    (* and buildFilter = Filename.concat rsyncDir ("android-" ^ build ^ "-expansions.filter") in *)
+      (* let buildFilter = if Sys.file_exists buildFilter then " --filter='. " ^ buildFilter ^ "'" else "" in *)
       (
         printf "\n\n[ generating expansions for build %s... ]\n%!" build;
         mkdir expDir;
 
+    let commonExp = try Array.map (fun fname -> lsyncCommonExp // fname) (Sys.readdir lsyncCommonExp) with [ _ -> [||] ] in
+    let buildExpDir = lsyncExp build in
+    let buildExp = try Array.map (fun fname -> buildExpDir // fname) (Sys.readdir buildExpDir) with [ _ -> [||] ] in
+    let lsyncRules = Array.to_list (ExtArray.Array.filter (fun fname -> Sys.file_exists fname && not (Sys.is_directory fname)) (Array.concat [ commonExp; buildExp ])) in
+    let lsyncRules = List.filter (fun rulesFname -> not (ExtString.String.ends_with rulesFname ".m4.include")) lsyncRules in
+      runCommand ("lsync -i " ^ resDir ^ " -o " ^ expDir ^ " " ^ (String.concat " " lsyncRules)) "lsync failed when copying expansions";
+
         (* it is so bad, not universal at all *)
-        runCommand ("rsync -avL --filter='protect locale/*/sounds' --filter='protect sounds' --include-from=" ^ (Filename.concat rsyncDir "android-expansions.include") ^ buildFilter ^ " --exclude-from=" ^ (Filename.concat rsyncDir "android-expansions.exclude") ^ " --delete --delete-excluded " ^ resDir ^ "/ " ^ expDir) "rsync failed when copying expansions";
+(*         runCommand ("rsync -avL --filter='protect locale/*/sounds' --filter='protect sounds' --include-from=" ^ (Filename.concat rsyncDir "android-expansions.include") ^ buildFilter ^ " --exclude-from=" ^ (Filename.concat rsyncDir "android-expansions.exclude") ^ " --delete --delete-excluded " ^ resDir ^ "/ " ^ expDir) "rsync failed when copying expansions";
 
         if not !nosounds
         then syncSounds expDir
-        else ();
+        else (); *)
 
         let inp = open_in (Filename.concat androidDir "AndroidManifest.xml") in
           let xmlinp = Xmlm.make_input ~strip:True (`Channel inp) in
