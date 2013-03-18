@@ -10,7 +10,7 @@ LicenseFile: LICENSE
 License:     LGPL-2.1 with OCaml linking exception
 BuildTools:  ocamlbuild
 FilesAB: src/core/camlimages.ml.ab
-PostConfCommand: ocaml unix.cma postconfig.ml $freetype2 $libpng $jpeg $gif $tiff $xpm $ps
+PostConfCommand: ocaml unix.cma postconfig.ml $freetype2 $libpng $libjpeg $gif $tiff $xpm $ps
 Plugins:     DevFiles (0.3), META (0.3), StdFiles (0.3)
 
 Flag gif
@@ -21,7 +21,7 @@ Flag libpng
   Description: PNG Support
   Default: true
 
-Flag jpeg
+Flag libjpeg
   Description: JPEG Support
   Default: true
 
@@ -108,8 +108,8 @@ Library "camlimages-tiff"
   # CCLib: -ltiff
 
 Library "camlimages-jpeg"
-  Build$: flag(jpeg)
-  Install$: flag(jpeg)
+  Build$: flag(libjpeg)
+  Install$: flag(libjpeg)
   FindlibName: jpeg
   FindlibParent: camlimages
   XMETADescription: JPEG Support for CamlImages
