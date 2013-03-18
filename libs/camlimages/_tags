@@ -2,9 +2,9 @@
 <src/png/*.a>: pkg_libpng_lflags, ocamlmklib
 <src/png/*.cm{x,}a>: pkg_libpng_lflags
 
-<src/jpeg/*.c>: pkg_libopenjpeg_cflags
-<src/jpeg/*.a>: pkg_libopenjpeg_lflags, ocamlmklib
-<src/jpeg/*.cm{x,}a>: pkg_libopenjpeg_lflags
+<src/jpeg/*.c>: pkg_libjpeg_cflags
+<src/jpeg/*.a>: pkg_libjpeg_lflags, ocamlmklib
+<src/jpeg/*.cm{x,}a>: pkg_libjpeg_lflags
 
 <src/gif/*.c>: pkg_gif_cflags
 <src/gif/*.a>: pkg_gif_lflags, ocamlmklib

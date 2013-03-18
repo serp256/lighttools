@@ -65,6 +65,7 @@ value concatFiles ?(fprefix = "") files out = (
     [ [] -> index
     | [ fname :: files ] ->
       let () = LOGN("process '" ^ fname ^ "'...") in
+      try
       let inChan = open_in (if fprefix <> "" then Filename.concat fprefix fname else fname) in
       let inLen = in_channel_length inChan in
       let buf = Buffer.create inLen in (
@@ -75,6 +76,13 @@ value concatFiles ?(fprefix = "") files out = (
         LOG(Printf.sprintf " done, offset %d, size %d" offset inLen);
         _concatFiles (Index.add index fname (Index.Entry.create offset inLen)) files (offset + inLen);
       )
+       with
+      [ exn ->
+          (
+            Printf.printf "!!!ERROR %s :\n %s\n%!" (Printexc.to_string exn) (Printexc.get_backtrace () );
+            raise exn;
+          )
+      ]
     ]
   in
   let index = _concatFiles (Index.create ()) files 0 in (
