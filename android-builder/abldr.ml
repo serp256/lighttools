@@ -292,14 +292,14 @@ value args = [
   ("-install-exp", Tuple [ Set installExp; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "\t\tinstall only expansion, usage same as -install");
 
   ("-proj", Set proj, "\t\tcreate android project with all needed for light android builder");
-  ("-proj-package", Set_string projPackage, "\tnew android project package");
-  ("-proj-activity", Set_string projActivity, "\t123");
-  ("-proj-app-name", Set_string projAppName, "\t123");
-  ("-proj-path", Set_string projPath, "\t\t123");
-  ("-proj-keystore-pass", Set_string projKeystorePass, "\t123");
-  ("-proj-with-exp", Set projWithExp, "\t123");
-  ("-proj-so", Set_string projSo, "\t123");
-  ("-proj-lightning", Set_string projLightning, "\t123")
+  ("-proj-package", Set_string projPackage, "\tjava package of new project");
+  ("-proj-activity", Set_string projActivity, "\tactivity class name");
+  ("-proj-app-name", Set_string projAppName, "\tapplication name");
+  ("-proj-path", Set_string projPath, "\t\tdirectory, where project structure will be created, by default './android'");
+  ("-proj-keystore-pass", Set_string projKeystorePass, "\tkeystore password, by default 'xyupizda'");
+  ("-proj-with-exp", Set projWithExp, "\tpass with option if application with expansions");
+  ("-proj-so", Set_string projSo, "\t\tnative library name");
+  ("-proj-lightning", Set_string projLightning, "\tpath to lightning")
 ];
 
 parse args (fun arg -> builds.val := [ arg :: !builds ]) "android multiple apks generator";
