@@ -17,7 +17,7 @@ let version = "$(pkg_version)";;
 (* Supported libraries *)
 let lib_gif = $(gif);;
 let lib_png = $(libpng);;
-let lib_jpeg = $(jpeg);;
+let lib_jpeg = $(libjpeg);;
 let lib_tiff = $(tiff);;
 let lib_freetype = $(freetype2);;
 let lib_ps = $(ps);;
