@@ -191,7 +191,11 @@ value readObjs lib =
                     let fnum = IO.read_ui16 inp in
                     (
                       for i = 1 to fnum do {
-                        frames.val := [ (IO.read_i32 inp) :: !frames ];
+                        let  frame = IO.read_i32 inp in
+                          (
+                            Printf.printf "read frame %d : %d\n%!" i frame;
+                            frames.val := [ frame :: !frames ];
+                          )
                       };
 
                       let frames = List.rev !frames
@@ -226,11 +230,17 @@ value writeObjs lib objs =
         write_utf out anim.aname;
         IO.write_real_i32 out (Int32.of_float anim.frameRate);
 
-        IO.write_byte out (List.length anim.contour);
+        Printf.printf "contours len : %d \n%!" (List.length anim.contour);
+        IO.write_ui16 out (List.length anim.contour);
         List.iter (fun (x, y) -> IO.write_i32 out ((x lsl 16) lor (y land 0xffff))) anim.contour;
 
         IO.write_ui16 out anim.fnum;
-        List.iter (fun frame -> IO.write_i32 out frame) anim.frames;
+        List.iteri (fun i frame ->
+            (
+              Printf.printf "write frame %d : %d \n%!" i frame;
+              IO.write_i32 out frame
+            )
+        ) anim.frames;
       )) obj.anims
     )) objs;
 

@@ -50,8 +50,8 @@ lib: prepare-input clean-output lib-compressed
 #	./convert.native -max 4096 -inp 1 -degree4 -scale 2 -o ${LIB_DIR} 
 
 lib-notcompressed:
+	./convert.native -without-cntr -degree4  -o ${LIB_DIR} conf/farm.json
 	./convert.native -degree4 -scale ${SCALE} -o ${LIB_DIR} conf/farm.json
-	./convert.native -degree4  -o ${LIB_DIR} conf/farm.json
 	./convert.native -max 4096 -degree4 -scale 2 -o ${LIB_DIR} conf/farm.json
 
 #lib-test: prepare-input clean-output lib-notcompressed
