@@ -146,6 +146,20 @@ value makeProject () = (
   );
 
   let manifestsDir = !projPath // "manifests" in
+
+  let defaultManifest =
+    "<?xml version=\"1.0\"?>
+      <apk>
+        <id>0</id>
+        <screens>
+          <small/><normal/><large/><xlarge/>
+          <compatible>
+            <!--<screen size=\"normal\" density=\"hdpi\"/>-->
+          </compatible>
+        </screens>
+      </apk>"
+  in
+
   let manifest =
     "<?xml version=\"1.0\"?>
     <xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:xi=\"http://www.w3.org/2001/XInclude\" xmlns:android=\"http://schemas.android.com/apk/res/android\">
@@ -242,6 +256,11 @@ value makeProject () = (
     let out = open_out (manifestsDir // "manifest.xslt") in (    
       output_string out manifest;
       close_out out;
+    );
+
+    let out = open_out (manifestsDir // "default.xml") in (
+      output_string out defaultManifest;
+      close_out out;      
     );
   );
 
