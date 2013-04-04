@@ -454,16 +454,19 @@ value archiveApk ?(apk = True) ?(expansions = True) build =
           if fname = ""
           then ()
           else
-            let fname = Filename.concat expDir fname in
-              if Unix.((lstat fname).st_kind = S_LNK)
-              then makeRelativeSymlink (Filename.concat expDir (Unix.readlink fname)) (Filename.concat apkArchiveDir (Filename.basename fname))
-              else runCommand ("cp -Rv " ^ fname ^ " " ^ apkArchiveDir) ("cp failed when trying to copy " ^ fname ^ " to archive")
+            let copy fname =
+              let fname = Filename.concat expDir fname in
+                if Unix.((lstat fname).st_kind = S_LNK)
+                then makeRelativeSymlink (Filename.concat expDir (Unix.readlink fname)) (Filename.concat apkArchiveDir (Filename.basename fname))
+                else runCommand ("cp -Rv " ^ fname ^ " " ^ apkArchiveDir) ("cp failed when trying to copy " ^ fname ^ " to archive")
+            in (
+              copy fname;
+              copy (fname ^ ".index");
+            )
         in
         let (main, patch) = findExpNames expDir in (
           archiveExp main;
-          archiveExp (main ^ ".index");
           archiveExp patch;
-          archiveExp (patch ^ ".index");
         );
 
         if !release && !baseExp && !patchFor = "" then
