@@ -151,8 +151,16 @@ value push_new_image img =
     id
   );
 
+value load_image path =
+  let img = Images.load path [] in
+  let (w,h) = Images.size img in
+  if w > !TextureLayout.max_size || h > !TextureLayout.max_size
+  then failwith (Printf.sprintf "IMAGE <%s:[%d:%d]> too large" path w h)
+  else img;
+
+
 value push_image (img: [= `image of Images.t | `path of string])  = 
-  let img = match img with [ `image img -> img | `path path -> Images.load path [] ] in
+  let img = match img with [ `image img -> img | `path path -> load_image path ] in
   try
     Hashtbl.iter begin fun id img' ->
       if compare_images img img'
@@ -165,7 +173,7 @@ value push_image (img: [= `image of Images.t | `path of string])  =
 
 value push_child_image  dirname mobj = 
   let path = dirname // (jstring (List.assoc "file" mobj)) in
-  let img = Images.load path [] in
+  let img = load_image path in
   try
     Utils.image_iter begin fun _ _ {Color.alpha=alpha;_}  ->
       if alpha > 1 then raise Exit else ()
