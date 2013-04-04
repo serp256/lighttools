@@ -461,7 +461,9 @@ value archiveApk ?(apk = True) ?(expansions = True) build =
         in
         let (main, patch) = findExpNames expDir in (
           archiveExp main;
+          archiveExp (main ^ ".index");
           archiveExp patch;
+          archiveExp (patch ^ ".index");
         );
 
         if !release && !baseExp && !patchFor = "" then
