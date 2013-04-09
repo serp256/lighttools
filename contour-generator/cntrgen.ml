@@ -104,7 +104,7 @@ value regionToString reg = Printf.sprintf "region(regx:%d; regy:%d; regw:%d; reg
 
 value readTexInfo lib =
   let inp = IO.input_channel (open_in (!indir // lib // ("texInfo" ^ !suffix ^ ".dat"))) in
-  let texNum = IO.read_i16 inp in
+  let texNum = IO.read_byte inp in
   let regions = DynArray.make texNum in
   (
     for i = 1 to texNum do {
@@ -274,6 +274,7 @@ value genContour regions frames anim =
   let frame = DynArray.get frames (List.hd anim.frames) in
   let (x, y, w, h) =
     List.fold_left (fun (x, y, w, h) layer ->
+      let () = Printf.printf "texId : %d; recId : %d\n%!" layer.texId layer.recId in
       let (_, regions) = DynArray.get regions layer.texId in
       let region = DynArray.get regions layer.recId in
         (min x layer.lx, min y layer.ly, max w (layer.lx + region.regw), max h (layer.ly + region.regh))

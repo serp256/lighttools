@@ -332,6 +332,60 @@ value copyAnimations dir =
       IO.close_out out;
     );
 
+type texInfo = 
+  {
+    count : mutable int;
+    textures : DynArray.t (string * (DynArray.t (int * int * int * int)));
+  };
+
+value readTexInfo fname = 
+  let inp = IO.input_channel (open_in fname) in
+    (
+      let count = IO.read_byte inp in
+      let textures = DynArray.make count in
+        (
+          for i = 1 to count do 
+            (
+              let name = read_utf inp in 
+              let count_regs = IO.read_ui16 inp in 
+              let regions = DynArray.make count_regs in
+                (
+                  for j = 1 to count_regs do 
+                    let sx = IO.read_ui16 inp in
+                    let sy = IO.read_ui16 inp in
+                    let iw = IO.read_ui16 inp in
+                    let ih = IO.read_ui16 inp in
+                    DynArray.add regions (sx,sy,iw,ih)
+                  done;
+                  DynArray.add textures (name, regions)
+                )
+            )
+          done;
+          IO.close_in inp;
+          {count; textures}
+        )
+    );
+
+value writeTexInfo texInfo fname = 
+  let newTexInfo = IO.output_channel (open_out fname) in
+    (
+      IO.write_byte newTexInfo texInfo.count;
+      DynArray.iter begin fun (name_tex, regions) ->
+        (
+          write_utf newTexInfo name_tex;
+          IO.write_ui16 newTexInfo (DynArray.length regions);
+          DynArray.iter begin fun (sx, sy, iw, ih) ->
+            (
+              IO.write_ui16 newTexInfo sx;
+              IO.write_ui16 newTexInfo sy;
+              IO.write_ui16 newTexInfo iw;
+              IO.write_ui16 newTexInfo ih;
+            )
+          end regions;
+        )
+      end texInfo.textures;
+      IO.close_out newTexInfo;
+    );
 
 value convert idTex  imgs =
   let convert_dir dir imgs = 
@@ -342,31 +396,30 @@ value convert idTex  imgs =
         | _ -> ()
         ];
         let newTexInfo = res_dir /// "texInfo" ^ (get_postfix ()) ^".dat" in
-        let newTexInfo = IO.output_channel (open_out newTexInfo) in
+        let regions = DynArray.make (List.length imgs) in
           (
+            List.iter begin fun (urlId,(sx,sy,isRotate,img)) ->
+              (
+                let (iw,ih) = Images.size img in
+                DynArray.add regions (sx, sy, iw, ih);
+              )
+            end imgs;
             copyAnimations dir;
             copyFrames dir;
-            (*
-            ignore(Sys.command (Printf.sprintf "cp -f %s/%s/animations.dat %s" !inp_dir dir res_dir));
-            ignore(Sys.command (Printf.sprintf "cp -f %s/%s/frames.dat %s" !inp_dir dir res_dir));
-            *)
-            IO.write_ui16 newTexInfo 1;
-          (*  write_utf newTexInfo ((string_of_int idTex) ^ (get_postfix ()) ^ ".png");*)
-            write_utf newTexInfo (idTex ^ (get_postfix ()) ^ ".png");
-            IO.write_ui16 newTexInfo (List.length imgs);
-            List.iteri begin fun i (urlId,(sx,sy,isRotate,img)) ->
-            (
-              let (iw,ih) = Images.size img in
-              (
-                IO.write_ui16 newTexInfo sx;
-                IO.write_ui16 newTexInfo sy;
-                IO.write_ui16 newTexInfo iw;
-                IO.write_ui16 newTexInfo ih;
-             (*   IO.write_byte newTexInfo (match isRotate with [ True -> 1 | _ -> 0]); *)
-              );
-            )
-            end imgs;
-            IO.close_out newTexInfo;
+            let newTexture = ((idTex ^ (get_postfix ()) ^ ".png"), regions) in
+            let texInfo = 
+              match Sys.file_exists newTexInfo with
+              [ True -> 
+                  let texInfo = readTexInfo newTexInfo in
+                    (
+                      texInfo.count := texInfo.count + 1;
+                      DynArray.add texInfo.textures newTexture;
+                      texInfo
+                    )
+              | _ -> {count=1; textures = DynArray.init 1 (fun _ -> newTexture)}
+              ]
+            in
+            writeTexInfo texInfo newTexInfo;
           );
         ) 
   in
@@ -510,7 +563,7 @@ value run_pack pack =
             end [] images
           )
         ]
-    | _ -> List.map (fun (_, images) -> (True, images)) images
+    | _ -> List.map (fun (_, images) -> (!scale < 2., images)) images
     ]
   in
   let (textures:list (TextureLayout.page (int * string))) = TextureLayout.layout_min images in
@@ -526,7 +579,8 @@ value run_pack pack =
           (
                 Printf.printf "Save %s.png \n%!" name_texture;
                 convert name_texture imgs;
-                List.iter begin fun (_,(sx,sy,isRotate,img)) ->
+                List.iter begin fun ((id,name) ,(sx,sy,isRotate,img)) ->
+                  let () = Printf.printf "INFO : (%d; %s)\n%!" id name in
                   let (iw,ih) = Images.size img in
                     try
                       (
@@ -630,9 +684,12 @@ value () =
       TextureLayout.countEmptyPixels.val := 0;
       TextureLayout.rotate.val := False;
 
+      if !scale >= 2. then TextureLayout.min_size.val := 512
+      else ();
+(*
     if !scale >= 2. then TextureLayout.max_size.val := 4096
     else ();
-
+*)
     run ();
   );
 
