@@ -57,10 +57,13 @@ lib: clean-output lib-compressed
 lib-notcompressed:
 	./convert.native -degree4 -without-cntr -scale ${SCALE} -o ${LIB_DIR} conf/farm.json
 	./convert.native -degree4  -without-cntr -o ${LIB_DIR} conf/farm.json
-	./convert.native -max 4096  -without-cntr -degree4 -scale 2 -o ${LIB_DIR} conf/farm.json
+	./convert.native -max 2048  -without-cntr -degree4 -scale 2 -o ${LIB_DIR} conf/farm.json
 
 #lib-test: prepare-input clean-output lib-notcompressed
 lib-test: clean-output lib-notcompressed
+lib-testx2: 
+	rm -r -f output/*
+	./convert.native -max 2048 -degree4 -scale 2 -without-cntr conf/farm.json
 
 100500:
 	./convert.native -inp 2 -n 100500 -min 512 -scale ${SCALE} -o ~/Devel/mobile-farm/Resources/library -pvr

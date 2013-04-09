@@ -4,6 +4,7 @@ open ExtArray;
 open Printf;
 open Arg;
 
+value (//) = Filename.concat;
 value myassert exp mes = if not exp then ( printf "\n%!"; failwith mes ) else ();
 value mkdir path =
 (
@@ -81,7 +82,6 @@ value assets = ref False;
 value expansions = ref False;
 value apk = ref False;
 value release = ref False;
-value package = ref "";
 value patchFor = ref "";
 value expVer = ref "";
 value builds = ref [];
@@ -91,40 +91,239 @@ value installApk = ref False;
 value installExp = ref False;
 value withoutLib = ref False;
 value baseExp = ref False;
-(* value cheat = ref False; *)
-value noExp = ref False;
-value asssounds = ref False;
+(* value noExp = ref False; *)
 value lib = ref False;
 value allBuilds = ref False;
-value nosounds = ref False;
+
+value proj = ref False;
+value projPackage = ref "";
+value projAppName = ref "";
+value projActivity = ref "";
+value projPath = ref "android";
+value projKeystorePass = ref "xyupizda";
+value projWithExp = ref False;
+value projSo = ref "";
+value projLightning = ref "";
+
+value makeProject () = (
+  myassert (!projPackage <> "") "-proj-package is required";
+  myassert (!projActivity <> "") "-proj-activity is required";
+  myassert (!projAppName <> "") "-proj-app-name is required";
+  myassert (!projSo <> "") "-proj-so is required";
+  myassert (!projLightning <> "") "-proj-lightning is required";
+
+  runCommand (Printf.sprintf "android create project --target android-10 --name abldr_android_project --path \"%s\" --activity %s --package %s" !projPath !projActivity !projPackage)
+              "android tool failed when creating base android project";
+
+  try Sys.remove (!projPath // "AndroidManifest.xml") with [ Sys_error _ -> () ];
+  try Sys.remove (!projPath // "ant.properties") with [ Sys_error _ -> () ];
+  try Sys.remove (!projPath // "proguard-project.txt") with [ Sys_error _ -> () ];
+  try Sys.remove (!projPath // "res/layout/main.xml") with [ Sys_error _ -> () ];
+  try Sys.remove (!projPath // "res/values/strings.xml") with [ Sys_error _ -> () ];
+  try Unix.rmdir (!projPath // "res/layout") with [ Unix.Unix_error _ -> () ];
+
+  mkdir (!projPath // "libs" // "armeabi-v7a");
+  mkdir (!projPath // "assets");
+
+  let kstore = String.lowercase !projActivity in
+  let kstoreFname = !projPath // kstore in
+  let cmd = Printf.sprintf 
+              "keytool -genkey -keystore %s.keystore -alias %s -dname \"CN=%s, OU=Unknown, O=Redspell, L=Orel, ST=Unknown, C=RU\" -keypass %s -storepass %s -keyalg RSA -keysize 2048 -validity 10000"
+              kstoreFname kstore (Unix.getlogin ()) !projKeystorePass !projKeystorePass
+  in (
+    runCommand cmd "keytool failed when create keystore";
+
+    let out = open_out (!projPath // "ant.properties") in (
+      output_string out (Printf.sprintf "key.store=%s.keystore\nkey.alias=%s\nkey.store.password=%s\nkey.alias.password=%s"
+                                        kstore kstore !projKeystorePass !projKeystorePass);
+      close_out out;
+    );
+  );
+
+  let lsyncDir = !projPath // "lsync" in (
+    mkdir (lsyncDir // "assets" // "common");
+    if !projWithExp then mkdir (lsyncDir // "expansions") else ();    
+  );
+
+  let manifestsDir = !projPath // "manifests" in
+
+  let defaultManifest =
+    "<?xml version=\"1.0\"?>
+      <apk>
+        <id>0</id>
+        <screens>
+          <small/><normal/><large/><xlarge/>
+          <compatible>
+            <!--<screen size=\"normal\" density=\"hdpi\"/>-->
+          </compatible>
+        </screens>
+      </apk>"
+  in
+
+  let manifest =
+    "<?xml version=\"1.0\"?>
+    <xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:xi=\"http://www.w3.org/2001/XInclude\" xmlns:android=\"http://schemas.android.com/apk/res/android\">
+        <xsl:output method=\"xml\" indent=\"yes\"/>
+
+        <xsl:template match=\"apk\">
+            <manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"
+                    package=\"{document('../abldr.xml')/apk/package}\"
+                    android:versionName=\"{document('../abldr.xml')/apk/version}\"
+                    android:versionCode=\"{concat(translate(document('../abldr.xml')/apk/version,'.',''),id)}\"
+                    android:installLocation=\"auto\">
+
+                <application android:label=\"{document('../abldr.xml')/apk/name}\" android:icon=\"@drawable/icon\">
+                    <activity android:name=\"{document('../abldr.xml')/apk/activity}\"
+                            android:label=\"{document('../abldr.xml')/apk/name}\"
+                            android:screenOrientation=\"portrait\"
+                            android:launchMode=\"singleTop\"
+                            android:configChanges=\"orientation\">
+                        <intent-filter>
+                            <action android:name=\"android.intent.action.MAIN\" />
+                            <category android:name=\"android.intent.category.LAUNCHER\" />
+                        </intent-filter>                    
+                    </activity>
+
+                    <service android:name=\"ru.redspell.lightning.expansions.LightExpansionsDownloadService\" />
+                    <receiver android:name=\"ru.redspell.lightning.expansions.LightExpansionsAlarmReceiver\" />
+
+                    <service android:name=\"ru.redspell.lightning.payments.BillingService\" />
+                    <receiver android:name=\"ru.redspell.lightning.payments.BillingReceiver\">
+                        <intent-filter>
+                            <action android:name=\"com.android.vending.billing.IN_APP_NOTIFY\" />
+                            <action android:name=\"com.android.vending.billing.RESPONSE_CODE\" />
+                            <action android:name=\"com.android.vending.billing.PURCHASE_STATE_CHANGED\" />
+                        </intent-filter>
+                    </receiver>
+
+                    <receiver android:name=\"ru.redspell.lightning.LightNotificationsReceiver\">
+                      <intent-filter>
+                        <action android:name=\"android.intent.action.BOOT_COMPLETED\" />
+                      </intent-filter>
+                    </receiver>
+
+                    <activity android:name=\"com.tapjoy.TJCOffersWebView\" android:configChanges=\"keyboardHidden|orientation\" />
+                    <activity android:name=\"com.tapjoy.TapjoyFeaturedAppWebView\" android:configChanges=\"keyboardHidden|orientation\" />
+                    <activity android:name=\"com.tapjoy.TapjoyVideoView\" android:configChanges=\"keyboardHidden|orientation\" />
+                    <activity android:name=\"com.facebook.LoginActivity\"/>
+                </application>
+
+                <uses-permission android:name=\"android.permission.INTERNET\" />
+                <uses-permission android:name=\"com.android.vending.BILLING\" />
+                <uses-permission android:name=\"com.android.vending.CHECK_LICENSE\" />
+                <uses-permission android:name=\"android.permission.WAKE_LOCK\" />
+                <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />
+                <uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"/>
+                <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>
+                <uses-permission android:name=\"android.permission.READ_PHONE_STATE\"/>
+                <uses-permission android:name=\"android.permission.RECEIVE_BOOT_COMPLETED\" />
+                <uses-feature android:glEsVersion=\"0x00020000\"></uses-feature>
+                <uses-sdk android:targetSdkVersion=\"10\" android:minSdkVersion=\"8\"></uses-sdk>
+
+                <xsl:apply-templates select=\"screens\"/>
+                <xsl:apply-templates select=\"//texture\"/>
+            </manifest>
+        </xsl:template>
+
+        <xsl:template match=\"texture\">
+            <supports-gl-texture android:name=\"{.}\" />
+        </xsl:template>
+
+        <xsl:template match=\"screens\">
+            <supports-screens>
+                <xsl:attribute name=\"android:smallScreens\"><xsl:choose><xsl:when test=\"small\">true</xsl:when><xsl:otherwise>false</xsl:otherwise></xsl:choose></xsl:attribute>
+                <xsl:attribute name=\"android:normalScreens\"><xsl:choose><xsl:when test=\"normal\">true</xsl:when><xsl:otherwise>false</xsl:otherwise></xsl:choose></xsl:attribute>
+                <xsl:attribute name=\"android:largeScreens\"><xsl:choose><xsl:when test=\"large\">true</xsl:when><xsl:otherwise>false</xsl:otherwise></xsl:choose></xsl:attribute>
+                <xsl:attribute name=\"android:xlargeScreens\"><xsl:choose><xsl:when test=\"xlarge\">true</xsl:when><xsl:otherwise>false</xsl:otherwise></xsl:choose></xsl:attribute>
+            </supports-screens>
+
+            <xsl:apply-templates select=\"compatible\"/>
+        </xsl:template>
+
+        <xsl:template match=\"compatible\">
+            <compatible-screens>
+                <xsl:apply-templates />
+            </compatible-screens>
+        </xsl:template>
+
+        <xsl:template match=\"screen\">
+            <screen android:screenSize=\"{@size}\" android:screenDensity=\"{@density}\"/>
+        </xsl:template>
+    </xsl:stylesheet>"
+  in (
+    mkdir manifestsDir;
+    
+    let out = open_out (manifestsDir // "manifest.xslt") in (    
+      output_string out manifest;
+      close_out out;
+    );
+
+    let out = open_out (manifestsDir // "default.xml") in (
+      output_string out defaultManifest;
+      close_out out;      
+    );
+  );
+
+  let out = open_out (!projPath // "abldr.xml") in (
+    output_string out (Printf.sprintf "<?xml version=\"1.0\"?>\n<apk>\n\t<package>%s</package>\n\t<activity>%s</activity>\n\t<name>%s</name>\n\t<version>1.0.0</version>\n\t<withexp>%B</withexp>\n</apk>"
+                                        !projPackage !projActivity !projAppName !projWithExp);
+    close_out out;
+  );
+
+  let out = open_out (!projPath // "Makefile") in (
+    output_string out "debug:\n\t$(MAKE) -C ../ android-debug\nrelease:\n\t$(MAKE) -C ../ android-release";
+    close_out out;
+  );
+
+  let activity =
+    Printf.sprintf "package %s;\n\nimport ru.redspell.lightning.LightActivity;\n\npublic class %s extends LightActivity {\n\tstatic {\n\t\tru.redspell.lightning.utils.Log.enabled = false;\n\t\tSystem.loadLibrary(\"%s\");\n\t}\n}"
+                    !projPackage !projActivity !projSo
+  in
+  let packagePath = String.map (fun c -> if c = '.' then '/' else c) !projPackage in
+  let out = open_out (!projPath // "src" // packagePath // (!projActivity ^ ".java")) in (
+    output_string out activity;
+    close_out out;
+  );
+
+  let out = open_out_gen [ Open_append ] 0o755 (!projPath // "local.properties") in (
+    seek_out out (out_channel_length out);
+    output_string out (Printf.sprintf "\nandroid.library.reference.1=%s/src/android/java\n" !projLightning);
+    close_out out;
+  );
+);
 
 value args = [
-  ("-i", Set_string inDir, "input directory (for example, farm root directory, which contains android subdirectory)");
-  ("-manifest", Set manifest, "generate manifest for builds");
-  ("-assets", Set assets, "generate assets for builds");
-  ("-asssounds", Set asssounds, "include sounds into assets, use with -assets option. by default sounds included into expansions");
-  ("-nosounds", Set nosounds, "do not apply specific for sounds rsync calls");
-  ("-exp", Set expansions, "generate expansions for builds");
-  ("-base-exp", Set baseExp, "create symlink, named 'base', to this version on expansions in release archive");
-  ("-exp-patch", Set_string patchFor, "generate expansions patch for version, passed through this option");
-  ("-exp-ver", Set_string expVer, "use expansions from version, passed through this option");
-  ("-lib", Set lib, "build only so");
-  ("-all-builds", Set allBuilds, "make all builds");
-  ("-apk", Set apk, "compile apk for builds");
-  ("-no-exp", Set noExp, "application has no expansions");
-  ("-without-lib", Set withoutLib, "compile apk without farm-lib rebuilding, use it in addition -apk option");
-  ("-release", Set release, "compile apks for release, install from release archive, copy apk and expansions to release archive");
-  ("-install", Tuple [ Set installApk; Set installExp; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "install both apk and expansions. when using with -release flag, takes build-version pair, when without -release -- only build. example: abldr -install normal_hdpi_pvr or abldr -release -install normal_hdpi_pvr 1.1.3");
-  ("-install-apk", Tuple [ Set installApk; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "install only apk, usage same as -install");
-  ("-install-exp", Tuple [ Set installExp; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "install only expansion, usage same as -install")
+  ("-i", Set_string inDir, "\t\t\tinput directory (for example, farm root directory, which contains android subdirectory)");
+  ("-manifest", Set manifest, "\t\tgenerate manifest for builds");
+  ("-assets", Set assets, "\t\tgenerate assets for builds");
+  ("-exp", Set expansions, "\t\t\tgenerate expansions for builds");
+  ("-base-exp", Set baseExp, "\t\tcreate symlink, named 'base', to this version on expansions in release archive");
+  ("-exp-patch", Set_string patchFor, "\t\tgenerate expansions patch for version, passed through this option");
+  ("-exp-ver", Set_string expVer, "\t\tuse expansions from version, passed through this option");
+  ("-lib", Set lib, "\t\t\tbuild only so");
+  ("-all-builds", Set allBuilds, "\t\tmake all builds");
+  ("-apk", Set apk, "\t\t\tcompile apk for builds");
+  (* ("-no-exp", Set noExp, "\t\tapplication has no expansions"); *)
+  ("-without-lib", Set withoutLib, "\t\tcompile apk without farm-lib rebuilding, use it in addition -apk option");
+  ("-release", Set release, "\t\tcompile apks for release, install from release archive, copy apk and expansions to release archive");
+  ("-install", Tuple [ Set installApk; Set installExp; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "\t\tinstall both apk and expansions. when using with -release flag, takes build-version pair, when without -release -- only build.\n\t\t\texample: abldr -install normal_hdpi_pvr or abldr -release -install normal_hdpi_pvr 1.1.3");
+  ("-install-apk", Tuple [ Set installApk; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "\t\tinstall only apk, usage same as -install");
+  ("-install-exp", Tuple [ Set installExp; Set_string installSuffix; Rest (fun ver -> installVer.val := ver) ], "\t\tinstall only expansion, usage same as -install");
+
+  ("-proj", Set proj, "\t\tcreate android project with all needed for light android builder");
+  ("-proj-package", Set_string projPackage, "\tjava package of new project");
+  ("-proj-activity", Set_string projActivity, "\tactivity class name");
+  ("-proj-app-name", Set_string projAppName, "\tapplication name");
+  ("-proj-path", Set_string projPath, "\t\tdirectory, where project structure will be created, by default './android'");
+  ("-proj-keystore-pass", Set_string projKeystorePass, "\tkeystore password, by default 'xyupizda'");
+  ("-proj-with-exp", Set projWithExp, "\tpass with option if application with expansions");
+  ("-proj-so", Set_string projSo, "\t\tnative library name");
+  ("-proj-lightning", Set_string projLightning, "\tpath to lightning")
 ];
 
 parse args (fun arg -> builds.val := [ arg :: !builds ]) "android multiple apks generator";
 builds.val := List.rev !builds;
 
-value (//) = Filename.concat;
-
-(* value androidDir = Filename.concat !inDir "android"; *)
 value androidDir = !inDir;
 value manifestsDir = Filename.concat androidDir "manifests";
 value rsyncDir = Filename.concat androidDir "rsync";
@@ -164,34 +363,44 @@ value genManifest build =
     runCommand ("xsltproc -o " ^ (Filename.concat androidDir "AndroidManifest.xml") ^ " --xinclude --xincludestyle " ^ (Filename.concat manifestsDir "manifest.xslt") ^ " " ^ manifestConfig) "xsltproc failed";
   );
 
-value getPackage () =
-(
-  if !package = "" then
-    let inp = open_in (Filename.concat !inDir "package.xml") in
-      let xmlinp = Xmlm.make_input ~strip:True (`Channel inp) in
-      (
-        ignore(Xmlm.input xmlinp);
+type projConfig = {
+  package:mutable string;
+  version:mutable string;
+  withExp:mutable bool;
+};
 
-        let rec findPackage () =
-          if Xmlm.eoi xmlinp then failwith "package not found package.xml"
-          else
-            match Xmlm.input xmlinp with
-            [ `El_start ((_, "package"), _) ->
-              match Xmlm.input xmlinp with
-              [ `Data package -> package
-              | _ -> failwith "package not found in package.xml"
-              ]
-            | _ -> findPackage ()
-            ]
-        in
-          package.val := findPackage ();
+value readProjConfig () =
+  let inp = open_in (Filename.concat !inDir "abldr.xml") in
+    let xmlinp = Xmlm.make_input ~strip:True (`Channel inp) in
+    (
+      ignore(Xmlm.input xmlinp);
 
+      let rec readProjConfig projConfig =
+        if Xmlm.eoi xmlinp then projConfig
+        else (
+          match Xmlm.input xmlinp with
+          [ `El_start ((_, "package"), _) -> match Xmlm.input xmlinp with [ `Data data -> projConfig.package := data | _ -> () ]
+          | `El_start ((_, "version"), _) -> match Xmlm.input xmlinp with [ `Data data -> projConfig.version := data | _ -> () ]
+          | `El_start ((_, "withexp"), _) -> match Xmlm.input xmlinp with [ `Data data -> projConfig.withExp := bool_of_string data | _ -> () ]
+          | _ -> ()
+          ];
+
+          readProjConfig projConfig;
+        )
+      in
+      let retval = readProjConfig { package = ""; version = ""; withExp = False } in (
         close_in inp;
-      )
-  else ();
-  
-  !package;  
-);
+        myassert (retval.package <> "") "package not found in abldr project config";
+        myassert (retval.version <> "") "version not found in abldr project config";
+        retval;
+      );
+    );
+
+value projConfig () = Lazy.force (Lazy.from_fun readProjConfig);
+
+value getPackage () = (projConfig ()).package;
+value getVersion () = (projConfig ()).version;
+value getWithExp () = (projConfig ()).withExp;
 
 value expFname package ver main = (if main then "main" else "patch") ^ "." ^ ver ^ "." ^ package ^ ".obb";
 
@@ -207,42 +416,23 @@ value syncSounds dst =
         else ()
     ) (Sys.readdir sndDir);
 
-value genAssets build =
-(*   let buildFilter = Filename.concat rsyncDir ("android-" ^ build ^ "-assets.filter") in
-  let buildFilter = if Sys.file_exists buildFilter then " --filter='. " ^ buildFilter ^ "'" else "" in *)
-  (
-    printf "\n\n[ generating assets for build %s... ]\n%!" build;
+value genAssets build = (
+  printf "\n\n[ generating assets for build %s... ]\n%!" build;
 
-    mkdir assetsAresmkrDir;
+  mkdir assetsAresmkrDir;
 
-(*     Printf.printf "%s: %s\n%!" lsyncCommonAssets (String.concat "," (Array.to_list (Sys.readdir lsyncCommonAssets)));
-    Printf.printf "%s: %s\n%!" (lsyncAssets build) (String.concat "," (Array.to_list (Sys.readdir (lsyncAssets build)))); *)
+  let commonAss = try Array.map (fun fname -> lsyncCommonAssets // fname) (Sys.readdir lsyncCommonAssets) with [ _ -> [||] ] in
+  let buildAssDir = lsyncAssets build in
+  let buildAss = try Array.map (fun fname -> buildAssDir // fname) (Sys.readdir buildAssDir) with [ _ -> [||] ] in
+  let lsyncRules = Array.to_list (ExtArray.Array.filter (fun fname -> Sys.file_exists fname && not (Sys.is_directory fname)) (Array.concat [ commonAss; buildAss ])) in
+  let lsyncRules = List.filter (fun rulesFname -> not ExtString.String.(starts_with (Filename.basename rulesFname) "." || ends_with rulesFname ".m4.include")) lsyncRules in
+    runCommand ("lsync -i " ^ resDir ^ " -o " ^ assetsAresmkrDir ^ " " ^ (String.concat " " lsyncRules)) "lsync failed when copying assets";
 
-    let commonAss = try Array.map (fun fname -> lsyncCommonAssets // fname) (Sys.readdir lsyncCommonAssets) with [ _ -> [||] ] in
-    let buildAssDir = lsyncAssets build in
-    let buildAss = try Array.map (fun fname -> buildAssDir // fname) (Sys.readdir buildAssDir) with [ _ -> [||] ] in
-    let lsyncRules = Array.to_list (ExtArray.Array.filter (fun fname -> Sys.file_exists fname && not (Sys.is_directory fname)) (Array.concat [ commonAss; buildAss ])) in
-    let lsyncRules = List.filter (fun rulesFname -> not ExtString.String.(starts_with (Filename.basename rulesFname) "." || ends_with rulesFname ".m4.include")) lsyncRules in
-      runCommand ("lsync -i " ^ resDir ^ " -o " ^ assetsAresmkrDir ^ " " ^ (String.concat " " lsyncRules)) "lsync failed when copying assets";
-
-(*     let sndOpts = if !asssounds then " --filter='protect locale/*/sounds' --filter='protect sounds'" else "" in
-      runCommand ("rsync -avL" ^ sndOpts ^ " --include-from=" ^ (Filename.concat rsyncDir "android-assets.include") ^ buildFilter ^ " --exclude-from=" ^ (Filename.concat rsyncDir "android-assets.exclude") ^ " --delete --delete-excluded " ^ resDir ^ "/ " ^ assetsAresmkrDir) "rsync failed when copying assets"; *)
-
-(*     if !asssounds then syncSounds assetsAresmkrDir
-    else (); *)
-
-    runCommand("aresmkr -concat -i " ^ assetsAresmkrDir ^ " -o " ^ assetsAresmkrFname) "android resources maker failed when making assets";
-  );
+  runCommand("aresmkr -concat -i " ^ assetsAresmkrDir ^ " -o " ^ assetsAresmkrFname) "android resources maker failed when making assets";
+);
 
 value archiveApk ?(apk = True) ?(expansions = True) build =
-  let ver =
-    let inchan = open_in (Filename.concat androidDir "version") in
-      let ver = input_line inchan in
-      (
-        close_in inchan;
-        ver;
-      )
-  in
+  let ver = getVersion () in
     let apkArchiveDir = archiveDir build ver in
     (
       mkdir apkArchiveDir;
@@ -264,10 +454,15 @@ value archiveApk ?(apk = True) ?(expansions = True) build =
           if fname = ""
           then ()
           else
-            let fname = Filename.concat expDir fname in
-              if Unix.((lstat fname).st_kind = S_LNK)
-              then makeRelativeSymlink (Filename.concat expDir (Unix.readlink fname)) (Filename.concat apkArchiveDir (Filename.basename fname))
-              else runCommand ("cp -Rv " ^ fname ^ " " ^ apkArchiveDir) ("cp failed when trying to copy " ^ fname ^ " to archive")
+            let copy fname =
+              let fname = Filename.concat expDir fname in
+                if Unix.((lstat fname).st_kind = S_LNK)
+                then makeRelativeSymlink (Filename.concat expDir (Unix.readlink fname)) (Filename.concat apkArchiveDir (Filename.basename fname))
+                else runCommand ("cp -Rv " ^ fname ^ " " ^ apkArchiveDir) ("cp failed when trying to copy " ^ fname ^ " to archive")
+            in (
+              copy fname;
+              copy (fname ^ ".index");
+            )
         in
         let (main, patch) = findExpNames expDir in (
           archiveExp main;
@@ -309,26 +504,17 @@ value genExpansion build =
       makeLink patch;
     )
   else
-    let expDir = (* Filename.concat expansionsDir build *)buildRawExpAresmkrDir build in
-    (* and buildFilter = Filename.concat rsyncDir ("android-" ^ build ^ "-expansions.filter") in *)
-      (* let buildFilter = if Sys.file_exists buildFilter then " --filter='. " ^ buildFilter ^ "'" else "" in *)
+    let expDir = buildRawExpAresmkrDir build in
       (
         printf "\n\n[ generating expansions for build %s... ]\n%!" build;
         mkdir expDir;
 
-    let commonExp = try Array.map (fun fname -> lsyncCommonExp // fname) (Sys.readdir lsyncCommonExp) with [ _ -> [||] ] in
-    let buildExpDir = lsyncExp build in
-    let buildExp = try Array.map (fun fname -> buildExpDir // fname) (Sys.readdir buildExpDir) with [ _ -> [||] ] in
-    let lsyncRules = Array.to_list (ExtArray.Array.filter (fun fname -> Sys.file_exists fname && not (Sys.is_directory fname)) (Array.concat [ commonExp; buildExp ])) in
-    let lsyncRules = List.filter (fun rulesFname -> not ExtString.String.(starts_with (Filename.basename rulesFname) "." || ends_with rulesFname ".m4.include")) lsyncRules in
-      runCommand ("lsync -i " ^ resDir ^ " -o " ^ expDir ^ " " ^ (String.concat " " lsyncRules)) "lsync failed when copying expansions";
-
-        (* it is so bad, not universal at all *)
-(*         runCommand ("rsync -avL --filter='protect locale/*/sounds' --filter='protect sounds' --include-from=" ^ (Filename.concat rsyncDir "android-expansions.include") ^ buildFilter ^ " --exclude-from=" ^ (Filename.concat rsyncDir "android-expansions.exclude") ^ " --delete --delete-excluded " ^ resDir ^ "/ " ^ expDir) "rsync failed when copying expansions";
-
-        if not !nosounds
-        then syncSounds expDir
-        else (); *)
+        let commonExp = try Array.map (fun fname -> lsyncCommonExp // fname) (Sys.readdir lsyncCommonExp) with [ _ -> [||] ] in
+        let buildExpDir = lsyncExp build in
+        let buildExp = try Array.map (fun fname -> buildExpDir // fname) (Sys.readdir buildExpDir) with [ _ -> [||] ] in
+        let lsyncRules = Array.to_list (ExtArray.Array.filter (fun fname -> Sys.file_exists fname && not (Sys.is_directory fname)) (Array.concat [ commonExp; buildExp ])) in
+        let lsyncRules = List.filter (fun rulesFname -> not ExtString.String.(starts_with (Filename.basename rulesFname) "." || ends_with rulesFname ".m4.include")) lsyncRules in
+          runCommand ("lsync -i " ^ resDir ^ " -o " ^ expDir ^ " " ^ (String.concat " " lsyncRules)) "lsync failed when copying expansions";
 
         let inp = open_in (Filename.concat androidDir "AndroidManifest.xml") in
           let xmlinp = Xmlm.make_input ~strip:True (`Channel inp) in
@@ -379,10 +565,13 @@ value compileLib () =
 
 value compileApk build =
 (
+  if !withoutLib then () else compileLib ();
+
   cleanDir assetsDir;
+  genAssets build;
   runCommand ("cp " ^ assetsAresmkrFname ^ " " ^ assetsDir ^ Filename.dir_sep) "failed when copying concated assets into android assets directory";
 
-  if not !noExp then
+  if getWithExp () then
     let expansionsDir = buildExpAresmkrDir build in
     let (main, patch) = findExpNames expansionsDir in
     let expXml fname main =
@@ -397,7 +586,7 @@ value compileApk build =
       output_string out ("<?xml version=\"1.0\" encoding=\"utf-8\"?><resources><array name=\"expansions\">" ^ (expXml main True) ^ (expXml patch False) ^ "</array></resources>");
       close_out out;
 
-      myassert (main <> "") "main expansion not found, if app doesn't use expansions, use -no-exp option";
+      myassert (main <> "") "main expansion not found, if app doesn't use expansions, put into abldr.xml <withexp>false</withexp>";
 
       let command = "aresmkr -o " ^ (Filename.concat assetsDir "index") ^ " -merge " ^ assetsAresmkrFname in
       let command = if patch <> "" then command ^ " " ^ (Filename.concat expansionsDir patch) else command in
@@ -407,8 +596,6 @@ value compileApk build =
     runCommand ("aresmkr -o " ^ (Filename.concat assetsDir "index") ^ " -merge " ^ assetsAresmkrFname) "failed when making assets binary index";
   
   printf "\n\n[ compiling apk for build %s... ]\n%!" build;
-
-  if !withoutLib then () else compileLib ();
   runCommand ("ant -f " ^ (Filename.concat androidDir "build.xml") ^ " release") "ant failed when compiling apk";
 
   archiveApk ~expansions:False build;
@@ -422,7 +609,7 @@ value install () =
   let () = printf "archiveDir %s\n" archiveDir in
   let (apk, main, patch) =
     Array.fold_left (fun (apk, main, patch) fname ->
-      if String.ends_with fname ".apk" then (fname, main, patch)
+      if String.ends_with fname ".apk" || String.ends_with fname ".index" then (fname, main, patch)
       else if String.starts_with fname "main" then (apk, fname, patch)
       else if String.starts_with fname "patch" then (apk, main, fname) else (apk, main, patch)
     ) ("", "", "") (Sys.readdir archiveDir)
@@ -433,7 +620,7 @@ value install () =
       else runCommand ("adb install -r " ^ (Filename.concat archiveDir apk)) "adb failed when installing apk"
     else ();
 
-    if !installExp then
+    if (getWithExp ()) && !installExp then
       let installObb fname =
         if fname <> ""
         then
@@ -448,7 +635,9 @@ value install () =
   );
 );
 
-if !installApk || !installExp then install ()
+if !proj
+then makeProject ()
+else if !installApk || !installExp then install ()
 else
 (
   if !allBuilds then
@@ -462,7 +651,7 @@ else
       printf "processing build %s...\n%!" build;
 
       if !manifest || !expansions || !patchFor <> "" || !expVer <> "" || !apk then genManifest build else ();
-      if !assets || !apk then genAssets build else ();
+      if !assets then genAssets build else ();
       if !expansions || !patchFor <> "" || !expVer <> "" then genExpansion build else ();
       if !apk then compileApk build else ();
     )

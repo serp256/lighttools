@@ -27,7 +27,8 @@ let env_libs = try Some (Sys.getenv "LIBS") with Not_found -> None
 
 let default_dirs =
   ["/usr/include", "/usr/lib";
-   "/usr/local/include", "/usr/local/lib"
+    "/usr/local/include", "/usr/local/lib";
+   "/opt/local/include", "/opt/local/lib"
   ]
 
 let search_in_default_dirs include_file =
@@ -98,7 +99,7 @@ let _ =
   let libs =
     [enabled_freetype, "freetype2", "ft2build.h", "-lfreetype";
      enabled_png, "libpng", "png.h", "-lpng -lz";
-     enabled_jpeg, "libopenjpeg", "jpeglib.h", "-ljpeg";
+     enabled_jpeg, "libjpeg", "jpeglib.h", "-ljpeg";
      enabled_gif, "gif", "gif_lib.h", "-lgif";
      enabled_tiff, "tiff", "tiff.h", "-ltiff";
      enabled_xpm, "xpm", "X11/xpm.h", "-lXpm -lX11"

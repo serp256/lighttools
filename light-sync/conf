@@ -1,7 +1,6 @@
 [
 	{
-		"path":"rasterizer/",
-		"dst":"pidarasterizer",
-		"exclude":["ui_us"]
+		"path":"/",
+		"include":["ui_res/common/*.png"]
 	}
 ]

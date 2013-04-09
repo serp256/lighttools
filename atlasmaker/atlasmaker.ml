@@ -245,7 +245,7 @@ value createAtlas () =
        (* save as alpha *)
         if !alpha then Utils.save_alpha canvas fname
         else Images.save fname (Some Images.Png) [] canvas;
-        {path=fname;items}
+        {path=Filename.basename fname;items}
       )
     )
     end pages

@@ -1,4 +1,26 @@
 {
+	"new_year_animal":{
+		"include":
+			[
+				"an_deer"
+			]
+	},
+	"new_year":{
+		"whooly":true,
+		"include":
+			[
+				"sb_christmas_present",
+				"sb_christmas_candy",
+				"sb_christmas_orange",
+				"sb_christmas_cherry",
+				"dc_sleigh",
+				"dc_big_christmas_eve",
+				"dc_small_christmas_eve",
+				"dc_gingerbread_house",
+				"dc_snowman",
+				"dc_santa_baloon"
+			]
+	},
 	"tiles":{
 		"whooly": true,
 		"include":
@@ -24,11 +46,17 @@
 				"dc_rose_vase"
 			]
 	},
+	"23_febrary_animal": {
+		"whooly":true,
+		"include":
+			[
+				"an_military_goat"
+			]
+	},
 	"23_febrary": {
 		"whooly":true,
 		"include":
 			[
-				"an_military_goat",
 				"dc_nanocannon",
 				"dc_honor_tree",
 				"dc_bonfire",
@@ -225,23 +253,6 @@
 				"dc_ghost",
 				"dc_three_pumpkin",
 				"dc_witches_trail"
-			]
-	},
-	"new_year":{
-		"whooly":true,
-		"include":
-			[
-				"an_deer",
-				"sb_christmas_present",
-				"sb_christmas_candy",
-				"sb_christmas_orange",
-				"sb_christmas_cherry",
-				"dc_sleigh",
-				"dc_big_christmas_eve",
-				"dc_small_christmas_eve",
-				"dc_gingerbread_house",
-				"dc_snowman",
-				"dc_santa_baloon"
 			]
 	},
 	"map2_base":{

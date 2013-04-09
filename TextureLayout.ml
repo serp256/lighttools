@@ -473,9 +473,25 @@ value layout ~tsize rects =
       ];
 
 
+
+  value stringify_images images = 
+    let l = 
+      List.map begin fun (wholly,imgs) ->
+        let imgs = 
+          String.concat ","
+            (List.map begin fun (_,img) ->
+              let (w,h) = Images.size img in
+              Printf.sprintf "<%d:%d>" w h 
+            end imgs)
+        in
+        Printf.sprintf "%B:%s" wholly imgs
+      end images
+    in
+    String.concat ";" l;
+
 (* Размещаем картинки с флажком нужно впихнуть целиком или не нужно, впихиваем в максимально возможные страницы *)
 value layout_max ?(tsize=Npot) images = 
-  let () = Printf.printf "layout_max: %d [%s]\n%!" (List.length images) (String.concat ";" (List.map (fun (wholly,imgs) -> Printf.sprintf "%B:%d" wholly (List.length imgs)) images)) in
+  let () = Printf.printf "layout_max: %d [%s]\n%!" (List.length images) (stringify_images images) in
   let try_place wholly rects pages =
     let () = print_endline "try place" in
     List.fold_left begin fun (rects,pages) page ->
@@ -502,7 +518,7 @@ value layout_max ?(tsize=Npot) images =
     end (rects,[]) pages
   in
   let rec alloc_new_pages wholly unfit pages = 
-    let () = print_endline "alloc new pages" in
+    let () = print_endline (Printf.sprintf "alloc new pages wholly : %b" wholly) in
     let new_page = create_page !max_size !max_size in
     let (placed_images,empty_rects,unfit) = MaxRects.maxrects False unfit new_page.empty_rects in
     match unfit with
@@ -569,7 +585,7 @@ value layout_min ?(tsize=Sqr) (images:list (bool * (list ('a * Images.t)) )) =
     end (rects,[]) pages
   in
   let  rec alloc_new_pages wholly unfit pages = 
-    let () = print_endline "alloc new pages" in
+    let () = print_endline (Printf.sprintf "alloc new pages wholly : %b" wholly) in
     let (new_page,unfit) = layout_page_pot ~sqr:True unfit in
     let new_page = {(new_page) with placed_images = List.rev new_page.placed_images } in
     match unfit with

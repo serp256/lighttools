@@ -70,6 +70,14 @@ List.iter (fun rulesFname ->
     ) rulesJson
   in
 
+  let rec makeIncludeFilePathFilter fname filterStr =
+    if Filename.dirname fname = "."
+    then filterStr
+    else
+      let dirname = Filename.dirname fname in
+        makeIncludeFilePathFilter dirname ((Printf.sprintf "--filter=\"+ %s%s\" " dirname Filename.dir_sep) ^ filterStr)
+  in
+
   let filterTypeStr filterType = match filterType with [ Include -> "+" | Exclude -> "-" | Protect -> "P" ] in
   let makeFilter path filters filterType =
     let filtersStr = String.concat " " (List.map (fun filter ->
@@ -78,9 +86,8 @@ List.iter (fun rulesFname ->
                                                       then
                                                         let path = !inp // path // filter in
                                                           if Sys.file_exists path && Sys.is_directory path
-                                                          then
-                                                            Printf.sprintf "--filter=\"%s %s\" %s" (filterTypeStr filterType) (filter ^ (if ExtString.String.ends_with filter "/" then "**" else "/**")) filtersStr
-                                                          else filtersStr
+                                                          then Printf.sprintf "--filter=\"%s %s\" %s" (filterTypeStr filterType) (filter ^ (if ExtString.String.ends_with filter "/" then "**" else "/**")) filtersStr
+                                                          else (makeIncludeFilePathFilter filter "") ^ filtersStr
                                                       else filtersStr
                                         ) filters)
     in
