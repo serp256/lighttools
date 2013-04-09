@@ -31,15 +31,20 @@ prepare-input:
 clean-output:
 	rm -r -f ${LIB_DIR}/*
 
-lib-compressed:
-	./convert.native -inp 2 -n 100500 -wholly -scale 2 -o ${LIB_DIR} -pvr
-	./convert.native -inp 1 -degree4 -scale 2 -o ${LIB_DIR} -pvr
-	./convert.native -inp 2 -n 100500 -wholly -scale 0.5 -o ${LIB_DIR} -pvr
-	./convert.native -inp 1 -degree4 -scale 0.5 -o ${LIB_DIR} -pvr
-	./convert.native -inp 2 -n 100500 -wholly -o ${LIB_DIR} -pvr -dxt
-	./convert.native -inp 1 -degree4 -o ${LIB_DIR} -pvr -dxt
+#lib-compressed:
+#	./convert.native -inp 2 -n 100500 -wholly -scale 2 -o ${LIB_DIR} -pvr
+#	./convert.native -inp 1 -degree4 -scale 2 -o ${LIB_DIR} -pvr
+#	./convert.native -inp 2 -n 100500 -wholly -scale 0.5 -o ${LIB_DIR} -pvr
+#	./convert.native -inp 1 -degree4 -scale 0.5 -o ${LIB_DIR} -pvr
+#	./convert.native -inp 2 -n 100500 -wholly -o ${LIB_DIR} -pvr -dxt
+#	./convert.native -inp 1 -degree4 -o ${LIB_DIR} -pvr -dxt
 
-lib: prepare-input clean-output lib-compressed
+lib-compressed:
+	./convert.native -degree4 -pvr -dxt -without-cntr -scale ${SCALE} -o ${LIB_DIR} conf/farm.json
+	./convert.native -degree4 -pvr -dxt  -without-cntr -o ${LIB_DIR} conf/farm.json
+	./convert.native -max 4096 -pvr -dxt  -without-cntr -degree4 -scale 2 -o ${LIB_DIR} conf/farm.json
+
+lib: clean-output lib-compressed
 
 #lib-notcompressed:
 #	./convert.native -inp 2 -wholly -n 100500 -scale ${SCALE} -o ${LIB_DIR} 
@@ -50,9 +55,9 @@ lib: prepare-input clean-output lib-compressed
 #	./convert.native -max 4096 -inp 1 -degree4 -scale 2 -o ${LIB_DIR} 
 
 lib-notcompressed:
-	./convert.native -degree4 -scale ${SCALE} -o ${LIB_DIR} conf/farm.json
-	./convert.native -degree4  -o ${LIB_DIR} conf/farm.json
-	./convert.native -max 4096 -degree4 -scale 2 -o ${LIB_DIR} conf/farm.json
+	./convert.native -degree4 -without-cntr -scale ${SCALE} -o ${LIB_DIR} conf/farm.json
+	./convert.native -degree4  -without-cntr -o ${LIB_DIR} conf/farm.json
+	./convert.native -max 4096  -without-cntr -degree4 -scale 2 -o ${LIB_DIR} conf/farm.json
 
 #lib-test: prepare-input clean-output lib-notcompressed
 lib-test: clean-output lib-notcompressed
