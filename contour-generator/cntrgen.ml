@@ -1,4 +1,5 @@
 open Arg;
+open ExtList;
 
 value (//) = Filename.concat;
 
@@ -470,7 +471,7 @@ value genContour regions frames anim =
           | points -> let (contour, points) = findContour points in findContours points [ contour :: contours ]
           ]
         in
-        let contours = List.sort (fun a b -> ~-1 * (compare (List.length a) (List.length b))) (findContours !segments []) in
+        let contours = List.sort ~cmp:(fun a b -> ~-1 * (compare (List.length a) (List.length b))) (findContours !segments []) in
         let points = List.map (fun (x, y) -> (float_of_int x, float_of_int y)) (List.hd contours) in
         let contour =
           if points = [] then []
