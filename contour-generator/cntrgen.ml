@@ -108,6 +108,7 @@ value readTexInfo lib =
   let texNum = IO.read_byte inp in
   let regions = DynArray.make texNum in
   (
+    Printf.printf "readTexInfo %s texNum : %d\n%!" lib texNum;
     for i = 1 to texNum do {
       let texFname = read_utf inp in
       let regNum = IO.read_i16 inp in
@@ -144,7 +145,7 @@ value readFrames lib =
         (
           for it = 1 to lnum do {
             let texId = IO.read_byte inp
-            and recId = IO.read_i32 inp
+            and recId = IO.read_ui16 inp
             and lx = IO.read_i16 inp
             and ly = IO.read_i16 inp
             and alpha = IO.read_byte inp
@@ -164,14 +165,16 @@ value readFrames lib =
 value readObjs lib =
   let objs = ref [] in
     let inp = IO.input_channel (open_in (!indir // lib // ("animations" ^ !suffix ^ ".dat"))) in 
-    let cnt_objects = IO.read_ui16 inp in
+    let cnt_objects = IO.read_byte inp in
       (
+        Printf.printf "cnt_objects %s : %d\n%!" lib cnt_objects;
         for _i = 1 to cnt_objects do {
           let anims = ref [] in 
           (
             let oname = read_utf inp  (*objname*)
-            and anum = IO.read_ui16 inp in
+            and anum = IO.read_byte inp in
             (
+              Printf.printf "anum : %d\n%!" anum;
               for _j = 1 to anum do {
                 let rects = ref []
                 and frames = ref []
@@ -194,7 +197,7 @@ value readObjs lib =
                       for i = 1 to fnum do {
                         let  frame = IO.read_i32 inp in
                           (
-                            Printf.printf "read frame %d : %d\n%!" i frame;
+                            Printf.printf "read %s:%s frame %d : %d\n%!" oname aname i frame;
                             frames.val := [ frame :: !frames ];
                           )
                       };

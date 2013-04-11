@@ -63,7 +63,7 @@ lib-notcompressed:
 lib-test: clean-output lib-notcompressed
 lib-testx2: 
 	rm -r -f output/*
-	./convert.native -max 2048 -degree4 -scale 2 -without-cntr conf/farm.json
+	./convert.native -max 2048 -degree4 -scale 2 conf/farm.json
 
 100500:
 	./convert.native -inp 2 -n 100500 -min 512 -scale ${SCALE} -o ~/Devel/mobile-farm/Resources/library -pvr

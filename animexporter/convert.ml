@@ -5,23 +5,6 @@ value frames = "frames.dat";
 
 value (///) = Filename.concat;
 
-type layer =
-  {
-    imgId   : int;
-    lx       : int;
-    ly       : int;
-    alpha   : int;
-    flip    : bool;
-  };
-
-type frame = 
-  {
-    x       : int;
-    y       : int;
-    iconX   : int;
-    iconY   : int;
-    layers  : list layer; 
-  };
 
 value read_utf inp = 
   let len = IO.read_i16 inp in
@@ -115,15 +98,16 @@ value get_images dir images  =
     );
 *)
 
+
 value get_images dirs images  =
   let get_images_by_dir dir s images = 
     let texInfo = !inp_dir /// dir /// texInfo in
     let texInfo = IO.input_channel (open_in texInfo) in 
     let countTex = IO.read_ui16 texInfo in
     let () = Printf.printf "count textures : %d\n%!" countTex in
-    let rec imagesByTexture img countImage id s images =
+    let rec imagesByTexture img countImage (texId,recId) s images =
       match countImage with
-      [ 0 -> (id, s, images) 
+      [ 0 -> ((texId,recId), s, images) 
       | _ ->
           let sx = IO.read_ui16 texInfo in
           let sy = IO.read_ui16 texInfo in
@@ -198,10 +182,10 @@ value get_images dirs images  =
             | _ -> image
             ]
           in
-          imagesByTexture img (countImage - 1) (id +1) (s + iw * ih) [ ((id,dir), res_img) :: images ]
+          imagesByTexture img (countImage - 1) (texId,(recId +1)) (s + iw * ih) [ ((texId,recId,dir), res_img) :: images ]
       ]
     in
-    let rec readTexture countTex (id,s,images) =
+    let rec readTexture countTex (texId,s,images) =
       match countTex with
       [ 0 -> (s,images)
       | _ ->
@@ -209,7 +193,8 @@ value get_images dirs images  =
           let () = Printf.printf "Try open %s\n%!" name in
           let texture = Images.load name [] in 
           let count = IO.read_ui16 texInfo in
-          readTexture (countTex - 1) (imagesByTexture texture count id s images) 
+          let (id, s, images) = imagesByTexture texture count (texId, 0) s images in
+          readTexture (countTex - 1) (texId + 1, s, images)
       ]
     in
     let res = readTexture countTex (0,s,images) in
@@ -262,7 +247,10 @@ value copyFrames dir =
               for it = 1 to cnt_items do
                 (
                   IO.write_byte out (IO.read_byte inp); (*texID*)
-                  IO.write_i32 out (IO.read_i32 inp); (*recID *)
+                  let recID = IO.read_i32 inp in 
+                    (
+                      IO.write_ui16 out recID; (*recID *)
+                    );
                   let lx = IO.read_i16 inp in 
                   let ly = IO.read_i16 inp in 
                   let newlx = round ((!scale *. (float (lx + x))) -. (float newx)) in
@@ -288,18 +276,89 @@ value copyFrames dir =
     IO.close_out out;
   );(*}}}*)
 
+type rects = 
+  {
+    rx : int;
+    ry : int;
+    rw : int;
+    rh : int;
+  };
+
+type animation =
+  {
+    a_name : string;
+    a_framerate : int32;
+    a_rects : DynArray.t rects;
+    a_frames : DynArray.t int;
+  };
+
+type obj = 
+  {
+    obj_name : string;
+    animations : DynArray.t animation;
+  };
+
+value readObjs dir = 
+  let inp =IO.input_channel (open_in (!inp_dir /// dir /// "animations.dat")) in 
+  let cnt_objs = IO.read_ui16 inp in
+  let objs = DynArray.make cnt_objs in
+    (
+      for i = 1 to cnt_objs do
+        let name = read_utf inp in
+        let cnt_anim = IO.read_ui16 inp in
+        let animations = DynArray.make cnt_anim in
+          (
+            for j = 1 to cnt_anim do
+              let a_name = read_utf inp in
+              let a_framerate = IO.read_real_i32 inp in
+              let cnt_rects = IO.read_byte inp in
+              let rects = DynArray.make cnt_rects in
+                (
+                  for k = 1 to cnt_rects do
+                    let rx = IO.read_i16 inp in
+                    let ry = IO.read_i16 inp in
+                    let rw = IO.read_i16 inp in
+                    let rh = IO.read_i16 inp in
+                    DynArray.add rects {rx;ry;rw;rh}
+                  done;
+                  let cnt_frames = IO.read_ui16 inp in
+                  let frames:DynArray.t int = DynArray.make cnt_frames in
+                    (
+                      for k = 1 to cnt_frames do
+                        DynArray.add frames (IO.read_i32 inp);
+                      done;
+                      DynArray.add animations {a_name; a_framerate; a_rects = rects; a_frames= frames}
+                    )
+                )
+            done;
+            DynArray.add objs {obj_name = name; animations}
+          )
+      done;
+      IO.close_in inp;
+      objs
+    );
+
+
 value copyAnimations dir =
   let inp =IO.input_channel (open_in (!inp_dir /// dir /// "animations.dat")) in 
   let out = IO.output_channel (open_out (!outdir /// dir /// "animations" ^ (get_postfix ()) ^ ".dat")) in
   let cnt_objects = IO.read_ui16 inp in
     (
-      IO.write_ui16 out cnt_objects;
+      Printf.printf "copyAnimations %s : %d \n%!" dir cnt_objects;
+      assert (cnt_objects < 256);
+      IO.write_byte out cnt_objects;
       for _i = 1 to cnt_objects do
         (
-          write_utf out (read_utf inp) (*objname*);
+          let name = read_utf inp in
+            (
+              Printf.printf "objname : %s\n%!" name;
+              write_utf out name (*objname*);
+            );
           let cnt_animations = IO.read_ui16 inp in
           (
-            IO.write_ui16 out cnt_animations; 
+            Printf.printf "cnt_animations : %d\n%!" cnt_animations;
+            assert (cnt_animations < 256);
+            IO.write_byte out cnt_animations; 
             for _j = 1 to cnt_animations do
               (
                 write_utf out (read_utf inp); (* animname*)
@@ -369,6 +428,7 @@ value readTexInfo fname =
 value writeTexInfo texInfo fname = 
   let newTexInfo = IO.output_channel (open_out fname) in
     (
+      Printf.printf "writeTexInfo %s countTex: %d \n%!" fname texInfo.count;
       IO.write_byte newTexInfo texInfo.count;
       DynArray.iter begin fun (name_tex, regions) ->
         (
@@ -387,6 +447,100 @@ value writeTexInfo texInfo fname =
       IO.close_out newTexInfo;
     );
 
+type layer =
+  {
+    texId   : mutable int;
+    recId   : mutable int;
+    lx      : int;
+    ly      : int;
+    alpha   : int;
+    flip    : int;
+  };
+
+type frame = 
+  {
+    x       : int;
+    y       : int;
+    iconX   : int;
+    iconY   : int;
+    layers  : DynArray.t layer; 
+  };
+
+value changed_frames = HSet.create 0;
+
+value changeFrames dir textureId rect_ids = 
+  let fname = !outdir /// dir /// "frames" ^ (get_postfix ()) ^  ".dat" in
+  let inp = IO.input_channel (open_in fname) in
+  let cnt_frames = IO.read_i32 inp in
+  let frames = DynArray.make cnt_frames in
+    (
+      for i = 1 to cnt_frames do
+        let x = IO.read_i16 inp in
+        let y = IO.read_i16 inp in
+        let iconX = IO.read_i16 inp in
+        let iconY = IO.read_i16 inp in
+        let cnt_layers = IO.read_byte inp in
+        let layers = DynArray.make cnt_layers in
+          (
+            for j = 1 to cnt_layers do
+              let texId = IO.read_byte inp in
+              let recId = IO.read_ui16 inp in
+              let lx = IO.read_i16 inp in
+              let ly = IO.read_i16 inp in
+              let alpha = IO.read_byte inp in
+              let flip = IO.read_byte inp in
+                (
+                  Printf.printf "old texId : %d; oldRecId : %d \n%!" texId recId;
+                  let (texId,recId) =
+                    match HSet.mem changed_frames (dir,i,j) with
+                    [ True -> (texId, recId)
+                    | _ -> 
+                          try
+                            let newId = Hashtbl.find rect_ids (texId,recId) in
+                              (
+                                Printf.printf "newTexId : %d; newRecId : %d\n%!" textureId newId;
+                                HSet.add changed_frames (dir, i, j);
+                                (textureId, newId)
+                              )
+                          with
+                           [ Not_found -> (texId, recId) ]
+                    ]
+                  in
+                  DynArray.add layers {texId; recId; lx; ly; alpha; flip}
+                )
+            done;
+            DynArray.add frames {x;y;iconX;iconY;layers}
+          )
+      done;
+      IO.close_in inp;
+      Hashtbl.reset rect_ids;
+      let out = IO.output_channel (open_out fname) in
+        (
+          IO.write_i32 out (DynArray.length frames);
+          DynArray.iter begin fun {x=x;y=y;iconX=iconX;iconY=iconY;layers=layers} -> 
+            (
+              IO.write_i16 out x;
+              IO.write_i16 out y;
+              IO.write_i16 out iconX;
+              IO.write_i16 out iconY;
+              IO.write_byte out (DynArray.length layers);
+              DynArray.iter begin fun {texId=texId;recId=recId;lx=lx;ly=ly;alpha=alpha;flip=flip} ->
+                (
+                  IO.write_byte out texId;
+                  IO.write_ui16 out recId;
+                  IO.write_i16 out lx;
+                  IO.write_i16 out ly;
+                  IO.write_byte out alpha;
+                  IO.write_byte out flip;
+                )
+              end layers;
+            )
+          end frames;
+          IO.close_out out;
+        )
+    );
+
+
 value convert idTex  imgs =
   let convert_dir dir imgs = 
     let res_dir = !outdir /// dir in
@@ -397,15 +551,16 @@ value convert idTex  imgs =
         ];
         let newTexInfo = res_dir /// "texInfo" ^ (get_postfix ()) ^".dat" in
         let regions = DynArray.make (List.length imgs) in
+        let rect_ids = Hashtbl.create 0 in
           (
-            List.iter begin fun (urlId,(sx,sy,isRotate,img)) ->
+            List.iteri begin fun i ((texId,rectId,name),(sx,sy,isRotate,img)) ->
               (
+                Printf.printf "regions texId: %d; rectId: %d; name : %s; pos : [%d ; %d]\n%! " texId rectId name sx sy;
+                Hashtbl.add rect_ids (texId,rectId) i;
                 let (iw,ih) = Images.size img in
                 DynArray.add regions (sx, sy, iw, ih);
               )
             end imgs;
-            copyAnimations dir;
-            copyFrames dir;
             let newTexture = ((idTex ^ (get_postfix ()) ^ ".png"), regions) in
             let texInfo = 
               match Sys.file_exists newTexInfo with
@@ -416,15 +571,23 @@ value convert idTex  imgs =
                       DynArray.add texInfo.textures newTexture;
                       texInfo
                     )
-              | _ -> {count=1; textures = DynArray.init 1 (fun _ -> newTexture)}
+              | _ ->
+                  (
+                    copyAnimations dir;
+                    copyFrames dir;
+                    {count=1; textures = DynArray.init 1 (fun _ -> newTexture)};
+                  )
               ]
             in
-            writeTexInfo texInfo newTexInfo;
+              (
+                changeFrames dir (texInfo.count - 1) rect_ids;
+                writeTexInfo texInfo newTexInfo;
+              )
           );
         ) 
   in
   let images = 
-    List.fold_left begin fun res (((_,name), _) as info) -> 
+    List.fold_left begin fun res (((_,_,name), _) as info) -> 
       let (imgs_by_dir, imgs) = 
         try
           MList.pop_assoc name res 
@@ -553,7 +716,7 @@ value run_pack pack =
   in
 (*  let images = [(0,"pizda", List.fold_left (fun res (_,_,img) ->  res @ img) [] images)] in *)
   let images = List.fast_sort (fun (s1,_) (s2,_) -> compare s2 s1) images in  
-  let (images:list (bool * (list ((int*string)* Images.t )))) = 
+  let (images:list (bool * (list ((int*int*string)* Images.t )))) = 
     match pack.wholly with
     [ True -> 
         [ 
@@ -566,7 +729,7 @@ value run_pack pack =
     | _ -> List.map (fun (_, images) -> (!scale < 2., images)) images
     ]
   in
-  let (textures:list (TextureLayout.page (int * string))) = TextureLayout.layout_min images in
+  let (textures:list (TextureLayout.page (int * int * string))) = TextureLayout.layout_min images in
     (
       List.iteri begin fun cnt xyupizda ->
         let w = xyupizda.TextureLayout.width in
@@ -579,8 +742,8 @@ value run_pack pack =
           (
                 Printf.printf "Save %s.png \n%!" name_texture;
                 convert name_texture imgs;
-                List.iter begin fun ((id,name) ,(sx,sy,isRotate,img)) ->
-                  let () = Printf.printf "INFO : (%d; %s)\n%!" id name in
+                List.iter begin fun ((texId, recId,name) ,(sx,sy,isRotate,img)) ->
+                  let () = Printf.printf "INFO texId: %d; recId : %d; name %s\n%!" texId recId name in
                   let (iw,ih) = Images.size img in
                     try
                       (
@@ -659,7 +822,7 @@ value run () =
     (
       List.iter (fun pack -> Printf.printf "Pack %s : [%s]\n%!" pack.name (String.concat "; " pack.libs)) packs; 
       Printf.printf "Other libs : [%s]\n%!" (String.concat "; " other_libs);
-      List.iter run_pack packs;
+      List.iter (fun pack -> (run_pack pack; )) packs;
       run_pack {name="main"; libs=other_libs; wholly=False}
     );
 
