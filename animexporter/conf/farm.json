@@ -1,4 +1,11 @@
 {
+	"study_animal:{
+		"whooly":true,
+		"include":
+			[
+				"an_chicken_hun"
+			]
+	},
 	"new_year_animal":{
 		"include":
 			[

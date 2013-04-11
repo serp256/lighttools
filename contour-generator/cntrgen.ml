@@ -170,8 +170,9 @@ value readObjs lib =
         for _i = 1 to cnt_objects do {
           let anims = ref [] in 
           (
-            let oname = read_utf inp  (*objname*)
-            and anum = IO.read_byte inp in
+            let oname = read_utf inp in  (*objname*)
+            let () = Printf.printf "name object %S\n%!" oname in 
+            let anum = IO.read_byte inp in
             (
               Printf.printf "anum : %d\n%!" anum;
               for _j = 1 to anum do {
