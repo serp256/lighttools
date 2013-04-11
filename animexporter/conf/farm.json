@@ -1,9 +1,9 @@
 {
-	"study_animal:{
+	"study_animal":{
 		"whooly":true,
 		"include":
 			[
-				"an_chicken_hun"
+				"an_deer"
 			]
 	},
 	"new_year_animal":{
