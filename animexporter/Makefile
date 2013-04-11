@@ -40,9 +40,9 @@ clean-output:
 #	./convert.native -inp 1 -degree4 -o ${LIB_DIR} -pvr -dxt
 
 lib-compressed:
-	./convert.native -degree4 -pvr -dxt -without-cntr -scale ${SCALE} -o ${LIB_DIR} conf/farm.json
-	./convert.native -degree4 -pvr -dxt  -without-cntr -o ${LIB_DIR} conf/farm.json
-	./convert.native -max 4096 -pvr -dxt  -without-cntr -degree4 -scale 2 -o ${LIB_DIR} conf/farm.json
+	./convert.native -degree4 -pvr -dxt -scale ${SCALE} -o ${LIB_DIR} conf/farm.json
+	./convert.native -degree4 -pvr -dxt -o ${LIB_DIR} conf/farm.json
+	./convert.native -max 2048 -pvr -dxt -degree4 -scale 2 -o ${LIB_DIR} conf/farm.json
 
 lib: clean-output lib-compressed
 
@@ -55,9 +55,9 @@ lib: clean-output lib-compressed
 #	./convert.native -max 4096 -inp 1 -degree4 -scale 2 -o ${LIB_DIR} 
 
 lib-notcompressed:
-	./convert.native -degree4 -without-cntr -scale ${SCALE} -o ${LIB_DIR} conf/farm.json
-	./convert.native -degree4  -without-cntr -o ${LIB_DIR} conf/farm.json
-	./convert.native -max 2048  -without-cntr -degree4 -scale 2 -o ${LIB_DIR} conf/farm.json
+	./convert.native -degree4 -scale ${SCALE} -o ${LIB_DIR} conf/farm.json
+	./convert.native -degree4 -o ${LIB_DIR} conf/farm.json
+	./convert.native -max 2048  -degree4 -scale 2 -o ${LIB_DIR} conf/farm.json
 
 #lib-test: prepare-input clean-output lib-notcompressed
 lib-test: clean-output lib-notcompressed
