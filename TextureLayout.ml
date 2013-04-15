@@ -590,7 +590,14 @@ value layout_min ?(tsize=Sqr) (images:list (bool * (list ('a * Images.t)) )) =
     let new_page = {(new_page) with placed_images = List.rev new_page.placed_images } in
     match unfit with
     [ [] -> [ new_page :: pages ]
-    | _ when wholly -> failwith "can't place images wholly"
+    | _ when wholly ->
+          (
+            (*
+            let ((_,_,name,aname),_) = List.hd new_page.placed_images in
+            Printf.printf "info %s:%s  \n%!" name aname;
+            *)
+            failwith "can't place images wholly";
+          )
     | _ -> 
         match try_place False unfit pages with
         [ ([],pages) -> [ new_page :: pages ]
