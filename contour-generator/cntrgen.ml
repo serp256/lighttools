@@ -18,8 +18,14 @@ Arg.parse [
 ] (fun _ -> ()) "contour generator";
 
 value read_utf inp = 
-  let len = IO.read_i16 inp in
-  	IO.really_nread inp len;
+  (
+    Printf.printf "read_utf\n%!";
+    let len = IO.read_i16 inp in
+      (
+        Printf.printf "string len %d\n%!" len;
+        IO.really_nread inp len;
+      )
+  );
 
 value write_utf out str =
 (

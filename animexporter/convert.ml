@@ -513,7 +513,7 @@ value changeFrames dir textureId rect_ids =
           )
       done;
       IO.close_in inp;
-      Hashtbl.reset rect_ids;
+      Hashtbl.clear rect_ids;
       let out = IO.output_channel (open_out fname) in
         (
           IO.write_i32 out (DynArray.length frames);

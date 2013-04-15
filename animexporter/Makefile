@@ -40,9 +40,9 @@ clean-output:
 #	./convert.native -inp 1 -degree4 -o ${LIB_DIR} -pvr -dxt
 
 lib-compressed:
+	./convert.native -max 2048 -pvr -dxt -degree4 -scale 2 -o ${LIB_DIR} conf/farm.json
 	./convert.native -degree4 -pvr -dxt -scale ${SCALE} -o ${LIB_DIR} conf/farm.json
 	./convert.native -degree4 -pvr -dxt -o ${LIB_DIR} conf/farm.json
-	./convert.native -max 2048 -pvr -dxt -degree4 -scale 2 -o ${LIB_DIR} conf/farm.json
 
 lib: clean-output lib-compressed
 
