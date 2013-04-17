@@ -185,34 +185,35 @@ value readObjs lib =
                 and frames = ref []
                 and aname = read_utf inp (* animname*)
                 and frameRate = Int32.to_float (IO.read_real_i32 inp) in (* framerate *)
-                (
-                  let rnum = IO.read_byte inp in
+
+
+                let rnum = if !readRects then IO.read_byte inp else IO.read_ui16 inp in (
+                  if !readRects
+                  then
+                    for i = 1 to rnum do {
+                     rects.val := [ { rx = IO.read_i16 inp; ry = IO.read_i16 inp; rw = IO.read_i16 inp; rh = IO.read_i16 inp } :: !rects ];
+                    }
+                  else
+                    for i = 1 to rnum do {
+                      let () = Printf.printf "read countour point %d\n%!" i in
+                      ignore(IO.read_i32 inp);
+                    };
+
+                  let fnum = IO.read_ui16 inp in
                   (
-                    if !readRects then
-                      for i = 1 to rnum do {
-                        rects.val := [ { rx = IO.read_i16 inp; ry = IO.read_i16 inp; rw = IO.read_i16 inp; rh = IO.read_i16 inp } :: !rects ];
-                      }
-                    else
-                      for i = 1 to rnum do
-                        ignore(IO.read_i32 inp);
-                      done;
+                    for i = 1 to fnum do {
+                      let  frame = IO.read_i32 inp in
+                        (
+                          Printf.printf "read %s:%s frame %d : %d\n%!" oname aname i frame;
+                          frames.val := [ frame :: !frames ];
+                        )
+                    };
 
-                    let fnum = IO.read_ui16 inp in
-                    (
-                      for i = 1 to fnum do {
-                        let  frame = IO.read_i32 inp in
-                          (
-                            Printf.printf "read %s:%s frame %d : %d\n%!" oname aname i frame;
-                            frames.val := [ frame :: !frames ];
-                          )
-                      };
-
-                      let frames = List.rev !frames
-                      and rects = List.rev !rects in
-                        anims.val := [ { aname; frameRate; fnum; rnum; frames; rects; contour = [] } :: !anims ];
-                    );
-                  );
-                );                
+                    let frames = List.rev !frames
+                    and rects = List.rev !rects in
+                      anims.val := [ { aname; frameRate; fnum; rnum; frames; rects; contour = [] } :: !anims ];
+                  );                    
+                );
               };
 
               let anims = List.rev !anims in
