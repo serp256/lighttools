@@ -609,9 +609,9 @@ value install () =
   let () = printf "archiveDir %s\n" archiveDir in
   let (apk, main, patch) =
     Array.fold_left (fun (apk, main, patch) fname ->
-      if String.ends_with fname ".apk" || String.ends_with fname ".index" then (fname, main, patch)
-      else if String.starts_with fname "main" then (apk, fname, patch)
-      else if String.starts_with fname "patch" then (apk, main, fname) else (apk, main, patch)
+      if String.ends_with fname ".apk" then (fname, main, patch)
+      else if String.starts_with fname "main" && not (String.ends_with fname ".index") then (apk, fname, patch)
+      else if String.starts_with fname "patch" && not (String.ends_with fname ".index") then (apk, main, fname) else (apk, main, patch)
     ) ("", "", "") (Sys.readdir archiveDir)
   in
   (

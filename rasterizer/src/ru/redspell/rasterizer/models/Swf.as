@@ -51,7 +51,11 @@ package ru.redspell.rasterizer.models {
 					classes = source;
 				}
 
+                trace('loading classes');
+
 				for each (var cls:Object in classes) {
+                    trace('cls', cls);
+
 					if (cls is SwfClass) {
 						(cls as SwfClass).definition = appDomain.getDefinition(cls.name) as Class;
 					} else {
@@ -64,6 +68,8 @@ package ru.redspell.rasterizer.models {
 
 				dispatchEvent(new Event(Event.COMPLETE));
 			} catch (e:Error) {
+                trace('error');
+
 				Facade.app.reportError(CommandError.create(e, this.toString()));
 			}
 		}
