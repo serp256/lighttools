@@ -170,7 +170,7 @@ value group_images_by_symbols () =
           end (True,[]) frames
         in
         let imgs = List.unique ~cmp:(fun (id1,_) (id2,_) -> id1 = id2) imgs in
-        [ (item.item_id,(wholly,imgs)) :: res ]
+        [ (item.item_id,(True,imgs)) :: res ]
     ]
   end [] exports;
 
