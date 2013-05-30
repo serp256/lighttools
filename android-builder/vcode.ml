@@ -1,7 +1,7 @@
 #!/usr/bin/env ocaml
 
 let screens = [ ("small", 0); ("normal", 1); ("large", 2); ("xlarge", 3) ];;
-let densities = [ ("ldpi", 0); ("mdpi", 1); ("hdpi", 2); ("xhdpi", 3); ("tvdpi", 4) ];;
+let densities = [ ("ldpi", 0); ("mdpi", 1); ("hdpi", 2); ("xhdpi", 3); ("tvdpi", 4); ("xxhdpi", 5) ];;
 let textures = [ ("etc", 0); ("pvr", 1); ("atc", 2); ("dds", 3) ];;
 let argv = Array.make 3 "";;
 let argc = ref 0;;
