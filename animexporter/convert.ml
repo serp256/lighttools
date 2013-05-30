@@ -895,7 +895,9 @@ value run () =
       List.iter (fun pack -> Printf.printf "Pack %s : [%s]\n%!" pack.name (String.concat "; " pack.libs)) packs; 
       Printf.printf "Other libs : [%s]\n%!" (String.concat "; " other_libs);
       List.iter (fun pack -> (run_pack pack; )) packs;
+      (*
       run_pack {name="main"; libs=other_libs; wholly=False};
+      *)
       match !without_cntr with
       [ False -> 
             let scale = 

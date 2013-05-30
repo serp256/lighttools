@@ -61,6 +61,10 @@ lib-notcompressed:
 
 #lib-test: prepare-input clean-output lib-notcompressed
 lib-test: clean-output lib-notcompressed
+lib-testx1: 
+	rm -r -f output/*
+	./convert.native -max 2048 -degree4 conf/farm.json
+
 lib-testx2: 
 	rm -r -f output/*
 	./convert.native -min 1024 -android -max 2048 -degree4 -scale 2 conf/farm.json
