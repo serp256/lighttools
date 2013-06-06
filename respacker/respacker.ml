@@ -170,7 +170,7 @@ value group_images_by_symbols () =
           end (True,[]) frames
         in
         let imgs = List.unique ~cmp:(fun (id1,_) (id2,_) -> id1 = id2) imgs in
-        [ (item.item_id,(wholly,imgs)) :: res ]
+        [ (item.item_id,(True,imgs)) :: res ]
     ]
   end [] exports;
 
@@ -573,6 +573,15 @@ value do_work isXml pack_mode fmt indir suffix outdir =
       close_out out;
     )(*}}}*) 
   | False -> (*{{{*)
+		let write_un_byte binout n = 
+			if n < (1 lsl 7) then
+				IO.write_byte binout n
+			else
+			(
+				IO.write_byte binout ((n lsr 8) lor (1 lsl 7));
+				IO.write_byte binout (n mod (1 lsl 8));
+			)
+		in
     let out = open_out (outdir // (Printf.sprintf "lib%s.bin" suffix)) in
     let binout = IO.output_channel out in
     let write_option_string = fun
@@ -597,6 +606,7 @@ value do_work isXml pack_mode fmt indir suffix outdir =
     in
     (
       IO.write_ui16 binout (List.length textures);
+
       List.iter (fun imgname -> IO.write_string binout imgname) textures;
       let cnt_items = 
         DynArray.fold_left begin fun cnt it -> 
@@ -619,7 +629,7 @@ value do_work isXml pack_mode fmt indir suffix outdir =
       in
       let write_sprite_children children = 
         let children = group_children children in
-        let () = IO.write_byte binout (List.length children) in
+        let () = write_un_byte binout (List.length children) in
         List.iter begin fun 
           [ `chld params -> 
             (
@@ -636,14 +646,14 @@ value do_work isXml pack_mode fmt indir suffix outdir =
           | `atlas els -> 
             (
               IO.write_byte binout 1;
-              IO.write_byte binout (List.length els);
+							write_un_byte binout (List.length els);
               List.iter write_child els;
             )
           ]
         end children
       in
       let write_children children = 
-        let () = IO.write_byte binout (DynArray.length children) in
+        let () = write_un_byte binout (DynArray.length children) in
         DynArray.iter begin fun 
           [ `chld (id,name,pos) ->
             (

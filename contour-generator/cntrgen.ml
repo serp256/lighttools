@@ -1,4 +1,5 @@
 open Arg;
+open ExtList;
 
 value (//) = Filename.concat;
 
@@ -17,8 +18,12 @@ Arg.parse [
 ] (fun _ -> ()) "contour generator";
 
 value read_utf inp = 
-  let len = IO.read_i16 inp in
-  	IO.really_nread inp len;
+  (
+    let len = IO.read_i16 inp in
+      (
+  	    IO.really_nread inp len;
+      )
+  );
 
 value write_utf out str =
 (
@@ -104,9 +109,10 @@ value regionToString reg = Printf.sprintf "region(regx:%d; regy:%d; regw:%d; reg
 
 value readTexInfo lib =
   let inp = IO.input_channel (open_in (!indir // lib // ("texInfo" ^ !suffix ^ ".dat"))) in
-  let texNum = IO.read_i16 inp in
+  let texNum = IO.read_byte inp in
   let regions = DynArray.make texNum in
   (
+    Printf.printf "readTexInfo %s texNum : %d\n%!" lib texNum;
     for i = 1 to texNum do {
       let texFname = read_utf inp in
       let regNum = IO.read_i16 inp in
@@ -165,45 +171,49 @@ value readObjs lib =
     let inp = IO.input_channel (open_in (!indir // lib // ("animations" ^ !suffix ^ ".dat"))) in 
     let cnt_objects = IO.read_ui16 inp in
       (
+        Printf.printf "cnt_objects %s : %d\n%!" lib cnt_objects;
         for _i = 1 to cnt_objects do {
           let anims = ref [] in 
           (
-            let oname = read_utf inp  (*objname*)
-            and anum = IO.read_ui16 inp in
+            let oname = read_utf inp in  (*objname*)
+            let () = Printf.printf "name object %S\n%!" oname in 
+            let anum = IO.read_ui16 inp in
             (
+              Printf.printf "anum : %d\n%!" anum;
               for _j = 1 to anum do {
                 let rects = ref []
                 and frames = ref []
                 and aname = read_utf inp (* animname*)
                 and frameRate = Int32.to_float (IO.read_real_i32 inp) in (* framerate *)
-                (
-                  let rnum = IO.read_byte inp in
+
+
+                let rnum = if !readRects then IO.read_byte inp else IO.read_ui16 inp in (
+                  if !readRects
+                  then
+                    for i = 1 to rnum do {
+                     rects.val := [ { rx = IO.read_i16 inp; ry = IO.read_i16 inp; rw = IO.read_i16 inp; rh = IO.read_i16 inp } :: !rects ];
+                    }
+                  else
+                    for i = 1 to rnum do {
+                      let () = Printf.printf "read countour point %d\n%!" i in
+                      ignore(IO.read_i32 inp);
+                    };
+
+                  let fnum = IO.read_ui16 inp in
                   (
-                    if !readRects then
-                      for i = 1 to rnum do {
-                        rects.val := [ { rx = IO.read_i16 inp; ry = IO.read_i16 inp; rw = IO.read_i16 inp; rh = IO.read_i16 inp } :: !rects ];
-                      }
-                    else
-                      for i = 1 to rnum do
-                        ignore(IO.read_i32 inp);
-                      done;
+                    for i = 1 to fnum do {
+                      let  frame = IO.read_i32 inp in
+                        (
+                          Printf.printf "read %s:%s frame %d : %d\n%!" oname aname i frame;
+                          frames.val := [ frame :: !frames ];
+                        )
+                    };
 
-                    let fnum = IO.read_ui16 inp in
-                    (
-                      for i = 1 to fnum do {
-                        let  frame = IO.read_i32 inp in
-                          (
-                            Printf.printf "read frame %d : %d\n%!" i frame;
-                            frames.val := [ frame :: !frames ];
-                          )
-                      };
-
-                      let frames = List.rev !frames
-                      and rects = List.rev !rects in
-                        anims.val := [ { aname; frameRate; fnum; rnum; frames; rects; contour = [] } :: !anims ];
-                    );
-                  );
-                );                
+                    let frames = List.rev !frames
+                    and rects = List.rev !rects in
+                      anims.val := [ { aname; frameRate; fnum; rnum; frames; rects; contour = [] } :: !anims ];
+                  );                    
+                );
               };
 
               let anims = List.rev !anims in
@@ -274,6 +284,7 @@ value genContour regions frames anim =
   let frame = DynArray.get frames (List.hd anim.frames) in
   let (x, y, w, h) =
     List.fold_left (fun (x, y, w, h) layer ->
+      let () = Printf.printf "texId : %d; recId : %d\n%!" layer.texId layer.recId in
       let (_, regions) = DynArray.get regions layer.texId in
       let region = DynArray.get regions layer.recId in
         (min x layer.lx, min y layer.ly, max w (layer.lx + region.regw), max h (layer.ly + region.regh))
@@ -469,7 +480,7 @@ value genContour regions frames anim =
           | points -> let (contour, points) = findContour points in findContours points [ contour :: contours ]
           ]
         in
-        let contours = List.sort (fun a b -> ~-1 * (compare (List.length a) (List.length b))) (findContours !segments []) in
+        let contours = List.sort ~cmp:(fun a b -> ~-1 * (compare (List.length a) (List.length b))) (findContours !segments []) in
         let points = List.map (fun (x, y) -> (float_of_int x, float_of_int y)) (List.hd contours) in
         let contour =
           if points = [] then []
@@ -515,6 +526,8 @@ if !graph then
   Graphics.set_color 0xff0000;
 )
 else ();
+
+Gc.set {(Gc.get()) with Gc.max_overhead = 2000000};
 
 Array.iter (fun fname ->
   if Sys.is_directory (!indir // fname) && (!libName <> "" && !libName = fname || !libName = "") then

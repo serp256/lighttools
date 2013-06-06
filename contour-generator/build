@@ -1,2 +1,2 @@
 #!/bin/bash
-ocamlbuild -use-ocamlfind cntrgen.byte
+ocamlbuild -use-ocamlfind -classic-display cntrgen.native

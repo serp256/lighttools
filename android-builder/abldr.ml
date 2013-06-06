@@ -79,6 +79,7 @@ value manifests: ref (list string) = ref [];
 
 value manifest = ref False;
 value assets = ref False;
+value assetsMd5 = ref True;
 value expansions = ref False;
 value apk = ref False;
 value release = ref False;
@@ -296,6 +297,7 @@ value args = [
   ("-i", Set_string inDir, "\t\t\tinput directory (for example, farm root directory, which contains android subdirectory)");
   ("-manifest", Set manifest, "\t\tgenerate manifest for builds");
   ("-assets", Set assets, "\t\tgenerate assets for builds");
+  ("-disable-ass-md5", Clear assetsMd5, "\tdisable md5 checking before generating assets");
   ("-exp", Set expansions, "\t\t\tgenerate expansions for builds");
   ("-base-exp", Set baseExp, "\t\tcreate symlink, named 'base', to this version on expansions in release archive");
   ("-exp-patch", Set_string patchFor, "\t\tgenerate expansions patch for version, passed through this option");
@@ -416,6 +418,8 @@ value syncSounds dst =
         else ()
     ) (Sys.readdir sndDir);
 
+value md5CheckPossible () = !assetsMd5 && Sys.command "which md5deep > /dev/null" = 0;
+
 value genAssets build = (
   printf "\n\n[ generating assets for build %s... ]\n%!" build;
 
@@ -428,7 +432,20 @@ value genAssets build = (
   let lsyncRules = List.filter (fun rulesFname -> not ExtString.String.(starts_with (Filename.basename rulesFname) "." || ends_with rulesFname ".m4.include")) lsyncRules in
     runCommand ("lsync -i " ^ resDir ^ " -o " ^ assetsAresmkrDir ^ " " ^ (String.concat " " lsyncRules)) "lsync failed when copying assets";
 
-  runCommand("aresmkr -concat -i " ^ assetsAresmkrDir ^ " -o " ^ assetsAresmkrFname) "android resources maker failed when making assets";
+  let md5Fname = aresmkrDir // "assets.md5" in
+  let files = assetsAresmkrDir // "*" in
+  let md5CheckPossible = md5CheckPossible () in
+  let remakeAssets =
+    if md5CheckPossible && Sys.file_exists md5Fname
+    then Sys.command ("md5deep -r -x " ^ md5Fname ^ " " ^ files) = 1
+    else True
+  in
+    if remakeAssets
+    then (
+      if md5CheckPossible then runCommand ("md5deep -rq " ^ files ^  " > " ^ md5Fname) "failed to make md5 hashes list" else ();
+      runCommand("aresmkr -concat -i " ^ assetsAresmkrDir ^ " -o " ^ assetsAresmkrFname) "android resources maker failed when making assets";
+    )
+    else ();
 );
 
 value archiveApk ?(apk = True) ?(expansions = True) build =
@@ -609,9 +626,9 @@ value install () =
   let () = printf "archiveDir %s\n" archiveDir in
   let (apk, main, patch) =
     Array.fold_left (fun (apk, main, patch) fname ->
-      if String.ends_with fname ".apk" || String.ends_with fname ".index" then (fname, main, patch)
-      else if String.starts_with fname "main" then (apk, fname, patch)
-      else if String.starts_with fname "patch" then (apk, main, fname) else (apk, main, patch)
+      if String.ends_with fname ".apk" then (fname, main, patch)
+      else if String.starts_with fname "main" && not (String.ends_with fname ".index") then (apk, fname, patch)
+      else if String.starts_with fname "patch" && not (String.ends_with fname ".index") then (apk, main, fname) else (apk, main, patch)
     ) ("", "", "") (Sys.readdir archiveDir)
   in
   (

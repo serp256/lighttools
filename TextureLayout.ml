@@ -518,7 +518,7 @@ value layout_max ?(tsize=Npot) images =
     end (rects,[]) pages
   in
   let rec alloc_new_pages wholly unfit pages = 
-    let () = print_endline "alloc new pages" in
+    let () = print_endline (Printf.sprintf "alloc new pages wholly : %b" wholly) in
     let new_page = create_page !max_size !max_size in
     let (placed_images,empty_rects,unfit) = MaxRects.maxrects False unfit new_page.empty_rects in
     match unfit with
@@ -585,12 +585,19 @@ value layout_min ?(tsize=Sqr) (images:list (bool * (list ('a * Images.t)) )) =
     end (rects,[]) pages
   in
   let  rec alloc_new_pages wholly unfit pages = 
-    let () = print_endline "alloc new pages" in
+    let () = print_endline (Printf.sprintf "alloc new pages wholly : %b" wholly) in
     let (new_page,unfit) = layout_page_pot ~sqr:True unfit in
     let new_page = {(new_page) with placed_images = List.rev new_page.placed_images } in
     match unfit with
     [ [] -> [ new_page :: pages ]
-    | _ when wholly -> failwith "can't place images wholly"
+    | _ when wholly ->
+          (
+            (*
+            let ((_,_,name,aname),_) = List.hd new_page.placed_images in
+            Printf.printf "info %s:%s  \n%!" name aname;
+            *)
+            failwith "can't place images wholly";
+          )
     | _ -> 
         match try_place False unfit pages with
         [ ([],pages) -> [ new_page :: pages ]
