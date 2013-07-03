@@ -127,6 +127,7 @@ Arg.parse
     ("-scale", Arg.Float (fun s -> scale.val := s ), "scale factor");
     ("-xml", Arg.Set xml, "xml format" ) ;
     ("-suf", Arg.Set_string suffix, "suffix");
+    ("-pmaxt", Arg.Int (fun v -> TextureLayout.max_size.val := v), "max texture size");
   ] 
   (fun f -> fontFile.val := f) "Usage msg";
 
