@@ -1,21 +1,40 @@
 {
-	"study_animal":{
+	"pl_friend": {
+		"whooly": true,
+		"include" : [ "pl_friend" ]
+	},
+	"pl_denis": {
+		"include" : [ "pl_denis"]
+	},
+	"pl_masha": {
+		"whooly": true,
+		"include" :  [ "pl_masha" ]
+	},
+	"pl_girlfriend": {
+		"whooly": true,
+		"include" : [ "pl_girlfriend" ]
+	},
+	"pl_girl": {
+		"whooly": true,
+		"include" : [ "pl_girl" ]
+	},
+	"pl_man": {
+		"whooly": true,
+		"include" : [ "pl_man" ]
+	},
+	"study":{
 		"whooly":true,
 		"include":
 			[
-				"an_chicken_hun"
-			]
-	},
-	"new_year_animal":{
-		"include":
-			[
-				"an_deer"
+				"an_chicken_hun",
+				"gb_"
 			]
 	},
 	"new_year":{
 		"whooly":true,
 		"include":
 			[
+				"an_deer",
 				"sb_christmas_present",
 				"sb_christmas_candy",
 				"sb_christmas_orange",
@@ -40,6 +59,9 @@
 		"whooly" : true,
 		"include": [ "mn_spider" ]
 	},
+	"monsters": {
+		"include": [ "mn_" ]
+	},
 	"st_valentine":{
 		"whooly": true,
 		"include":
@@ -53,17 +75,11 @@
 				"dc_rose_vase"
 			]
 	},
-	"23_febrary_animal": {
-		"whooly":true,
-		"include":
-			[
-				"an_military_goat"
-			]
-	},
 	"23_febrary": {
 		"whooly":true,
 		"include":
 			[
+				"an_military_goat",
 				"dc_nanocannon",
 				"dc_honor_tree",
 				"dc_bonfire",
@@ -318,8 +334,7 @@
 				"tr_",
 				"map_build",
 				"mp_stone1",
-				"mp_stone3",
-				"gb_"
+				"mp_stone3"
 			],
 		"exclude":
 			[
@@ -353,6 +368,6 @@
 			]
 	},
 	"main": {
-		"include": [ "*" ]
+		"include": [ "" ]
 	}
 }
