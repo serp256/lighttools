@@ -1021,9 +1021,9 @@ value split_pack pack =
   let (packs, remain_pack) = 
     List.fold_left begin fun (res, pack) pstfx  ->
       let new_name = pack.name ^ pstfx in
-      let (new_libs, remain_libs) = List.partition (fun lib -> String.ends_with lib pstfx) pack.libs in
+      let (new_libs, remain_libs) = List.partition (fun lib -> String.ends_with lib "_ex" || String.ends_with lib "_sh") pack.libs in
       ( [ {name=new_name; libs=new_libs; wholly = pack.wholly} :: res ], {(pack) with libs=remain_libs})
-    end  ([], pack) postfixs
+    end  ([], pack) [ "_ex" ]
   in
   packs @ [ remain_pack ];
 
