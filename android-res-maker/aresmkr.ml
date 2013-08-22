@@ -56,7 +56,7 @@ value readdir root =
             [ fname :: files ]
     ) (Sys.readdir dir) files
   in
-    _readdir root [];
+    List.sort (fun a b -> compare a b) (_readdir root []);
 
 value concatFiles ?(fprefix = "") files out = (
   let outChan = open_out out in
