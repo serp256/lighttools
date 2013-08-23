@@ -499,7 +499,9 @@ value archiveApk ?(apk = True) ?(expansions = True) build =
 
 value genExpansion build =
 (
+  printf "genExpansion\n%!";
   if !expVer <> "" then
+    let () = printf "\n\n[ making symlinks to expansions for build %s... ]\n%!" build in
     let src = Filename.concat releaseDir (Filename.concat build !expVer) in
     let (main, patch) = findExpNames src in
     let dst = buildExpAresmkrDir build in
@@ -508,15 +510,14 @@ value genExpansion build =
       then
         let src = Filename.concat src fname in
         let dst = Filename.concat dst fname in (
-          runCommand ("rm -f " ^ (Filename.concat (Filename.dirname dst) "*.obb*")) "rm failed when trying to remove previous obbs";
-
-          printf "\n\n[ creating links to expansions version %s... ]\n%!" !expVer;
+          printf "\n\n[ creating links to expansions version %s (from %s to %s) ... ]\n%!" !expVer src dst;
           makeRelativeSymlink src dst;
           makeRelativeSymlink (src ^ ".index") (dst ^ ".index");
           printf "[ done ]\n%!";
         )
       else ()
     in (
+      runCommand ("rm -f " ^ (Filename.concat dst "*.obb*")) "rm failed when trying to remove previous obbs";
       makeLink main;
       makeLink patch;
     )
