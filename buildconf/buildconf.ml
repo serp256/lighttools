@@ -64,7 +64,7 @@ value create () =
     output_string mb start_config_line; 
     do_include mb;
     output_string mb end_config_line;
-    output_string mb "\n\n\n(* ENTER YOUR CODE HERE *)\nlet my_dispatch = function | After_rules -> ();;\n\n";
+    output_string mb "\n\n\n(* ENTER YOUR CODE HERE *)\nlet my_dispatch = function | After_rules -> () | -> ();;\n\n";
     output_string mb "let _ = dispatch (function stage -> lightning_dispatch stage; my_dispatch stage);;\n";
     close_out mb;
   );
