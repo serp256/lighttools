@@ -72,6 +72,7 @@ type frame = {
   iy:int;
   lnum:int;
   layers:list layer;
+  pnts:list (int * int * string);
 };
 
 value frameToString frame = Printf.sprintf "frame(fx:%d; fy:%d; ix:%d; iy:%d; lnum:%d)" frame.fx frame.fy frame.ix frame.iy frame.lnum;
@@ -144,6 +145,8 @@ value readFrames lib =
         let fy = IO.read_i16 inp in
         let ix = IO.read_i16 inp in
         let iy = IO.read_i16 inp in
+        let pntsNum = IO.read_byte inp in
+        let pnts = List.init pntsNum (fun _ -> ( IO.read_i16 inp, IO.read_i16 inp, read_utf inp)) in
         let lnum = IO.read_byte inp
         and layers = ref [] in
         (
@@ -158,7 +161,7 @@ value readFrames lib =
           };
 
           let layers = List.rev !layers in
-            DynArray.add frames { fx; fy; ix; iy; lnum; layers };
+            DynArray.add frames { fx; fy; ix; iy; lnum; layers; pnts };
         );
       };
 
@@ -168,7 +171,8 @@ value readFrames lib =
 
 value readObjs lib =
   let objs = ref [] in
-    let inp = IO.input_channel (open_in (!indir // lib // ("animations" ^ !suffix ^ ".dat"))) in 
+    (* let inp = IO.input_channel (open_in (!indir // lib // ("animations" ^ !suffix ^ ".dat"))) in  *)
+    let (inp, cnt) = IO.pos_in (IO.input_channel (open_in (!indir // lib // ("animations" ^ !suffix ^ ".dat")))) in
     let cnt_objects = IO.read_ui16 inp in
       (
         Printf.printf "cnt_objects %s : %d\n%!" lib cnt_objects;
@@ -186,12 +190,17 @@ value readObjs lib =
                 and aname = read_utf inp (* animname*)
                 and frameRate = Int32.to_float (IO.read_real_i32 inp) in (* framerate *)
 
-
+                let () = Printf.printf "pos %d\n%!" (cnt ()) in 
                 let rnum = if !readRects then IO.read_byte inp else IO.read_ui16 inp in (
+                  Printf.printf "rnum %B %x\n%!" !readRects rnum;
+
                   if !readRects
                   then
                     for i = 1 to rnum do {
                      rects.val := [ { rx = IO.read_i16 inp; ry = IO.read_i16 inp; rw = IO.read_i16 inp; rh = IO.read_i16 inp } :: !rects ];
+
+                      let rect = List.hd !rects in
+                        Printf.printf "%d %d %d %d" rect.rx rect.ry rect.rw rect.rh;
                     }
                   else
                     for i = 1 to rnum do {
@@ -199,8 +208,11 @@ value readObjs lib =
                       ignore(IO.read_i32 inp);
                     };
 
+
                   let fnum = IO.read_ui16 inp in
                   (
+                    Printf.printf "fnum %d\n%!" fnum; 
+
                     for i = 1 to fnum do {
                       let  frame = IO.read_i32 inp in
                         (

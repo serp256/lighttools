@@ -217,7 +217,8 @@ type frame =
     y       : int;
     iconX   : int;
     iconY   : int;
-    layers  : DynArray.t layer; 
+    layers  : DynArray.t layer;
+    pnts    : mutable list (int * int * string);
   };
 
 value read_frames dir =
@@ -233,6 +234,10 @@ value read_frames dir =
         let y = IO.read_i16 inp in
         let iconX = IO.read_i16 inp in
         let iconY = IO.read_i16 inp in
+
+        let pntsNum = IO.read_byte inp in
+        let pnts = List.init pntsNum (fun _ -> (IO.read_i16 inp, IO.read_i16 inp, read_utf inp)) in
+
         let cnt_layers = IO.read_byte inp in
         let layers = DynArray.make cnt_layers in
           (
@@ -245,7 +250,7 @@ value read_frames dir =
               let flip = IO.read_byte inp in
               DynArray.add layers {texId; recId; lx; ly; alpha; flip}
             done;
-            DynArray.add frames {x;y;iconX;iconY;layers}
+            DynArray.add frames {x;y;iconX;iconY;layers;pnts}
           )
       done;
       IO.close_in inp;
@@ -396,15 +401,23 @@ value copyFrames dir =
         let y = IO.read_i16 inp in
         let ix = IO.read_i16 inp in
         let iy = IO.read_i16 inp in
+
+        let pntsNum = IO.read_byte inp in
+        let pnts = List.init pntsNum (fun _ -> (IO.read_i16 inp, IO.read_i16 inp, read_utf inp)) in
+
         let newx =round (!scale *.  (float x)) in
         let newy =round (!scale *.  (float y)) in
         let newix =round (!scale *.  (float ix)) in
         let newiy =round (!scale *.  (float iy)) in
+        let newPnts = List.map (fun (x, y, label) -> (round (!scale *. (float x)), round (!scale *. (float y)), label)) pnts in
           (
             IO.write_i16 out newx;
             IO.write_i16 out newy;
             IO.write_i16 out newix;
             IO.write_i16 out newiy;
+            IO.write_byte out pntsNum;
+
+            List.iter (fun (x, y, label) -> ( IO.write_i16 out x; IO.write_i16 out y; write_utf out label)) newPnts;
             (*
             IO.write_i16 out (truncate (round (!scale *.  (float(IO.read_i16 inp))))); (*x*)
             IO.write_i16 out (truncate (round (!scale *.  (float(IO.read_i16 inp))))); (*y*)
@@ -485,6 +498,8 @@ value copyAnimations dir =
                 IO.write_real_i32 out (IO.read_real_i32 inp); (* framerate *) 
                 let cnt_rects = IO.read_byte inp in
                   (
+                    Printf.printf ">>>>>>>>>>>>>>>>>>>>>>>>>cnt_rects %d\n%!" cnt_rects;
+
                     IO.write_byte out cnt_rects;
                     for i = 1 to cnt_rects do
                       (
@@ -597,6 +612,10 @@ value changeFrames dir textureId rect_ids =
         let y = IO.read_i16 inp in
         let iconX = IO.read_i16 inp in
         let iconY = IO.read_i16 inp in
+
+        let pntsNum = IO.read_byte inp in
+        let pnts = List.init pntsNum (fun _ -> (IO.read_i16 inp, IO.read_i16 inp, read_utf inp)) in
+
         let cnt_layers = IO.read_byte inp in
         let layers = DynArray.make cnt_layers in
           (
@@ -631,7 +650,7 @@ value changeFrames dir textureId rect_ids =
                   DynArray.add layers {texId; recId; lx; ly; alpha; flip}
                 )
             done;
-            DynArray.add frames {x;y;iconX;iconY;layers}
+            DynArray.add frames {x;y;iconX;iconY;layers;pnts}
           )
       done;
       IO.close_in inp;
@@ -640,12 +659,16 @@ value changeFrames dir textureId rect_ids =
       let out = IO.output_channel (open_out fname) in
         (
           IO.write_i32 out (DynArray.length frames);
-          DynArray.iter begin fun {x=x;y=y;iconX=iconX;iconY=iconY;layers=layers} -> 
+          DynArray.iter begin fun {x=x;y=y;iconX=iconX;iconY=iconY;layers=layers;pnts=pnts} -> 
             (
               IO.write_i16 out x;
               IO.write_i16 out y;
               IO.write_i16 out iconX;
               IO.write_i16 out iconY;
+
+              IO.write_byte out (List.length pnts);
+              List.iter (fun (x, y, label) -> ( IO.write_i16 out x; IO.write_i16 out y; write_utf out label; )) pnts;
+
               IO.write_byte out (DynArray.length layers);
               DynArray.iter begin fun {texId=texId;recId=recId;lx=lx;ly=ly;alpha=alpha;flip=flip} ->
                 (
