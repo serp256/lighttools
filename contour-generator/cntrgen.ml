@@ -145,8 +145,17 @@ value readFrames lib =
         let fy = IO.read_i16 inp in
         let ix = IO.read_i16 inp in
         let iy = IO.read_i16 inp in
+
         let pntsNum = IO.read_byte inp in
-        let pnts = List.init pntsNum (fun _ -> ( IO.read_i16 inp, IO.read_i16 inp, read_utf inp)) in
+        let pnts =
+          List.init pntsNum (fun _ ->
+            let x = IO.read_i16 inp in
+            let y = IO.read_i16 inp in
+            let label = read_utf inp in
+              (x, y, label)
+          )
+        in
+                
         let lnum = IO.read_byte inp
         and layers = ref [] in
         (
