@@ -109,11 +109,12 @@ value regions_print () =
 				)
 		) !regions;
 
-
+   value _path = ref "";
 value saveImgs () =
    (
     let name = Printf.sprintf "%s" !fileName in
     let path = Filename.concat "atlas_resources" name  in 
+    let path = Printf.sprintf "%s/%s" !_path path in
     
 
       (
@@ -142,7 +143,7 @@ value saveImgs () =
 								) l;
                 if !notSave then ()
                 else let canvas = Images.Rgba32 rgba in
-								Images.save (Printf.sprintf "atlas_resources/%s/%u.png"
+								Images.save (Printf.sprintf "%satlas_resources/%s/%u.png" !_path
                 !fileName !num) (Some Images.Png) [] canvas
 						);
             let countPx = List.length l in (
@@ -168,7 +169,7 @@ value saveImgs () =
     (*Ojson.from_string (Printf.sprintf"%s" List.length l);
      * *)
    let out = open_out (Printf.sprintf "./Resources/textures/%s/%s%s.json"
-   fname fname
+    fname fname
    !suffix) in
    (
     output_string out !s;
@@ -269,6 +270,7 @@ value main () =
 						] in
 				try
 				(
+          _path.val := dst;
           let lib = LLib.load src !suffix in
           let ((x,y),cont) = LLib.symbol lib "Skins.Contour" in
 						let contour =
@@ -330,7 +332,7 @@ value main () =
                   if !notSave then ()
                   else
 
-                    let out = open_out (Printf.sprintf "./Resources/textures/maps/%s.map" !fileName) in
+                    let out = open_out (Printf.sprintf "%smaps/%s.map" dst !fileName) in
                     (
                       let binout = IO.output_channel out in
                       (
