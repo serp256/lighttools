@@ -64,61 +64,64 @@ let outChan = open_out (Filename.concat !outDir "layout") in
 let out = IO.output_channel outChan in
 let xlayout = layout 0 imgW [] in
 let ylayout = layout 0 imgH [] in
-let i = ref ~-1 in (
-  List.iter (fun y ->
-    let h = min !size (imgH - y) in
-    List.iter (fun x ->
-      let w = min !size (imgW - x) in
-      let piece = Images.sub img x y w h in
-      let () = incr i in
-      let fname = (string_of_int !i) ^ ".png" in
+let i = ref ~-1 in
+  (
+    IO.write_byte out ((List.length xlayout) * (List.length ylayout));
 
-      let potSize =
-        if w = !size && h = !size
-        then
-          (
-            Images.save (Filename.concat !outDir fname) (Some Images.Png) [] piece;
-            !size;
-          )
-        else
-          let potSize = max (nextPot w) (nextPot h) in
-          let piece' =
-            match piece with
-            [ Images.Index8 _ -> Images.Index8 (Index8.make potSize potSize 0)
-            | Images.Rgb24 _ -> Images.Rgb24 (Rgb24.make potSize potSize { Color.Rgb.r = 0; g = 0; b = 0 })
-            | Images.Index16 _ -> Images.Index16 (Index16.make potSize potSize 0)
-            | Images.Rgba32 _ -> Images.Rgba32 (Rgba32.make potSize potSize { Color.Rgba.color = { Color.Rgb.r = 0; g = 0; b = 0 }; alpha = 0 })
-            | Images.Cmyk32 _ -> Images.Cmyk32 (Cmyk32.make potSize potSize { Color.Cmyk.c = 0; m = 0; y = 0; k = 0 })
-            ]
-          in
+    List.iter (fun y ->
+      let h = min !size (imgH - y) in
+      List.iter (fun x ->
+        let w = min !size (imgW - x) in
+        let piece = Images.sub img x y w h in
+        let () = incr i in
+        let fname = (string_of_int !i) ^ ".png" in
+
+        let potSize =
+          if w = !size && h = !size
+          then
             (
-              Images.blit piece 0 0 piece' 0 0 w h;
-              Images.save (Filename.concat !outDir fname) (Some Images.Png) [] piece';
-              Images.destroy piece';
-              potSize;
+              Images.save (Filename.concat !outDir fname) (Some Images.Png) [] piece;
+              !size;
             )
-      in
-        (
-          write_utf out fname;
-          IO.write_i16 out (if x <> 0 then x + pvrGap else x);
-          IO.write_i16 out (if y <> 0 then y + pvrGap else y);
+          else
+            let potSize = max (nextPot w) (nextPot h) in
+            let piece' =
+              match piece with
+              [ Images.Index8 _ -> Images.Index8 (Index8.make potSize potSize 0)
+              | Images.Rgb24 _ -> Images.Rgb24 (Rgb24.make potSize potSize { Color.Rgb.r = 0; g = 0; b = 0 })
+              | Images.Index16 _ -> Images.Index16 (Index16.make potSize potSize 0)
+              | Images.Rgba32 _ -> Images.Rgba32 (Rgba32.make potSize potSize { Color.Rgba.color = { Color.Rgb.r = 0; g = 0; b = 0 }; alpha = 0 })
+              | Images.Cmyk32 _ -> Images.Cmyk32 (Cmyk32.make potSize potSize { Color.Cmyk.c = 0; m = 0; y = 0; k = 0 })
+              ]
+            in
+              (
+                Images.blit piece 0 0 piece' 0 0 w h;
+                Images.save (Filename.concat !outDir fname) (Some Images.Png) [] piece';
+                Images.destroy piece';
+                potSize;
+              )
+        in
+          (
+            write_utf out fname;
+            IO.write_i16 out (if x <> 0 then x + pvrGap else x);
+            IO.write_i16 out (if y <> 0 then y + pvrGap else y);
 
-          let paddingL = if x = 0 then 0 else pvrGap in
-          let paddingT = if y = 0 then 0 else pvrGap in
-          let paddingR = if x + w = imgW then potSize - w else pvrGap in
-          let paddingB = if y + h = imgH then potSize - h else pvrGap in
-            (
-              IO.write_byte out paddingL;
-              IO.write_byte out paddingT;
-              IO.write_i16 out (potSize - paddingL - paddingR);
-              IO.write_i16 out (potSize - paddingT - paddingB);
-            );
+            let paddingL = if x = 0 then 0 else pvrGap in
+            let paddingT = if y = 0 then 0 else pvrGap in
+            let paddingR = if x + w = imgW then potSize - w else pvrGap in
+            let paddingB = if y + h = imgH then potSize - h else pvrGap in
+              (
+                IO.write_byte out paddingL;
+                IO.write_byte out paddingT;
+                IO.write_i16 out (potSize - paddingL - paddingR);
+                IO.write_i16 out (potSize - paddingT - paddingB);
+              );
 
-          Images.destroy piece;
-        );
-    ) xlayout
-  ) ylayout;
+            Images.destroy piece;
+          );
+      ) xlayout
+    ) ylayout;
 
-  close_out outChan;
-  Images.destroy img;
-);
+    close_out outChan;
+    Images.destroy img;
+  );

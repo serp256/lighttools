@@ -10,4 +10,4 @@ install:
 	cp mpcttr.byte ~/bin/mpcttr
 
 test: all
-	mpcttr -size 2048 -i ~/projects/steampunk/mobile_client/Resources/map_bg.png -o ./out
+	mpcttr -size 4096 -i ~/projects/steampunk/mobile_client/Resources/map_bg.png -o ~/projects/steampunk/mobile_client/Resources/map
