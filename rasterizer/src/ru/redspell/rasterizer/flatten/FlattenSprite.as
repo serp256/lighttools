@@ -15,7 +15,9 @@ package ru.redspell.rasterizer.flatten {
 
 	import mx.core.FlexGlobals;
 
-	import ru.redspell.rasterizer.utils.Utils;
+    import ru.redspell.rasterizer.flatten.FlattenImage;
+
+    import ru.redspell.rasterizer.utils.Utils;
 
 	public class FlattenSprite extends Sprite implements IFlatten {
         public static const BMP_SMOOTHING_MISTAKE:Number = 0;
@@ -26,6 +28,8 @@ package ru.redspell.rasterizer.flatten {
 		protected var _childs:Vector.<IFlatten> = new Vector.<IFlatten>();
         protected var _masks:Object = {};
         protected var _masked:Dictionary = new Dictionary();
+        protected var _namedMasks:Object = {};
+        protected var maskForAll:FlattenImage;
 
         protected function applyFilters(obj:FlattenImage, fltrs:Array):FlattenImage {
             var finalRect:Rectangle = new Rectangle(0, 0, obj.width, obj.height);
@@ -102,6 +106,48 @@ package ru.redspell.rasterizer.flatten {
             return objBmpData;
         }
 
+        protected function applyMask(mask:FlattenImage, masked:FlattenImage, disposeMask:Boolean = true):FlattenImage {
+            var maskedRect:Rectangle = new Rectangle(Math.round(masked.matrix.tx), Math.round(masked.matrix.ty), masked.width, masked.height);
+            var maskRect:Rectangle = new Rectangle(Math.round(mask.matrix.tx), Math.round(mask.matrix.ty), mask.width, mask.height);
+            var intersect:Rectangle = maskedRect.intersection(maskRect);
+
+            if (intersect.isEmpty()) {
+                if (disposeMask) {
+                    _childs.splice(_childs.indexOf(mask), 1);
+                    mask.dispose();
+                }
+
+                /*
+                ??? return it if needed
+                _childs.splice(_childs.indexOf(masked), 1);
+                masked.dispose();
+                */
+
+                return masked;
+            }
+
+            var srcRect:Rectangle = new Rectangle(intersect.x - maskRect.x, intersect.y - maskRect.y, intersect.width, intersect.height);
+            var dstPnt:Point = new Point(intersect.x - maskedRect.x, intersect.y - maskedRect.y);
+
+            masked.threshold(mask, srcRect, dstPnt, '==', 0x00000000, 0x00000000, 0xff000000);
+
+            var maskedFinal:FlattenImage = new FlattenImage(intersect.width, intersect.height, true, 0x00000000);
+
+            maskedFinal.copyPixels(masked, new Rectangle(dstPnt.x, dstPnt.y, intersect.width, intersect.height), new Point(0, 0));
+
+            if (disposeMask) {
+                _childs.splice(_childs.indexOf(mask), 1);
+                mask.dispose();
+            }
+
+            _childs.splice(_childs.indexOf(masked), 1, maskedFinal);
+            masked.dispose();
+
+            maskedFinal.matrix = new Matrix(1, 0, 0, 1, intersect.x, intersect.y);
+
+            return maskedFinal;
+        }
+
         protected function applyMasks():void {
             for (var m:Object in _masked) {
                 try {
@@ -115,38 +161,12 @@ package ru.redspell.rasterizer.flatten {
                         continue;
                     }
 
-                    var maskedRect:Rectangle = new Rectangle(Math.round(masked.matrix.tx), Math.round(masked.matrix.ty), masked.width, masked.height);
-                    var maskRect:Rectangle = new Rectangle(Math.round(mask.matrix.tx), Math.round(mask.matrix.ty), mask.width, mask.height);
-                    var intersect:Rectangle = maskedRect.intersection(maskRect);
-
-                    if (intersect.isEmpty()) {
-                        _childs.splice(_childs.indexOf(mask), 1);
-                        _childs.splice(_childs.indexOf(masked), 1);
-                        mask.dispose();
-                        masked.dispose();
-
-                        continue;
-                    }
-
-                    var srcRect:Rectangle = new Rectangle(intersect.x - maskRect.x, intersect.y - maskRect.y, intersect.width, intersect.height);
-                    var dstPnt:Point = new Point(intersect.x - maskedRect.x, intersect.y - maskedRect.y);
-
-                    masked.threshold(mask, srcRect, dstPnt, '==', 0x00000000, 0x00000000, 0xff000000);
-
-                    var maskedFinal:FlattenImage = new FlattenImage(intersect.width, intersect.height, true, 0x00000000);
-
-                    maskedFinal.copyPixels(masked, new Rectangle(dstPnt.x, dstPnt.y, intersect.width, intersect.height), new Point(0, 0));
-
-                    _childs.splice(_childs.indexOf(mask), 1);
-                    _childs.splice(_childs.indexOf(masked), 1, maskedFinal);
-                    mask.dispose();
-                    masked.dispose();
-
-                    maskedFinal.matrix = new Matrix(1, 0, 0, 1, intersect.x, intersect.y);
+                    applyMask(mask, masked);
                 } catch (e:ArgumentError) {
-
                 }
             }
+
+
         }
 
         protected function cleanMasks():void {
@@ -214,16 +234,27 @@ package ru.redspell.rasterizer.flatten {
                 var layer:FlattenImage = applyFilters(applyMatrix(obj, mtx, clr), filters);
                 _childs.push(layer);
 
-                var matches:Array = obj.parent.name.match(/^(masked|mask)([\d]+)$/);
-
-                if (!matches) {
-                    return;
-                }
-
-                if (matches[1] == 'masked') {
-                    _masked[layer] = matches[2];
+                trace('obj.parent.name ' + obj.parent.name);
+                if (obj.parent.name == "maskfor_all") {
+                    maskForAll = layer;
                 } else {
-                    _masks[matches[2]] = layer;
+                    var matches:Array = obj.parent.name.match(/^(masked|mask)([\d]+)$/);
+
+                    if (!matches) {
+                        matches = obj.parent.name.match(/^maskfor_(.+)$/);
+
+                        if (!matches) {
+                            return;
+                        }
+
+                        _namedMasks[matches[1]] = layer;
+                    }
+
+                    if (matches[1] == 'masked') {
+                        _masked[layer] = matches[2];
+                    } else {
+                        _masks[matches[2]] = layer;
+                    }
                 }
             }
         }
@@ -265,6 +296,32 @@ package ru.redspell.rasterizer.flatten {
             cleanMasks();
             flatten(obj);
             applyMasks();
+
+            var i:uint = 0;
+
+            while (i < _childs.length) {
+                var fimg:FlattenImage = _childs[i] as FlattenImage;
+
+                if (fimg == null || fimg == maskForAll) {
+                    i++;
+                    continue;
+                }
+
+                if (_namedMasks.hasOwnProperty(fimg.name)) {
+                    fimg = applyMask(_namedMasks[fimg.name], fimg);
+                }
+
+                if (maskForAll != null) {
+                    fimg = applyMask(maskForAll, fimg, false);
+                }
+
+                i = _childs.indexOf(fimg) + 1;
+            }
+
+            if (maskForAll != null) {
+                _childs.splice(_childs.indexOf(maskForAll), 1);
+                maskForAll.dispose();
+            }
 			//clipTransparency();
 
             return this;
