@@ -1,0 +1,4 @@
+<**/*.ml{,i}>: package(camlp4),syntax(camlp4r),package(extlib),package(lightning),package(lightning.syntax.platform),package(redspell.syntax.debug),package(ojson),package(camlp4.macro)
+true:debug
+<*.{native,byte,so}>: package(lightning), package(lightning.facebook), package(lightning.twitter), package(lightning.instagram), package(lightning.whatsapp), package(lightning.tapjoy), package(lightning.appsflyer)
+<*.byte>: custom

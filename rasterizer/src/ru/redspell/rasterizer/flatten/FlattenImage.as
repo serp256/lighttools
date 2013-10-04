@@ -19,5 +19,10 @@ package ru.redspell.rasterizer.flatten {
 
 		public function render():void {
 		}
+
+        override public function dispose():void {
+            trace('flatten image ' + name + ' dispose');
+            super.dispose();
+        }
 	}
 }
