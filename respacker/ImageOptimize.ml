@@ -148,12 +148,12 @@ value do_merge_images () =
     let i = ref 0 in
     while !i < DynArray.length children - 1 do
       match DynArray.get children !i with
-      [ `chld (id1,label,pos1) ->
+      [ `chld (id1,None,pos1) ->
         match  (DynArray.get items id1).item with
         [ `image texInfo1 when not (HSet.mem alredySeen id1) ->
           let () = HSet.add alredySeen id1 in
           match DynArray.get children (!i + 1) with
-          [ `chld (id2,_,pos2) ->
+          [ `chld (id2,None,pos2) ->
             match (DynArray.get items id2).item with
             [ `image texInfo2 ->
               let rect1 = Rectangle.create pos1.x pos1.y (float texInfo1.width) (float texInfo1.height)
@@ -288,7 +288,7 @@ value do_merge_images () =
                           Hashtbl.replace images id1 (Images.Rgba32 gimg);
                           DynArray.set items id1 {item_id=id1;item=`image {(texInfo1) with width = gwidth; height = gheight};deleted=False};
                           DynArray.delete_range children !i (maxOffset+1);
-                          DynArray.insert children !i (`chld (id1,label,{x=rect.(0);y=rect.(1)})); (* FIXME: label skipped *)
+                          DynArray.insert children !i (`chld (id1,None,{x=rect.(0);y=rect.(1)})); (* FIXME: label skipped *)
                           let dx = pos1.x -. rect.(0)
                           and dy = pos1.y -. rect.(1) in
                           (* А теперь все вхождения пореплейсить нахуй *)
