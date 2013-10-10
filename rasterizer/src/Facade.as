@@ -36,8 +36,6 @@ package {
 				if (app) {
 					app.reportError(error);
 				}
-
-				trace(error.getStack());
 			}
 		}
 	}

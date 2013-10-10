@@ -9,8 +9,6 @@ package ru.redspell.rasterizer.commands {
 		}
 
 		override public function unsafeExecute():void {
-            trace('ok', _pack.checked, _pack.scales);
-
 			var meta:Object = Facade.proj.meta;
 
 			if (!meta.hasOwnProperty(_pack.name)) {
@@ -29,10 +27,6 @@ package ru.redspell.rasterizer.commands {
                 delete packMeta.scales;
             } else {
                 packMeta.scales = _pack.scales;
-            }
-
-            for (var key:String in packMeta) {
-                trace(key, packMeta[key]);
             }
 
             if (Utils.objIsEmpty(packMeta)) {

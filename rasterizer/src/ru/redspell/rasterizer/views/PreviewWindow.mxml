@@ -47,26 +47,17 @@
 				fltMc.goto(0);
 			}
 
-			trace('rect', rect);
-			trace('w, h', containerGrp.width, containerGrp.height);
-
 			if (rect.width > containerGrp.width) {
 				container.scaleX = container.scaleY = containerGrp.width / rect.width;
 				rect = container.getBounds(this);
-				trace('scaling width, new rect', rect);
 			}
 
 			if (rect.height > containerGrp.height) {
 				container.scaleX = container.scaleY = containerGrp.height / rect.height * container.scaleX;
 				rect = container.getBounds(this);
-				trace('scaling height, new rect', rect);
 			}
 
 			rect = container.getRect(containerGrp);
-
-			trace('containerGrp.width, containerGrp.height', containerGrp.width, containerGrp.height);
-			trace('container.width, container.height', container.width, container.height);
-
 
 			container.x = (containerGrp.width - rect.width) / 2 - rect.x ;
 			container.y = (containerGrp.height - rect.height) / 2 - rect.y;

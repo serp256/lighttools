@@ -39,7 +39,6 @@ package ru.redspell.rasterizer.commands {
 
 			for each (var pack:SwfsPack in proj.packs) {
 				var packMeta:Object = {};
-				trace(pack.name);
 
 				if (!pack.checked) {
 					packMeta = { checked:false };
@@ -50,7 +49,6 @@ package ru.redspell.rasterizer.commands {
 
 				for each (var swf:Swf in pack.swfs) {
 					var swfMeta:Object = {};
-					trace('\t', swf.path);
 
 					if (!swf.animated) {
 						swfMeta = { animated:false };
@@ -85,7 +83,6 @@ package ru.redspell.rasterizer.commands {
 							swfMeta[cls.name] = clsMeta;
 						}
 
-						trace('\t\t', cls.name);
 					}
 
 					if (!Utils.objIsEmpty(swfMeta)) {

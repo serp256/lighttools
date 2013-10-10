@@ -53,18 +53,13 @@ package ru.redspell.rasterizer.commands {
 			var instance:DisplayObject = new cls.definition();
             var profileLbl:String = (_profiles[0] as Profile).label;
 
-            trace('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', cls.name, cls.swf.animated);
-
 			var animated:Boolean = (!cls.anims.hasOwnProperty(profileLbl) || cls.anims[profileLbl]) && cls.swf.animated;
 
 			Utils.traceObj(instance as DisplayObjectContainer);
 
-            trace('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', (instance is MovieClip) && animated);
-
 			var flatten:IFlatten = (instance is MovieClip) && animated ? new FlattenMovieClip() : new FlattenSprite();
+            trace('pizdalalahoho');
 			flatten.fromDisplayObject(instance, Utils.getClsScale(cls, _profiles[0]));
-
-            trace('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', (instance is MovieClip) && animated);
 
 			try {
 				var exporter:IExporter = new FlattenExporter();
@@ -88,7 +83,6 @@ package ru.redspell.rasterizer.commands {
 				trace('\t' + cls.name);
 
 				if (!cls.checks.hasOwnProperty(profileLbl) || cls.checks[profileLbl]) {
-					trace('Exporting profile ' + (_profiles[0] as Profile).label + ' pack ' + _pack.name + ' swf ' + _swf.path + ' class ' + cls.name + ' (' + _classesExported + '/' + _classesTotal + ')');
 					Facade.app.setStatus('Exporting profile ' + (_profiles[0] as Profile).label + ' pack ' + _pack.name + ' swf ' + _swf.path + ' class ' + cls.name + ' (' + _classesExported + '/' + _classesTotal + ')', false, true);
 					setTimeout(exportClass, Config.STATUS_REFRESH_TIME, cls);
 				} else {

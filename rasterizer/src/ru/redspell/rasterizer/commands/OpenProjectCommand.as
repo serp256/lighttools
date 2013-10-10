@@ -27,8 +27,6 @@ package ru.redspell.rasterizer.commands {
 				var swf:Swf = event.target as Swf;
 				var meta:Object = Facade.proj.meta;
 
-				trace('swf_completeHandler', swf.path);
-
 				for each (var cls:SwfClass in swf.classes) {
 					if (!meta.hasOwnProperty(cls.swf.pack.name)) {
 						continue;
@@ -68,8 +66,6 @@ package ru.redspell.rasterizer.commands {
 					//cls.animated = clsMeta.hasOwnProperty('animated') ? clsMeta.animated : true;
                     cls.alias = clsMeta.hasOwnProperty('alias') ? clsMeta.alias : "";
 					cls.scales = clsMeta.hasOwnProperty('scales') ? clsMeta.scales : {};
-
-					trace(swf.path, cls.name, com.maccherone.json.JSON.encode(clsMeta.scales));
 				}
 			}
 
@@ -144,8 +140,6 @@ package ru.redspell.rasterizer.commands {
 						swf.animated = swfMeta.hasOwnProperty('animated') ? swfMeta.aninated : true;
                         swf.scales = swfMeta.hasOwnProperty('scales') ? swfMeta.scales : {};
 					}
-
-					trace('loaing swf', swf.path);
 
 					swf.addEventListener(Event.COMPLETE, swf_completeHandler);
 					swf.loadClasses(dir);

@@ -61,7 +61,6 @@ package ru.redspell.rasterizer.commands {
                 delete clsMeta.alias;
             } else {
                 clsMeta.alias = _cls.alias;
-                trace('clsMeta.alias', clsMeta.alias);
             }
 
             if (Utils.objIsEmpty(_cls.anims)) {
