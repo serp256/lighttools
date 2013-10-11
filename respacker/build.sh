@@ -1,6 +1,6 @@
 #!/bin/bash
 
-OCB="ocamlbuild -classic-display -use-ocamlfind -I ~/Projects/lightning/src"
+OCB="ocamlbuild -classic-display -use-ocamlfind" 
 target=respacker
 
 case $1 in

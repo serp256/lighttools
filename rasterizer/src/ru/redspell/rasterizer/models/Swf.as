@@ -39,8 +39,6 @@ package ru.redspell.rasterizer.models {
 
 		protected function loader_completeHandler(event:Event):void {
 			try {
-				trace('loader_completeHandler', path);
-
 				var li:LoaderInfo = event.target as LoaderInfo;
 				var appDomain:ApplicationDomain = li.applicationDomain;
 
@@ -51,11 +49,7 @@ package ru.redspell.rasterizer.models {
 					classes = source;
 				}
 
-                trace('loading classes');
-
 				for each (var cls:Object in classes) {
-                    trace('cls', cls);
-
 					if (cls is SwfClass) {
 						(cls as SwfClass).definition = appDomain.getDefinition(cls.name) as Class;
 					} else {
@@ -68,8 +62,6 @@ package ru.redspell.rasterizer.models {
 
 				dispatchEvent(new Event(Event.COMPLETE));
 			} catch (e:Error) {
-                trace('error');
-
 				Facade.app.reportError(CommandError.create(e, this.toString()));
 			}
 		}
@@ -78,8 +70,6 @@ package ru.redspell.rasterizer.models {
 		}
 
 		public function loadClasses(useGetDefinitions:Boolean = true):void {
-			trace('load class call', path);
-
 			var loader:Loader = new Loader();
 
 			_useGetDefinitions = useGetDefinitions;

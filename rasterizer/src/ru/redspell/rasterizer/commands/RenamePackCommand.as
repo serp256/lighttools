@@ -26,14 +26,9 @@ package ru.redspell.rasterizer.commands {
 					}
 				}
 
-				trace('Utils.getFreeName(_pack.name, names)', Utils.getFreeName(_pack.name, names));
-
 				_pack.name = Utils.getFreeName(_pack.name, names);
 				(Facade.app.packsList.dataProvider as ArrayCollection).refresh();
 			}
-
-			trace('_prevName', _prevName);
-			trace('_pack.name', _pack.name);
 
 			Facade.projDir.resolvePath(_prevName).moveTo(Facade.projDir.resolvePath(_pack.name));
 		}

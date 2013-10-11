@@ -23,6 +23,8 @@ open RBase;
 open ImageOptimize;
 open RClips;
 
+value nreg = Str.regexp "^instance[0-9]+$";
+
 value rec process_children dirname children = 
   let lst = 
     List.filter_map begin fun child ->
@@ -32,7 +34,14 @@ value rec process_children dirname children =
       match ctype with
       [ "box" -> Some (`box (pos,jstring (List.assoc "name" child)))
       | _ ->
-        let name = try Some (jstring (List.assoc "name" child)) with [ Not_found -> None ] in
+        let name = 
+          try 
+              let name = jstring (List.assoc "name" child) in
+              match Str.string_match nreg name 0 with
+              [ True -> None
+              | False -> Some name 
+              ]
+          with [ Not_found -> None ] in
         let id = 
           match ctype with
           [ "image" -> (push_child_image dirname child)
@@ -593,10 +602,10 @@ value do_work isXml pack_mode fmt indir suffix outdir =
       | None -> IO.write_byte binout 0
       ]
     in
-    let nreg = Str.regexp "^instance[0-9]+$" in
+(*     let nreg = Str.regexp "^instance[0-9]+$" in *)
     let write_name = fun
-      [ Some name when Str.string_match nreg name 0 -> IO.write_byte binout 0
-      | Some name ->
+(*       [ Some name when Str.string_match nreg name 0 -> IO.write_byte binout 0 *)
+      [ Some name ->
         (
           IO.write_byte binout (String.length name);
           IO.nwrite binout name;

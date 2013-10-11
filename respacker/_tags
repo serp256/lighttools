@@ -3,4 +3,7 @@
 "resreader.byte": package(camlimages),package(extlib),package(lightning),package(camlimages.png)
 <TextureLayout.ml>: package(extlib)
 <respacker.{ml,byte,native}>: package(extlib),package(extlib),package(camlimages.png),package(ojson),package(xmlm),package(zip),package(str),linkall
+
+"xml_of_bin.ml": package(xmlm),package(extlib)
+<xml_of_bin.{byte,native}>: package(xmlm),package(extlib)
 true: debug

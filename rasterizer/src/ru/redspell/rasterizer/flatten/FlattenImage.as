@@ -8,7 +8,6 @@ package ru.redspell.rasterizer.flatten {
 		public var matrix:Matrix = new Matrix();
 
 		public function FlattenImage(width:int, height:int, transparent:Boolean = true, fillColor:uint = 0xFFFFFFFF) {
-            //trace(width + ' ' + height);
 			super(width, height, transparent, fillColor);
 		}
 

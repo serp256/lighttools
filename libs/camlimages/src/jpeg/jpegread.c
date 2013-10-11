@@ -417,7 +417,7 @@ value read_jpeg_scanlines( value jpegh, value buf, value offset, value lines )
     jpeg_read_scanlines( cinfop, row, 1 );
     row[0] += scanline_bytes;
   }
-  CAMLreturn0;
+  CAMLreturn(Val_unit);
 }
 
 value close_jpeg_file_for_read( jpegh )
