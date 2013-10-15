@@ -12,8 +12,6 @@ value () =
     [
       ("-i", Arg.Set_string indir, "input directory relative to Resources");
       ("-f", Arg.Set_string font, "font name");
-      ("-ff", Arg.Set_string fontFamily, "font family. by default: font name");
-      ("-fw", Arg.Set_string fontWeight, "font weight");
       ("-fs", Arg.Set_int fontSize, "font size. by default: 20");
       ("-suf", Arg.Set_string suffix, "light lib suffix");
     ]
@@ -28,6 +26,14 @@ value () =
       font.val := fontName
     |False -> ()
     ];
-    match String.length !fontFamily = 0 with [True -> fontFamily.val := !font| False -> ()];
+    let inp = open_in (Printf.sprintf "Resources/fonts/%s%s.fnt" !font !suffix) in
+    let bin_inp = IO.input_channel inp in
+    let family = IO.read_string bin_inp in
+    let weight = IO.read_string bin_inp in
+      let () = Debug.d "%s: %s" family weight in
+      (
+        fontFamily.val := family;
+        fontWeight.val := String.uncapitalize weight;
+      );
     Drawllib.draw !indir (!font, !fontFamily, !fontWeight, !fontSize) !suffix;
   );
