@@ -41,6 +41,10 @@ value draw indir (font, fontFamily, fontWeight, fontSize) suffix =
         
         let lib = LightLib.load indir in 
         let symbols = LightLib.symbols lib in
+        let l = ExtLib.List.of_enum symbols in
+        let l = ExtLib.List.sort l in
+        let symbols = ExtLib.List.enum l in
+
         (
           Enum.iter (fun cls ->
             (
