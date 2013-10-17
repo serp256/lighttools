@@ -33,9 +33,11 @@ value scale = ref 1.;
 value without_cntr = ref False;
 value is_android = ref False;
 value no_anim = ref False;
+value suffix = ref "";
 
 value json_name = ref "";
-
+value get_postfix () = !suffix;
+(*
 value get_postfix () =
   let sfx = 
     match !is_android with
@@ -47,6 +49,7 @@ value get_postfix () =
   [ 1. -> sfx
   | _ -> "x" ^ (snd ( ExtString.String.replace ~str:(string_of_float !scale) ~sub:"." ~by:"")) ^ sfx
   ];
+  *)
 
   value round v = 
   let mult = 
@@ -1101,10 +1104,17 @@ value run () =
       *)
       match !without_cntr with
       [ False -> 
+        (*
             let scale = 
               match !scale with
               [ 1. -> ""
               | _ -> "-s " ^ (get_postfix ())
+              ]
+      *)
+            let scale = 
+              match get_postfix () with
+              [ "" -> ""
+              | suffix -> "-s " ^ suffix
               ]
             in
             let cmd = Printf.sprintf "cntrgen %s -i %s" scale !outdir in
@@ -1135,7 +1145,8 @@ value () =
         ("-degree4", Arg.Set degree4, "Use degree 4 rects");
         ("-without-cntr", Arg.Set without_cntr, "Not generate counters");
         ("-android", Arg.Set is_android, "Textures for android");
-        ("-no-anim", Arg.Set no_anim, "Skip expansion animations")
+        ("-no-anim", Arg.Set no_anim, "Skip expansion animations");
+        ("-suffix", Arg.Set_string suffix, "add suffix to library name")
       ]
       (fun name -> json_name.val := name)
       "";

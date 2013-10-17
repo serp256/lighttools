@@ -3,6 +3,9 @@
 BUILDER = ocamlbuild -use-ocamlfind -classic-display
 SCALE=0.5
 LIB_DIR?=libs
+LIB_DIR_STEAMPUNK?=../../steampunk_graphic/atlases
+OUT_DIR_STEAMPUBK?=steam
+
 
 all: 
 	$(BUILDER) convert.native
@@ -88,7 +91,12 @@ lib-test: clean-output lib-notcompressed
 	./convert.native -wholly -inp 2 -n 100500 -scale 2 -o ~/Devel/mobile-farm/Resources/library
 	./convert.native -wholly -inp 2 -n 100500 -o ~/Devel/mobile-farm/Resources/library 
 
+clean-out-steam:
+	rm -r -f ${OUT_DIR_STEAMPUBK}/*
 
+steam: clean-out-steam
+	./convert.native -inp ${LIB_DIR_STEAMPUNK} -scale 0.5 -degree4 -max 2048 -o ${OUT_DIR_STEAMPUBK} conf/steampunk.json
+	./convert.native -inp ${LIB_DIR_STEAMPUNK} -suffix x2 -degree4 -max 4096 -o ${OUT_DIR_STEAMPUBK} conf/steampunk.json
 
 
 %.cmo:
