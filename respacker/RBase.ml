@@ -50,7 +50,8 @@ end;(*}}}*)
 
 type pos = {x:float;y:float};
 type texinfo = {page:mutable int; tx:mutable int;ty:mutable int; width: int;height:int};
-type child = [= `chld of (int * option string * pos) | `box of (pos * string) ];
+type img = (int * option string * pos);
+type child = [= `chld of img | `box of (pos * string) ];
 type children = DynArray.t child;
 type clipcmd = [ ClpPlace of (int * (int * option string * pos)) | ClpClear of (int*int) | ClpChange of (int * list [= `posX of float | `posY of float | `move of int]) ];
 type frame = {children:children; commands: mutable option (DynArray.t clipcmd); label: option string; duration: mutable int};
