@@ -20,8 +20,6 @@
 			Facade.runCommand(Facade.commandsFactory.getRefreshClassMetaCommand(cls));
 		}
 
-		trace("cls.alias: " + cls.alias);
-
 		return retval;
 	}
 	]]></fx:Script>

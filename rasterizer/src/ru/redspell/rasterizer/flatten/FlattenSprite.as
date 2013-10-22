@@ -143,6 +143,7 @@ package ru.redspell.rasterizer.flatten {
             _childs.splice(_childs.indexOf(masked), 1, maskedFinal);
             masked.dispose();
 
+            maskedFinal.name = masked.name;
             maskedFinal.matrix = new Matrix(1, 0, 0, 1, intersect.x, intersect.y);
 
             return maskedFinal;
@@ -174,7 +175,7 @@ package ru.redspell.rasterizer.flatten {
             _masked = new Dictionary();
         }
 
-        protected function flatten(obj:DisplayObject, matrix:Matrix = null, color:ColorTransform = null, filters:Array = null):void {
+        protected function flatten(obj:DisplayObject, matrix:Matrix = null, color:ColorTransform = null, filters:Array = null, name:String = null):void {
 			if (!obj) {
 				return;
 			}
@@ -199,27 +200,26 @@ package ru.redspell.rasterizer.flatten {
             if (container) {
                 var mtx:Matrix = obj.transform.matrix.clone();
                 var fltrs:Array = filters.concat(obj.filters);
+                var customName:Boolean = !/^instance[\d]+$/.test(obj.name);
 
                 mtx.concat(matrix);
 
-                for (var i:uint = 0; i < container.numChildren; i++) {
-                    flatten(container.getChildAt(i), mtx, clr, fltrs);
+
+                if (container.numChildren == 0 && customName) {
+                    mtx.scale(_scale, _scale);
+
+                    var box:FlattenSprite = new FlattenSprite();
+                    box.name = obj.name;
+                    box.transform.matrix = mtx.clone();
+
+                    _childs.push(box);
+                } else if (container.numChildren == 1 && customName) {
+                    flatten(container.getChildAt(0), mtx, clr, fltrs, container.name);
+                } else {
+                    for (var i:uint = 0; i < container.numChildren; i++) {
+                        flatten(container.getChildAt(i), mtx, clr, fltrs);
+                    }
                 }
-
-				if (!/^instance[\d]+$/.test(obj.name)) {
-                    //trace(mtx);
-					mtx.scale(_scale, _scale);
-
-					var box:FlattenSprite = new FlattenSprite();
-					box.name = obj.name;
-					box.transform.matrix = mtx.clone();
-
-					//trace('obj.transform.matrix', obj.transform.matrix);
-					//trace('matrix', matrix);
-					//trace('mtx', mtx);
-
-					_childs.push(box);
-				}
             } else {
                 //mtx = matrix.clone();
                 //mtx.concat(obj.transform.matrix);
@@ -234,7 +234,10 @@ package ru.redspell.rasterizer.flatten {
                 var layer:FlattenImage = applyFilters(applyMatrix(obj, mtx, clr), filters);
                 _childs.push(layer);
 
-                trace('obj.parent.name ' + obj.parent.name);
+                if (name != null) {
+                    layer.name = name;
+                }
+
                 if (obj.parent.name == "maskfor_all") {
                     maskForAll = layer;
                 } else {

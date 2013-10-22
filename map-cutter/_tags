@@ -1,2 +1,2 @@
-<*.ml>: package(camlp4),syntax(camlp4r),package(extlib),package(camlimages)
-<*.{byte,native}>: package(extlib),package(camlimages.png),package(camlimages.graphic),linkall
+<*.ml>: package(camlp4),syntax(camlp4r),package(extlib),package(camlimages),package(zip)
+<*.{byte,native}>: package(extlib),package(camlimages.png),linkall,package(zip)

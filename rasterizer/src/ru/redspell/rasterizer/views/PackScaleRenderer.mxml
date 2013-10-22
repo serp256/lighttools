@@ -17,7 +17,6 @@
 				return;
 			}
 
-			trace('Utils.getPackScale(pack)', Utils.getPackScale(pack));
 			label = String(Utils.getPackScale(pack));
 		}
 		]]></fx:Script>
