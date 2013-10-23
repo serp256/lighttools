@@ -407,7 +407,7 @@ value do_work isXml pack_mode fmt indir suffix outdir =
   in
 (*   let () = print_endline "textures created" in *)
   let group_children = 
-    if !use_atlases 
+    if not !use_atlases 
     then fun children ->  ((DynArray.to_list children) :> (list [= child | `atlas of list img ]))
     else
     fun children ->
