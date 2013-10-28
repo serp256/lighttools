@@ -17,6 +17,7 @@ value (=*=) k v = k =|= string_of_int v;
 
 value npot = ref False;
 value alpha = ref False;
+value use_atlases = ref True;
 
 
 open RBase;
@@ -405,30 +406,34 @@ value do_work isXml pack_mode fmt indir suffix outdir =
     ]
   in
 (*   let () = print_endline "textures created" in *)
-  let group_children children = 
-    let qchld = Stack.create () in
-    (
-      DynArray.iter begin fun 
-        [ `chld _ as chld when Stack.is_empty qchld -> Stack.push chld qchld
-        | `chld img as chld -> 
-            match Stack.pop qchld with
-            [ `chld pimg -> Stack.push (`atlas [ img ; pimg ]) qchld
-            | `atlas els -> Stack.push (`atlas [ img :: els ]) qchld
-            | `box _ as b -> (Stack.push b qchld; Stack.push chld qchld)
-            ]
-        | `box _ as b -> Stack.push b qchld
-        ]
-      end children;
-      let res = RefList.empty () in
+  let group_children = 
+    if not !use_atlases 
+    then fun children ->  ((DynArray.to_list children) :> (list [= child | `atlas of list img ]))
+    else
+    fun children ->
+      let qchld = Stack.create () in
       (
-        Stack.iter begin fun 
-          [ `atlas els -> RefList.push res (`atlas (List.rev els))
-          | _ as el -> RefList.push res el
+        DynArray.iter begin fun 
+          [ `chld _ as chld when Stack.is_empty qchld -> Stack.push chld qchld
+          | `chld img as chld -> 
+              match Stack.pop qchld with
+              [ `chld pimg -> Stack.push (`atlas [ img ; pimg ]) qchld
+              | `atlas els -> Stack.push (`atlas [ img :: els ]) qchld
+              | `box _ as b -> (Stack.push b qchld; Stack.push chld qchld)
+              ]
+          | `box _ as b -> Stack.push b qchld
           ]
-        end qchld;
-        RefList.to_list res;
+        end children;
+        let res = RefList.empty () in
+        (
+          Stack.iter begin fun 
+            [ `atlas els -> RefList.push res (`atlas (List.rev els))
+            | _ as el -> RefList.push res el
+            ]
+          end qchld;
+          RefList.to_list res;
+        )
       )
-    )
   in
   (* отсортировать items чтобы все картинки были в начале *)
   let sitems = sorted_items () in
@@ -821,6 +826,7 @@ value () =
         );
         ("-npot",Arg.Set npot, "Not power of 2");
         ("-alpha",Arg.Set alpha, "Save as alpha");
+        ("-skip-atlases",Arg.Clear use_atlases, "Dont use atlases")
       ] 
       (fun id -> libs.val := [id :: !libs]) "usage msg";
     match !libs with
