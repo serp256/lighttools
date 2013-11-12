@@ -61,6 +61,7 @@ type layer = {
   ly:int;
   alpha:int;
   flip:int;
+  scale:float;
 };
 
 value layerToString layer = Printf.sprintf "layer(texId:%d; recId:%d; lx:%d; ly:%d; alpha:%d; flip:%d)" layer.texId layer.recId layer.lx layer.ly layer.alpha layer.flip;
@@ -165,8 +166,9 @@ value readFrames lib =
             and lx = IO.read_i16 inp
             and ly = IO.read_i16 inp
             and alpha = IO.read_byte inp
-            and flip = IO.read_byte inp in
-              layers.val := [ { texId; recId; lx; ly; alpha; flip } :: !layers ];
+            and flip = IO.read_byte inp
+            and scale = Int32.to_float (IO.read_real_i32 inp) in
+              layers.val := [ { texId; recId; lx; ly; alpha; flip; scale } :: !layers ];
           };
 
           let layers = List.rev !layers in

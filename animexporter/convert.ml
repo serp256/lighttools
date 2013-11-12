@@ -214,6 +214,7 @@ type layer =
     ly      : int;
     alpha   : int;
     flip    : int;
+    scale   : int32;
   };
 
 type frame = 
@@ -263,7 +264,8 @@ value read_frames dir =
               let ly = IO.read_i16 inp in
               let alpha = IO.read_byte inp in
               let flip = IO.read_byte inp in
-              DynArray.add layers {texId; recId; lx; ly; alpha; flip}
+              let scale = IO.read_real_i32 inp in
+                DynArray.add layers {texId; recId; lx; ly; alpha; flip; scale }
             done;
             DynArray.add frames {x;y;iconX;iconY;layers;pnts}
           )
@@ -480,6 +482,7 @@ value copyFrames dir =
                   *)
                   IO.write_byte out (IO.read_byte inp); (*alpha*)
                   IO.write_byte out (IO.read_byte inp); (*flip*)
+                  IO.write_real_i32 out (IO.read_real_i32 inp); (*flip*)
                 )
               done;
             )
@@ -655,6 +658,7 @@ value changeFrames dir textureId rect_ids =
               let ly = IO.read_i16 inp in
               let alpha = IO.read_byte inp in
               let flip = IO.read_byte inp in
+              let scale = IO.read_real_i32 inp in
                 (
                   (*
                   Printf.printf "old texId : %d; oldRecId : %d \n%!" texId recId;
@@ -676,7 +680,7 @@ value changeFrames dir textureId rect_ids =
                            [ Not_found -> (texId, recId) ]
                     ]
                   in
-                  DynArray.add layers {texId; recId; lx; ly; alpha; flip}
+                  DynArray.add layers {texId; recId; lx; ly; alpha; flip; scale }
                 )
             done;
             DynArray.add frames {x;y;iconX;iconY;layers;pnts}
@@ -699,7 +703,7 @@ value changeFrames dir textureId rect_ids =
               List.iter (fun (x, y, label) -> ( IO.write_i16 out x; IO.write_i16 out y; write_utf out label; )) pnts;
 
               IO.write_byte out (DynArray.length layers);
-              DynArray.iter begin fun {texId=texId;recId=recId;lx=lx;ly=ly;alpha=alpha;flip=flip} ->
+              DynArray.iter begin fun {texId=texId;recId=recId;lx=lx;ly=ly;alpha=alpha;flip=flip;scale=scale} ->
                 (
                   IO.write_byte out texId;
                   IO.write_i32 out recId;
@@ -707,6 +711,7 @@ value changeFrames dir textureId rect_ids =
                   IO.write_i16 out ly;
                   IO.write_byte out alpha;
                   IO.write_byte out flip;
+                  IO.write_real_i32 out scale;
                 )
               end layers;
             )
