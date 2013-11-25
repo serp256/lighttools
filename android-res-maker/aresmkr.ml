@@ -177,20 +177,26 @@ value runDiff fnameA fnameB out = (
             let size = Index.Entry.getSize entry in
             let inChanB = open_in (Filename.concat fnameB fname) in
             let inLenB = in_channel_length inChanB in
-              if size <> inLenB
-              then (
-                LOG "different sizes, include in diff";
-                True;
-              )
-              else (
-                LOGN "sizes matched, checking content... ";
-                seek_in inChanA (Index.Entry.getOffset entry);
+              (
+                if size <> inLenB
+                then
+                  (
+                    LOG "different sizes, include in diff";
+                    close_in inChanB;
+                    True;
+                  )
+                else
+                  (
+                    LOGN "sizes matched, checking content... ";
+                    seek_in inChanA (Index.Entry.getOffset entry);
 
-                let retval = Digest.(compare (channel inChanA size) (channel inChanB inLenB)) <> 0 in (
-                  close_in inChanB;
-                  LOG (if retval then "different content, include in diff" else "content identical, skip");
-                  retval;
-                );
+                    let retval = Digest.(compare (channel inChanA size) (channel inChanB inLenB)) <> 0 in
+                      (
+                        LOG (if retval then "different content, include in diff" else "content identical, skip");
+                        close_in inChanB;
+                        retval;
+                      );
+                  )
               )
           with [ Index.No_entry -> True ]
         ) (readdir fnameB)
