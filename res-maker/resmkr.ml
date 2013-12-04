@@ -4,6 +4,7 @@ DEFINE LOG(mes) = Printf.printf "%s\n%!" mes;
 DEFINE LOGN(mes) = Printf.printf "%s%!" mes;
 
 value concat = ref False;
+value combine = ref False;
 value extract = ref False;
 value diff = ref False;
 value merge = ref False;
@@ -22,6 +23,7 @@ value appendToMerge fname = (
 
 value args = [
   ("-concat", Arg.Set concat, "\tmake so-called light archive (sigle file which contains files from input directory one-by-one)");
+  ("-combine", Arg.Set combine, "\tused only with -concat or -extract. in first case force resmkr to combine index with archive. this archive cannot be merged with no-index archives.\n\t\tin second case determine that input file is combined archive");
   ("-extract", Arg.Set extract, "\textract specified file from light-archive");
   ("-diff", Arg.Tuple [ Arg.Set diff; Arg.Set_string diffFnameA; Arg.Set_string diffFnameB ], "\tmake light archive from diff between directory content and another light archve");
   ("-merge", Arg.Set merge, "\tperform merging of specified archives indexes");
@@ -30,13 +32,13 @@ value args = [
   ("-fname", Arg.Set_string fname, "\tusing only with -extract option, specifies file name to extract from light archive");
 ];
 
-value usage = "Android resources maker, usage:\n"
-  ^ "\taresmkr -concat -i <inp-dirname> -o <out-fname> -- reads content of directory <inp-dirname> and make light archive, named <out-fname>\n"
-  ^ "\taresmkr -extract -i <light-archive> -fname <fname-to-extract> -o <out-fname> -- extract <fname-to-extract> from <light-archive> to <out-fname>\n"
-  ^ "\taresmkr -diff -o <out-fname> <light-archive> <dir> -- makes diff light-archive, determine which files are not in <light-archive> or changed since <light-archive> was made and include these files into new light-archive named <out-fname>\n"
-  ^ "\taresmkr -merge -o <out-fname> <assets-archive> -- makes binary index for single light-archive <assets-archive>, uses for apps without expansions\n"
-  ^ "\taresmkr -merge -o <out-fname> <assets-archive> <main-exp-archive> -- makes common binary index for specified light archives\n"
-  ^ "\taresmkr -merge -o <out-fname> <assets-archive> <patch-exp-archive> <main-exp-archive> -- same as previous\n"
+value usage = "Resources archives maker, usage:\n"
+  ^ "\tresmkr -concat -i <inp-dirname> -o <out-fname> -- reads content of directory <inp-dirname> and make light archive, named <out-fname>\n"
+  ^ "\tresmkr -extract -i <light-archive> -fname <fname-to-extract> -o <out-fname> -- extract <fname-to-extract> from <light-archive> to <out-fname>\n"
+  ^ "\tresmkr -diff -o <out-fname> <light-archive> <dir> -- makes diff light-archive, determine which files are not in <light-archive> or changed since <light-archive> was made and include these files into new light-archive named <out-fname>\n"
+  ^ "\tresmkr -merge -o <out-fname> <assets-archive> -- makes binary index for single light-archive <assets-archive>, uses for apps without expansions\n"
+  ^ "\tresmkr -merge -o <out-fname> <assets-archive> <main-exp-archive> -- makes common binary index for specified light archives\n"
+  ^ "\tresmkr -merge -o <out-fname> <assets-archive> <patch-exp-archive> <main-exp-archive> -- same as previous\n"
   ^ "\tpay attention to archives order, when merging, assets have high priority, than patch, than main expansion\n";
 
 
@@ -58,44 +60,87 @@ value readdir root =
   in
     List.sort (fun a b -> compare a b) (_readdir root []);
 
-value concatFiles ?(fprefix = "") files out = (
-  let outChan = open_out out in
+value binIndexEntrySize fname = 1 + (String.length fname) + 4 + 4 + 1;
+
+(* if modify this function, modify binIndexEntrySize too *)
+value addBinIndexEntry buf fname offset size location =
+(
+  IO.write_byte buf (String.length fname);
+  IO.nwrite buf fname;
+  IO.write_i32 buf offset;
+  IO.write_i32 buf size;
+  IO.write_byte buf location;
+);
+
+value readBinIndexEntry inp =
+  let fnameLen = IO.read_byte inp in
+  let fname = IO.nread inp fnameLen in
+  let offset = IO.read_i32 inp in
+  let size = IO.read_i32 inp in
+  let location = IO.read_byte inp in
+    (fname, offset, size);
+
+value concatFiles ?(fprefix = "") files out =
+  let filesBuf = Buffer.create 50000000 in
   let rec _concatFiles index files offset =
     match files with
     [ [] -> index
     | [ fname :: files ] ->
       let () = LOGN("process '" ^ fname ^ "'...") in
-      try
-      let inChan = open_in (if fprefix <> "" then Filename.concat fprefix fname else fname) in
-      let inLen = in_channel_length inChan in
-      let buf = Buffer.create inLen in (
-        try Buffer.add_channel buf inChan inLen with [ End_of_file -> ERROR ("error when reading " ^ fname) ];
-        close_in inChan;
+        try
+          let inChan = open_in (Filename.concat fprefix fname) in
+          let inLen = in_channel_length inChan in
+          let buf = Buffer.create inLen in
+            (
+              try Buffer.add_channel buf inChan inLen with [ End_of_file -> ERROR ("error when reading " ^ fname) ];
+              close_in inChan;
 
-        Buffer.output_buffer outChan buf;
-        LOG(Printf.sprintf " done, offset %d, size %d" offset inLen);
-        _concatFiles (Index.add index fname (Index.Entry.create offset inLen)) files (offset + inLen);
-      )
-       with
-      [ exn ->
-          (
-            Printf.printf "!!!ERROR %s :\n %s\n%!" (Printexc.to_string exn) (Printexc.get_backtrace () );
-            raise exn;
-          )
-      ]
+              Buffer.add_buffer filesBuf buf;
+              Buffer.reset buf;
+              LOG(Printf.sprintf " done, offset %d, size %d" offset inLen);
+              _concatFiles (Index.add index fname (Index.Entry.create offset inLen)) files (offset + inLen);
+            )
+        with
+        [ exn ->
+            (
+              Printf.printf "!!!ERROR %s :\n %s\n%!" (Printexc.to_string exn) (Printexc.get_backtrace () );
+              raise exn;
+            )
+        ]
     ]
   in
-  let index = _concatFiles (Index.create ()) files 0 in (
-    close_out outChan;
+    let index = _concatFiles (Index.create ()) files 0 in
+      (
+        if !combine
+        then
+          let outChan = open_out out in
+          let out = IO.output_channel outChan in
+          let indexSize = 4 + Index.fold index (fun fname _ size -> size + binIndexEntrySize fname) 0 in (* this value we will add to all offsets; 4 cause indexed is prefixed with int32 (index entries number) *)
+            (
+              IO.write_i32 out (List.length files);
+              Index.iter index (fun fname entry -> addBinIndexEntry out fname (Index.Entry.getOffset entry + indexSize) (Index.Entry.getSize entry) 0);
+              Buffer.output_buffer outChan filesBuf;
+              close_out outChan;
+            )
+        else          
+          (
+            let outChan = open_out out in
+              (
+                Buffer.output_buffer outChan filesBuf;
+                close_out outChan;
+              );
 
-    let outChan = open_out (out ^ Index.ext) in (
-      Marshal.to_channel outChan index [];
-      close_out outChan;
-    );
+            let outChan = open_out (out ^ Index.ext) in
+              (
+                Marshal.to_channel outChan index [];
+                close_out outChan;
+              );
 
-    LOG("done, files written to '" ^ out ^ "', index written to '" ^ (out ^ Index.ext) ^ "'");
-  );  
-);
+            LOG("done, files written to '" ^ out ^ "', index written to '" ^ (out ^ Index.ext) ^ "'");
+          );
+
+        Buffer.reset filesBuf;
+      );
 
 value checkOutFname out = (
   ASSERT(not (Sys.file_exists out && Sys.is_directory out), "output file exists and it's directory, remove at first or specify another output filename");
@@ -106,48 +151,72 @@ value checkOutFname out = (
   else ();  
 );
 
-value runConcat inp out = (
-  LOG("concatenating files from '" ^ inp ^ "'");
+value runConcat inp out =
+  (
+    LOG("concatenating files from '" ^ inp ^ "'");
 
-  ASSERT(inp <> "" && out <> "", "specify both input directory and output filename");
-  ASSERT(Sys.file_exists inp, "input directory doesn't exists");
-  ASSERT(Sys.is_directory inp, "input should be directory, not regular file");
+    ASSERT(inp <> "" && out <> "", "specify both input directory and output filename");
+    ASSERT(Sys.file_exists inp, "input directory doesn't exists");
+    ASSERT(Sys.is_directory inp, "input should be directory, not regular file");
 
-  checkOutFname out;
-  concatFiles ~fprefix:inp (readdir inp) out;
-);
+    checkOutFname out;
+    concatFiles ~fprefix:inp (readdir inp) out;
+  );
 
 value runExtract inp out fname =
   let indexFname = inp ^ Index.ext in (
     ASSERT(inp <> "" && out <> "", "specify both input and output filenames");
     ASSERT(Sys.file_exists inp, "input file doesn't exists");
-    ASSERT(Sys.file_exists indexFname, "index file doesn't exists");
+    ASSERT(!combine || Sys.file_exists indexFname, "index file doesn't exists");
     ASSERT(not (Sys.file_exists out && Sys.is_directory out), "output file exists and it's directory, remove at first or specify another output filename") ;
     ASSERT(Sys.file_exists (Filename.dirname out), "output filename path doesn't exists");
 
-    let inChan = open_in indexFname in 
-    let index = Marshal.from_channel inChan in (
-      close_in inChan;
+    try
+      let (offset, size) =
+        if (!combine)
+        then
+          let inpChan = open_in inp in 
+          let inp = IO.input_channel inpChan in
+          let entriesNum = IO.read_i32 inp in
+          let rec findEntry entriesLeft =
+            if entriesLeft = 0
+            then raise Index.No_entry
+            else
+              let (fname', offset, size) = readBinIndexEntry inp in
+                if fname' = fname
+                then (offset, size)
+                else findEntry (entriesLeft - 1)
+          in
+          let offsetSizePair = findEntry entriesNum in
+            (
+              close_in inpChan;
+              offsetSizePair;
+            )
+        else
+          let inChan = open_in indexFname in 
+          let index = Marshal.from_channel inChan in
+            (
+              close_in inChan;
 
-      try
-        let entry = Index.get index fname in
-        let inChan = open_in inp in (
-          seek_in inChan (Index.Entry.getOffset entry);
+              let entry = Index.get index fname in
+                (Index.Entry.getOffset entry, Index.Entry.getSize entry);
+            )
+      in
+      let inChan = open_in inp in
+      let buf = Buffer.create size in
+        (
+          seek_in inChan offset;
+          Buffer.add_channel buf inChan size;
+          close_in inChan;
 
-          let bufSize = Index.Entry.getSize entry in
-          let buf = Buffer.create bufSize in (
-            Buffer.add_channel buf inChan bufSize;
-            close_in inChan;
-
-            let out = open_out out in (
-              Buffer.output_buffer out buf;
-              close_out out;
-            );
+          let out = open_out out in (
+            Buffer.output_buffer out buf;
+            close_out out;
           );
-        );
-              
-      with [ Index.No_entry -> ERROR(fname ^ " not found in files index") ]
-    );  
+
+          Buffer.reset buf;
+        )
+    with [ Index.No_entry -> ERROR(fname ^ " not found in files index") ];
   );
 
 value runDiff fnameA fnameB out = (
@@ -206,15 +275,6 @@ value runDiff fnameA fnameB out = (
       );
     );
   );
-);
-
-value addBinIndexEntry buf fname offset size location =
-(
-  IO.write_byte buf (String.length fname);
-  IO.nwrite buf fname;
-  IO.write_i32 buf offset;
-  IO.write_i32 buf size;
-  IO.write_byte buf location;
 );
 
 value runMerge mergeFnames out = (
