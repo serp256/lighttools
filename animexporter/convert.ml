@@ -29,6 +29,7 @@ value outdir = ref "output";
 value gen_pvr = ref False;
 value gen_dxt = ref False;
 value degree4 = ref False;
+value is_gamma = ref False;
 value scale = ref 1.;
 value without_cntr = ref False;
 value is_android = ref False;
@@ -1024,9 +1025,25 @@ value run_pack pack =
                 end imgs;
             let save_img = !outdir /// name_texture  ^ (get_postfix ()) in
               (
-                Printf.printf "Save image %s.png\n%!;" save_img;
-                Images.save (save_img ^ ".png") (Some Images.Png) [] new_img;
-                
+                Printf.printf "Save image %s.png\n%!" save_img;
+                match !is_gamma with
+                [ True -> 
+                    let tmp_name = save_img ^ "_tmp.png" in
+                    (
+                      Images.save tmp_name (Some Images.Png) [] new_img;
+                      let cmd = Printf.sprintf "convert -gamma 1.1 %s %s.png" tmp_name save_img in
+                        (
+                          Printf.printf "%s\n%!" cmd;
+                          match Sys.command cmd with
+                          [ 0 -> Sys.remove tmp_name
+                          | _ -> failwith "conver gamma return non-zero"
+                          ];
+                        )
+                    )
+                | _ -> 
+                    Images.save (save_img ^ ".png") (Some Images.Png) [] new_img
+                ];
+              
                 match !gen_pvr with
                 [ True -> 
                     (
@@ -1151,7 +1168,8 @@ value () =
         ("-without-cntr", Arg.Set without_cntr, "Not generate counters");
         ("-android", Arg.Set is_android, "Textures for android");
         ("-no-anim", Arg.Set no_anim, "Skip expansion animations");
-        ("-suffix", Arg.Set_string suffix, "add suffix to library name")
+        ("-suffix", Arg.Set_string suffix, "add suffix to library name");
+        ("-gamma", Arg.Set is_gamma, "add conver -gamma 1.1 call for result image");
       ]
       (fun name -> json_name.val := name)
       "";
