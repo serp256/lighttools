@@ -22,6 +22,8 @@
 #include <caml/fail.h>
 
 #include <ft2build.h>
+#include <freetype/ftglyph.h>
+#include <freetype/ftstroke.h>
 #include FT_FREETYPE_H
 
 value init_FreeType()
@@ -252,7 +254,42 @@ value load_Char( face, code, flags )
   CAMLreturn(res);
 }
 
-value render_Glyph_of_Face( face, mode )
+value render_Glyph_of_Face( vface, vmode )
+     value vface;
+     value vmode;
+{
+  FT_Face* face = (FT_Face *)vface;
+
+  CAMLparam2(vface, vmode);
+  if (FT_Render_Glyph( (*face)->glyph , Int_val(vmode) )){
+    failwith("FT_Render_Glyph");
+  }
+
+  FT_Glyph glyph;
+
+  if (FT_Get_Glyph((*face)->glyph, &glyph) == 0) {
+    FT_Stroker stroker;
+    FT_Library* library = &((*face)->glyph->library);
+
+    FT_Stroker_New(*library, &stroker);
+    FT_Stroker_Set(stroker,
+                   (int)(1.f * 64),
+                   FT_STROKER_LINECAP_ROUND,
+                   FT_STROKER_LINEJOIN_ROUND,
+                   0);
+
+    FT_Glyph_StrokeBorder(&glyph, stroker, 0, 1);
+    FT_Outline_Render(*library, &((*face)->glyph->outline), NULL);
+
+    FT_Stroker_Done(stroker);
+    FT_Done_Glyph(glyph);    
+  } else {
+    failwith("FT_Get_Glyph");
+  }
+
+  CAMLreturn(Val_unit);
+}
+/*  value render_Glyph_of_Face( face, mode )
      value face;
      value mode;
 {
@@ -261,7 +298,7 @@ value render_Glyph_of_Face( face, mode )
     failwith("FT_Render_Glyph");
   }
   CAMLreturn(Val_unit);
-}
+}*/
 
 value render_Char( face, code, flags, mode )
      value face, code, flags, mode;
