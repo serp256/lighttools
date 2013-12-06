@@ -20,10 +20,14 @@
 #include <caml/memory.h>
 #include <caml/callback.h>
 #include <caml/fail.h>
+#include <caml/custom.h>
 
 #include <ft2build.h>
 #include <freetype/ftglyph.h>
 #include <freetype/ftstroke.h>
+#include <freetype/ftbitmap.h>
+#include <freetype/ftbbox.h>
+#include <math.h>
 #include FT_FREETYPE_H
 
 value init_FreeType()
@@ -254,7 +258,7 @@ value load_Char( face, code, flags )
   CAMLreturn(res);
 }
 
-value render_Glyph_of_Face( vface, vmode )
+/*value render_Glyph_of_Face( vface, vmode )
      value vface;
      value vmode;
 {
@@ -288,8 +292,8 @@ value render_Glyph_of_Face( vface, vmode )
   }
 
   CAMLreturn(Val_unit);
-}
-/*  value render_Glyph_of_Face( face, mode )
+}*/
+value render_Glyph_of_Face( face, mode )
      value face;
      value mode;
 {
@@ -298,7 +302,244 @@ value render_Glyph_of_Face( vface, vmode )
     failwith("FT_Render_Glyph");
   }
   CAMLreturn(Val_unit);
+}
+
+typedef struct {
+  int w;
+  int h;
+  unsigned char* stroke;
+  unsigned char* glyph;
+} bmp_t;
+
+void render(const int y,
+               const int count,
+               const FT_Span * const spans,
+               bmp_t* bmp, int glyph) 
+{
+  unsigned char* buf = glyph ? bmp->glyph : bmp->stroke;
+
+  for (int i = 0; i < count; ++i) 
+    for (int j = spans[i].x; j < spans[i].x + spans[i].len; j++) {
+      *(buf + bmp->w * y + j) = spans[i].coverage; 
+    }
+}
+
+void renderStroke(const int y,
+               const int count,
+               const FT_Span * const spans,
+               void * const user)
+{
+  render(y, count, spans, (bmp_t*)user, 0);
+}
+
+void renderGlyph(const int y,
+               const int count,
+               const FT_Span * const spans,
+               void * const user)
+{
+  render(y, count, spans, (bmp_t*)user, 1);
+}
+
+value render_Stroke_of_Face( vface )
+  value vface;
+{
+  CAMLparam1(vface);
+
+  printf("render_Stroke_of_Face\n");
+
+  FT_Face face = *(FT_Face*)vface;
+  FT_Library library = face->glyph->library;
+
+  FT_Glyph glyph;
+
+  if (FT_Get_Glyph(face->glyph, &glyph) != 0) {
+    failwith("FT_Get_Glyph");
+  }
+
+  FT_Stroker stroker;
+  FT_Stroker_New(library, &stroker);
+  FT_Stroker_Set(stroker,
+                 (int)(0.5 * 64),
+                 FT_STROKER_LINECAP_ROUND,
+                 FT_STROKER_LINEJOIN_ROUND,
+                 0);
+
+  FT_Glyph_StrokeBorder(&glyph, stroker, 0, 0);
+
+  if (glyph->format != FT_GLYPH_FORMAT_OUTLINE) {
+    failwith("glyph format is not FT_GLYPH_FORMAT_OUTLINE");
+  }
+
+  FT_Outline* outline = &(((FT_OutlineGlyph)glyph)->outline);
+
+  FT_BBox stroke_box;
+  FT_Outline_Get_BBox(outline, &stroke_box);
+  FT_Outline_Translate(outline, -stroke_box.xMin, -stroke_box.yMin);
+
+  int stroke_w = (stroke_box.xMax - stroke_box.xMin) / 64 + 1;
+  int stroke_h = (stroke_box.yMax - stroke_box.yMin) / 64 + 1;
+
+  bmp_t* bmp = (bmp_t*)malloc(sizeof(bmp_t));
+  bmp->w = stroke_w;
+  bmp->h = stroke_h;
+  bmp->stroke = (unsigned char*)malloc(stroke_w * stroke_h);
+  bmp->glyph = (unsigned char*)malloc(stroke_w * stroke_h);
+  memset(bmp->stroke, 0, stroke_w * stroke_h);
+  memset(bmp->glyph, 0, stroke_w * stroke_h);
+
+  printf("stroke %d;%d\n", stroke_w, stroke_h);
+
+  FT_Raster_Params params;
+  params.flags = FT_RASTER_FLAG_AA | FT_RASTER_FLAG_DIRECT;
+  params.gray_spans = renderStroke;
+  params.user = (void*)bmp;
+
+  if (FT_Outline_Render(library, outline, &params) != 0) {
+    failwith("FT_Outline_Render");
+  }
+
+  if (face->glyph->format != FT_GLYPH_FORMAT_OUTLINE) {
+    failwith("glyph format is not FT_GLYPH_FORMAT_OUTLINE"); 
+  }
+
+  outline = &face->glyph->outline;
+  FT_Outline_Translate(outline, -stroke_box.xMin, -stroke_box.yMin);
+  params.gray_spans = renderGlyph;
+
+  if (FT_Outline_Render(library, outline, &params) != 0) {
+    failwith("FT_Outline_Render");
+  }
+
+  FT_Stroker_Done(stroker);
+  FT_Done_Glyph(glyph);  
+
+  CAMLreturn((value)bmp);
+}
+
+value stroke_dims( vstroke )
+  value vstroke;
+{
+  CAMLparam1(vstroke);
+  CAMLlocal1(retval);
+
+  bmp_t* bmp = (bmp_t*)vstroke;
+  retval = caml_alloc_tuple(2);
+  Store_field(retval, 0, Val_int(bmp->w));
+  Store_field(retval, 1, Val_int(bmp->h));
+
+  CAMLreturn(retval);
+}
+
+value stroke_get_pixel(vstroke, vx, vy, vglyph)
+  value vstroke;
+  value vx;
+  value vy;
+  value vglyph;
+{
+  CAMLparam3(vstroke, vx, vy);
+
+  bmp_t* bmp = (bmp_t*)vstroke;
+  int retval = *((vglyph == Val_true ? bmp->glyph : bmp->stroke) + Int_val(vy) * bmp->w + Int_val(vx));  
+
+  CAMLreturn(Val_int(retval));
+}
+
+/*value render_Stroke_of_Face( vface, vmode )
+  value vface;
+  value vmode;
+{
+  CAMLparam2(vface, vmode);
+
+  FT_Face face = *(FT_Face*)vface;
+  FT_Glyph glyph;
+
+  if (FT_Get_Glyph(face->glyph, &glyph) != 0) {
+    failwith("FT_Get_Glyph");
+  }
+
+  FT_Stroker stroker;
+  FT_Library library = face->glyph->library;
+
+  FT_Stroker_New(library, &stroker);
+  FT_Stroker_Set(stroker,
+                 (int)(0.5f * 64),
+                 FT_STROKER_LINECAP_ROUND,
+                 FT_STROKER_LINEJOIN_ROUND,
+                 0);
+
+  FT_Glyph_StrokeBorder(&glyph, stroker, 1, 1);
+
+  if (glyph->format != FT_GLYPH_FORMAT_OUTLINE) {
+    failwith("glyph format is not FT_GLYPH_FORMAT_OUTLINE");
+  }
+
+  FT_Outline* outline = &(((FT_OutlineGlyph)glyph)->outline);
+  FT_BBox box;
+
+  // lbpair_t* lb_pair = (lbpair_t*)caml_alloc_custom(&libbmppair_ops, sizeof(lbpair_t), sizeof(lbpair_t), sizeof(lbpair_t) * 1000000);
+  lbpair_t* lb_pair = (lbpair_t*)malloc(sizeof(lbpair_t));
+  lb_pair->lib = &library;
+  FT_Bitmap* bmp = &lb_pair->bmp;
+
+  FT_Outline_Get_BBox(outline, &box);
+  box.xMax += 64;
+  FT_Outline_Translate(outline, -box.xMin, -box.yMin);
+
+  FT_Bitmap_New(bmp);
+  bmp->pixel_mode = FT_PIXEL_MODE_GRAY;
+  bmp->rows = (box.yMax - box.yMin) / 64;
+  bmp->width = (box.xMax - box.xMin) / 64;
+  bmp->pitch = bmp->width;
+  bmp->buffer = (unsigned char*)malloc(bmp->rows * bmp->width);
+  memset(bmp->buffer, 0, bmp->rows * bmp->width);
+
+  if (FT_Outline_Get_Bitmap(library, outline, bmp) != 0) {
+    failwith("FT_Outline_Get_Bitmap");
+  }
+
+  // printf("%d;%d;%d;%d\n", box.xMin, box.yMin, box.xMax, box.yMax);
+
+  for (int i = 0; i < bmp->rows; i++) {
+    for (int j = 0; j < bmp->width; j++) {
+      int p = *(bmp->buffer + i * bmp->pitch + j);
+      printf("%d", p > 0 ? 1 : 0);
+    }
+    printf("\n");
+  }
+
+  FT_Stroker_Done(stroker);
+  FT_Done_Glyph(glyph);
+
+  CAMLreturn((value)bmp);
 }*/
+
+value read_FTBitmap ( vbmp, vx, vy )
+  value vbmp;
+  value vx;
+  value vy;
+{
+  CAMLparam3(vbmp, vx, vy);
+
+  FT_Bitmap* bmp = (FT_Bitmap*)vbmp;
+  int retval = *(bmp->buffer + Int_val(vy) * bmp->pitch + Int_val(vx));
+
+  CAMLreturn(Val_int(retval));
+}
+
+value dims_FTBitmap( vbmp )
+  value vbmp;
+{
+  CAMLparam1(vbmp);
+  CAMLlocal1(retval);
+
+  FT_Bitmap* bmp = (FT_Bitmap*)vbmp;
+
+  retval = caml_alloc_tuple(2);
+  Store_field(retval, 0, Val_int(bmp->width));
+  Store_field(retval, 1, Val_int(bmp->rows));
+
+  CAMLreturn(retval);
+}
 
 value render_Char( face, code, flags, mode )
      value face, code, flags, mode;

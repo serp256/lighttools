@@ -41,18 +41,66 @@ value make_size face size callback =
     (* take bitmap as is for now *)
     let open Freetype in
 (*     let () = Printf.printf "%C: bi.left = %d, bi.top = %d,bi.width: %d, bi.height: %d\n%!" (char_of_int code) bi.bitmap_left bi.bitmap_top bi.bitmap_width bi.bitmap_height in *)
+    
+    let w = bi.bitmap_width in
+    let h = bi.bitmap_height in
+    
     let img =  Rgba32.make bi.bitmap_width bi.bitmap_height bgcolor in
     (
       for y = 0 to bi.bitmap_height - 1 do
         for x = 0 to bi.bitmap_width - 1 do
           let level = read_bitmap face x y in
-(*           let () = Printf.printf "level: %d\n%!" level in *)
           let color = {Color.color; alpha =level } in
           Rgba32.set img x (bi.bitmap_height - y - 1) color
         done
       done;
-(*         img#save (Printf.sprintf "%d.png" code) (Some Images.Png) []; *)
-      callback code xadv bi.bitmap_left bi.bitmap_top img
+
+      
+
+
+      let stroke = Freetype.stroke_render face char_index [] Freetype.Render_Normal in
+      let (w, h) = Freetype.stroke_dims stroke in
+      let strokeImg =  Rgba32.make w h bgcolor in
+        (
+          for y = 0 to h - 1 do
+            for x = 0 to w - 1 do
+              let levelA = Freetype.stroke_get_pixel stroke x y False in
+              let levelB = Freetype.stroke_get_pixel stroke x y True in
+              let colorA = {Color.color = {Color.r = 255; g = 0; b = 0}; alpha = levelA } in
+              let colorB = {Color.color; alpha = levelB } in
+                Rgba32.set strokeImg x (h - y - 1) (Color.Rgba.merge colorB colorA)
+            done
+          done;
+
+          callback code xadv bi.bitmap_left bi.bitmap_top strokeImg;
+        );
+
+      (* callback code xadv bi.bitmap_left bi.bitmap_top img *)
+
+
+(*       let ftbmp = Freetype.render_stroke face char_index [] Freetype.Render_Normal in
+      let (w, h) = Freetype.ftbitmap_dims ftbmp in
+      let strokeImg =  Rgba32.make w h bgcolor in
+        (
+          for y = 0 to h - 1 do
+            for x = 0 to w - 1 do
+              let level = Freetype.ftbitmap_read ftbmp x y in
+              let color = {Color.color = {Color.r = 255; g = 0; b = 0}; alpha = level } in
+                Rgba32.set strokeImg x y color
+            done
+          done;
+
+          Printf.printf "img %d %d, strokeImg %d %d\n%!" bi.bitmap_width bi.bitmap_height w h; 
+
+          Rgba32.map Color.Rgba.merge strokeImg 0 0 img ((bi.bitmap_width - w) / 2) ((bi.bitmap_height - h) / 2) (w - 1) (h - 1);
+          callback code xadv bi.bitmap_left bi.bitmap_top img *)
+
+(*           Rgba32.map Color.Rgba.merge img 0 0 strokeImg ((w - bi.bitmap_width) / 2) ((h - bi.bitmap_height) / 2) (bi.bitmap_width - 1) (bi.bitmap_height - 1);
+          callback code xadv bi.bitmap_left bi.bitmap_top strokeImg
+        )          
+ *)
+          
+
     )
   )
   end !pattern;

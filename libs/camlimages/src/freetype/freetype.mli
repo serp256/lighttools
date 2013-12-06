@@ -80,6 +80,12 @@ val render_glyph :
 val render_char :
   face -> int -> load_flag list -> render_mode -> float * float;;
 
+type stroke = Ftlow.stroke;;
+
+val stroke_render : face -> char_index -> load_flag list -> render_mode -> stroke;;
+val stroke_dims : stroke -> (int * int);;
+val stroke_get_pixel : stroke -> int -> int -> bool -> int;;
+
 (** matrix and vector *)
 type matrix = { ft_xx : float; ft_xy : float; ft_yx : float; ft_yy : float; };;
 type vector = { ft_x : float; ft_y : float; };;
