@@ -128,7 +128,7 @@ module C = struct
   external get_outline_contents :
     face -> outline_contents = "get_Outline_Contents";;
 
-  external render_stroke_of_face : face -> stroke = "render_Stroke_of_Face";;
+  external render_stroke_of_face : face -> float -> stroke = "render_Stroke_of_Face";;
   external stroke_dims : stroke -> (int * int) = "stroke_dims";;
   external stroke_get_pixel : stroke -> int -> int -> bool -> int = "stroke_get_pixel";;
 end
@@ -150,9 +150,9 @@ let render_glyph face idx flags render_mode =
   render_glyph_of_face face render_mode;
   adv;;
 
-let stroke_render face idx flags render_mode =
+let stroke_render face idx flags render_mode size =
   let adv = load_glyph face idx flags in
-  render_stroke_of_face face;;
+  render_stroke_of_face face size;;
 
 let render_char face code flags render_mode =
   render_char_raw face code (encode_flags flags) render_mode;;

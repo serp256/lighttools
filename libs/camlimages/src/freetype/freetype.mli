@@ -82,7 +82,7 @@ val render_char :
 
 type stroke = Ftlow.stroke;;
 
-val stroke_render : face -> char_index -> load_flag list -> render_mode -> stroke;;
+val stroke_render : face -> char_index -> load_flag list -> render_mode -> float -> stroke;;
 val stroke_dims : stroke -> (int * int);;
 val stroke_get_pixel : stroke -> int -> int -> bool -> int;;
 

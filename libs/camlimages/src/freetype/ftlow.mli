@@ -75,7 +75,7 @@ val render_glyph_of_face : face -> render_mode -> unit
 
 val render_glyph : face -> int -> load_flag list -> render_mode -> int * int
 
-val stroke_render : face -> int -> load_flag list -> render_mode -> stroke
+val stroke_render : face -> int -> load_flag list -> render_mode -> float -> stroke
 
 val stroke_dims : stroke -> (int * int)
 

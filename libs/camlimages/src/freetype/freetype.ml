@@ -105,8 +105,8 @@ let render_glyph face index flags render_mode =
 
 type stroke = Ftlow.stroke;;
 
-let stroke_render face index flags render_mode =
-  Ftlow.stroke_render face.cont index flags render_mode;;
+let stroke_render face index flags render_mode size =
+  Ftlow.stroke_render face.cont index flags render_mode size;;
 
 let stroke_dims = Ftlow.stroke_dims;;
 let stroke_get_pixel = Ftlow.stroke_get_pixel;;

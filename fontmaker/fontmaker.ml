@@ -22,7 +22,7 @@ value suffix = ref "";
 value sizes = ref [ ]; (* add support for multisize *)
 value color = {Color.r = 255; g = 255; b = 255};
 value dpi = ref 72;
-value alpha_texture = ref False;
+(* value alpha_texture = ref False; *)
 value xml = ref False;
 
 value bgcolor = {Color.color = {Color.r = 0; g = 0; b = 0}; alpha = 0};
@@ -58,7 +58,7 @@ value make_size face size callback =
       
 
 
-      let stroke = Freetype.stroke_render face char_index [] Freetype.Render_Normal in
+      let stroke = Freetype.stroke_render face char_index [] Freetype.Render_Normal (size *. 0.03) in 
       let (w, h) = Freetype.stroke_dims stroke in
       let strokeImg =  Rgba32.make w h bgcolor in
         (
@@ -73,34 +73,7 @@ value make_size face size callback =
           done;
 
           callback code xadv bi.bitmap_left bi.bitmap_top strokeImg;
-        );
-
-      (* callback code xadv bi.bitmap_left bi.bitmap_top img *)
-
-
-(*       let ftbmp = Freetype.render_stroke face char_index [] Freetype.Render_Normal in
-      let (w, h) = Freetype.ftbitmap_dims ftbmp in
-      let strokeImg =  Rgba32.make w h bgcolor in
-        (
-          for y = 0 to h - 1 do
-            for x = 0 to w - 1 do
-              let level = Freetype.ftbitmap_read ftbmp x y in
-              let color = {Color.color = {Color.r = 255; g = 0; b = 0}; alpha = level } in
-                Rgba32.set strokeImg x y color
-            done
-          done;
-
-          Printf.printf "img %d %d, strokeImg %d %d\n%!" bi.bitmap_width bi.bitmap_height w h; 
-
-          Rgba32.map Color.Rgba.merge strokeImg 0 0 img ((bi.bitmap_width - w) / 2) ((bi.bitmap_height - h) / 2) (w - 1) (h - 1);
-          callback code xadv bi.bitmap_left bi.bitmap_top img *)
-
-(*           Rgba32.map Color.Rgba.merge img 0 0 strokeImg ((w - bi.bitmap_width) / 2) ((h - bi.bitmap_height) / 2) (bi.bitmap_width - 1) (bi.bitmap_height - 1);
-          callback code xadv bi.bitmap_left bi.bitmap_top strokeImg
-        )          
- *)
-          
-
+        );   
     )
   )
   end !pattern;
@@ -170,7 +143,7 @@ Arg.parse
     ("-s",Arg.String parse_sizes,"sizes");
     ("-cf",Arg.String read_chars,"chars from file");
     ("-sf",Arg.String read_sizes,"sizes from file");
-    ("-alpha",Arg.Set alpha_texture,"make alpha texture");
+    (* ("-alpha",Arg.Set alpha_texture,"make alpha texture"); *)
     ("-o",Arg.String (fun s -> output.val := Some s),"output dir");
     ("-scale", Arg.Float (fun s -> scale.val := s ), "scale factor");
     ("-xml", Arg.Set xml, "xml format" ) ;
@@ -236,14 +209,12 @@ let font = empty_font in
                 ( r.x := x; r.y := y; r.page := i;)
               )
             end imgs;
-            let ext = match !alpha_texture with [ True -> "alpha" | False -> "png" ] in
+            (* let ext = match !alpha_texture with [ True -> "alpha" | False -> "png" ] in *)
+            let ext = "alpha" in
             let imgname =  Printf.sprintf "%s_%d%s.%s" fname i postfix ext in
             let fname = match !output with [ None -> imgname | Some o -> Filename.concat o imgname] in
             (
-              match !alpha_texture with
-              [ True -> Utils.save_alpha (Images.Rgba32 texture) fname
-              | False -> Images.save fname (Some Images.Png) [] (Images.Rgba32 texture)
-              ];
+              Utils.save_alpha (Images.Rgba32 texture) fname;
               font.pages := [ imgname :: font.pages ];
             );
           )
