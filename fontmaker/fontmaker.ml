@@ -16,6 +16,7 @@ value (=.=) k v = k =|= string_of_float v;
 value (=*=) k v = k =|= string_of_int v;
 
 
+value stroke = ref 0.02;
 value pattern = ref "";
 value fontFile = ref "";
 value suffix = ref "";
@@ -30,7 +31,7 @@ value scale = ref 1.;
 
 value make_size face size callback = 
 (
-  Freetype.set_char_size face (!scale *. size) 0. !dpi 0;
+  Freetype.set_char_size face (!scale *. size *. (1. -. !stroke)) 0. !dpi 0;
   UTF8.iter begin fun uchar ->
   (
     let code = UChar.code uchar in
@@ -58,7 +59,7 @@ value make_size face size callback =
       
 
 
-      let stroke = Freetype.stroke_render face char_index [] Freetype.Render_Normal (size *. 0.03) in 
+      let stroke = Freetype.stroke_render face char_index [] Freetype.Render_Normal (size *. !stroke) in 
       let (w, h) = Freetype.stroke_dims stroke in
       let strokeImg =  Rgba32.make w h bgcolor in
         (
@@ -66,9 +67,10 @@ value make_size face size callback =
             for x = 0 to w - 1 do
               let levelA = Freetype.stroke_get_pixel stroke x y False in
               let levelB = Freetype.stroke_get_pixel stroke x y True in
-              let colorA = {Color.color = {Color.r = 255; g = 0; b = 0}; alpha = levelA } in
+                Rgba32.set strokeImg x (h - y - 1) {Color.color = {Color.r = levelA; g = 0; b = 0}; alpha = levelB }
+(*               let colorA = {Color.color = {Color.r = 255; g = 0; b = 0}; alpha = levelA } in
               let colorB = {Color.color; alpha = levelB } in
-                Rgba32.set strokeImg x (h - y - 1) (Color.Rgba.merge colorB colorA)
+                Rgba32.set strokeImg x (h - y - 1) (Color.Rgba.merge colorA colorB) *)
             done
           done;
 
@@ -210,11 +212,12 @@ let font = empty_font in
               )
             end imgs;
             (* let ext = match !alpha_texture with [ True -> "alpha" | False -> "png" ] in *)
-            let ext = "alpha" in
+            let ext = "lumal" in
             let imgname =  Printf.sprintf "%s_%d%s.%s" fname i postfix ext in
             let fname = match !output with [ None -> imgname | Some o -> Filename.concat o imgname] in
             (
-              Utils.save_alpha (Images.Rgba32 texture) fname;
+              Utils.save_alpha ~with_lum:True (Images.Rgba32 texture) fname;
+              (* Images.save fname (Some Images.Png) [] (Images.Rgba32 texture); *)
               font.pages := [ imgname :: font.pages ];
             );
           )

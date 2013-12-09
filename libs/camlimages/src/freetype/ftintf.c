@@ -353,8 +353,6 @@ value render_Stroke_of_Face( vface, vsize )
   int stroke_w = (stroke_box.xMax - stroke_box.xMin) / 64 + 1;
   int stroke_h = (stroke_box.yMax - stroke_box.yMin) / 64 + 1;
 
-  // stroke_t* stroke = (stroke_t*)malloc(sizeof(stroke_t));
-  // stroke_t* stroke = (stroke_t*)caml_alloc_custom(&stroket_ops, sizeof(stroke_t), 2 * stroke_w * stroke_h, 10485760);
   value retval = caml_alloc_custom(&stroket_ops, sizeof(stroke_t), 2 * stroke_w * stroke_h, 10485760);
 
   stroke_t* stroke = (stroke_t*)Data_custom_val(retval);
