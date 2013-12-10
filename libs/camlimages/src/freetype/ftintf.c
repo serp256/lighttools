@@ -273,6 +273,8 @@ typedef struct {
   int w;
   int h;
   unsigned char* buf;
+  int glyph_x;
+  int glyph_y;
 } stroke_t;
 
 static void stroket_finalize(value vstroke) {
@@ -293,10 +295,19 @@ void render(const int y,
                const FT_Span * const spans,
                stroke_t* stroke, int offset) 
 {
-  for (int i = 0; i < count; ++i) 
+  if (offset == 0 && stroke->glyph_y < y) {
+    stroke->glyph_y = y;
+  }
+
+  for (int i = 0; i < count; ++i) {
+    if (offset == 0 && stroke->glyph_x > spans[i].x) {
+      stroke->glyph_x = spans[i].x;
+    }
+
     for (int j = spans[i].x; j < spans[i].x + spans[i].len; j++) {
       *(stroke->buf + 2 * (stroke->w * y + j) + offset) = spans[i].coverage; 
     }
+  }
 }
 
 void renderStroke(const int y,
@@ -320,6 +331,7 @@ value render_Stroke_of_Face( vface, vsize )
   value vsize;
 {
   CAMLparam1(vface);
+  CAMLlocal1(retval);
 
   FT_Face face = *(FT_Face*)vface;
   FT_Library library = face->glyph->library;
@@ -348,16 +360,18 @@ value render_Stroke_of_Face( vface, vsize )
 
   FT_BBox stroke_box;
   FT_Outline_Get_BBox(outline, &stroke_box);
-  FT_Outline_Translate(outline, -stroke_box.xMin, -stroke_box.yMin);
+  FT_Outline_Translate(outline, -stroke_box.xMin + 4 * 64, -stroke_box.yMin + 4 * 64);
 
-  int stroke_w = (stroke_box.xMax - stroke_box.xMin) / 64 + 1;
-  int stroke_h = (stroke_box.yMax - stroke_box.yMin) / 64 + 1;
+  int stroke_w = (stroke_box.xMax - stroke_box.xMin) / 64 + 1 + 10;
+  int stroke_h = (stroke_box.yMax - stroke_box.yMin) / 64 + 1 + 10;
 
-  value retval = caml_alloc_custom(&stroket_ops, sizeof(stroke_t), 2 * stroke_w * stroke_h, 10485760);
+  value vstroke = caml_alloc_custom(&stroket_ops, sizeof(stroke_t), 2 * stroke_w * stroke_h, 10485760);
 
-  stroke_t* stroke = (stroke_t*)Data_custom_val(retval);
+  stroke_t* stroke = (stroke_t*)Data_custom_val(vstroke);
   stroke->w = stroke_w;
   stroke->h = stroke_h;
+  stroke->glyph_x = stroke_w;
+  stroke->glyph_y = -1;
   stroke->buf = (unsigned char*)malloc(2 * stroke_w * stroke_h);
   memset(stroke->buf, 0, 2 * stroke_w * stroke_h);
 
@@ -375,12 +389,41 @@ value render_Stroke_of_Face( vface, vsize )
   }
 
   outline = &face->glyph->outline;
-  FT_Outline_Translate(outline, -stroke_box.xMin, -stroke_box.yMin);
+
+  FT_BBox glyph_box;
+  FT_Outline_Get_BBox(outline, &glyph_box);
+  FT_Outline_Translate(outline, -stroke_box.xMin + 4 * 64, -stroke_box.yMin + 4 * 64);
   params.gray_spans = renderGlyph;
 
   if (FT_Outline_Render(library, outline, &params) != 0) {
     failwith("FT_Outline_Render");
   }
+
+  stroke->glyph_y = stroke_h - stroke->glyph_y - 1;
+
+  retval = caml_alloc_tuple(3);
+  Store_field(retval, 0, vstroke);
+  Store_field(retval, 1, Val_int(stroke->glyph_x));
+  Store_field(retval, 2, Val_int(stroke->glyph_y));
+
+
+  printf("!!!!%d %d\n", stroke->glyph_x, stroke->glyph_y);
+
+  for (int i = stroke_h - 1; i >= 0; i--) {
+    for (int j = 0; j < stroke_w; j++) {
+      printf("%c", *(stroke->buf + 2 * (stroke_w * i + j)) > 0 ? '+' : '.');
+    }
+    printf("\n");
+  }
+
+  printf("---------------\n");
+
+  for (int i = stroke_h - 1; i >= 0; i--) {
+    for (int j = 0; j < stroke_w; j++) {
+      printf("%c", *(stroke->buf + 2 * (stroke_w * i + j + 1)) > 0 ? '+' : '.');
+    }
+    printf("\n");
+  }  
 
   FT_Stroker_Done(stroker);
   FT_Done_Glyph(glyph);  

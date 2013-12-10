@@ -16,7 +16,7 @@ value (=.=) k v = k =|= string_of_float v;
 value (=*=) k v = k =|= string_of_int v;
 
 
-value stroke = ref 0.02;
+value stroke = ref 0.04;
 value pattern = ref "";
 value fontFile = ref "";
 value suffix = ref "";
@@ -31,35 +31,60 @@ value scale = ref 1.;
 
 value make_size face size callback = 
 (
-  Freetype.set_char_size face (!scale *. size *. (1. -. !stroke)) 0. !dpi 0;
-  UTF8.iter begin fun uchar ->
+  Freetype.set_char_size face (!scale *. size) 0. !dpi 0;
+
+  UTF8.iter (fun uchar ->
+    let code = UChar.code uchar in
+    let indx = Freetype.get_char_index face code in        
+    let (xadv, _) = Freetype.load_glyph face indx [] in
+    let metrics = Freetype.get_glyph_metrics face in
+    let (stroke, glyphx, glyphy) = Freetype.stroke_render face (size *. !stroke) in
+    let (w, h) = Freetype.stroke_dims stroke in
+    let img =  Rgba32.make w h bgcolor in
+      (
+        for y = 0 to h - 1 do
+          for x = 0 to w - 1 do
+            let levelA = Freetype.stroke_get_pixel stroke x y False in
+            let levelB = Freetype.stroke_get_pixel stroke x y True in
+              Rgba32.set img x (h - y - 1) {Color.color = {Color.r = levelA; g = 0; b = 0}; alpha = levelB }
+          done
+        done;
+
+        callback code xadv (int_of_float metrics.gm_hori.bearingx) (int_of_float metrics.gm_hori.bearingy) glyphx glyphy img;
+      )       
+  ) !pattern;
+
+  
+
+
+(*   UTF8.iter begin fun uchar ->
   (
     let code = UChar.code uchar in
 (*     let () = Printf.printf "process char: %d\n%!" code in *)
     let char_index = Freetype.get_char_index face code in
-    let (xadv,yadv) = Freetype.render_glyph face char_index [] Freetype.Render_Normal in
-    let bi = Freetype.get_bitmap_info face in
+    (* let (xadv,yadv) = Freetype.render_glyph face char_index [] Freetype.Render_Normal in *)
+    (* let bi = Freetype.get_bitmap_info face in *)
     (* take bitmap as is for now *)
     let open Freetype in
 (*     let () = Printf.printf "%C: bi.left = %d, bi.top = %d,bi.width: %d, bi.height: %d\n%!" (char_of_int code) bi.bitmap_left bi.bitmap_top bi.bitmap_width bi.bitmap_height in *)
     
-    let w = bi.bitmap_width in
-    let h = bi.bitmap_height in
+(*     let w = bi.bitmap_width in
+    let h = bi.bitmap_height in *)
     
-    let img =  Rgba32.make bi.bitmap_width bi.bitmap_height bgcolor in
+    (* let img =  Rgba32.make bi.bitmap_width bi.bitmap_height bgcolor in *)
     (
-      for y = 0 to bi.bitmap_height - 1 do
+(*       for y = 0 to bi.bitmap_height - 1 do
         for x = 0 to bi.bitmap_width - 1 do
           let level = read_bitmap face x y in
           let color = {Color.color; alpha =level } in
           Rgba32.set img x (bi.bitmap_height - y - 1) color
         done
-      done;
+      done; *)
 
       
 
 
-      let stroke = Freetype.stroke_render face char_index [] Freetype.Render_Normal (size *. !stroke) in 
+      let (stroke, xadv, yadv) = Freetype.stroke_render face char_index [] Freetype.Render_Normal (size *. !stroke) in 
       let (w, h) = Freetype.stroke_dims stroke in
       let strokeImg =  Rgba32.make w h bgcolor in
         (
@@ -74,11 +99,12 @@ value make_size face size callback =
             done
           done;
 
-          callback code xadv bi.bitmap_left bi.bitmap_top strokeImg;
+          callback code mertics.gm_hori.advance (int_of_float mertics.gm_hori.bearingx) (int_of_float mertics.gm_hori.bearingy) strokeImg;
+          (* callback code xadv bi.bitmap_left bi.bitmap_top strokeImg; *)
         );   
     )
   )
-  end !pattern;
+  end !pattern; *)
 );
 (*
 type sdescr = 
@@ -98,6 +124,8 @@ type char_info =
     width : mutable int;
     height : mutable int;
     page : mutable int;
+    glyphx: mutable int;
+    glyphy: mutable int;
   };
 
 type chars = 
@@ -188,11 +216,11 @@ let font = empty_font in
     let imgs = ref [] in
       (
         List.iter begin fun size ->
-          make_size face (float size) begin fun code xadvance xoffset yoffset img ->
+          make_size face (float size) begin fun code xadvance xoffset yoffset glyphx glyphy img ->
             let key = (code,size) in
             (
               imgs.val := [ (key,Images.Rgba32 img) :: !imgs ];
-              Hashtbl.add chars key {id=code;xadvance=(int_of_float xadvance);xoffset;yoffset;width=img.Rgba32.width;height=img.Rgba32.height;x=0;y=0;page=0};
+              Hashtbl.add chars key {id=code;xadvance=(int_of_float xadvance);xoffset;yoffset;width=img.Rgba32.width;height=img.Rgba32.height;x=0;y=0;page=0; glyphx; glyphy };
             )
           end
         end !sizes;
@@ -249,7 +277,7 @@ let font = empty_font in
                   let info = Hashtbl.find chars (code,size) in
         (*           let () = Printf.printf "char: %C, xoffset: %d, yoffset: %d\n%!" (char_of_int code) info.xoffset info.yoffset in *)
                   chars'.char_list := 
-                    [ {id=code; xadvance=info.xadvance; xoffset=info.xoffset; yoffset = (truncate (sizeInfo.Freetype.ascender -. (float info.yoffset))); x=info.x; y=info.y; width=info.width; height=info.height; page=info.page } :: chars'.char_list ]
+                    [ {id=code; xadvance=info.xadvance; xoffset=info.xoffset; yoffset = (truncate (sizeInfo.Freetype.ascender -. (float info.yoffset))); x=info.x; y=info.y; width=info.width; height=info.height; page=info.page; glyphx = info.glyphx; glyphy = info.glyphy } :: chars'.char_list ]
                 end !pattern;
                 font.chars := [ chars' :: font.chars]
               )
@@ -300,6 +328,8 @@ let font = empty_font in
                     ; "width" =*= ch.width
                     ; "height" =*= ch.height
                     ; "page" =*= ch.page
+                    ; "glyphx" =*= ch.glyphx
+                    ; "glyphy" =*= ch.glyphy
                     ]
                   in
                   (
@@ -342,6 +372,8 @@ let font = empty_font in
                       IO.write_ui16 binout ch.width;
                       IO.write_ui16 binout ch.height;
                       IO.write_ui16 binout ch.page;
+                      IO.write_ui16 binout ch.glyphx;
+                      IO.write_ui16 binout ch.glyphy;
                     )
                   end chars.char_list;
                 )

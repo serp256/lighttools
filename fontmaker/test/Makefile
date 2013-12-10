@@ -3,10 +3,10 @@ rebuild:
 	make -C ..
 
 test1:
-	./fontmaker -c QWERTYUIOPASDFGHJKLZXCVBNM1234567890 -s 30 -o 1 Arial.ttf
+	./fontmaker -c 2 -s 24 -o 1 CCFairyTale.otf
 
 test2:
-	./fontmaker -c 1234567890QWERTYUIOPASDFGHJKLZXCVBNM -s 20,25,30,40,100 -o 2 Arial.ttf
+	./fontmaker -c QWERTYUIOPASDFGHJKLZXCVBNM1234567890 -s 24 -o 2 Arial.ttf
 
 1:
 	open 1/CCFairyTale_0.png
