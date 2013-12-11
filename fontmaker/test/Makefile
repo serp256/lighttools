@@ -3,7 +3,7 @@ rebuild:
 	make -C ..
 
 test1:
-	./fontmaker -c 2 -s 24 -o 1 CCFairyTale.otf
+	fontmaker -stroke 4 -s 25 -c 12 -o 2 CCFairyTale.otf 
 
 test2:
 	./fontmaker -c QWERTYUIOPASDFGHJKLZXCVBNM1234567890 -s 24 -o 2 Arial.ttf

@@ -58,11 +58,11 @@ value save_alpha ?(with_lum = False) img fname =
     IO.write_ui16 binout height;
     image_iter (fun _ _ clr ->
       (
-        IO.write_byte binout clr.Color.alpha;
-        
         if with_lum
         then IO.write_byte binout Color.(clr.color.Rgb.r)
         else ();
+        
+        IO.write_byte binout clr.Color.alpha;
       )
     ) img;
     IO.close_out binout;
