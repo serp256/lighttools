@@ -55,8 +55,19 @@ value make_size face size callback =
             Rgba32.set img x (bi.bitmap_height - y - 1) color
           done
         done;
+
+(*         for y = 0 to bi.bitmap_height - 1 do
+          for x = 0 to bi.bitmap_width - 1 do
+            let color = Rgba32.get img x y in
+              Printf.printf "%c" (if color.alpha = 0 then '.' else '+')
+          done;
+
+          Printf.printf "\n%!";
+        done; *)
+
   (*         img#save (Printf.sprintf "%d.png" code) (Some Images.Png) []; *)
-        callback code xadv bi.bitmap_left bi.bitmap_top 0 0 img
+        (* Printf.printf "!!!w %d, h %d ||| xoffset %d, yoffset %d\n%!" bi.bitmap_width bi.bitmap_height bi.bitmap_left bi.bitmap_top; *)
+        callback code xadv bi.bitmap_left bi.bitmap_top img
       )
     )
     end !pattern
@@ -66,7 +77,7 @@ value make_size face size callback =
       let indx = Freetype.get_char_index face code in        
       let (xadv, _) = Freetype.load_glyph face indx [] in
       let metrics = Freetype.get_glyph_metrics face in
-      let (stroke, glyphx, glyphy) = Freetype.stroke_render face (size *. !stroke) in
+      let (stroke, bearingx, bearingy) = Freetype.stroke_render face (size *. !stroke) in
       let (w, h) = Freetype.stroke_dims stroke in
       let img =  Rgba32.make w h bgcolor in
         (
@@ -78,7 +89,17 @@ value make_size face size callback =
             done
           done;
 
-          callback code xadv (int_of_float metrics.gm_hori.bearingx) (int_of_float metrics.gm_hori.bearingy) glyphx glyphy img;
+(*         for y = 0 to h - 1 do
+          for x = 0 to w - 1 do
+            let color = Rgba32.get img x y in
+              Printf.printf "%c" (if color.alpha = 0 then '.' else '+')
+          done;
+
+          Printf.printf "\n%!";
+        done;           *)
+
+          (* Printf.printf "!!!w %d, h %d ||| xoffset %d, yoffset %d\n%!" w h (int_of_float metrics.gm_hori.bearingx - bearingx) (int_of_float metrics.gm_hori.bearingy + bearingy); *)
+          callback code xadv (int_of_float metrics.gm_hori.bearingx - bearingx) (int_of_float metrics.gm_hori.bearingy + bearingy) img;
         )       
     ) !pattern;
 
@@ -152,8 +173,6 @@ type char_info =
     width : mutable int;
     height : mutable int;
     page : mutable int;
-    glyphx: mutable int;
-    glyphy: mutable int;
   };
 
 type chars = 
@@ -245,11 +264,11 @@ let font = empty_font in
     let imgs = ref [] in
       (
         List.iter begin fun size ->
-          make_size face (float size) begin fun code xadvance xoffset yoffset glyphx glyphy img ->
+          make_size face (float size) begin fun code xadvance xoffset yoffset img ->
             let key = (code,size) in
             (
               imgs.val := [ (key,Images.Rgba32 img) :: !imgs ];
-              Hashtbl.add chars key {id=code;xadvance=(int_of_float xadvance);xoffset;yoffset;width=img.Rgba32.width;height=img.Rgba32.height;x=0;y=0;page=0; glyphx; glyphy };
+              Hashtbl.add chars key {id=code;xadvance=(int_of_float xadvance);xoffset;yoffset;width=img.Rgba32.width;height=img.Rgba32.height;x=0;y=0;page=0 };
             )
           end
         end !sizes;
@@ -305,7 +324,7 @@ let font = empty_font in
                   let info = Hashtbl.find chars (code,size) in
         (*           let () = Printf.printf "char: %C, xoffset: %d, yoffset: %d\n%!" (char_of_int code) info.xoffset info.yoffset in *)
                   chars'.char_list := 
-                    [ {id=code; xadvance=info.xadvance; xoffset=info.xoffset; yoffset = (truncate (sizeInfo.Freetype.ascender -. (float info.yoffset))); x=info.x; y=info.y; width=info.width; height=info.height; page=info.page; glyphx = info.glyphx; glyphy = info.glyphy } :: chars'.char_list ]
+                    [ {id=code; xadvance=info.xadvance; xoffset=info.xoffset; yoffset = (truncate (sizeInfo.Freetype.ascender -. (float info.yoffset))); x=info.x; y=info.y; width=info.width; height=info.height; page=info.page; } :: chars'.char_list ]
                 end !pattern;
                 font.chars := [ chars' :: font.chars]
               )
@@ -356,8 +375,6 @@ let font = empty_font in
                     ; "width" =*= ch.width
                     ; "height" =*= ch.height
                     ; "page" =*= ch.page
-                    ; "glyphx" =*= ch.glyphx
-                    ; "glyphy" =*= ch.glyphy
                     ]
                   in
                   (
@@ -400,8 +417,6 @@ let font = empty_font in
                       IO.write_ui16 binout ch.width;
                       IO.write_ui16 binout ch.height;
                       IO.write_ui16 binout ch.page;
-                      IO.write_ui16 binout ch.glyphx;
-                      IO.write_ui16 binout ch.glyphy;
                     )
                   end chars.char_list;
                 )
