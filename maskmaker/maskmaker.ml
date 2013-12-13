@@ -143,8 +143,11 @@ value saveImgs () =
 								) l;
                 if !notSave then ()
                 else let canvas = Images.Rgba32 rgba in
-								Images.save (Printf.sprintf "%satlas_resources/%s/%u.png" !_path
-                !fileName !num) (Some Images.Png) [] canvas
+                let save_path =Printf.sprintf "%satlas_resources/%s/%u.png" !_path !fileName !num in
+                  (
+                    Printf.printf "save_path %s\n%!" save_path;
+                    Images.save save_path (Some Images.Png) [] canvas
+                  )
 						);
             let countPx = List.length l in (
             Array.set a !num (!num,float_of_int countPx);
@@ -155,22 +158,14 @@ value saveImgs () =
 				)
     ) !regions;
     
-    (*ignore(Array.map (fun (i,el) -> s.val:= Printf.sprintf "%s\n\"%s\": %f," !s
-    (string_of_int i)
-    ((float_of_int el) /. float_of_int(!sum))) a);
-    *)
     ignore(Array.map (fun (i,el) -> s.val:= Printf.sprintf "%s\n\"%s\": %f," !s
     (string_of_int i) el ) a);
     String.set (!s)(String.length !s - 1) '}';
-    (*
-    s.val := Printf.sprintf "%s\n}" !s;*)
     Printf.printf "%s %s %d" fname !s !sum;
     (*json with count of pixels*)
     (*Ojson.from_string (Printf.sprintf"%s" List.length l);
      * *)
-   let out = open_out (Printf.sprintf "./Resources/textures/%s/%s%s.json"
-    fname fname
-   !suffix) in
+   let out = open_out (Printf.sprintf "./Resources/textures/%s/%s%s.json" fname fname !suffix) in
    (
     output_string out !s;
     close_out out;
@@ -338,12 +333,41 @@ value main () =
                       (
                         IO.write_ui16 binout !img_w;
                         IO.write_ui16 binout !img_h;
+
+                        let sum = ref 0 in
+                        let cur = ref map.(0).(0) in
+                        let count = ref 0 in
+                        (
+                          Printf.printf "img: %d %d\n" !img_w !img_h;
                         for j = 0 to !img_h - 1 do
                           for i = 0 to !img_w - 1 do
-                            IO.write_byte binout (map.(i).(j))
+                            (
+
+                              if !cur <> map.(i).(j) 
+                              
+                              then 
+                                (
+
+                                  IO.write_byte binout !cur;
+                                  IO.write_i32 binout !count;
+                                  sum.val := !sum + !count;
+                                  cur.val  := map.(i).(j);
+                                  count.val := 1
+                                )
+                              else
+                                incr count;
+                            )
+
                           done;
                           done;
+                                  IO.write_byte binout !cur;
+                                  IO.write_i32 binout !count;
+
+                                  sum.val := !sum + !count;
+                            Printf.printf "sum %d\n%!" !sum;
+                      )
                             );
+
                             close_out out;
                       )
             )
