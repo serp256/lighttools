@@ -202,6 +202,7 @@ value readObjs dir =
           )
       done;
       IO.close_in inp;
+			Printf.printf "END READ OBJS \n";
   let () = decr cnt_open in
       objs
     );
@@ -234,16 +235,20 @@ value read_frames dir =
   let inp = IO.input_channel (open_in fname) in
   let () = incr cnt_open in
   let cnt_frames = IO.read_i32 inp in
+	let _ = Printf.printf "%d" cnt_frames in
   let frames = DynArray.make cnt_frames in
     (
       for i = 1 to cnt_frames do
         let x = IO.read_i16 inp in
         let y = IO.read_i16 inp in
         let iconX = IO.read_i16 inp in
+	let _ = Printf.printf "iconX %d" iconX in
         let iconY = IO.read_i16 inp in
+	let _ = Printf.printf "iconY %d" iconY in
 
         let pntsNum = IO.read_byte inp in
         let pnts =
+				let _ = Printf.printf "pntsNum %d" pntsNum in
           List.init pntsNum (fun _ ->
             let x = IO.read_i16 inp in
             let y = IO.read_i16 inp in
@@ -271,6 +276,7 @@ value read_frames dir =
           )
       done;
       IO.close_in inp;
+			Printf.printf "END READ FRAMES";
   let () = decr cnt_open in
       frames
     );
@@ -278,6 +284,7 @@ value read_frames dir =
 value old_new_rect_ids = Hashtbl.create 0;
 
 value get_images dirs images  =
+	let () = Printf.printf "START GET_IMAGES" in 
   let get_images_by_dir dir s images = 
     let () = Printf.printf "get_images_by_dir %s \n"  dir in
     let objs = readObjs dir in
@@ -399,16 +406,19 @@ value get_images dirs images  =
       get_images_by_dir dir s imgs 
     end (0, []) dirs  
   in
-  [ res :: images ];
+		(
+			Printf.printf "END GET_IMAGES";
+  		[ res :: images ];
+		);
 
 
  
 
 value copyFrames dir =
+  let () = Printf.printf "Copy frames  %s \n%!" dir in
   let inp =IO.input_channel (open_in (!inp_dir /// dir /// "frames.dat")) in 
   let () = incr cnt_open in
   let out = IO.output_channel (open_out (!outdir /// dir /// "frames" ^ (get_postfix ()) ^  ".dat")) in
-  let () = Printf.printf "Copy frames  %s \n%!" dir in
   let cnt_frames = IO.read_i32 inp in
   (
     IO.write_i32 out cnt_frames;
@@ -493,6 +503,7 @@ value copyFrames dir =
     IO.close_in inp;
   let () = decr cnt_open in
     IO.close_out out;
+		Printf.printf "END COPY FRAMES";
   );(*}}}*)
 
 value copyAnimations dir =
@@ -501,7 +512,7 @@ value copyAnimations dir =
   let out = IO.output_channel (open_out (!outdir /// dir /// "animations" ^ (get_postfix ()) ^ ".dat")) in
   let cnt_objects = IO.read_ui16 inp in
     (
-      Printf.printf "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+      Printf.printf "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
       Printf.printf "copyAnimations %s : %d \n%!" dir cnt_objects;
       assert (cnt_objects < 256);
       IO.write_ui16 out cnt_objects;
@@ -560,7 +571,7 @@ value copyAnimations dir =
       IO.close_in inp;
   let () = decr cnt_open in
       IO.close_out out;
-      Printf.printf "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+      Printf.printf "END COPY ANIMATIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
     );
 
 type texInfo = 
@@ -570,6 +581,7 @@ type texInfo =
   };
 
 value readTexInfo fname = 
+	let () = Printf.printf "START readTexInfo\n" in 
   let inp = IO.input_channel (open_in fname) in
   let () = incr cnt_open in
     (
@@ -594,6 +606,7 @@ value readTexInfo fname =
             )
           done;
           IO.close_in inp;
+					Printf.printf "END readTexInfo \n";
   let () = decr cnt_open in
           {count; textures}
         )
@@ -618,6 +631,7 @@ value writeTexInfo texInfo fname =
           end regions;
         )
       end texInfo.textures;
+			Printf.printf "END WRITE TEXT INFO\n";
       IO.close_out newTexInfo;
     );
 
@@ -627,18 +641,20 @@ value changed_frames = HSet.create 0;
 
 value changeFrames dir textureId rect_ids = 
   let fname = !outdir /// dir /// "frames" ^ (get_postfix ()) ^  ".dat" in
+  let () = Printf.printf "CHANGE FRAMES %S %d %s\n" dir textureId fname in 
   let inp = IO.input_channel (open_in fname) in
   let () = incr cnt_open in
   let cnt_frames = IO.read_i32 inp in
   let frames = DynArray.make cnt_frames in
     (
-      for i = 1 to cnt_frames do
+			for i = 1 to cnt_frames do
         let x = IO.read_i16 inp in
         let y = IO.read_i16 inp in
         let iconX = IO.read_i16 inp in
         let iconY = IO.read_i16 inp in
 
         let pntsNum = IO.read_byte inp in
+				let () = Printf.printf "CPUNT POINTS %d \n" pntsNum in
         let pnts =
           List.init pntsNum (fun _ ->
             let x = IO.read_i16 inp in
@@ -717,6 +733,7 @@ value changeFrames dir textureId rect_ids =
             )
           end frames;
           IO.close_out out;
+					Printf.printf "END CHANGE Framesnm\n";
         )
     );
 
@@ -725,7 +742,9 @@ value changeFrames dir textureId rect_ids =
 value anim_name_hash = HSet.create 0;
 *)
 value convert idTex  imgs =
+let () = Printf.printf "START CONVERT \n" in
   let convert_dir dir imgs = 
+		let () = Printf.printf "CONVERT DIR %s\n" dir in 
     let res_dir = !outdir /// dir in
       (
         match Sys.file_exists res_dir with
@@ -805,7 +824,11 @@ value convert idTex  imgs =
       [  (name , [ info :: imgs_by_dir ]) :: imgs ] 
     end [] imgs 
   in
+		(
+			
   List.iter (fun (dir, images) -> convert_dir dir (List.rev images)) images;
+			Printf.printf "END CONVERT \n";
+		);
 
   
 value postfixs = [ "_sh"; "_ex" ];
