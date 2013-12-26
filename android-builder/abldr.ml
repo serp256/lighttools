@@ -4,6 +4,7 @@ open ExtArray;
 open Printf;
 open Arg;
 
+value doNotCleanAssets = ref False;
 value (//) = Filename.concat;
 value myassert exp mes = if not exp then ( printf "\n%!"; failwith mes ) else ();
 value mkdir path =
@@ -320,7 +321,8 @@ value args = [
   ("-proj-keystore-pass", Set_string projKeystorePass, "\tkeystore password, by default 'xyupizda'");
   ("-proj-with-exp", Set projWithExp, "\tpass with option if application with expansions");
   ("-proj-so", Set_string projSo, "\t\tnative library name");
-  ("-proj-lightning", Set_string projLightning, "\tpath to lightning")
+  ("-proj-lightning", Set_string projLightning, "\tpath to lightning");
+  ("-do-not-clean-assets", Set doNotCleanAssets, "\tdon't clen assets folder")
 ];
 
 parse args (fun arg -> builds.val := [ arg :: !builds ]) "android multiple apks generator";
@@ -585,7 +587,10 @@ value compileApk build =
 (
   if !withoutLib then () else compileLib ();
 
-  cleanDir assetsDir;
+  (* CLEANING ASSETS *)
+  if !doNotCleanAssets
+	then ()
+	else cleanDir assetsDir;
   genAssets build;
   runCommand ("cp " ^ assetsAresmkrFname ^ " " ^ assetsDir ^ Filename.dir_sep) "failed when copying concated assets into android assets directory";
 
