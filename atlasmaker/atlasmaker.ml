@@ -17,6 +17,7 @@ value npot = ref False;
 value alpha = ref False;
 
 value nocrop = ref "";
+value nocropFlag = ref False;
 value nocropHash:Hashtbl.t string unit = Hashtbl.create 3;
 
 value emptyPx = 2;
@@ -131,13 +132,21 @@ value readImageRect path fname =
   try 
     let image = Images.load path [] in
     let (rect, (x,y)) = 
-      try 
-        let () = Hashtbl.find nocropHash fname in
-        let () = Printf.eprintf "Won't crop %s\n%!" fname 
-        in 
-        (*картинка не кропалась, поэтому координаты 0 0*)
-        (image, (0,0))
-      with [ Not_found -> croppedImageRect image ] 
+        match !nocropFlag with 
+        [True -> 
+          let () = Printf.eprintf "Won't crop %s\n%!" fname 
+          in 
+          (*картинка не кропалась, поэтому координаты 0 0*)
+          (image, (0,0))
+        |False ->
+         try 
+          let () = Hashtbl.find nocropHash fname in
+          let () = Printf.eprintf "Won't crop %s\n%!" fname 
+          in 
+          (*картинка не кропалась, поэтому координаты 0 0*)
+          (image, (0,0))
+         with [ Not_found -> croppedImageRect image ] 
+        ]
     in
 		let name = 
 				match !fp with
@@ -162,6 +171,7 @@ value (//) = Filename.concat;
 value loadFiles gdir =
   let rec _readdir dir = 
     Array.iter begin fun f -> 
+      let () = Printf.printf "xyupizdatralyalya %s\n%!" f in 
       try 
         let fpath = gdir // dir // f in
         match Sys.is_directory fpath with
@@ -224,17 +234,24 @@ value createAtlas () =
       let items = 
         List.map begin fun (id, (x,y,isRotate,img)) -> 
           let () = print_endline "HERE" in
+          let () = print_endline id in
           let img = 
             match img with 
             [ Images.Rgba32 _ -> img
             | Images.Rgb24 i -> 
                 let () = print_endline "convert 23 -> 32" in
                 Images.Rgba32 (Rgb24.to_rgba32 i)
-            | _ -> assert False
+            | Index8 i -> 
+               (* let () = print_endline "convert index8 -> rgba32" in
+                Images.Rgba32 (Index8.to_rgba32 i) 
+    *)
+               failwith "index8"
+            | Index16 _ -> failwith "index16 format"
+            | Cmyk32 _ -> failwith "cmyk32 format"
             ]
           in
           let (w, h) = Images.size img in
-          let () = Printf.printf "Images.blit x=%d; y=%d; w=%d; h=%d; isRotate=%b \n%!" x y w h isRotate in
+          let () = Printf.printf "Images.blit %s x=%d; y=%d; w=%d; h=%d; isRotate=%b \n%!" fname x y w h isRotate in
           (
             Images.blit img 0 0 canvas x y w h;
             {name=id;x;y;width = w;height = h;isRotate};
@@ -340,6 +357,7 @@ value () =
         ("-nc", Arg.Set_string nocrop, "files that are not supposed to be cropped");
 (*         ("-t",Arg.String (fun s -> let t = match s with [ "vert" -> `vert | "hor" -> `hor | "rand" -> `rand | "maxrect" -> `maxrect |  _ -> failwith "unknown type rect" ] in type_rect.val :=
   *         t),"type rect for insert images"); *)
+        ("-nocrop", Arg.Set nocropFlag, "dont crop images");
         ("-pvr",Arg.Set gen_pvr,"generate pvr file");
         ("-xml",Arg.Set is_xml,"meta in xml format");
         ("-npot", Arg.Set npot, "Not power of 2");
