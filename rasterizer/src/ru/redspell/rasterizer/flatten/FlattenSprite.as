@@ -106,7 +106,7 @@ package ru.redspell.rasterizer.flatten {
             return objBmpData;
         }
 
-        protected function applyMask(mask:FlattenImage, masked:FlattenImage, disposeMask:Boolean = true):FlattenImage {
+        protected function applyMask(mask:FlattenImage, masked:FlattenImage, disposeMask:Boolean = true):int {
             var maskedRect:Rectangle = new Rectangle(Math.round(masked.matrix.tx), Math.round(masked.matrix.ty), masked.width, masked.height);
             var maskRect:Rectangle = new Rectangle(Math.round(mask.matrix.tx), Math.round(mask.matrix.ty), mask.width, mask.height);
             var intersect:Rectangle = maskedRect.intersection(maskRect);
@@ -117,13 +117,15 @@ package ru.redspell.rasterizer.flatten {
                     mask.dispose();
                 }
 
+                var retval:int = _childs.indexOf(masked);
+                _childs.splice(_childs.indexOf(masked), 1);
                 /*
                 ??? return it if needed
                 _childs.splice(_childs.indexOf(masked), 1);
                 masked.dispose();
                 */
 
-                return masked;
+                return retval;
             }
 
             var srcRect:Rectangle = new Rectangle(intersect.x - maskRect.x, intersect.y - maskRect.y, intersect.width, intersect.height);
@@ -140,13 +142,14 @@ package ru.redspell.rasterizer.flatten {
                 mask.dispose();
             }
 
-            _childs.splice(_childs.indexOf(masked), 1, maskedFinal);
+            retval = _childs.indexOf(masked);
+            _childs.splice(retval, 1, maskedFinal);
             masked.dispose();
 
             maskedFinal.name = masked.name;
             maskedFinal.matrix = new Matrix(1, 0, 0, 1, intersect.x, intersect.y);
 
-            return maskedFinal;
+            return retval + 1;
         }
 
         protected function applyMasks():void {
@@ -303,6 +306,8 @@ package ru.redspell.rasterizer.flatten {
             var i:uint = 0;
 
             while (i < _childs.length) {
+                trace("pizda " + i + " " + _childs.length);
+
                 var fimg:FlattenImage = _childs[i] as FlattenImage;
 
                 if (fimg == null || fimg == maskForAll) {
@@ -311,14 +316,16 @@ package ru.redspell.rasterizer.flatten {
                 }
 
                 if (_namedMasks.hasOwnProperty(fimg.name)) {
-                    fimg = applyMask(_namedMasks[fimg.name], fimg);
+                    i = applyMask(_namedMasks[fimg.name], fimg);
+                    continue;
                 }
 
                 if (maskForAll != null) {
-                    fimg = applyMask(maskForAll, fimg, false);
+                    i = applyMask(maskForAll, fimg, false);
+                    continue;
                 }
 
-                i = _childs.indexOf(fimg) + 1;
+                i++;
             }
 
             if (maskForAll != null) {
