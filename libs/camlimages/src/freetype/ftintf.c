@@ -374,7 +374,8 @@ void render(const int y,
 {
   spans_t* spns = (spans_t*)user;
 
-  for (int i = 0; i < count; ++i) {
+	int i;
+  for (i = 0; i < count; ++i) {
     spans_add(spns, spans[i].x, y, spans[i].len, spans[i].coverage);
   }  
 }
