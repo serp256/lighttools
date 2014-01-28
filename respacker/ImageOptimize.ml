@@ -79,10 +79,16 @@ value rec usageFrom address id = (* сделать енум *)
   in(*}}}*)
   Enum.make 
     ~next:begin fun () ->
-      let ((addr,_) as res) = findElement !address in
+      let ((addr,pos) as res) = findElement !address in
       (
         address.val := addr;
-        res
+        match addr with
+        [ (elid, addr) ->
+          match addr with
+          [ `clip frames f c -> ((elid, `clip frames f (c - 1)), pos)
+          | `sprite childs c -> ((elid, `sprite childs (c - 1)), pos)
+          ]
+        ]
       )
     end
     ~count:(fun () -> failwith "can't calculate count")

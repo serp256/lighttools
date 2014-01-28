@@ -107,3 +107,13 @@ value gzip_img img =
     | _ -> failwith (Printf.sprintf "Failed gzip %s" img)
     ];
   );
+
+value round v = 
+  let mult  = if v < 0. then ~-.1. else 1. in
+  let v_abs = abs_float v in
+  let v' = ceil v_abs in
+  match v' -. v_abs > 0.5 with
+  [ True -> mult *. (v' -. 1.)
+  | _ -> mult *. v'
+  ];
+  

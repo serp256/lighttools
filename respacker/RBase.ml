@@ -4,7 +4,7 @@ value bgcolor = {Color.color = {Color.r = 0; g = 0; b = 0}; alpha = 0};
 
 value jfloat = fun [ `Float s -> s | _ -> failwith "not a float" ];
 value jint = fun [ `Int s -> s | _ -> failwith "not a float" ];
-value jnumber = fun [ `Int s -> float s | `Float f -> f | _ -> failwith "not a float" ];
+value jnumber = fun [ `Int s -> float s | `Float f -> Utils.round f | _ -> failwith "not a float" ];
 value jobject = fun [ `Assoc s -> s | _ -> failwith "not an object" ];
 value jstring = fun [ `String s -> s | _ -> failwith "not a string" ];
 value jlist = fun [ `List s -> s | _ -> failwith "not a list" ];
