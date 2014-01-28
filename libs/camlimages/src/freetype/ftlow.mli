@@ -65,6 +65,8 @@ type load_flag =
    | Load_no_scale
    | Load_no_hinting
 
+type stroke;;
+
 val load_glyph : face -> int -> load_flag list -> int * int
 
 val load_char : face -> int -> load_flag list -> int * int
@@ -72,6 +74,12 @@ val load_char : face -> int -> load_flag list -> int * int
 val render_glyph_of_face : face -> render_mode -> unit
 
 val render_glyph : face -> int -> load_flag list -> render_mode -> int * int
+
+val stroke_render : face -> float -> (stroke * int * int)
+
+val stroke_dims : stroke -> (int * int)
+
+val stroke_get_pixel : stroke -> int -> int -> bool -> int
 
 val render_char : face -> int -> load_flag list -> render_mode -> int * int
 

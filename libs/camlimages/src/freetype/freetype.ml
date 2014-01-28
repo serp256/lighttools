@@ -103,6 +103,13 @@ let render_glyph face index flags render_mode =
   vector_float_of_intfrac6
     (Ftlow.render_glyph face.cont index flags render_mode);;
 
+type stroke = Ftlow.stroke;;
+
+let stroke_render face size = Ftlow.stroke_render face.cont size;;
+
+let stroke_dims = Ftlow.stroke_dims;;
+let stroke_get_pixel = Ftlow.stroke_get_pixel;;
+
 let render_char face code flags render_mode =
   vector_float_of_intfrac6
     (Ftlow.render_char face.cont code flags render_mode);;
