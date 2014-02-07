@@ -395,7 +395,7 @@ value layout_page_npot ?(width=max_size.val) ?(height=max_size.val) rects =
       let (placed_images, empty_rects, rest) = MaxRects.maxrects False rects [main_rect] in
       match rest with 
       [ [] ->
-(*         let () = Printf.printf "All in rect : w : %d; h : %d; dw : %d; dh : %d \n%!" w h dw dh in  *)
+         let () = Printf.printf "All in rect : w : %d; h : %d; dw : %d; dh : %d \n%!" w h dw dh in  
         match dw = min_diff && dh = min_diff with
         [ True -> ({width=w; height=h; placed_images; empty_rects}, rest) (* разместили все *)
         | _ -> 
