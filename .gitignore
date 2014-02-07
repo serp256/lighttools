@@ -1,3 +1,5 @@
+*.native
+*.byte
 android-exp-maker/aem.native
 _build
 eit

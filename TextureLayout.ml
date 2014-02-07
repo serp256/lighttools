@@ -216,7 +216,7 @@ module MaxRects = struct
     end placed;
 
   value maxrects isDegree4 rects empty = 
-(*     let () = Printf.printf "START MAX RECTS %d %dx%d\n%!" (List.length empty) (List.hd empty).w (List.hd empty).h in     *)
+    (* let () = Printf.printf "START MAX RECTS %d %dx%d\n%!" (List.length empty) (List.hd empty).w (List.hd empty).h in     *)
     loop rects [] empty [] where
       rec loop rects placed empty unfit = 
 (*         let () = Printf.printf "maxrects loop [%d:%d:%d:%d]\n%!" (List.length
