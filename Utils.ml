@@ -1,4 +1,10 @@
 
+value chop_ext f = 
+  try
+    let idx = (String.rindex f '.') + 1 in
+    String.sub f 0 (idx - 1)
+  with [ Not_found -> f ];
+
 value rec nextPowerOfTwo number =
   let rec loop result = 
     if result < number 
