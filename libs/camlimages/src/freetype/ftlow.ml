@@ -98,6 +98,8 @@ type outline_contents = {
     contours : int array;
   };;
 
+type stroke;;
+
 module C = struct
   external init : unit -> library = "init_FreeType";;
   external close : library -> unit = "done_FreeType";;
@@ -125,6 +127,10 @@ module C = struct
   external get_size_metrics : face -> size_metrics = "get_Size_Metrics";;
   external get_outline_contents :
     face -> outline_contents = "get_Outline_Contents";;
+
+  external render_stroke_of_face : face -> float -> (stroke * int * int) = "render_Stroke_of_Face";;
+  external stroke_dims : stroke -> (int * int) = "stroke_dims";;
+  external stroke_get_pixel : stroke -> int -> int -> bool -> int = "stroke_get_pixel";;
 end
 
 include C
@@ -143,6 +149,8 @@ let render_glyph face idx flags render_mode =
   let adv = load_glyph face idx flags in
   render_glyph_of_face face render_mode;
   adv;;
+
+let stroke_render face size = render_stroke_of_face face size;;
 
 let render_char face code flags render_mode =
   render_char_raw face code (encode_flags flags) render_mode;;
