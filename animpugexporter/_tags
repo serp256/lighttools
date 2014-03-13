@@ -1,0 +1,6 @@
+true: debug
+<*.ml>: package(camlp4),syntax(camlp4r),package(camlimages),package(extlib),package(zip),package(ojson),package(str)
+"animexporter.ml": package(camlimages.png),package(json-wheel),package(extlib),package(xmlm)
+<HSet.ml{,i}>: package(camlp4),syntax(camlp4r),package(extlib)
+<convert.{byte,native}>: package(extlib),package(camlimages.png),package(xmlm),package(zip),package(ojson),package(str),linkall
+"test.native": package(camlimages.png)
