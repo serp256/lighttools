@@ -121,19 +121,19 @@ Gc.set {(Gc.get()) with Gc.max_overhead = 2000000};
   Arg.parse 
 	[
 		("-inp",			Arg.Set_string inp_dir,	"input directory");
-		("-o",			Arg.Set_string outdir,	"output directory");
+		("-o",				Arg.Set_string outdir,	"output directory");
 		("-pvr",			Arg.Set gen_pvr,		"generate pvr file");
 		("-dxt",			Arg.Set gen_dxt,		"generate dxt file");        
-		("-p",			Arg.Set_int TextureLayout.countEmptyPixels,	"count Empty pixels between images");
+		("-p",				Arg.Set_int TextureLayout.countEmptyPixels,	"count Empty pixels between images");
 		("-min",			Arg.Set_int TextureLayout.min_size,			"Min size texture");
 		("-max",			Arg.Set_int TextureLayout.max_size,			"Max size texture");
-		("-scale",		Arg.Set_float scale,	"Scale factor");
+		("-scale",			Arg.Set_float scale,	"Scale factor");
 		("-degree4",		Arg.Set degree4,		"Use degree 4 rects");
 		("-without-cntr",	Arg.Set without_cntr,	"Not generate counters");
 		("-android",		Arg.Set is_android,		"Textures for android");
 		("-no-anim",		Arg.Set no_anim,		"Skip expansion animations");
-		("-suffix",		Arg.Set_string suffix,	"add suffix to library name");
-		("-gamma",		Arg.Set is_gamma,		"add conver -gamma 1.1 call for result image");
+		("-suffix",			Arg.Set_string suffix,	"add suffix to library name");
+		("-gamma",			Arg.Set is_gamma,		"add conver -gamma 1.1 call for result image");
 	]
 	(fun name -> json_name.val := name)
 	"";
@@ -164,9 +164,10 @@ module Pug = Pug.Make(
 );
 
 
-
-(* Printf.printf "\n Pug.prjName %s\n" (Pug.prjName); 
-exit 0; *)
+(* Pug.readPrjName; *)
+(* exit 0; *)
+(* Printf.printf "\n Pug.prjName %s\n" (Pug1.prjName);  *)
+(* exit 0; *)
 
 value postfixs = [ "_sh"; "_ex" ];
 

@@ -1,10 +1,6 @@
 open Node;
 open Images;
 
-
-(* Printf.printf "\n int_of_bool %d\n" (Utils.int_of_bool True); 
-exit 0; *)
-
 module type P =
   sig
 	value prjName:  	string;
@@ -41,6 +37,11 @@ type rects =
 value no_anim_prefix = [ "an_"; "bl_"; "dc_"; "mn_" ];
 
 value (///) = Filename.concat;
+
+(* value setPrj = (
+	P.
+
+); *)
 
 
 module Make(P:P) =
@@ -89,44 +90,56 @@ module Make(P:P) =
 			Utils.writeUTF animsOut oname;
 			let numAnims		= Common.childsNum o in
 				IO.write_ui16 animsOut numAnims;
-			let numFrames		= List.fold_left (fun frmIndx a -> (
-				let aname		= Animation.name a in
-				let _			= Utils.writeUTF animsOut aname in
-				let frmRt		= Int32.bits_of_float (Animation.frameRate a) in
-					IO.write_real_i32 animsOut frmRt;
-				let rects		= Animation.rects a in 
-				let numRects	= List.length rects in (
-					(* Минимум всегда 1 прямоугольник *)
-					if numRects > 0 then IO.write_byte animsOut numRects else IO.write_byte animsOut 1;
+			let numFrames		= 
+				List.fold_left (fun frmIndx a -> (
+					let aname		= Animation.name a in
+					let _			= Utils.writeUTF animsOut aname in
+					let frmRt		= Int32.bits_of_float (Animation.frameRate a) in
+						IO.write_real_i32 animsOut frmRt;
+					let rects		= Animation.rects a in 
+					let numRects	= List.length rects in (
+						(* Минимум всегда 1 прямоугольник *)
+						if numRects > 0 then IO.write_byte animsOut numRects else IO.write_byte animsOut 1;
 
-					if numRects > 0 then
-						List.iter (fun r -> (
-								(* Printf.printf "\n1oname %s; %f %f %f %f\n" oname r.Rect.x r.Rect.y r.Rect.width r.Rect.height; *)
-								IO.write_i16 animsOut (truncate (P.scale *. r.Rect.x));
-								IO.write_i16 animsOut (truncate (P.scale *. r.Rect.y));
-								IO.write_i16 animsOut (truncate (P.scale *. r.Rect.width));
-								IO.write_i16 animsOut (truncate (P.scale *. r.Rect.height));
+						if numRects > 0 then
+							List.iter (fun r -> (
+									(* Printf.printf "\n1oname %s; %f %f %f %f\n" oname r.Rect.x r.Rect.y r.Rect.width r.Rect.height; *)
+									IO.write_i16 animsOut (truncate (P.scale *. r.Rect.x));
+									IO.write_i16 animsOut (truncate (P.scale *. r.Rect.y));
+									IO.write_i16 animsOut (truncate (P.scale *. r.Rect.width));
+									IO.write_i16 animsOut (truncate (P.scale *. r.Rect.height));
+								)
+							) rects
+						else (
+							let (x, y, w, h) = calcAnimRects a in (
+								(* Printf.printf "\n2oname %s; %f %f %f %f\n" oname x y w h; *)
+								IO.write_i16 animsOut (truncate (P.scale *. x));
+								IO.write_i16 animsOut (truncate (P.scale *. y));
+								IO.write_i16 animsOut (truncate (P.scale *. w));
+								IO.write_i16 animsOut (truncate (P.scale *. h));
 							)
-						) rects
-					else (
-						let (x, y, w, h) = calcAnimRects a in (
-							(* Printf.printf "\n2oname %s; %f %f %f %f\n" oname x y w h; *)
-							IO.write_i16 animsOut (truncate (P.scale *. x));
-							IO.write_i16 animsOut (truncate (P.scale *. y));
-							IO.write_i16 animsOut (truncate (P.scale *. w));
-							IO.write_i16 animsOut (truncate (P.scale *. h));
 						)
+					);
+					let _			= Printf.printf "\n NO ANIM %b\n" (P.no_anim) in
+					let frmIndx = 
+						match P.no_anim with
+						[ False -> (
+							let numFrames	= Common.childsNum a in 
+								IO.write_ui16 animsOut numFrames;
+							List.fold_left (fun frmIndx' f -> (
+									IO.write_i32 animsOut frmIndx';
+									frmIndx' + 1
+							)) frmIndx (Common.childs a)
+						)
+						(* Для случая отключение анимации *)
+						| True -> (
+							IO.write_ui16 animsOut 1;
+							1
+						)
+						]
+					in frmIndx
 					)
-				);
-				let numFrames	= Common.childsNum a in 
-					IO.write_ui16 animsOut numFrames;
-				let frmIndx		= List.fold_left (fun frmIndx' f -> (
-						IO.write_i32 animsOut frmIndx';
-						frmIndx' + 1
-				)) frmIndx (Common.childs a);
-					(frmIndx)
-				)
-			) 0 (Common.childs o);
+				) 0 (Common.childs o);
 			numFrames
 		) in
 		let animsOut	= IO.close_out animsOut in
@@ -146,7 +159,11 @@ module Make(P:P) =
 			IO.write_i32 framesOut numFrames;
 			(* Фреймы *)
 			List.iter (fun a -> (
+				let animLst = Common.childs a in
+				(* Берем первый кадр если отключена анимация *)
+				let animLst = if (P.no_anim) then [List.hd animLst] else animLst in
 				List.iter (fun f -> (
+					
 					let fx			= Utils.round (P.scale *. (Frame.x f)) in
 					let fy			= Utils.round (P.scale *. (Frame.y f)) in
 					let iconX		= Utils.round (P.scale *. (Animation.iconX a)) in
@@ -195,7 +212,7 @@ module Make(P:P) =
 						)
 					)) (Common.childs f)
 
-				)) (Common.childs a);
+				)) animLst;
 			)) (Common.childs o);
 
 
@@ -208,7 +225,6 @@ module Make(P:P) =
 	);
 
 	(* Собираем уникальные картинки с объекта *)
-	(* @return list  *)
 	value makeLstImgs o:list string = (
 		List.fold_left (fun allimgs a -> (
 			List.fold_left (fun imgsf f -> (
@@ -441,7 +457,6 @@ module Make(P:P) =
 	(* Записать данных либы *)
 	value writeLibData prj packname lstObjs isWholly = (
 		let ttInfHash							= Hashtbl.create 30 in
-		(* Получаем [("имя объекта", [картинки])] *)
 		let lstImgs:list string	= 
 			let lstImgs = List.fold_left (fun lstImgs oname -> 
 				let obj	= List.find (fun o -> (
