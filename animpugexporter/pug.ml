@@ -258,7 +258,53 @@ module Make(P:P) =
                 	imgIndex + 1
             	)
             )) 0 imgs;
-            Images.save (P.outDir /// packname ^ ".png") (Some Images.Png) [] new_img
+			let pathSaveImg = (P.outDir /// packname) in (
+				(* Если гамма *)
+	            match P.is_gamma with
+		            [ True -> 
+		                let tmp_name = pathSaveImg ^ "_tmp.png" in
+		                (
+		                  Images.save tmp_name (Some Images.Png) [] new_img;
+		                  let cmd = Printf.sprintf "convert -gamma 1.1 %s %s.png" tmp_name pathSaveImg in
+		                    (
+		                      Printf.printf "%s\n%!" cmd;
+		                      match Sys.command cmd with
+		                      [ 0 -> Sys.remove tmp_name
+		                      | _ -> failwith "conver gamma return non-zero"
+		                      ];
+		                    )
+		                )
+		            | _ -> 
+		            	(* Обычное сохранение *)
+		                Images.save (pathSaveImg ^ ".png") (Some Images.Png) [] new_img
+		            ];
+		        match P.gen_pvr with
+	                [ True -> 
+	                    (
+	                    	try
+								Utils.pvr_png	pathSaveImg;
+								Utils.gzip_img	(pathSaveImg ^ ".pvr");	                    		
+	                    	with
+	                    	[ _ -> Printf.printf "\n === WARNING!!! NO PVR TOOL ===\n"]
+
+	                    )
+	                | _ -> ()
+	                ];
+		        match P.gen_dxt with
+	                [ True -> 
+	                    (
+	                    	try
+								Utils.dxt_png	pathSaveImg;
+                  				Utils.gzip_img	(pathSaveImg ^ ".dds");	                    		
+	                    	with
+	                    	[ _ -> Printf.printf "\n === WARNING!!! NO DDS TOOL ===\n"]
+
+	                    )
+	                | _ -> ()
+	                ];
+            )
+
+            
         )
 	);
 
@@ -297,6 +343,21 @@ module Make(P:P) =
 					);
 				)
 			] in
+		let image = 
+		match P.degree4 with
+		[ True -> 
+		    let (iw', ih') = Images.size image in
+		    let iw = TextureLayout.do_degree4 iw' 
+		    and ih = TextureLayout.do_degree4 ih' 
+		    in
+		    let rgb = Rgba32.make iw ih {Color.color={Color.r=0;g=0;b=0}; alpha=0;} in
+		    let res_img = Images.Rgba32 rgb in
+		      ( 
+		        Images.blit image 0 0 res_img 0 0 iw' ih';
+		        res_img
+		      )
+		| _ -> image
+		] in
 		image
 	);
 
