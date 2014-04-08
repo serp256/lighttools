@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="VTool" type="flex">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/embed/VTool.swc!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

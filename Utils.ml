@@ -131,3 +131,63 @@ value round v =
   | _ -> mult *. v'
   ];
   
+
+
+  (* Создание директории *)
+value makeDir path = (
+  if not (Sys.file_exists path)
+  then Unix.mkdir path 0o775
+  else ()
+);
+
+
+value readUTF ?(endian = `little) inp = 
+  let read_i16 = match endian with [ `little -> IO.read_i16 | `big -> IO.BigEndian.read_i16 ] in
+  let len = read_i16 inp in
+    IO.nread inp len;
+
+value writeUTF ?(endian = `little) out str =
+  let write_i16 = match endian with [ `little -> IO.write_i16 | `big -> IO.BigEndian.write_i16 ] in
+    (
+      write_i16 out (String.length str);
+      IO.nwrite out str;
+    );
+
+value pngDims fname =
+  (* let fname   = escapePath fname in *)
+  (* let ()  = Printf.printf "\n fname escaping %s" (fname) in *)
+  let inpChan = open_in fname in
+  let inp = IO.input_channel inpChan in
+  let module IO = IO.BigEndian in
+    (
+      ignore(IO.read_real_i32 inp);
+      ignore(IO.read_real_i32 inp);
+      ignore(IO.read_real_i32 inp);
+      ignore(IO.read_real_i32 inp);
+
+      let w = IO.read_i32 inp in
+      let h = IO.read_i32 inp in
+        (
+          close_in inpChan;
+          (w, h);
+        );
+    );
+
+value rectsUnion (x1, y1, w1, h1) (x2, y2, w2, h2) = (
+  if (w1 = 0.0 && h1 = 0.0) then ((x2, y2, w2, h2)) 
+  else(
+    let x_list = ExtList.List.sort [x1; x1 +. w1; x2; x2 +. w2] in
+    let new_x  = ExtList.List.first x_list in
+    let new_w  = (ExtList.List.last x_list) -. new_x in
+    let y_list = ExtList.List.sort [y1; y1 +. h1; y2; y2 +. h2] in
+    let new_y  = ExtList.List.first y_list in
+    let new_h  = (ExtList.List.last y_list) -. new_y in
+      (new_x, new_y, new_w, new_h)
+  )
+);
+
+value int_of_bool = (
+  fun [True -> 1 | False -> 0]
+);
+
+value round x = truncate (f x) where f = fun [ x when x > 0. -> x +. 0.5 | x -> x -. 0.4999 ];
