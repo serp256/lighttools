@@ -1,0 +1,3 @@
+#!/bin/bash
+
+ocamlbuild -use-ocamlfind -lflag -g cntrview.byte
