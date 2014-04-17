@@ -1,0 +1,194 @@
+день валентина
+sb_red_rose
+sb_valentine_hearts
+dc_love_tree
+dc_rose_bed
+dc_angel
+dc_valentine_table
+dc_rose_vase
+
+23 февраля
+an_military_goat
+dc_nanocannon
+dc_honor_tree 
+dc_bonfire 
+dc_tent
+dc_war_god 
+dc_radar
+
+8 марта
+sb_snowdrops
+sb_tulip
+tl_march
+dc_flower_basket 
+dc_bird 
+dc_acacia
+dc_butterfly_bush
+dc_balloon_flower 
+dc_flower_can
+
+день патрика
+sb_gold_pot
+sb_gold_horseshoe
+tl_shamrock
+dc_big_gold_pot 
+dc_harp
+dc_ale_barrel 
+dc_flowers_hat 
+dc_shamrock_bed
+dc_green_sheep
+
+1 апреля
+sb_smile
+sb_clown
+dc_bubble_machine
+dc_flying_cow
+dc_strange_spruce 
+dc_evil_tree 
+dc_dont_walk
+dc_emergency_exit
+
+пасха
+an_easter_rabbit
+sb_white_lily
+sb_narcissus
+dc_egg_eyes
+dc_easter_basket
+dc_easter_rabbit
+dc_easter_tree
+dc_lamb_bed
+dc_pussy_wilow
+dc_easter_egg (еще рисуют)
+
+день победы
+sb_forget_flower
+sb_red_carnation
+dc_fireworks
+dc_small_fireworks
+dc_apple_tree_bloom
+dc_ussr_flag
+dc_carnation_bouquet
+dc_star_flowerbed
+
+день матери
+sb_crocus
+sb_daisy
+dc_stork
+dc_braided_brougham
+dc_chair
+dc_giraffe
+dc_small_lanterns
+dc_family_boots
+
+день защиты детей
+sb_dandelion
+sb_rainbow_flower
+dc_rocking_horse
+dc_flower_bicycle
+dc_locomotive
+dc_turtle
+dc_tree_home
+dc_playground_pear
+
+день отца
+sb_shirt
+sb_tie
+dc_hammoc
+dc_workbench
+dc_rose_bush
+dc_barbecue
+dc_auto_flowbed
+
+летний ивент
+sb_sunflower
+sb_icecream
+tl_summer
+dc_waterfall
+dc_aerostat
+dc_oasis
+dc_sand_castle
+dc_water_tower
+dc_sea_shel
+
+осенний ивент
+sb_hot_tea
+sb_apple_tub
+tl_leaves1
+tl_leaves2
+tl_leaves3
+dc_palisade
+dc_palisade_flip
+dc_filled_basket
+dc_leafy_arch
+dc_pencil_flowerbed
+dc_barometer
+
+день знаний
+dc_bookshelf
+dc_formula_board
+dc_knowledge_monument
+dc_newton_tree
+dc_shucks
+
+день науки
+an_owl
+
+день благодарения
+sb_thanksday_tomatoes (старый день благодарения)
+sb_thanksday_pumpkin  (старый день благодарения)
+sb_corn
+dc_vegetables_trolley
+dc_turkey_statue
+dc_pumpkin_flowers
+dc_feast_table
+dc_horn_plenty
+dc_turkey_table
+dc_wigwam
+
+хэлоуин
+an_infra_duckling
+sb_potion_jam
+sb_fussy_beans
+sb_brooms
+tl_halloween_floor
+tl_halloween_2
+tl_halloween_3
+tl_halloween_4
+dc_scarecrow
+dc_bagpipe
+dc_ghost
+dc_three_pumpkin
+dc_witches_trail
+
+рождество и новый год
+an_deer
+tl_winter_trail84
+tl_winter2
+tl_winter3
+tl_winter4
+tl_winter5
+sb_christmas_present
+sb_christmas_candy
+sb_christmas_orange
+sb_christmas_cherry
+dc_sleigh
+dc_big_christmas_eve
+dc_small_christmas_eve
+dc_gingerbread_house
+dc_snowman
+dc_santa_baloon
+
+сбербанк
+dc_agent_car
+dc_agent_lab
+dc_credit_card
+
+скитлс
+sb_rainbow
+sb_helmet_strawberry
+sb_slingy
+sb_skittles_palm
+dc_rainbow_piece
+dc_multipan
+dc_skittleshenge
+dc_alpine_skittles
