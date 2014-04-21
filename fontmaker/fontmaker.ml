@@ -30,80 +30,105 @@ value bgcolor = {Color.color = {Color.r = 0; g = 0; b = 0}; alpha = 0};
 value scale = ref 1.;
 
 value make_size face size callback = 
-(
-  Freetype.set_char_size face (!scale *. size) 0. !dpi 0;
+  (
+    Freetype.set_char_size face (!scale *. size) 0. !dpi 0;
 
-  if !stroke = 0.
-  then
-    UTF8.iter begin fun uchar ->
-    (
-      let code = UChar.code uchar in
-  (*     let () = Printf.printf "process char: %d\n%!" code in *)
-      let char_index = Freetype.get_char_index face code in
-      let (xadv,yadv) = Freetype.render_glyph face char_index [] Freetype.Render_Normal in
-      let bi = Freetype.get_bitmap_info face in
-      (* take bitmap as is for now *)
-      let open Freetype in
-  (*     let () = Printf.printf "%C: bi.left = %d, bi.top = %d,bi.width: %d, bi.height: %d\n%!" (char_of_int code) bi.bitmap_left bi.bitmap_top bi.bitmap_width bi.bitmap_height in *)
-      let img =  Rgba32.make bi.bitmap_width bi.bitmap_height bgcolor in
-      (
-        for y = 0 to bi.bitmap_height - 1 do
-          for x = 0 to bi.bitmap_width - 1 do
-            let level = read_bitmap face x y in
-  (*           let () = Printf.printf "level: %d\n%!" level in *)
-            let color = {Color.color; alpha =level } in
-            Rgba32.set img x (bi.bitmap_height - y - 1) color
-          done
-        done;
-
-(*         for y = 0 to bi.bitmap_height - 1 do
-          for x = 0 to bi.bitmap_width - 1 do
-            let color = Rgba32.get img x y in
-              Printf.printf "%c" (if color.alpha = 0 then '.' else '+')
-          done;
-
-          Printf.printf "\n%!";
-        done; *)
-
-  (*         img#save (Printf.sprintf "%d.png" code) (Some Images.Png) []; *)
-        (* Printf.printf "!!!w %d, h %d ||| xoffset %d, yoffset %d\n%!" bi.bitmap_width bi.bitmap_height bi.bitmap_left bi.bitmap_top; *)
-        callback code xadv bi.bitmap_left bi.bitmap_top img
-      )
-    )
-    end !pattern
-  else
-    UTF8.iter (fun uchar ->
-      let code = UChar.code uchar in
-      let indx = Freetype.get_char_index face code in        
-      let (xadv, _) = Freetype.load_glyph face indx [] in
-      let metrics = Freetype.get_glyph_metrics face in
-      let (stroke, bearingx, bearingy) = Freetype.stroke_render face (size *. !stroke) in
-      let (w, h) = Freetype.stroke_dims stroke in
-      let img =  Rgba32.make w h bgcolor in
+    
+      UTF8.iter (fun uchar ->
         (
-          for y = 0 to h - 1 do
-            for x = 0 to w - 1 do
-              let levelA = Freetype.stroke_get_pixel stroke x y False in
-              let levelB = Freetype.stroke_get_pixel stroke x y True in
-                Rgba32.set img x (h - y - 1) {Color.color = {Color.r = levelA; g = 0; b = 0}; alpha = levelB }
-            done
-          done;
+          let code = UChar.code uchar in
+          let char_index = Freetype.get_char_index face code in
+          let (xadv,yadv) = Freetype.render_glyph face char_index [] Freetype.Render_Normal in
+          let bi = Freetype.get_bitmap_info face in
+          let open Freetype in
+          let img =  Rgba32.make bi.bitmap_width bi.bitmap_height bgcolor in
+          (
+            for y = 0 to bi.bitmap_height - 1 do
+              for x = 0 to bi.bitmap_width - 1 do
+                let level = read_bitmap face x y in
+                let color = {Color.color; alpha =level } in
+                  Rgba32.set img x (bi.bitmap_height - y - 1) color
+              done
+            done;
 
-(*         for y = 0 to h - 1 do
-          for x = 0 to w - 1 do
-            let color = Rgba32.get img x y in
-              Printf.printf "%c" (if color.alpha = 0 then '.' else '+')
-          done;
+            for y = 0 to bi.bitmap_height - 1 do
+              for x = 0 to bi.bitmap_width - 1 do
+                let color = Rgba32.get img x y in
+                  Printf.printf "%c" (if color.alpha = 0 then '.' else '+')
+              done;
 
-          Printf.printf "\n%!";
-        done;           *)
+              Printf.printf "\n%!";
+            done;
 
-          (* Printf.printf "!!!w %d, h %d ||| xoffset %d, yoffset %d\n%!" w h (int_of_float metrics.gm_hori.bearingx - bearingx) (int_of_float metrics.gm_hori.bearingy + bearingy); *)
-          callback code xadv (int_of_float metrics.gm_hori.bearingx - bearingx) (int_of_float metrics.gm_hori.bearingy + bearingy) img;
-        )       
-    ) !pattern;
+            if !stroke = 0.
+            then callback code xadv bi.bitmap_left bi.bitmap_top img
+            else
+              let blankLinesNum ~img ~nextLine ~nextInLine ~linesScaned ~lineScaned () =
+                let rec scanLine ((col, row) as pixel) = if lineScaned pixel then True else if (Rgba32.get img col row).Color.alpha = 0 then scanLine (nextInLine pixel) else False in
+                let rec blankLinesNum pixel num =
+                  if scanLine pixel
+                  then blankLinesNum (nextLine pixel) num + 1
+                  else num
+                in
+                  blankLinesNum (0, 0) 0
+              in
+              let blankRows =
+                blankLinesNum ~img
+                  ~nextLine:(fun (col, row) -> (col, row + 1))
+                  ~nextInLine:(fun (col, row) -> (col + 1, row))
+                  ~lineScaned:(fun (col, _) -> col = bi.bitmap_width)
+                  ~linesScaned:(fun (_, row) -> row = bi.bitmap_height)
+                  ()
+              in
+              let blankCols =
+                blankLinesNum ~img
+                  ~nextLine:(fun (col, row) -> (col + 1, row))
+                  ~nextInLine:(fun (col, row) -> (col, row + 1))
+                  ~lineScaned:(fun (_, row) -> row = bi.bitmap_height)
+                  ~linesScaned:(fun (col, _) -> col = bi.bitmap_width)
+                  ()
+              in
+              let (xadv, _) = Freetype.load_glyph face char_index [] in
+              let metrics = Freetype.get_glyph_metrics face in
+              let (stroke, bearingx, bearingy) = Freetype.stroke_render face (size *. !stroke) in
+              let (w, h) = Freetype.stroke_dims stroke in
+              let img =  Rgba32.make w h bgcolor in
+                (
+                  for y = 0 to h - 1 do
+                    for x = 0 to w - 1 do
+                      let levelA = Freetype.stroke_get_pixel stroke x y False in
+                      let levelB = Freetype.stroke_get_pixel stroke x y True in
+                        Rgba32.set img x (h - y - 1) {Color.color = {Color.r = levelA; g = 0; b = 0}; alpha = levelB }
+                    done
+                  done;
 
-  
+                  for y = 0 to h - 1 do
+                    for x = 0 to w - 1 do
+                      let color = Rgba32.get img x y in
+                        Printf.printf "%c" (if color.alpha = 0 then '.' else '+')
+                    done;
+
+                    Printf.printf "\n%!";
+                  done;
+
+                  Printf.printf "\n%!";
+
+                  for y = 0 to h - 1 do
+                    for x = 0 to w - 1 do
+                      let color = Rgba32.get img x y in
+                        Printf.printf "%c" (if color.color.r = 0 then '.' else '+')
+                    done;
+
+                    Printf.printf "\n%!";
+                  done;
+                  
+                  Printf.printf "blank rows: %d, cols %d\n%!" blankRows blankCols;
+                  callback code xadv (int_of_float metrics.gm_hori.bearingx - bearingx + blankCols) (int_of_float metrics.gm_hori.bearingy + bearingy - blankRows) img;
+                );
+            )
+        )
+      ) !pattern;
+);
 
 
 (*   UTF8.iter begin fun uchar ->
@@ -154,7 +179,7 @@ value make_size face size callback =
     )
   )
   end !pattern; *)
-);
+
 (*
 type sdescr = 
   {
