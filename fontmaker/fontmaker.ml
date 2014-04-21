@@ -51,14 +51,14 @@ value make_size face size callback =
               done
             done;
 
-            for y = 0 to bi.bitmap_height - 1 do
+(*             for y = 0 to bi.bitmap_height - 1 do
               for x = 0 to bi.bitmap_width - 1 do
                 let color = Rgba32.get img x y in
                   Printf.printf "%c" (if color.alpha = 0 then '.' else '+')
               done;
 
               Printf.printf "\n%!";
-            done;
+            done; *)
 
             if !stroke = 0.
             then callback code xadv bi.bitmap_left bi.bitmap_top img
@@ -102,7 +102,7 @@ value make_size face size callback =
                     done
                   done;
 
-                  for y = 0 to h - 1 do
+(*                   for y = 0 to h - 1 do
                     for x = 0 to w - 1 do
                       let color = Rgba32.get img x y in
                         Printf.printf "%c" (if color.alpha = 0 then '.' else '+')
@@ -122,7 +122,7 @@ value make_size face size callback =
                     Printf.printf "\n%!";
                   done;
                   
-                  Printf.printf "blank rows: %d, cols %d\n%!" blankRows blankCols;
+                  Printf.printf "blank rows: %d, cols %d\n%!" blankRows blankCols; *)
                   callback code xadv (int_of_float metrics.gm_hori.bearingx - bearingx + blankCols) (int_of_float metrics.gm_hori.bearingy + bearingy - blankRows) img;
                 );
             )
