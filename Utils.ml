@@ -122,7 +122,7 @@ value gzip_img img =
     ];
   );
 
-value round v = 
+value round (v:float) : float = 
   let mult  = if v < 0. then ~-.1. else 1. in
   let v_abs = abs_float v in
   let v' = ceil v_abs in
@@ -190,4 +190,4 @@ value int_of_bool = (
   fun [True -> 1 | False -> 0]
 );
 
-value round x = truncate (f x) where f = fun [ x when x > 0. -> x +. 0.5 | x -> x -. 0.4999 ];
+(* value round x = truncate (f x) where f = fun [ x when x > 0. -> x +. 0.5 | x -> x -. 0.4999 ]; *)
