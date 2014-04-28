@@ -334,7 +334,7 @@ void spans_add(spans_t* spans, int x, int y, int len, int val) {
 
   spans->minx = spans->minx > x ? x : spans->minx;
   spans->miny = spans->miny > y ? y : spans->miny;
-  spans->maxx = spans->maxx < x + len ? x + len : spans->maxx;
+  spans->maxx = spans->maxx < x + len - 1 ? x + len - 1 : spans->maxx;
   spans->maxy = spans->maxy < y ? y : spans->maxy;
   spans->len++;
 }
@@ -451,8 +451,8 @@ value render_Stroke_of_Face( vface, vsize )
     failwith("FT_Outline_Render");
   }
 
-  stroke->bearingx = (glyph_box.xMin >> 6) - (stroke_box.xMin >> 6);
-  stroke->bearingy = (stroke_box.yMax >> 6) - (glyph_box.yMax >> 6);
+  stroke->bearingx = glyph_spans->minx - stroke_spans->minx;
+  stroke->bearingy = stroke_spans->maxy - glyph_spans->maxy;
 
   spans_to_stroke(stroke, stroke_spans, glyph_spans);
   spans_free(stroke_spans);
@@ -463,9 +463,10 @@ value render_Stroke_of_Face( vface, vsize )
   Store_field(retval, 1, Val_int(stroke->bearingx));
   Store_field(retval, 2, Val_int(stroke->bearingy));
 
-/*  printf("%d %d\n", stroke_w, stroke_h);
+  // printf("%d %d\n", stroke_w, stroke_h);
 
-  for (int i = stroke_h - 1; i >= 0; i--) {
+/*  for (int i = stroke_h - 1; i >= 0; i--) {
+    printf("%.2d ", i);
     for (int j = 0; j < stroke_w; j++) {
       printf("%c", *(stroke->buf + 2 * (stroke_w * i + j)) > 0 ? '+' : '.');
     }
