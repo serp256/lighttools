@@ -1,4 +1,4 @@
-<**/*.ml{,i}>: package(camlp4),syntax(camlp4r),package(extlib),package(lightning),package(lightning.syntax.platform),package(redspell.syntax.debug),package(ojson),package(camlp4.macro)
+<**/*.ml{,i}>: package(camlp4),syntax(camlp4r),package(extlib),package(lightning),package(lightning.syntax.platform),package(redspell.syntax.debug),package(ojson),package(camlp4.macro),thread
 true:debug
 <*.{native,byte,so}>: package(lightning)
-<*.byte>: custom
+<*.byte>: custom,thread

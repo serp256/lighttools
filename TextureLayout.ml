@@ -621,11 +621,13 @@ value layout_min ?(tsize=Sqr) (images:list (bool * (list ('a * Images.t)) )) =
         end pages images
     ]
   in
+  (*
   let () = 
     Printf.printf "ALL allocated!!!! pages: %d [%s]\n%!" 
       (List.length pages) 
       (String.concat ";" (List.map (fun page -> Printf.sprintf "[%d:(%s)]" (List.length page.placed_images) (String.concat "," (List.map (fun (_,_) -> "SOME INFO") page.placed_images))) pages)) 
   in
+  *)
   pages;
   (*
   List.map begin fun page -> 

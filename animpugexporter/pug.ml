@@ -206,9 +206,9 @@ module Make(P:P) =
 							IO.write_i32		framesOut imgRcd.img_index; (* rectId *)
 							IO.write_i16 		framesOut lx;
 							IO.write_i16 		framesOut ly;
-		                  	IO.write_byte		framesOut alpha;
-		                  	IO.write_byte		framesOut flip;
-		                	IO.write_real_i32	framesOut scale;
+		          IO.write_byte		framesOut alpha;
+		          IO.write_byte		framesOut flip;
+		          IO.write_real_i32	framesOut scale;
 						)
 					)) (Common.childs f)
 
@@ -378,7 +378,6 @@ module Make(P:P) =
 	);
 
 
-
 	(* Запись атласа либы *)
 	value writeLibAtlas packname lstImgs ttInfHash isWholly = (
 		(* Собираем список текстурной информации *)
@@ -436,9 +435,9 @@ module Make(P:P) =
 							(* Printf.printf "\n img %d %s\n" img.index img.path; *)
 							(* Printf.printf "\n\t\t (%d,%d,%d,%d) \n" img.rect.rx img.rect.ry img.rect.rw img.rect.rh; *)
 							IO.write_ui16 texOut img.rect.rx;
-			              	IO.write_ui16 texOut img.rect.ry;
-			              	IO.write_ui16 texOut img.rect.rw;
-			              	IO.write_ui16 texOut img.rect.rh;
+              IO.write_ui16 texOut img.rect.ry;
+              IO.write_ui16 texOut img.rect.rw;
+              IO.write_ui16 texOut img.rect.rh;
 						)) ttImgs;
 					)
 
