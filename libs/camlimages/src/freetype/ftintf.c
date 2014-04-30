@@ -275,15 +275,17 @@ typedef struct {
   unsigned char* buf;
   int bearingx;
   int bearingy;
+  int minx;
+  int miny;
 } stroke_t;
 
-static void stroket_finalize(value vstroke) {
+static void stroke_finalize(value vstroke) {
   free(((stroke_t*)Data_custom_val(vstroke))->buf);
 }
 
 struct custom_operations stroket_ops = {
   "stroke_t",
-  stroket_finalize,
+  stroke_finalize,
   custom_compare_default,
   custom_hash_default,
   custom_serialize_default,
@@ -323,7 +325,7 @@ spans_t* spans_create() {
 void spans_add(spans_t* spans, int x, int y, int len, int val) {
   if (spans->len == spans->size) {
     spans->size += 10;
-    spans->items = realloc(spans->items, sizeof(span_t) * spans->size);
+    spans->items = (span_t*)realloc(spans->items, sizeof(span_t) * spans->size);
   }
 
   span_t* span = spans->items + spans->len;
@@ -350,22 +352,25 @@ void spans_to_stroke(stroke_t* stroke, spans_t* strk_spans, spans_t* glph_spans)
 
   for (i = 0; i < strk_spans->len; i++) {
     span = strk_spans->items + i;
-    y = span->y - strk_spans->miny;
+    y = span->y - stroke->miny;
 
-    for (j = span->x - strk_spans->minx; j < span->x - strk_spans->minx + span->len; j++) {
+    for (j = span->x - stroke->minx; j < span->x - stroke->minx + span->len; j++) {
       *(stroke->buf + 2 * (stroke->w * y + j) + 1) = span->val;
     }
   }
 
   for (i = 0; i < glph_spans->len; i++) {
     span = glph_spans->items + i;
-    y = span->y - strk_spans->miny;
+    y = span->y - stroke->miny;
 
-    for (j = span->x - strk_spans->minx; j < span->x - strk_spans->minx + span->len; j++) {
+    for (j = span->x - stroke->minx; j < span->x - stroke->minx + span->len; j++) {
       *(stroke->buf + 2 * (stroke->w * y + j)) = span->val;
     }
   }
 }
+
+#define MIN(a,b) a < b ? a : b
+#define MAX(a,b) a > b ? a : b
 
 void render(const int y,
                const int count,
@@ -384,8 +389,8 @@ value render_Stroke_of_Face( vface, vsize )
   value vface;
   value vsize;
 {
-  CAMLparam1(vface);
-  CAMLlocal1(retval);
+  CAMLparam2(vface, vsize);
+  CAMLlocal2(retval, vstroke);
 
   FT_Face face = *(FT_Face*)vface;
   FT_Library library = face->glyph->library;
@@ -427,17 +432,6 @@ value render_Stroke_of_Face( vface, vsize )
     failwith("FT_Outline_Render");
   }
 
-  int stroke_w = stroke_spans->maxx - stroke_spans->minx + 1;
-  int stroke_h = stroke_spans->maxy - stroke_spans->miny + 1;
-
-  value vstroke = caml_alloc_custom(&stroket_ops, sizeof(stroke_t), 2 * stroke_w * stroke_h, 10485760);
-
-  stroke_t* stroke = (stroke_t*)Data_custom_val(vstroke);
-  stroke->w = stroke_w;
-  stroke->h = stroke_h;
-  stroke->buf = (unsigned char*)malloc(2 * stroke_w * stroke_h);
-  memset(stroke->buf, 0, 2 * stroke_w * stroke_h);  
-
   if (face->glyph->format != FT_GLYPH_FORMAT_OUTLINE) {
     failwith("glyph format is not FT_GLYPH_FORMAT_OUTLINE"); 
   }
@@ -451,12 +445,33 @@ value render_Stroke_of_Face( vface, vsize )
     failwith("FT_Outline_Render");
   }
 
+  int minx = MIN(stroke_spans->minx, glyph_spans->minx);
+  int miny = MIN(stroke_spans->miny, glyph_spans->miny);
+  int maxx = MAX(stroke_spans->maxx, glyph_spans->maxx);
+  int maxy = MAX(stroke_spans->maxy, glyph_spans->maxy);
+
+  int stroke_w = maxx - minx + 1;
+  int stroke_h = maxy - miny + 1;
+
+  vstroke = caml_alloc_custom(&stroket_ops, sizeof(stroke_t), 2 * stroke_w * stroke_h, 10485760);
+
+  stroke_t* stroke = (stroke_t*)Data_custom_val(vstroke);
+  stroke->w = stroke_w;
+  stroke->h = stroke_h;
+  stroke->minx = minx;
+  stroke->miny = miny;  
+  stroke->buf = (unsigned char*)malloc(2 * stroke_w * stroke_h);
+  memset(stroke->buf, 0, 2 * stroke_w * stroke_h);
+
   stroke->bearingx = glyph_spans->minx - stroke_spans->minx;
   stroke->bearingy = stroke_spans->maxy - glyph_spans->maxy;
 
   spans_to_stroke(stroke, stroke_spans, glyph_spans);
   spans_free(stroke_spans);
   spans_free(glyph_spans);
+
+  FT_Done_Glyph(glyph);
+  FT_Stroker_Done(stroker);
 
   retval = caml_alloc_tuple(3);
   Store_field(retval, 0, vstroke);
@@ -476,14 +491,12 @@ value render_Stroke_of_Face( vface, vsize )
   printf("---------------\n");
 
   for (int i = stroke_h - 1; i >= 0; i--) {
+    printf("%.2d ", i);
     for (int j = 0; j < stroke_w; j++) {
       printf("%c", *(stroke->buf + 2 * (stroke_w * i + j) + 1) > 0 ? '+' : '.');
     }
     printf("\n");
   }  */
-
-  FT_Stroker_Done(stroker);
-  FT_Done_Glyph(glyph);  
 
   CAMLreturn(retval);
 }
@@ -508,7 +521,7 @@ value stroke_get_pixel(vstroke, vx, vy, vglyph)
   value vy;
   value vglyph;
 {
-  CAMLparam3(vstroke, vx, vy);
+  CAMLparam4(vstroke, vx, vy, vglyph);
 
   stroke_t* stroke = (stroke_t*)Data_custom_val(vstroke);
   int retval = *(stroke->buf + 2 * (Int_val(vy) * stroke->w + Int_val(vx)) + (vglyph == Val_true ? 0 : 1));
