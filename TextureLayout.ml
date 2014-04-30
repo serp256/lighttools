@@ -395,7 +395,7 @@ value layout_page_npot ?(width=max_size.val) ?(height=max_size.val) rects =
       let (placed_images, empty_rects, rest) = MaxRects.maxrects False rects [main_rect] in
       match rest with 
       [ [] ->
-(*         let () = Printf.printf "All in rect : w : %d; h : %d; dw : %d; dh : %d \n%!" w h dw dh in  *)
+         let () = Printf.printf "All in rect : w : %d; h : %d; dw : %d; dh : %d \n%!" w h dw dh in  
         match dw = min_diff && dh = min_diff with
         [ True -> ({width=w; height=h; placed_images; empty_rects}, rest) (* разместили все *)
         | _ -> 
@@ -621,11 +621,13 @@ value layout_min ?(tsize=Sqr) (images:list (bool * (list ('a * Images.t)) )) =
         end pages images
     ]
   in
+  (*
   let () = 
     Printf.printf "ALL allocated!!!! pages: %d [%s]\n%!" 
       (List.length pages) 
       (String.concat ";" (List.map (fun page -> Printf.sprintf "[%d:(%s)]" (List.length page.placed_images) (String.concat "," (List.map (fun (_,_) -> "SOME INFO") page.placed_images))) pages)) 
   in
+  *)
   pages;
   (*
   List.map begin fun page -> 

@@ -248,7 +248,8 @@ value read_frames dir =
 
         let pntsNum = IO.read_byte inp in
         let pnts =
-				let _ = Printf.printf "pntsNum %d" pntsNum in
+
+				let _ = Printf.printf "pntsNum %d\n!" pntsNum in
           List.init pntsNum (fun _ ->
             let x = IO.read_i16 inp in
             let y = IO.read_i16 inp in
@@ -316,6 +317,12 @@ value get_images dirs images  =
 (*
                 Printf.printf "convert -resize %d%% -filter catrom %s %s\n" (int_of_float (scale *. 100.)) srcFname dstFname;
 *)
+                let cnm  = 
+                  match scale > 1. with
+                  [ True -> Printf.sprintf "convert -resize %d%% -filter catrom %s png32:%s" (int_of_float (scale *. 100.)) srcFname dstFname
+                  | _ ->Printf.sprintf "convert -interpolative-resize %d%% -sharpen 0x.1 %s png32:%s" (int_of_float (scale *. 100.)) srcFname dstFname 
+                  ]
+                in
                 if Sys.command (Printf.sprintf "convert -resize %d%% -filter catrom %s png32:%s" (int_of_float (scale *. 100.)) srcFname dstFname) <> 0 then failwith "convert returns non-zero exit code"
                 else ();
 
@@ -430,6 +437,7 @@ value copyFrames dir =
         let iy = IO.read_i16 inp in
 
         let pntsNum = IO.read_byte inp in
+        let () = Printf.printf "PNTS COUNT %d\n" pntsNum in
         let pnts =
           List.init pntsNum (fun _ ->
             let x = IO.read_i16 inp in
