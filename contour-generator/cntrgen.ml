@@ -211,7 +211,7 @@ value readObjs lib =
                      rects.val := [ { rx = IO.read_i16 inp; ry = IO.read_i16 inp; rw = IO.read_i16 inp; rh = IO.read_i16 inp } :: !rects ];
 
                       let rect = List.hd !rects in
-                        Printf.printf "%d %d %d %d" rect.rx rect.ry rect.rw rect.rh;
+                        Printf.printf "rect %d : %d %d %d %d\n%!" i rect.rx rect.ry rect.rw rect.rh;
                     }
                   else
                     for i = 1 to rnum do {

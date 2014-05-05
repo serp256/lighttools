@@ -98,6 +98,10 @@ steam: clean-out-steam
 	./convert.native -gamma -pvr -dxt -inp ${LIB_DIR_STEAMPUNK} -scale 0.5 -degree4 -max 2048 -o ${OUT_DIR_STEAMPUBK} conf/steampunk.json
 	./convert.native -gamma -pvr -dxt -inp ${LIB_DIR_STEAMPUNK} -suffix x2 -degree4 -max 4096 -o ${OUT_DIR_STEAMPUBK} conf/steampunk.json
 
+steam_test: clean-out-steam
+	./convert.native -gamma -inp ${LIB_DIR_STEAMPUNK} -scale 0.5 -degree4 -max 2048 -o ${OUT_DIR_STEAMPUBK} conf/steampunk.json
+	./convert.native -gamma -inp ${LIB_DIR_STEAMPUNK} -suffix x2 -degree4 -max 4096 -o ${OUT_DIR_STEAMPUBK} conf/steampunk.json
+
 
 %.cmo:
 	  $(BUILDER) $@
