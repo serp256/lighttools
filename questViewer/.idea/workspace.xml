@@ -72,7 +72,16 @@
       <file leaf-file-name="Quest.as" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/Quest.as">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="44" column="35" selection-start="1210" selection-end="1210" vertical-scroll-proportion="-22.333334" vertical-offset="57" max-vertical-offset="7590">
+            <state line="94" column="118" selection-start="2710" selection-end="2710" vertical-scroll-proportion="0.0" vertical-offset="1315" max-vertical-offset="7785">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="HelpPanel.as" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/HelpPanel.as">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="54" column="123" selection-start="2242" selection-end="2242" vertical-scroll-proportion="0.53513515" vertical-offset="315" max-vertical-offset="1275">
               <folding />
             </state>
           </provider>
@@ -87,10 +96,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="QuestView.as" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="QuestView.as" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/QuestView.as">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="61" column="93" selection-start="1840" selection-end="1840" vertical-scroll-proportion="0.6876333" vertical-offset="270" max-vertical-offset="1950">
+            <state line="106" column="16" selection-start="2890" selection-end="3003" vertical-scroll-proportion="0.0" vertical-offset="1012" max-vertical-offset="1950">
               <folding />
             </state>
           </provider>
@@ -164,8 +173,9 @@
         <option value="$PROJECT_DIR$/src/ui/UIFactory.as" />
         <option value="$PROJECT_DIR$/src/vo/VOQuest.as" />
         <option value="$PROJECT_DIR$/src/ui/vbase/VButton.as" />
-        <option value="$PROJECT_DIR$/src/Quest.as" />
         <option value="$PROJECT_DIR$/src/QuestView.as" />
+        <option value="$PROJECT_DIR$/src/Quest.as" />
+        <option value="$PROJECT_DIR$/src/HelpPanel.as" />
       </list>
     </option>
   </component>
@@ -204,6 +214,7 @@
     </navigator>
     <panes>
       <pane id="Scope" />
+      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -304,7 +315,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="PackagesPane" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -326,15 +336,17 @@
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="FullScreen" value="false" />
+    <property name="LayoutCode.rearrangeEntriesECMA Script Level 4" value="false" />
   </component>
   <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/src/finders" />
-    </key>
     <key name="CreateActionScriptClassDialog.DESTINATION_PACKAGE_RECENT_KEY">
       <recent name="" />
       <recent name="ui" />
       <recent name="view" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src" />
+      <recent name="$PROJECT_DIR$/src/finders" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/vo" />
@@ -486,24 +498,24 @@
     <frame x="49" y="1076" width="1871" height="1084" extended-state="6" />
     <editor active="true" />
     <layout>
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.27357513" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.1326425" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39481866" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.27357513" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.21945946" sideWeight="0.67367256" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39481866" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="JetGradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24940048" sideWeight="0.6717687" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.1326425" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -535,11 +547,6 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/ui/vtool/VToolPanel.as">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="155" column="38" selection-start="5023" selection-end="5038" vertical-scroll-proportion="0.0" vertical-offset="2325" max-vertical-offset="3630" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vtool/CapturePanel.as">
       <provider selected="true" editor-type-id="text-editor">
         <state line="26" column="48" selection-start="1277" selection-end="1277" vertical-scroll-proportion="0.0" vertical-offset="199" max-vertical-offset="3480" />
@@ -767,9 +774,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Quest (копия).as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="5520">
-          <folding />
-        </state>
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="5520" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vbase/VInputText.as">
@@ -819,6 +824,20 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/Quest.as">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="94" column="118" selection-start="2710" selection-end="2710" vertical-scroll-proportion="0.0" vertical-offset="1315" max-vertical-offset="7785">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/QuestView.as">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="106" column="16" selection-start="2890" selection-end="3003" vertical-scroll-proportion="0.0" vertical-offset="1012" max-vertical-offset="1950">
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/vo/VOQuest.as">
       <provider selected="true" editor-type-id="text-editor">
         <state line="21" column="14" selection-start="451" selection-end="451" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="495">
@@ -826,16 +845,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/Quest.as">
+    <entry file="file://$PROJECT_DIR$/src/HelpPanel.as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="44" column="35" selection-start="1210" selection-end="1210" vertical-scroll-proportion="-22.333334" vertical-offset="57" max-vertical-offset="7590">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/QuestView.as">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="61" column="93" selection-start="1840" selection-end="1840" vertical-scroll-proportion="0.6876333" vertical-offset="270" max-vertical-offset="1950">
+        <state line="54" column="123" selection-start="2242" selection-end="2242" vertical-scroll-proportion="0.53513515" vertical-offset="315" max-vertical-offset="1275">
           <folding />
         </state>
       </provider>

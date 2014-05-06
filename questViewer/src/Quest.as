@@ -40,6 +40,7 @@ package {
 		private var lastButton:VButton;
 		private var stack:Array = [];
 		private var currentData:*;
+		private var helpPanel:HelpPanel = new HelpPanel();
 
 		public static var instance:Quest;
 		public var folds:Array = []/*of QuestView*/;
@@ -72,6 +73,9 @@ package {
 			mainpanel.addListener(MouseEvent.MOUSE_DOWN, dragStart);
 			mainpanel.addListener(MouseEvent.MOUSE_UP, dragStop);
 			mainpanel.addListener(MouseEvent.MOUSE_WHEEL, scal);
+
+			searchBox.add(helpPanel, {hCenter:0, top:100});
+			helpPanel.visible = false;
 		}
 
 		private function dragStart(e:MouseEvent):void {
@@ -160,12 +164,12 @@ package {
 			var button:VButton = UIFactory.createButton(AssetManager.getEmbedSkin('VToolOrangeButtonBg', VSkin.STRETCH),
 					{w:100, h:30, vCenter:0, hCenter:0}, new VLabel('поиск'), {vCenter:0, hCenter:0});
 			searchBox.add(button, {left:280, top:20});
-			button.addClickListener(onClickSearch);
+			button.addClickListener(search);
 
 			button = UIFactory.createButton(AssetManager.getEmbedSkin('VToolOrangeButtonBg', VSkin.STRETCH),
-					{w:150, h:30, vCenter:0, hCenter:0}, new VLabel('поиск по уровню'), {vCenter:0, hCenter:0});
+					{w:150, h:30, vCenter:0, hCenter:0}, new VLabel('помощь'), {vCenter:0, hCenter:0});
 			searchBox.add(button, {left:350, top:20});
-			button.addClickListener(onClickSearchLevel);
+			button.addClickListener(onClickHelp);
 
 			button = UIFactory.createButton(AssetManager.getEmbedSkin('VToolOrangeButtonBg', VSkin.STRETCH),
 					{w:150, h:30, vCenter:0, hCenter:0}, new VLabel('сохр'), {vCenter:0, hCenter:0});
@@ -272,6 +276,7 @@ package {
 		 * @param e
 		 */
 		private function onClickQuest(e:*):void {
+			folds = [];
 			mainpanel.x = 0;
 			mainpanel.y = 120;
 
@@ -414,11 +419,15 @@ package {
 
 		private function onKeyUp(e:KeyboardEvent):void {
 			if (e.keyCode == Keyboard.ENTER){
-				if (int(tf.text) > 0){
-					onClickSearchLevel(null);
-				} else {
-					onClickSearch(null);
-				}
+				search(null);
+			}
+		}
+
+		private function search(e:MouseEvent):void {
+			if (int(tf.text) > 0){
+				searchLevel();
+			} else {
+				searchQuest();
 			}
 		}
 
@@ -426,7 +435,7 @@ package {
 		 * Искать квест по имени
 		 * @param e
 		 */
-		private function onClickSearch(e:MouseEvent):void {
+		private function searchQuest():void {
 			for each (var voq:VOQuest in quests){
 				if (voq.qname.toLowerCase() == tf.text.toLowerCase()){
 					var bn:VButton = createQuestButton(voq);
@@ -442,7 +451,7 @@ package {
 		 * Искать квест по уровню
 		 * @param e
 		 */
-		private function onClickSearchLevel(e:MouseEvent):void {
+		private function searchLevel():void {
 			for each (var voq:VOQuest in quests){
 				if (int(tf.text) > 0 && voq.level == int(tf.text)){
 					var bn:VButton = createQuestButton(voq.level);
@@ -452,6 +461,10 @@ package {
 			}
 
 			tf.text = 'Уровень не найден!';
+		}
+
+		private function onClickHelp(e:MouseEvent):void{
+			helpPanel.visible = !helpPanel.visible;
 		}
 
 		private function onClickSave(e:MouseEvent):void {
