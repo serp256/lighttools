@@ -72,7 +72,7 @@
       <file leaf-file-name="Quest.as" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/Quest.as">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="428" column="35" selection-start="11900" selection-end="11900" vertical-scroll-proportion="-225.62962" vertical-offset="328" max-vertical-offset="7680">
+            <state line="44" column="35" selection-start="1210" selection-end="1210" vertical-scroll-proportion="-22.333334" vertical-offset="57" max-vertical-offset="7590">
               <folding />
             </state>
           </provider>
@@ -90,7 +90,7 @@
       <file leaf-file-name="QuestView.as" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/QuestView.as">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="36" column="66" selection-start="1241" selection-end="1241" vertical-scroll-proportion="-0.55117273" vertical-offset="1057" max-vertical-offset="1995">
+            <state line="61" column="93" selection-start="1840" selection-end="1840" vertical-scroll-proportion="0.6876333" vertical-offset="270" max-vertical-offset="1950">
               <folding />
             </state>
           </provider>
@@ -117,7 +117,7 @@
       <file leaf-file-name="VButton.as" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/ui/vbase/VButton.as">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="29" column="64" selection-start="879" selection-end="879" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2790">
+            <state line="29" column="64" selection-start="879" selection-end="879" vertical-scroll-proportion="0.0" vertical-offset="435" max-vertical-offset="2790">
               <folding />
             </state>
           </provider>
@@ -164,16 +164,16 @@
         <option value="$PROJECT_DIR$/src/ui/UIFactory.as" />
         <option value="$PROJECT_DIR$/src/vo/VOQuest.as" />
         <option value="$PROJECT_DIR$/src/ui/vbase/VButton.as" />
-        <option value="$PROJECT_DIR$/src/QuestView.as" />
         <option value="$PROJECT_DIR$/src/Quest.as" />
+        <option value="$PROJECT_DIR$/src/QuestView.as" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-1871" />
-    <option name="y" value="1104" />
+    <option name="x" value="49" />
+    <option name="y" value="1076" />
     <option name="width" value="1871" />
-    <option name="height" value="1056" />
+    <option name="height" value="1084" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -203,6 +203,7 @@
       <sortByType />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -304,7 +305,6 @@
         </subPane>
       </pane>
       <pane id="PackagesPane" />
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -483,12 +483,12 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-1871" y="1104" width="1871" height="1056" extended-state="6" />
+    <frame x="49" y="1076" width="1871" height="1084" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.307772" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.1326425" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39481866" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -508,8 +508,8 @@
       <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
   <component name="Vcs.Log.UiProperties">
@@ -547,9 +547,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vbase/VScrollBar.as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="27" column="29" selection-start="709" selection-end="719" vertical-scroll-proportion="0.0" vertical-offset="220" max-vertical-offset="2970">
-          <folding />
-        </state>
+        <state line="27" column="29" selection-start="709" selection-end="719" vertical-scroll-proportion="0.0" vertical-offset="220" max-vertical-offset="2970" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vbase/VBox.as">
@@ -598,9 +596,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vbase/VScrollBar.as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="27" column="29" selection-start="709" selection-end="719" vertical-scroll-proportion="0.0" vertical-offset="220" max-vertical-offset="2970">
-          <folding />
-        </state>
+        <state line="27" column="29" selection-start="709" selection-end="719" vertical-scroll-proportion="0.0" vertical-offset="220" max-vertical-offset="2970" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vbase/VBox.as">
@@ -804,18 +800,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/vo/VOQuest.as">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="21" column="14" selection-start="451" selection-end="451" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="495">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vbase/VScrollBar.as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="27" column="29" selection-start="709" selection-end="719" vertical-scroll-proportion="0.0" vertical-offset="220" max-vertical-offset="2970">
-          <folding />
-        </state>
+        <state line="27" column="29" selection-start="709" selection-end="719" vertical-scroll-proportion="0.0" vertical-offset="220" max-vertical-offset="2970" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vbase/VBaseComponent.as">
@@ -832,16 +819,23 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/vo/VOQuest.as">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="21" column="14" selection-start="451" selection-end="451" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="495">
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/Quest.as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="428" column="35" selection-start="11900" selection-end="11900" vertical-scroll-proportion="-225.62962" vertical-offset="328" max-vertical-offset="7680">
+        <state line="44" column="35" selection-start="1210" selection-end="1210" vertical-scroll-proportion="-22.333334" vertical-offset="57" max-vertical-offset="7590">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/QuestView.as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="36" column="66" selection-start="1241" selection-end="1241" vertical-scroll-proportion="-0.55117273" vertical-offset="1057" max-vertical-offset="1995">
+        <state line="61" column="93" selection-start="1840" selection-end="1840" vertical-scroll-proportion="0.6876333" vertical-offset="270" max-vertical-offset="1950">
           <folding />
         </state>
       </provider>

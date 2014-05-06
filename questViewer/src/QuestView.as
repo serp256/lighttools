@@ -18,7 +18,7 @@ package {
 		public var data:*;
 		private var folded:Boolean = true;
 		private var nextList:Array = [];
-		public var parentFold:QuestView;
+		//public var parentFold:QuestView;
 
 		public function QuestView(data:*, callback:Function) {
 			this.data = data;
@@ -50,23 +50,21 @@ package {
 
 			folded = !folded;
 			trace('click fold')
-			drawParentFold();
+			for each (var folder:QuestView in Quest.instance.folds){
+				folder.drawParentFold();
+			}
 			fold.setIcon(new VLabel(folded ? '+' : '-'), {vCenter:0, hCenter:0});
 		}
 
 		public function drawParentFold():void {
-			trace(this);
 			if (folded){
 				graphics.clear();
 			} else {
 				if (nextBox.list.length > 1){
-					nextBox.graphics.lineStyle(2,0x555555 * Math.random());
+					nextBox.graphics.lineStyle(2,0x555555 /** Math.random()*/);
 					nextBox.graphics.moveTo(30,0);
 					nextBox.graphics.lineTo(nextBox.list[nextBox.list.length - 1].x + 30, 0);
 				}
-			}
-			if (parentFold){
-				parentFold.drawParentFold();
 			}
 		}
 
@@ -101,10 +99,10 @@ package {
 			if (next.length == 1){
 				nextBox.addList(next);
 			}
-			parentFold = Quest.instance.parentFold;
+			//parentFold = Quest.instance.parentFold;
 			if (next.length > 1){
-				Quest.instance.parentFold = this;
-				trace('NEXT ', parentFold, Quest.instance.parentFold);
+				//Quest.instance.parentFold = this;
+				//trace('NEXT ', parentFold, Quest.instance.parentFold);
 
 				fold = UIFactory.createEmbedButton('VToolOrangeButtonBg', VSkin.STRETCH, new VLabel('+'),{vCenter:0, hCenter:0});
 				fold.setLayout({w:20, h:20});

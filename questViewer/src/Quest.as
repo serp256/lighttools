@@ -42,8 +42,7 @@ package {
 		private var currentData:*;
 
 		public static var instance:Quest;
-		public var parentFold:QuestView;
-
+		public var folds:Array = []/*of QuestView*/;
 
 		/**
 		 * Конструхтор
@@ -325,8 +324,10 @@ package {
 
 		/**
 		 * добавляем всю хурму рекурсивно до упора
-		 * @param qv
-		 * @param voq
+		 * @param qv вьюха
+		 * @param voq - квест
+		 * @param isFirst - для первого квеста в рекурсии рисуем зависимости принудительно
+		 * @param parentvoq квест родитель
 		 */
 		public function rec(qv:QuestView, voq:*, isFirst:Boolean = false, parentvoq:* = null):void {
 			var next:Array = [];
@@ -405,6 +406,9 @@ package {
 
 			if (next.length){
 				qv.setNext(next);
+				if (next.length > 1){
+					folds.push(qv);
+				}
 			}
 		}
 
