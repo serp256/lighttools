@@ -3,6 +3,8 @@ package {
 
 	import ui.UIFactory;
 	import ui.vbase.*;
+
+	import vo.VOQuest;
 	import vo.VOQuest;
 
 	public class QuestView extends VBaseComponent{
@@ -16,7 +18,7 @@ package {
 		public var data:*;
 		private var folded:Boolean = true;
 		private var nextList:Array = [];
-		//public var parentFold:QuestView;
+		public var parentFold:QuestView;
 
 		public function QuestView(data:*, callback:Function) {
 			this.data = data;
@@ -36,28 +38,9 @@ package {
 		 * Свернуть/развернуть
 		 */
 		public function clickFold(e:MouseEvent):void {
-			//nextBox.graphics.clear();
-/*			if (e == null){
-				folded = true;
-			}*/
-
 			if (folded){
-				//Quest.instance.rec(this, data/*, true*/);
 				nextBox.visible = true;
-
 				nextBox.addList(nextList);
-				//nextBox.geometryPhase();
-				geometryPhase();
-				if (nextList.length){
-					//if (parentFold && e){
-						//parentFold.clickFold(null);
-						//parentFold.clickFold(null);
-					//}
-					//nextBox.graphics.clear();
-					nextBox.graphics.lineStyle(2,0x555555);
-					nextBox.graphics.moveTo(30,0);
-					nextBox.graphics.lineTo(nextBox.list[nextBox.list.length - 1].x + 30, 0);
-				}
 			} else {
 				nextBox.visible = false;
  				nextList = toArray(nextBox.list);
@@ -65,9 +48,26 @@ package {
 				nextBox.removeAll(false);
 			}
 
-
 			folded = !folded;
+			trace('click fold')
+			drawParentFold();
 			fold.setIcon(new VLabel(folded ? '+' : '-'), {vCenter:0, hCenter:0});
+		}
+
+		public function drawParentFold():void {
+			trace(this);
+			if (folded){
+				graphics.clear();
+			} else {
+				if (nextBox.list.length > 1){
+					nextBox.graphics.lineStyle(2,0x555555 * Math.random());
+					nextBox.graphics.moveTo(30,0);
+					nextBox.graphics.lineTo(nextBox.list[nextBox.list.length - 1].x + 30, 0);
+				}
+			}
+			if (parentFold){
+				parentFold.drawParentFold();
+			}
 		}
 
 		private function toArray(vec:Vector.<VBaseComponent>):Array{
@@ -87,6 +87,10 @@ package {
 			//geometryPhase();
 		}
 
+		override public function toString():String {
+			return 'QuestView ' + (data is VOQuest ? data.qname : data);
+		}
+
 		/**
 		 * выставить продолжения
 		 * @param next
@@ -97,16 +101,11 @@ package {
 			if (next.length == 1){
 				nextBox.addList(next);
 			}
-			//nextBox.geometryPhase();
-			/*geometryPhase();
-			nextBox.graphics.clear();
-			nextBox.graphics.lineStyle(2,0);
-			nextBox.graphics.moveTo(10,0);
-			nextBox.graphics.lineTo(nextBox.list[nextBox.list.length - 1].x + 10, 0);*/
-			//parentFold = Quest.instance.parentFold;
-			//Quest.instance.parentFold = this;
-
+			parentFold = Quest.instance.parentFold;
 			if (next.length > 1){
+				Quest.instance.parentFold = this;
+				trace('NEXT ', parentFold, Quest.instance.parentFold);
+
 				fold = UIFactory.createEmbedButton('VToolOrangeButtonBg', VSkin.STRETCH, new VLabel('+'),{vCenter:0, hCenter:0});
 				fold.setLayout({w:20, h:20});
 				fold.addClickListener(clickFold);

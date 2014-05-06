@@ -41,15 +41,15 @@ package {
 		private var stack:Array = [];
 		private var currentData:*;
 
-		//public static var instance:Quest;
-		//public var parentFold:QuestView;
+		public static var instance:Quest;
+		public var parentFold:QuestView;
 
 
 		/**
 		 * Конструхтор
  		 */
 		public function Quest() {
-			//instance = this;
+			instance = this;
 			mainpanel.setLayout({w:600, h:400});
 			mainpanel.geometryPhase();
 			mainpanel.graphics.beginFill(0,0.05);
@@ -328,7 +328,7 @@ package {
 		 * @param qv
 		 * @param voq
 		 */
-		public function rec(qv:QuestView, voq:*, isFirst:Boolean = false):void {
+		public function rec(qv:QuestView, voq:*, isFirst:Boolean = false, parentvoq:* = null):void {
 			var next:Array = [];
 			if (voq is VOQuest){
 
@@ -337,7 +337,7 @@ package {
 						usedVoqn.push(voqn);
 						var qv1:QuestView = new QuestView(voqn, onClickQuest);
 						//if ((voq.nextQ.length == 1) || isFirst){
-							rec(qv1, voqn);
+							rec(qv1, voqn, false, qv.data);
 						//}
 						next.push(qv1);
 					} else {
@@ -359,7 +359,7 @@ package {
 
 					for each (var p:* in voq.prev){
 						if (p is Array){
-							var button:VButton = UIFactory.createButton(AssetManager.getEmbedSkin('VToolBgInputText', VSkin.STRETCH),
+							button = UIFactory.createButton(AssetManager.getEmbedSkin('VToolBgInputText', VSkin.STRETCH),
 									{h:30,vCenter:0, hCenter:0}, new VLabel(p[0] +  "::" + p[1]), {vCenter:0, hCenter:0});
 							button.data = p[0];
 						} else {
@@ -368,17 +368,7 @@ package {
 							button.data = p;
 						}
 
-						/*for each (var voq1:VOQuest in quests){
-							if (voq1.qname == button.data){
-								button.data = voq1;
-								button.addClickListener(onClickQuest);
-								prev.push(button);
-								addFold(button);
-								break;
-							}
-						}*/
-
-						if (quests[button.data]){
+						if (quests[button.data] && quests[button.data] != parentvoq){
 							button.data = quests[button.data];
 							button.addClickListener(onClickQuest);
 							prev.push(button);
@@ -387,7 +377,7 @@ package {
 					}
 				}
 
-				if (voq.level){
+				if (voq.level && voq.level != parentvoq){
 					button = UIFactory.createButton(AssetManager.getEmbedSkin('VToolRedButtonBg', VSkin.STRETCH),
 							{h:30,vCenter:0, hCenter:0}, new VLabel(voq.level + ' level'), {vCenter:0, hCenter:0});
 					button.data = voq.level;
@@ -406,7 +396,7 @@ package {
 						usedVoqn.push(voq1);
 						qv1 = new QuestView(voq1, onClickQuest);
 						//if (next.length == 0 || isFirst){
-							rec(qv1, voq1);
+							rec(qv1, voq1, false, qv.data);
 						//}
 						next.push(qv1);
 					}
