@@ -5,7 +5,6 @@ package {
 	import ui.vbase.*;
 
 	import vo.VOQuest;
-	import vo.VOQuest;
 
 	public class QuestView extends VBaseComponent{
 
@@ -20,14 +19,14 @@ package {
 		private var nextList:Array = [];
 		//public var parentFold:QuestView;
 
-		public function QuestView(data:*, callback:Function) {
+		public function QuestView(data:*/*, callback:Function*/) {
 			this.data = data;
 			var skin:String = data is VOQuest && data.nextQ.length == 0 ? 'VToolRedButtonBg' : 'VToolGreenButtonBg';
 			button = UIFactory.createButton(AssetManager.getEmbedSkin(skin, VSkin.STRETCH | VSkin.CONTAIN),
 					{h:30, vCenter:0, hCenter:0}, new VLabel(
-							data is VOQuest ? data.qname /*+ data.maxnestinglevel*/ : 'level ' + data), {vCenter:0, hCenter:0});
+							data is VOQuest ? (data.line == -1? '' : '<span fontWeight="bold" color="#3333FF">[' + data.line + ']</span>') + data.qname /*+ data.maxnestinglevel*/ : 'level ' + data), {vCenter:0, hCenter:0});
 			button.data = data;
-			button.addClickListener(callback);
+			//button.addClickListener(callback);
 
 			add(container);
 			btBox.addList([button]);

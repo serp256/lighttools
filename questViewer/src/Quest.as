@@ -17,6 +17,8 @@ package {
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 
+	import flashx.textLayout.events.ModelChange;
+
 	import ui.UIFactory;
 
 	import ui.vbase.*;
@@ -72,7 +74,9 @@ package {
 
 			mainpanel.addListener(MouseEvent.MOUSE_DOWN, dragStart);
 			mainpanel.addListener(MouseEvent.MOUSE_UP, dragStop);
-			mainpanel.addListener(MouseEvent.MOUSE_WHEEL, scal);
+			mainpanel.addListener(MouseEvent.CLICK, click);
+			searchBox.addListener(MouseEvent.CLICK, click);
+			//mainpanel.addListener(MouseEvent.MOUSE_WHEEL, scal);
 
 			searchBox.add(helpPanel, {hCenter:0, top:100});
 			helpPanel.visible = false;
@@ -84,6 +88,18 @@ package {
 		private function dragStop(e:MouseEvent):void {
 			mainpanel.stopDrag();
 		}
+
+		private static const SCALE:Number = 0.05;
+
+		private function scaleMinus(e:MouseEvent):void {
+			mainpanel.scaleX -= SCALE;
+			mainpanel.scaleY -= SCALE;
+		}
+		private function scalePlus(e:MouseEvent):void {
+			mainpanel.scaleX += SCALE;
+			mainpanel.scaleY += SCALE;
+		}
+
 		private function scal(e:MouseEvent):void {
 			var delta:Number = 0.02 * (e.delta < 0 ? 1 : -1);
 			mainpanel.scaleX -= delta;
@@ -104,6 +120,14 @@ package {
 			fileR.addEventListener(ProgressEvent.PROGRESS, progressHandler);
 			fileR.addEventListener(Event.COMPLETE, completeHandler);
 
+		}
+
+		private function click(e:MouseEvent):void {
+			if (e.target is VButton){
+				if (e.target.data != null){
+					onClickQuest(e.target);
+				}
+			}
 		}
 
 		/**
@@ -173,16 +197,26 @@ package {
 
 			button = UIFactory.createButton(AssetManager.getEmbedSkin('VToolOrangeButtonBg', VSkin.STRETCH),
 					{w:150, h:30, vCenter:0, hCenter:0}, new VLabel('сохр'), {vCenter:0, hCenter:0});
-			searchBox.add(button, {left:550, top:20});
+			searchBox.add(button, {left:500, top:20});
 			button.addClickListener(onClickSave);
 
 			stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp);
 
 			lastButton = UIFactory.createButton(AssetManager.getEmbedSkin('VToolOrangeButtonBg', VSkin.STRETCH),
 					{w:150, h:30, vCenter:0, hCenter:0}, new VLabel('назад'), {vCenter:0, hCenter:0});
-			searchBox.add(lastButton, {left:480, top:20});
+			searchBox.add(lastButton, {left:440, top:20});
 			lastButton.addClickListener(onClickBack);
 			lastButton.disabled = true;
+
+			searchBox.add(new VLabel('Масштаб'), {left:565, top:8});
+			button = UIFactory.createButton(AssetManager.getEmbedSkin('VToolOrangeButtonBg', VSkin.STRETCH),
+					{w:30, h:30, vCenter:0, hCenter:0}, new VLabel('-'), {vCenter:0, hCenter:0});
+			searchBox.add(button, {left:560, top:20});
+			button.addClickListener(scaleMinus);
+			button = UIFactory.createButton(AssetManager.getEmbedSkin('VToolOrangeButtonBg', VSkin.STRETCH),
+					{w:30, h:30, vCenter:0, hCenter:0}, new VLabel('+'), {vCenter:0, hCenter:0});
+			searchBox.add(button, {left:590, top:20});
+			button.addClickListener(scalePlus);
 
 		}
 
@@ -297,7 +331,7 @@ package {
 				currentData = cur.data is VOQuest ? cur.data.qname : cur.data;
 			}
 
-			var qv:QuestView = new QuestView(cur.data, onClickQuest);
+			var qv:QuestView = new QuestView(cur.data/*, onClickQuest*/);
 			usedVoqn = cur.data is VOQuest ? [cur.data] : [];
 			usedQV = {};
 			questPanel.add(qv);
@@ -341,7 +375,7 @@ package {
 				for each (var voqn:VOQuest in voq.nextQ){
 					if (usedVoqn.indexOf(voqn) == -1){
 						usedVoqn.push(voqn);
-						var qv1:QuestView = new QuestView(voqn, onClickQuest);
+						var qv1:QuestView = new QuestView(voqn/*, onClickQuest*/);
 						//if ((voq.nextQ.length == 1) || isFirst){
 							rec(qv1, voqn, false, qv.data);
 						//}
@@ -387,7 +421,7 @@ package {
 					button = UIFactory.createButton(AssetManager.getEmbedSkin('VToolRedButtonBg', VSkin.STRETCH),
 							{h:30,vCenter:0, hCenter:0}, new VLabel(voq.level + ' level'), {vCenter:0, hCenter:0});
 					button.data = voq.level;
-					button.addClickListener(onClickQuest);
+					//button.addClickListener(onClickQuest);
 					addFold(button);
 					prev.push(button);
 				}
@@ -400,7 +434,7 @@ package {
 				for each (var voq1:VOQuest in quests){
 					if (voq1.level == voq){
 						usedVoqn.push(voq1);
-						qv1 = new QuestView(voq1, onClickQuest);
+						qv1 = new QuestView(voq1/*, onClickQuest*/);
 						//if (next.length == 0 || isFirst){
 							rec(qv1, voq1, false, qv.data);
 						//}
@@ -467,6 +501,7 @@ package {
 			helpPanel.visible = !helpPanel.visible;
 		}
 
+
 		private function onClickSave(e:MouseEvent):void {
 			var bitmapData:BitmapData=new BitmapData(mainpanel.contentWidth, mainpanel.contentHeight);
 			bitmapData.draw(mainpanel);
@@ -506,7 +541,7 @@ package {
 					{h:30, vCenter:0, hCenter:0}, new VLabel(
 					data is VOQuest ? data.qname + getMaxNestingLevel(data) : '' + data), {vCenter:0, hCenter:0});
 			button.data = data;
-			button.addClickListener(onClickQuest);
+			//button.addClickListener(onClickQuest);
 			return button;
 		}
 	}
