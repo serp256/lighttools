@@ -37,22 +37,27 @@ package {
 		 * Свернуть/развернуть
 		 */
 		public function clickFold(e:MouseEvent):void {
-			if (folded){
-				nextBox.visible = true;
-				nextBox.addList(nextList);
-			} else {
-				nextBox.visible = false;
- 				nextList = toArray(nextBox.list);
-				nextBox.graphics.clear();
-				nextBox.removeAll(false);
-			}
+			try {
+				if (folded){
+					nextBox.visible = true;
+					nextBox.addList(nextList);
+				} else {
+					nextBox.visible = false;
+					nextList = toArray(nextBox.list);
+					nextBox.graphics.clear();
+					nextBox.removeAll(false);
+				}
 
-			folded = !folded;
-			trace('click fold')
-			for each (var folder:QuestView in Quest.instance.folds){
-				folder.drawParentFold();
+				folded = !folded;
+				trace('click fold')
+				for each (var folder:QuestView in Quest.instance.folds){
+					folder.drawParentFold();
+				}
+				fold.setIcon(new VLabel(folded ? '+' : '-'), {vCenter:0, hCenter:0});
 			}
-			fold.setIcon(new VLabel(folded ? '+' : '-'), {vCenter:0, hCenter:0});
+			catch (e:Error){
+				trace("Fold Error:", e, e.message, e.getStackTrace());
+			}
 		}
 
 		public function drawParentFold():void {

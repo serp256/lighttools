@@ -342,35 +342,38 @@ package {
 		 * @param e
 		 */
 		private function onClickQuest(e:*):void {
-			folds = [];
-			mainpanel.x = 0;
-			mainpanel.y = 120;
+			try {
+				folds = [];
+				mainpanel.x = 0;
+				mainpanel.y = 120;
 
-			if (questPanel){
-				mainpanel.remove(questPanel);
+				if (questPanel){
+					mainpanel.remove(questPanel);
+				}
+
+				questPanel = new VBox(null, true, 15, VBox.TL_ALIGN);
+				mainpanel.add(questPanel, {left:20, top:100});
+				var cur:VButton = e is VButton ? e : e.target as VButton;
+
+				if (flagback){
+					flagback = false;
+				} else {
+					lastButton.data = currentData;
+					lastButton.disabled = false;
+					stack.push(currentData);
+					currentData = cur.data is VOQuest ? cur.data.qname : cur.data;
+				}
+
+				var qv:QuestView = new QuestView(cur.data/*, onClickQuest*/);
+				usedVoqn = cur.data is VOQuest ? [cur.data] : [];
+				usedQV = {};
+				questPanel.add(qv);
+				//trace('start rec')
+				rec(qv, cur.data, true);
+				//trace('end rec');
+			} catch (e:Error){
+				trace("Global Error:", e, e.message, e.getStackTrace());
 			}
-
-			questPanel = new VBox(null, true, 15, VBox.TL_ALIGN);
-			mainpanel.add(questPanel, {left:20, top:100});
-			var cur:VButton = e is VButton ? e : e.target as VButton;
-
-			if (flagback){
-				flagback = false;
-			} else {
-				lastButton.data = currentData;
-				lastButton.disabled = false;
-				stack.push(currentData);
-				currentData = cur.data is VOQuest ? cur.data.qname : cur.data;
-			}
-
-			var qv:QuestView = new QuestView(cur.data/*, onClickQuest*/);
-			usedVoqn = cur.data is VOQuest ? [cur.data] : [];
-			usedQV = {};
-			questPanel.add(qv);
-			//trace('start rec')
-			rec(qv, cur.data, true);
-			//trace('end rec');
-
 		}
 
 		//флаг, что мы тычем кнопку бэк и в стек не надо добавлять эти данные
