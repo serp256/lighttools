@@ -8,6 +8,7 @@ package {
 	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
 	import flash.events.ProgressEvent;
+	import flash.geom.Point;
 	import flash.net.FileFilter;
 	import flash.net.FileReference;
 	import flash.text.TextField;
@@ -17,8 +18,6 @@ package {
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 
-	import flashx.textLayout.events.ModelChange;
-
 	import ui.UIFactory;
 
 	import ui.vbase.*;
@@ -26,6 +25,7 @@ package {
 	import vo.VOQuest;
 	[SWF(backgroundColor="0xDDFFBB" , width="680" , height="720")]
 	public class Quest extends Sprite {
+		private var startbn:VButton;
 		private var searchBox:VBaseComponent = new VBaseComponent();
 		public var mainpanel:VBaseComponent = new VBaseComponent();
 		private var fileR:FileReference = new FileReference();
@@ -36,7 +36,7 @@ package {
 
 		private var usedVoqn:Array = [];
 		private var usedQV:Object = {};
-		private var pos:int = 0;
+		private var pos:Point;
 
 
 		private var lastButton:VButton;
@@ -66,26 +66,31 @@ package {
 
 			var lb:VLabel =  new VLabel('жди!')
 			searchBox.add(lb, {left:40, top:25});
-			var button:VButton = UIFactory.createButton(AssetManager.getEmbedSkin('VToolOrangeButtonBg', VSkin.STRETCH),
+			startbn = UIFactory.createButton(AssetManager.getEmbedSkin('VToolOrangeButtonBg', VSkin.STRETCH),
 					{w:100, h:20,vCenter:0, hCenter:0}, new VLabel('жми!'), {vCenter:0, hCenter:0});
-			searchBox.add(button, {left:20, top:20});
+			searchBox.add(startbn, {left:20, top:20});
 
-			button.addClickListener(onClick);
+			startbn.addClickListener(onClick);
 
 			mainpanel.addListener(MouseEvent.MOUSE_DOWN, dragStart);
 			mainpanel.addListener(MouseEvent.MOUSE_UP, dragStop);
 			mainpanel.addListener(MouseEvent.CLICK, click);
-			searchBox.addListener(MouseEvent.CLICK, click);
+			searchBox.addListener(MouseEvent.CLICK, clickLevels);
 			//mainpanel.addListener(MouseEvent.MOUSE_WHEEL, scal);
 
 			searchBox.add(helpPanel, {hCenter:0, top:100});
 			helpPanel.visible = false;
 		}
 
+		private var isClick:Boolean = true;
+
 		private function dragStart(e:MouseEvent):void {
-			pos = mouseX + mouseY * 100;mainpanel.startDrag();
+			isClick = true;
+			pos = new Point(mouseX, mouseY);mainpanel.startDrag();
 		}
+
 		private function dragStop(e:MouseEvent):void {
+			isClick = pos.x == mouseX && pos.y == mouseY;
 			mainpanel.stopDrag();
 		}
 
@@ -112,8 +117,6 @@ package {
 		 * @param e
 		 */
 		private function onClick(e:MouseEvent):void{
-
-			e.target.visible = false;
 			var filter:FileFilter = new FileFilter("Quests.conf", "*.conf;*.conf.example");
 			fileR.browse([filter]);
 			fileR.addEventListener(Event.SELECT, selectHandler);
@@ -122,8 +125,19 @@ package {
 
 		}
 
+		/**
+		 * клик по борде
+		 * @param e
+		 */
 		private function click(e:MouseEvent):void {
-			if (e.target is VButton){
+			if (isClick && e.target is VButton){
+				if (e.target.data != null){
+					onClickQuest(e.target);
+				}
+			}
+		}
+		private function clickLevels(e:MouseEvent):void {
+			if (e.target is VButton && !(e.target == lastButton)){
 				if (e.target.data != null){
 					onClickQuest(e.target);
 				}
@@ -135,6 +149,9 @@ package {
 		 * @param e
 		 */
 		private function selectHandler(e:Event):void{
+			startbn.visible = false;
+			startbn.removeListener(MouseEvent.CLICK, onClick);
+			startbn.dispose();
 			fileR.load();
 		}
 
@@ -295,15 +312,30 @@ package {
 		private function addFold(bn:VButton):void {
 			bn.skin.setLayout({w:16, h:16});
 			bn.icon.setLayout({w:16, h:16});
-			bn.geometryPhase();
-			bn.addListener(MouseEvent.MOUSE_OVER, function(e:MouseEvent):void{bn.skin.setLayout({w:200});bn.icon.setLayout({w:200});(bn.parent as VBox).geometryPhase();});
-			bn.addListener(MouseEvent.MOUSE_OUT, function(e:MouseEvent):void{bn.skin.setLayout({w:16});bn.icon.setLayout({w:16});(bn.parent as VBox).geometryPhase();});
+			//bn.geometryPhase();
+			bn.addListener(MouseEvent.MOUSE_OVER, foldOn);
+			bn.addListener(MouseEvent.MOUSE_OUT, foldOff);
 			if (usedQV[bn.data]){
 				usedQV[bn.data].push(bn);
 			} else {
 				usedQV[bn.data] = [bn];
 			}
  		}
+
+		private function foldOn(e:MouseEvent):void {
+			var bn:VButton = e.target as VButton;
+			bn.icon.setLayout({w:0});
+			//bn.icon.geometryPhase();
+			bn.skin.setLayout({w:bn.icon.contentWidth + 5});
+			//(bn.parent as VBox).geometryPhase();
+		}
+		private function foldOff(e:MouseEvent):void {
+			var bn:VButton = e.target as VButton;
+			bn.skin.setLayout({w:16});
+			bn.icon.setLayout({w:16});
+			//(bn.parent as VBox).geometryPhase();
+
+		}
 
 		/**
 		 * клик по любому квесту
@@ -383,7 +415,7 @@ package {
 					} else {
 						qv.button.setSkin(AssetManager.getEmbedSkin('VToolBlueButtonBg', VSkin.STRETCH | VSkin.CONTAIN), {h:30, vCenter:0, hCenter:0, w:50});
 						qv.button.skin.setLayout({w:qv.button.icon.contentWidth+20})
-						qv.geometryPhase();
+						//qv.geometryPhase();
 
 						if (usedQV[voq]){
 							for each (var button:VButton in usedQV[voq]){
@@ -410,7 +442,7 @@ package {
 
 						if (quests[button.data] && quests[button.data] != parentvoq){
 							button.data = quests[button.data];
-							button.addClickListener(onClickQuest);
+							//button.addClickListener(onClickQuest);
 							prev.push(button);
 							addFold(button);
 						}
