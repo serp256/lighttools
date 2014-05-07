@@ -49,7 +49,7 @@ package {
 				}
 
 				folded = !folded;
-				trace('click fold')
+				//trace('click fold')
 				for each (var folder:QuestView in Quest.instance.folds){
 					folder.drawParentFold();
 				}
