@@ -315,11 +315,13 @@ package {
 			//bn.geometryPhase();
 			bn.addListener(MouseEvent.MOUSE_OVER, foldOn);
 			bn.addListener(MouseEvent.MOUSE_OUT, foldOff);
-			if (usedQV[bn.data]){
-				usedQV[bn.data].push(bn);
+			var index:String = (bn.data is VOQuest) ? bn.data.qname : (bn.data + 'l');
+			if (usedQV[index]){
+				usedQV[index].push(bn);
 			} else {
-				usedQV[bn.data] = [bn];
+				usedQV[index] = [bn];
 			}
+			//trace(index, usedQV[index].length)
  		}
 
 		private function foldOn(e:MouseEvent):void {
@@ -344,6 +346,8 @@ package {
 		private function onClickQuest(e:*):void {
 			try {
 				folds = [];
+				//usedQV = {};
+				//usedVoqn = [];
 				mainpanel.x = 0;
 				mainpanel.y = 120;
 
@@ -405,12 +409,13 @@ package {
 		 */
 		public function rec(qv:QuestView, voq:*, isFirst:Boolean = false, parentvoq:* = null):void {
 			var next:Array = [];
+			var button:VButton;
 			if (voq is VOQuest){
 
 				for each (var voqn:VOQuest in voq.nextQ){
 					if (usedVoqn.indexOf(voqn) == -1){
 						usedVoqn.push(voqn);
-						var qv1:QuestView = new QuestView(voqn/*, onClickQuest*/);
+						var qv1:QuestView = new QuestView(voqn);
 						//if ((voq.nextQ.length == 1) || isFirst){
 							rec(qv1, voqn, false, qv.data);
 						//}
@@ -420,10 +425,10 @@ package {
 						qv.button.skin.setLayout({w:qv.button.icon.contentWidth+20})
 						//qv.geometryPhase();
 
-						if (usedQV[voq]){
-							for each (var button:VButton in usedQV[voq]){
+						if (usedQV[voq.qname]){
+							for each (button in usedQV[voq.qname]){
 								button.setSkin(AssetManager.getEmbedSkin('VToolBlueButtonBg', VSkin.STRETCH), {h:16, vCenter:0, hCenter:0, w:16});
-								button.geometryPhase();
+								//button.geometryPhase();
 							}
 						}
 					}
@@ -445,7 +450,6 @@ package {
 
 						if (quests[button.data] && quests[button.data] != parentvoq){
 							button.data = quests[button.data];
-							//button.addClickListener(onClickQuest);
 							prev.push(button);
 							addFold(button);
 						}
@@ -456,12 +460,11 @@ package {
 					button = UIFactory.createButton(AssetManager.getEmbedSkin('VToolRedButtonBg', VSkin.STRETCH),
 							{h:30,vCenter:0, hCenter:0}, new VLabel(voq.level + ' level'), {vCenter:0, hCenter:0});
 					button.data = voq.level;
-					//button.addClickListener(onClickQuest);
 					addFold(button);
 					prev.push(button);
 				}
 
-				if (prev.length > 1 || (prev.length > 0 && isFirst)){
+				if (prev.length > 0){
 					qv.setPrev(prev);
 				}
 

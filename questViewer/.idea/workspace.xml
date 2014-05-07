@@ -69,10 +69,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="Quest.as" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="Quest.as" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/Quest.as">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="374" column="36" selection-start="10489" selection-end="10489" vertical-scroll-proportion="-15.25532" vertical-offset="4893" max-vertical-offset="8835">
+            <state line="323" column="14" selection-start="9201" selection-end="9201" vertical-scroll-proportion="0.3164983" vertical-offset="4563" max-vertical-offset="8880">
               <folding />
             </state>
           </provider>
@@ -90,16 +90,16 @@
       <file leaf-file-name="VOQuest.as" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/vo/VOQuest.as">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="13" column="0" selection-start="272" selection-end="272" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="495">
+            <state line="25" column="0" selection-start="526" selection-end="526" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="495">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="QuestView.as" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="QuestView.as" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/QuestView.as">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="51" column="18" selection-start="1659" selection-end="1659" vertical-scroll-proportion="0.33249685" vertical-offset="500" max-vertical-offset="2010">
+            <state line="51" column="18" selection-start="1659" selection-end="1659" vertical-scroll-proportion="0.0" vertical-offset="1213" max-vertical-offset="2010">
               <folding />
             </state>
           </provider>
@@ -173,9 +173,9 @@
         <option value="$PROJECT_DIR$/src/ui/UIFactory.as" />
         <option value="$PROJECT_DIR$/src/ui/vbase/VButton.as" />
         <option value="$PROJECT_DIR$/src/HelpPanel.as" />
+        <option value="$PROJECT_DIR$/src/QuestView.as" />
         <option value="$PROJECT_DIR$/src/vo/VOQuest.as" />
         <option value="$PROJECT_DIR$/src/Quest.as" />
-        <option value="$PROJECT_DIR$/src/QuestView.as" />
       </list>
     </option>
   </component>
@@ -506,11 +506,11 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1969" y="24" width="1871" height="1056" extended-state="6" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.1326425" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.1326425" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39481866" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -519,7 +519,7 @@
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.21945946" sideWeight="0.67367256" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.21945946" sideWeight="0.67367256" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="JetGradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -836,13 +836,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/vo/VOQuest.as">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="13" column="0" selection-start="272" selection-end="272" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="495">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vbase/VButton.as">
       <provider selected="true" editor-type-id="text-editor">
         <state line="132" column="33" selection-start="2969" selection-end="2969" vertical-scroll-proportion="0.0" vertical-offset="1668" max-vertical-offset="2790">
@@ -850,16 +843,23 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/Quest.as">
+    <entry file="file://$PROJECT_DIR$/src/QuestView.as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="374" column="36" selection-start="10489" selection-end="10489" vertical-scroll-proportion="-15.25532" vertical-offset="4893" max-vertical-offset="8835">
+        <state line="51" column="18" selection-start="1659" selection-end="1659" vertical-scroll-proportion="0.0" vertical-offset="1213" max-vertical-offset="2010">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/QuestView.as">
+    <entry file="file://$PROJECT_DIR$/src/vo/VOQuest.as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="51" column="18" selection-start="1659" selection-end="1659" vertical-scroll-proportion="0.33249685" vertical-offset="500" max-vertical-offset="2010">
+        <state line="25" column="0" selection-start="526" selection-end="526" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="495">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Quest.as">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="323" column="14" selection-start="9201" selection-end="9201" vertical-scroll-proportion="0.3164983" vertical-offset="4563" max-vertical-offset="8880">
           <folding />
         </state>
       </provider>
