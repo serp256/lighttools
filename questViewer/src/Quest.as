@@ -38,6 +38,7 @@ package {
 		private var usedQV:Object = {};
 		private var pos:Point;
 
+		private var kinds:Object = {};
 
 		private var lastButton:VButton;
 		private var stack:Array = [];
@@ -111,6 +112,33 @@ package {
 			mainpanel.scaleY -= delta;
 		}
 
+		private function saveKinds(e:MouseEvent):void {
+/*			mainpanel.x = 0;
+			mainpanel.y = 120;
+
+			if (questPanel){
+				mainpanel.remove(questPanel);
+			}
+
+			questPanel = new VBox(null, true, 15, VBox.TL_ALIGN);
+			mainpanel.add(questPanel, {left:20, top:100});*/
+
+			var text:String = 'Кайнды таргетов по алфавиту:';
+			var a:Array = [];
+			for (var kind:String in kinds){
+				a.push(kind + ':' + kinds[kind]);
+			}
+			a.sort();
+			for each(kind in a){
+				text += '\n' + kind;
+			}
+			var byteArray:ByteArray = new ByteArray();
+			byteArray.writeMultiByte(text, 'utf-8');
+			var fileReference:FileReference=new FileReference();
+			fileReference.save(byteArray, '.txt');
+
+			//questPanel.add(new VLabel(text));
+		}
 
 		/**
 		 * Выбор файла с конфом
@@ -169,8 +197,14 @@ package {
 			//вырезаем закомментированные строки
 			var r:RegExp = /\/\/.*?\n/;
 			str = replaceAll(r,str);
+			var obj:*;
+			try {
+				obj = JSON.parse(str);
+			} catch (e:Error) {
+				searchBox.add(new VLabel('Выбранный файл содержит ошибку!'), {left:200, top:20});
+				return;
+			}
 
-			var obj:* = JSON.parse(str);
 			for (var name:String in obj){
 				var voq:VOQuest = new VOQuest();
 				voq.qname = name;
@@ -180,6 +214,19 @@ package {
 					}
 				}
 				quests[voq.qname] = voq;
+
+				// вычитаем кайнды таргетов
+				if (obj[name]['targets']){
+					for each (var targ:Object in obj[name]['targets']){
+						if (targ.kind != ''){
+							if (kinds.hasOwnProperty(targ.kind)){
+								kinds[targ.kind]++;
+							} else {
+								kinds[targ.kind] = 1;
+							}
+						}
+					}
+				}
 			}
 
 			linkQuests();
@@ -234,6 +281,11 @@ package {
 					{w:30, h:30, vCenter:0, hCenter:0}, new VLabel('+'), {vCenter:0, hCenter:0});
 			searchBox.add(button, {left:590, top:20});
 			button.addClickListener(scalePlus);
+
+			button = UIFactory.createButton(AssetManager.getEmbedSkin('VToolOrangeButtonBg', VSkin.STRETCH),
+					{w:30, h:30, vCenter:0, hCenter:0}, new VLabel('kinds'), {vCenter:0, hCenter:0});
+			searchBox.add(button, {left:630, top:20});
+			button.addClickListener(saveKinds);
 
 		}
 
