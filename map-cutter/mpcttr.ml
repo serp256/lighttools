@@ -8,6 +8,7 @@ value suffix = ref  "";
 value scale = ref 1.;
 value gen_dds = ref False;
 value gen_pvr = ref False;
+value gamma = ref 0.;
 
 value write_utf out str =
 (
@@ -24,6 +25,7 @@ value args =
     ("-scale", Arg.Set_float scale, "\t\tScaling factor");
     ("-pvr", Arg.Set gen_pvr, "\t\tCompress to pvr");
     ("-dds", Arg.Set gen_dds, "\t\tCompress to dds");
+    ("-gamma", Arg.Set_float gamma, "\t\tGamma");
   ];
 
 Arg.parse args (fun _ -> ()) "Tool to cut large map image into small pieces to use it on mobile devices.";
@@ -99,7 +101,23 @@ let i = ref ~-1 in
           if w = !size && h = !size
           then
             (
-              Images.save (Filename.concat !outDir fname) (Some Images.Png) [] piece;
+              let save_img = Filename.concat !outDir fname in
+                match !gamma with
+                [ 0. -> Images.save save_img (Some Images.Png) [] piece
+                | _ ->  
+                    let tmp_name = (Filename.chop_extension save_img) ^ "_tmp.png" in
+                    (
+                      Images.save tmp_name (Some Images.Png) [] piece;
+                      let cmd = Printf.sprintf "convert -gamma %f %s %s" !gamma tmp_name save_img in
+                        (
+                          Printf.printf "%s\n%!" cmd;
+                          match Sys.command cmd with
+                          [ 0 -> Sys.remove tmp_name
+                          | _ -> failwith "conver gamma return non-zero"
+                          ];
+                        )
+                    )
+                ];
               !size;
             )
           else
@@ -115,31 +133,49 @@ let i = ref ~-1 in
             in
               (
                 Images.blit piece 0 0 piece' 0 0 w h;
-                Images.save (Filename.concat !outDir fname) (Some Images.Png) [] piece';
-
-                let file_name = Filename.chop_extension (Filename.concat !outDir fname) in
+                let save_img = Filename.concat !outDir fname in
                   (
-                    if !gen_dds then
-                    (
-                      Utils.dxt_png file_name;
-                      Utils.gzip_img (file_name ^ ".dds");
-                    )
-                    else ();
-                    match !gen_pvr with
-                    [ True -> 
+                    match !gamma with
+                    [ 0. -> Images.save save_img (Some Images.Png) [] piece'
+                    | _ ->  
+                        let tmp_name = (Filename.chop_extension save_img) ^ "_tmp.png" in
                         (
-                          Utils.pvr_png file_name;
-                          Utils.gzip_img (file_name ^ ".pvr");
+                          Images.save tmp_name (Some Images.Png) [] piece';
+                          let cmd = Printf.sprintf "convert -gamma %f %s %s" !gamma tmp_name save_img in
+                            (
+                              Printf.printf "%s\n%!" cmd;
+                              match Sys.command cmd with
+                              [ 0 -> Sys.remove tmp_name
+                              | _ -> failwith "conver gamma return non-zero"
+                              ];
+                            )
                         )
-                    | _ -> ()
                     ];
-
                   );
+
                 Images.destroy piece';
                 potSize;
               )
         in
           (
+            let file_name = Filename.chop_extension (Filename.concat !outDir fname) in
+              (
+                if !gen_dds then
+                (
+                  Utils.dxt_png file_name;
+                  Utils.gzip_img (file_name ^ ".dds");
+                )
+                else ();
+                match !gen_pvr with
+                [ True -> 
+                    (
+                      Utils.pvr_png file_name;
+                      Utils.gzip_img (file_name ^ ".pvr");
+                    )
+                | _ -> ()
+                ];
+
+              );
             write_utf out fname;
             IO.write_i16 out (if x <> 0 then x + pvrGap else x);
             IO.write_i16 out (if y <> 0 then y + pvrGap else y);
