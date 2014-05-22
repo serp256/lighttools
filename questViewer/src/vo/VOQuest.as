@@ -21,7 +21,8 @@ package vo {
 			share_type:*,  */
 			//maxnestinglevel:int = 0,
 			prevQ:Array = [],
-			nextQ:Array = []
+			nextQ:Array = [],
+			likeness:Object = {}
 		;
 	}
 }
