@@ -39,6 +39,7 @@ package {
 		private var pos:Point;
 
 		private var kinds:Object = {};
+		private var names:Array = [];
 
 		private var lastButton:VButton;
 		private var stack:Array = [];
@@ -197,6 +198,7 @@ package {
 			//вырезаем закомментированные строки
 			var r:RegExp = /\/\/.*?\n/;
 			str = replaceAll(r,str);
+			names = getNames(str);
 			var obj:*;
 			try {
 				obj = JSON.parse(str);
@@ -338,8 +340,24 @@ package {
 			}*/
 		}
 
-		function calcLikeness(a:String, b:String):int {
+
+		/**
+		 * Вычислим схожесть названия.
+		 *
+		 * если квест в файле стоит выше на 1 позицию, то выставляем принудительно максимум
+		 *
+		 * @param a имя квеста-родителя
+		 * @param b имя самого проверяемого на сходство квеста
+		 * @return
+		 */
+		private function calcLikeness(a:String, b:String):int {
 			var len:int = Math.min(a.length, b.length);
+
+			// принудительная вставка
+			if (names.indexOf(b) > 0 && names.indexOf(a) == names.indexOf(b) - 1){
+				return len;
+			}
+
 			for (var i:uint = 0; i < len; i++){
 				if (a.charAt(i) != b.charAt(i)){
 					//trace (a,b,i, a.charAt(i), b.charAt(i))
@@ -383,6 +401,18 @@ package {
 				s = s.replace(r, "");
 			}
 			return s;
+		}
+
+		private function getNames(s:String):Array {
+			var a:Array = s.split('\n');
+			function qnfilter(element:String, index:int, arr:Array):Boolean{
+				return element.charAt(element.length - 1) == '{';
+			}
+			a = a.filter(qnfilter);
+			for each (s in a){
+				s = s.split('"')[1];
+			}
+			return a;
 		}
 
 		/**
