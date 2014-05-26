@@ -5,7 +5,7 @@ package vo {
 //			auto_programmable:Boolean,
 			prev:Array /*of String or [String, int]*/,
 			level:uint,
-//			story:String,
+			story:String = null,
 //			icon:String,
 			nesting_level:int,
 			line:int = -1,
