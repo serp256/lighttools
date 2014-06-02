@@ -40,6 +40,7 @@ package ui {
 			if (icon) {
 				bt.setIcon(icon, iconLayout);
 			}
+			bt.skin.setLayout({w:bt.icon.measuredWidth + 20});
 			bt.changeStateFunc = (changeStateFunc != null) ? changeStateFunc : defaultButtonChangeState;
 			return bt;
 		}

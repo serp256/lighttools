@@ -72,16 +72,16 @@
       <file leaf-file-name="Quest.as" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/Quest.as">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="281" column="41" selection-start="7597" selection-end="7597" vertical-scroll-proportion="4.4086485" vertical-offset="137" max-vertical-offset="4800">
+            <state line="124" column="95" selection-start="3519" selection-end="3519" vertical-scroll-proportion="0.5249042" vertical-offset="1449" max-vertical-offset="9660">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="VInputText.as" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/ui/vbase/VInputText.as">
+      <file leaf-file-name="HelpPanel.as" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/HelpPanel.as">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="3930">
+            <state line="46" column="160" selection-start="1589" selection-end="1589" vertical-scroll-proportion="0.0" vertical-offset="478" max-vertical-offset="1275">
               <folding />
             </state>
           </provider>
@@ -90,7 +90,34 @@
       <file leaf-file-name="VOQuest.as" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/vo/VOQuest.as">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="19" column="48" selection-start="416" selection-end="416" vertical-scroll-proportion="0.0" vertical-offset="285" max-vertical-offset="450">
+            <state line="10" column="26" selection-start="235" selection-end="235" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="495">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="QuestView.as" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/QuestView.as">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="51" column="18" selection-start="1659" selection-end="1659" vertical-scroll-proportion="0.0" vertical-offset="1213" max-vertical-offset="2010">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="UIFactory.as" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/ui/UIFactory.as">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="42" column="0" selection-start="1309" selection-end="1362" vertical-scroll-proportion="0.0" vertical-offset="468" max-vertical-offset="6300">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="VInputText.as" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/ui/vbase/VInputText.as">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="211" column="161" selection-start="7116" selection-end="7116" vertical-scroll-proportion="0.0" vertical-offset="1415" max-vertical-offset="3930">
               <folding />
             </state>
           </provider>
@@ -99,61 +126,16 @@
       <file leaf-file-name="VButton.as" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/ui/vbase/VButton.as">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="4" column="0" selection-start="91" selection-end="91" vertical-scroll-proportion="0.0" vertical-offset="45" max-vertical-offset="2790">
+            <state line="132" column="33" selection-start="2969" selection-end="2969" vertical-scroll-proportion="0.0" vertical-offset="1668" max-vertical-offset="2790">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="LayoutPanel.as" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/ui/vtool/LayoutPanel.as">
+      <file leaf-file-name="VBaseComponent.as" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/ui/vbase/VBaseComponent.as">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="397" max-vertical-offset="1335">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="library.swf" pinned="false" current="false" current-in-tab="false">
-        <entry file="jar://$USER_HOME$/lib/flex_sdk_4.6/frameworks/libs/player/11.1/playerglobal.swc!/library.swf">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="4823" column="25" selection-start="206882" selection-end="206882" vertical-scroll-proportion="0.0" vertical-offset="72037" max-vertical-offset="144420">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="VToolPanel.as" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/ui/vtool/VToolPanel.as">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="155" column="38" selection-start="5023" selection-end="5038" vertical-scroll-proportion="0.0" vertical-offset="2325" max-vertical-offset="3630">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="CapturePanel.as" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/ui/vtool/CapturePanel.as">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="26" column="48" selection-start="1277" selection-end="1277" vertical-scroll-proportion="0.0" vertical-offset="199" max-vertical-offset="3480">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="VScrollBar.as" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/ui/vbase/VScrollBar.as">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="27" column="29" selection-start="709" selection-end="719" vertical-scroll-proportion="0.0" vertical-offset="220" max-vertical-offset="2970">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="VBox.as" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/ui/vbase/VBox.as">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="2" column="17" selection-start="34" selection-end="34" vertical-scroll-proportion="0.0" vertical-offset="30" max-vertical-offset="5175">
+            <state line="407" column="24" selection-start="11962" selection-end="11962" vertical-scroll-proportion="0.0" vertical-offset="6105" max-vertical-offset="8550">
               <folding />
             </state>
           </provider>
@@ -183,23 +165,25 @@
         <option value="$PROJECT_DIR$/src/Jps.as" />
         <option value="$PROJECT_DIR$/src/ui/common/AvatarPanel.as" />
         <option value="$PROJECT_DIR$/src/ui/Style.as" />
-        <option value="$PROJECT_DIR$/src/ui/UIFactory.as" />
-        <option value="$PROJECT_DIR$/src/ui/vbase/VButton.as" />
         <option value="$PROJECT_DIR$/src/ui/vbase/AssetManager.as" />
         <option value="$PROJECT_DIR$/src/ui/PQuest.as" />
         <option value="$PROJECT_DIR$/src/ui/VOQuest.as" />
         <option value="$PROJECT_DIR$/src/ui/vtool/ComponentPanel.as" />
         <option value="$PROJECT_DIR$/src/ui/vbase/VGridPanel.as" />
+        <option value="$PROJECT_DIR$/src/ui/UIFactory.as" />
+        <option value="$PROJECT_DIR$/src/ui/vbase/VButton.as" />
+        <option value="$PROJECT_DIR$/src/HelpPanel.as" />
+        <option value="$PROJECT_DIR$/src/QuestView.as" />
         <option value="$PROJECT_DIR$/src/vo/VOQuest.as" />
         <option value="$PROJECT_DIR$/src/Quest.as" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="48" />
-    <option name="y" value="-4" />
-    <option name="width" value="1873" />
-    <option name="height" value="1085" />
+    <option name="x" value="49" />
+    <option name="y" value="24" />
+    <option name="width" value="1871" />
+    <option name="height" value="1056" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -238,6 +222,106 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
             </PATH_ELEMENT>
           </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jps" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="questViewer" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jps" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="questViewer" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jps" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="questViewer" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ui" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jps" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="questViewer" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ui" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="vbase" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jps" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="questViewer" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="lib" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jps" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="questViewer" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="lib" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="embed" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="VTool.swc" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiFileNode" />
+            </PATH_ELEMENT>
+          </PATH>
         </subPane>
       </pane>
       <pane id="Scope" />
@@ -257,18 +341,21 @@
     <property name="GoToClass.includeLibraries" value="false" />
     <property name="options.searchVisible" value="true" />
     <property name="options.splitter.details.proportions" value="0.2" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/lib/playerglobal.swc!/" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/lib" />
     <property name="project.structure.last.edited" value="Libraries" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="FullScreen" value="false" />
+    <property name="LayoutCode.rearrangeEntriesECMA Script Level 4" value="false" />
   </component>
   <component name="RecentsManager">
     <key name="CreateActionScriptClassDialog.DESTINATION_PACKAGE_RECENT_KEY">
+      <recent name="" />
       <recent name="ui" />
       <recent name="view" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src" />
       <recent name="$PROJECT_DIR$/src/finders" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
@@ -418,16 +505,17 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="48" y="-4" width="1873" height="1085" extended-state="6" />
-    <editor active="false" />
+    <frame x="49" y="24" width="1871" height="1056" extended-state="6" />
+    <editor active="true" />
     <layout>
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4238342" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.27357513" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.1326425" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.21945946" sideWeight="0.67367256" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.21945946" sideWeight="0.67367256" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39481866" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
@@ -437,7 +525,6 @@
       <window_info id="JetGradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.307772" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24940048" sideWeight="0.6717687" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -462,7 +549,7 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="4" />
+      <option name="time" value="5" />
     </breakpoint-manager>
   </component>
   <component name="antWorkspaceConfiguration">
@@ -470,53 +557,14 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/vo/VOQuest.as">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="48" selection-start="416" selection-end="416" vertical-scroll-proportion="0.0" vertical-offset="285" max-vertical-offset="450">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/ui/vbase/VButton.as">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="4" column="0" selection-start="91" selection-end="91" vertical-scroll-proportion="0.0" vertical-offset="45" max-vertical-offset="2790">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/ui/vtool/LayoutPanel.as">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="397" max-vertical-offset="1335">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/lib/flex_sdk_4.6/frameworks/libs/player/11.1/playerglobal.swc!/library.swf">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="4823" column="25" selection-start="206882" selection-end="206882" vertical-scroll-proportion="0.0" vertical-offset="72037" max-vertical-offset="144420">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/ui/vtool/VToolPanel.as">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="155" column="38" selection-start="5023" selection-end="5038" vertical-scroll-proportion="0.0" vertical-offset="2325" max-vertical-offset="3630">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vtool/CapturePanel.as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="26" column="48" selection-start="1277" selection-end="1277" vertical-scroll-proportion="0.0" vertical-offset="199" max-vertical-offset="3480">
-          <folding />
-        </state>
+        <state line="26" column="48" selection-start="1277" selection-end="1277" vertical-scroll-proportion="0.0" vertical-offset="199" max-vertical-offset="3480" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vbase/VScrollBar.as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="27" column="29" selection-start="709" selection-end="719" vertical-scroll-proportion="0.0" vertical-offset="220" max-vertical-offset="2970">
-          <folding />
-        </state>
+        <state line="27" column="29" selection-start="709" selection-end="719" vertical-scroll-proportion="0.0" vertical-offset="220" max-vertical-offset="2970" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vbase/VBox.as">
@@ -545,9 +593,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vtool/LayoutPanel.as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="765" max-vertical-offset="1335">
-          <folding />
-        </state>
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="765" max-vertical-offset="1335" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vtool/ComponentPanel.as">
@@ -557,23 +603,17 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vtool/VToolPanel.as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="155" column="38" selection-start="5023" selection-end="5038" vertical-scroll-proportion="0.0" vertical-offset="2194" max-vertical-offset="3630">
-          <folding />
-        </state>
+        <state line="155" column="38" selection-start="5023" selection-end="5038" vertical-scroll-proportion="0.0" vertical-offset="2194" max-vertical-offset="3630" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vtool/CapturePanel.as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="26" column="48" selection-start="1277" selection-end="1277" vertical-scroll-proportion="0.0" vertical-offset="199" max-vertical-offset="3480">
-          <folding />
-        </state>
+        <state line="26" column="48" selection-start="1277" selection-end="1277" vertical-scroll-proportion="0.0" vertical-offset="199" max-vertical-offset="3480" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vbase/VScrollBar.as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="27" column="29" selection-start="709" selection-end="719" vertical-scroll-proportion="0.0" vertical-offset="220" max-vertical-offset="2970">
-          <folding />
-        </state>
+        <state line="27" column="29" selection-start="709" selection-end="719" vertical-scroll-proportion="0.0" vertical-offset="220" max-vertical-offset="2970" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vbase/VBox.as">
@@ -702,32 +742,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/ui/UIFactory.as">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="345" column="46" selection-start="10418" selection-end="10445" vertical-scroll-proportion="0.0" vertical-offset="2141" max-vertical-offset="6285">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/ui/vbase/VScrollBar.as">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="27" column="29" selection-start="709" selection-end="719" vertical-scroll-proportion="0.0" vertical-offset="220" max-vertical-offset="2970">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vtool/VToolPanel.as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="155" column="38" selection-start="5023" selection-end="5038" vertical-scroll-proportion="0.0" vertical-offset="2194" max-vertical-offset="3630">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/ui/vtool/CapturePanel.as">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="26" column="48" selection-start="1277" selection-end="1277" vertical-scroll-proportion="0.0" vertical-offset="199" max-vertical-offset="3480">
-          <folding />
-        </state>
+        <state line="155" column="38" selection-start="5023" selection-end="5038" vertical-scroll-proportion="0.0" vertical-offset="2194" max-vertical-offset="3630" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vbase/VLabel.as">
@@ -740,18 +757,9 @@
         <state line="26" column="54" selection-start="1253" selection-end="1253" vertical-scroll-proportion="0.36780384" vertical-offset="45" max-vertical-offset="6630" />
       </provider>
     </entry>
-    <entry file="jar://$USER_HOME$/lib/flex_sdk_4.6/frameworks/libs/player/11.1/playerglobal.swc!/library.swf">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="4823" column="25" selection-start="206882" selection-end="206882" vertical-scroll-proportion="0.0" vertical-offset="72037" max-vertical-offset="144420">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vtool/LayoutPanel.as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1335">
-          <folding />
-        </state>
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1335" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vbase/VGridPanel.as">
@@ -759,42 +767,99 @@
         <state line="421" column="86" selection-start="10178" selection-end="10178" vertical-scroll-proportion="0.0" vertical-offset="5549" max-vertical-offset="6465" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/ui/vbase/VInputText.as">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="3930">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/GridConnector.as">
       <provider selected="true" editor-type-id="text-editor">
         <state line="186" column="24" selection-start="5289" selection-end="5289" vertical-scroll-proportion="0.2196162" vertical-offset="2584" max-vertical-offset="3645" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/ui/vbase/VBox.as">
+    <entry file="file://$PROJECT_DIR$/src/ui/FilterPanel.as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="2" column="17" selection-start="34" selection-end="34" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="5175">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="938" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ui/vtool/CapturePanel.as">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="44" column="33" selection-start="1873" selection-end="1873" vertical-scroll-proportion="0.0" vertical-offset="199" max-vertical-offset="3480" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ui/vbase/VInputText.as">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="211" column="161" selection-start="7116" selection-end="7116" vertical-scroll-proportion="0.0" vertical-offset="1415" max-vertical-offset="3930">
           <folding />
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/ui/vbase/VBox.as">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="34" column="24" selection-start="1067" selection-end="1067" vertical-scroll-proportion="0.3323442" vertical-offset="286" max-vertical-offset="5175">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$USER_HOME$/lib/flex_sdk_4.6/frameworks/libs/player/11.1/playerglobal.swc!/library.swf">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="206" column="23" selection-start="8640" selection-end="8640" vertical-scroll-proportion="0.33282906" vertical-offset="2870" max-vertical-offset="144420">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ui/UIFactory.as">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="42" column="0" selection-start="1309" selection-end="1362" vertical-scroll-proportion="0.0" vertical-offset="198" max-vertical-offset="6300">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ui/vbase/VBaseComponent.as">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="407" column="24" selection-start="11962" selection-end="11962" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="8550">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ui/vbase/VScrollBar.as">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="66" column="88" selection-start="2166" selection-end="2166" vertical-scroll-proportion="-1.098081" vertical-offset="2020" max-vertical-offset="2970" />
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/vbase/VButton.as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="4" column="0" selection-start="91" selection-end="91" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2790">
+        <state line="132" column="33" selection-start="2969" selection-end="2969" vertical-scroll-proportion="0.0" vertical-offset="1668" max-vertical-offset="2790">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Quest (копия).as">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="95" column="24" selection-start="2727" selection-end="2727" vertical-scroll-proportion="0.89612013" vertical-offset="709" max-vertical-offset="5520">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/vo/VOQuest.as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="48" selection-start="416" selection-end="416" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="450">
+        <state line="10" column="26" selection-start="235" selection-end="235" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="495">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/QuestView.as">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="51" column="18" selection-start="1659" selection-end="1659" vertical-scroll-proportion="0.0" vertical-offset="1213" max-vertical-offset="2010">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/HelpPanel.as">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="46" column="160" selection-start="1589" selection-end="1589" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1275">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Quest.as">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="281" column="41" selection-start="7597" selection-end="7597" vertical-scroll-proportion="4.4086485" vertical-offset="137" max-vertical-offset="4800">
+        <state line="124" column="95" selection-start="3519" selection-end="3519" vertical-scroll-proportion="0.5249042" vertical-offset="1449" max-vertical-offset="9660">
           <folding />
         </state>
       </provider>
@@ -851,11 +916,12 @@
       </state>
       <state key="ModuleStructureConfigurable.UI">
         <settings>
-          <last-edited>QuestViewer|QuestViewer</last-edited>
+          <last-edited>QuestViewer</last-edited>
           <splitter-proportions>
             <option name="proportions">
               <list>
                 <option value="0.2" />
+                <option value="0.6" />
               </list>
             </option>
           </splitter-proportions>
@@ -875,7 +941,7 @@
       </state>
       <state key="ProjectLibrariesConfigurable.UI">
         <settings>
-          <last-edited>VTool</last-edited>
+          <last-edited>embed</last-edited>
           <splitter-proportions>
             <option name="proportions">
               <list>

@@ -24,10 +24,10 @@ package ui.vbase {
 			mouseChildren = false;
 			buttonMode = true;
 			
-			addListener(MouseEvent.ROLL_OVER, onMouseHandler);
+			/*addListener(MouseEvent.ROLL_OVER, onMouseHandler);
 			addListener(MouseEvent.ROLL_OUT, onMouseHandler);
 			addListener(MouseEvent.MOUSE_DOWN, onMouseHandler);
-			addListener(MouseEvent.MOUSE_UP, onMouseHandler);
+			addListener(MouseEvent.MOUSE_UP, onMouseHandler); */
 		}
 		
 		/**
