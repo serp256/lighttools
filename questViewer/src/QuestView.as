@@ -5,7 +5,6 @@ package {
 	import ui.vbase.*;
 
 	import vo.VOQuest;
-	import vo.VOQuest;
 
 	public class QuestView extends VBaseComponent{
 
@@ -20,14 +19,14 @@ package {
 		private var nextList:Array = [];
 		//public var parentFold:QuestView;
 
-		public function QuestView(data:*, callback:Function) {
+		public function QuestView(data:*/*, callback:Function*/) {
 			this.data = data;
 			var skin:String = data is VOQuest && data.nextQ.length == 0 ? 'VToolRedButtonBg' : 'VToolGreenButtonBg';
 			button = UIFactory.createButton(AssetManager.getEmbedSkin(skin, VSkin.STRETCH | VSkin.CONTAIN),
 					{h:30, vCenter:0, hCenter:0}, new VLabel(
-							data is VOQuest ? data.qname /*+ data.maxnestinglevel*/ : 'level ' + data), {vCenter:0, hCenter:0});
+							data is VOQuest ? (data.line == -1? '' : '<span fontWeight="bold" color="#3333FF">[' + data.line + ']</span>') + '<span color="#' + (data.story ? '3333FF' : '000000') + '">' + data.qname + '</span>'/*+ data.maxnestinglevel*/ : (data == 0 ? 'no level, no prev' : 'level ' + data)), {vCenter:0, hCenter:0});
 			button.data = data;
-			button.addClickListener(callback);
+			//button.addClickListener(callback);
 
 			add(container);
 			btBox.addList([button]);
@@ -38,22 +37,27 @@ package {
 		 * Свернуть/развернуть
 		 */
 		public function clickFold(e:MouseEvent):void {
-			if (folded){
-				nextBox.visible = true;
-				nextBox.addList(nextList);
-			} else {
-				nextBox.visible = false;
- 				nextList = toArray(nextBox.list);
-				nextBox.graphics.clear();
-				nextBox.removeAll(false);
-			}
+			try {
+				if (folded){
+					nextBox.visible = true;
+					nextBox.addList(nextList);
+				} else {
+					nextBox.visible = false;
+					nextList = toArray(nextBox.list);
+					nextBox.graphics.clear();
+					nextBox.removeAll(false);
+				}
 
-			folded = !folded;
-			trace('click fold')
-			for each (var folder:QuestView in Quest.instance.folds){
-				folder.drawParentFold();
+				folded = !folded;
+				//trace('click fold')
+				for each (var folder:QuestView in Quest.instance.folds){
+					folder.drawParentFold();
+				}
+				fold.setIcon(new VLabel(folded ? '+' : '-'), {vCenter:0, hCenter:0});
 			}
-			fold.setIcon(new VLabel(folded ? '+' : '-'), {vCenter:0, hCenter:0});
+			catch (e:Error){
+				trace("Fold Error:", e, e.message, e.getStackTrace());
+			}
 		}
 
 		public function drawParentFold():void {

@@ -5,12 +5,12 @@ package vo {
 //			auto_programmable:Boolean,
 			prev:Array /*of String or [String, int]*/,
 			level:uint,
-//			story:String,
+			story:String = null,
 //			icon:String,
 			nesting_level:int,
+			line:int = -1,
 /*			prize:Array,
 			targets:Array,
-			line:int,
 			drop:Array,
 			monsters_probability:Object,
 			story_line:String,
@@ -21,7 +21,8 @@ package vo {
 			share_type:*,  */
 			//maxnestinglevel:int = 0,
 			prevQ:Array = [],
-			nextQ:Array = []
+			nextQ:Array = [],
+			likeness:Object = {}
 		;
 	}
 }

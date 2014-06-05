@@ -58,7 +58,7 @@ package {
 
 			var boxlist:Array = [];
 
-			boxlist.push(new VLabel('<p fontWeight="bold">Тулза для визуализации дерева квестов.</p><br/><br/>Кнопки вверху предназначены для навигации и поиска.<br/>Второй ряд - это уровни, на которых открываются квесты без превов.<br/>Зависимости идут сверху вниз<br/><br/>'));
+			boxlist.push(new VLabel('<p fontWeight="bold">Тулза для визуализации дерева квестов.</p><br/><br/>Кнопки вверху предназначены для навигации и поиска.<br/>Второй ряд - это уровни, на которых открываются квесты без превов.<br/>Зависимости идут сверху вниз<br/><span fontWeight="bold" color="#3333FF">[7]</span> - номер лайна.<br/><span color="#3333FF"> есть стори |</span>| нет стори<br/><br/>'));
 
 			for (var i:uint = 0; i < buttons.length; i++){
 				addHelp(buttons[i], blayouts[i], texts[i], boxlist);

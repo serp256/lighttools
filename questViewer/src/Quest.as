@@ -8,6 +8,7 @@ package {
 	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
 	import flash.events.ProgressEvent;
+	import flash.geom.Point;
 	import flash.net.FileFilter;
 	import flash.net.FileReference;
 	import flash.text.TextField;
@@ -24,6 +25,7 @@ package {
 	import vo.VOQuest;
 	[SWF(backgroundColor="0xDDFFBB" , width="680" , height="720")]
 	public class Quest extends Sprite {
+		private var startbn:VButton;
 		private var searchBox:VBaseComponent = new VBaseComponent();
 		public var mainpanel:VBaseComponent = new VBaseComponent();
 		private var fileR:FileReference = new FileReference();
@@ -34,8 +36,10 @@ package {
 
 		private var usedVoqn:Array = [];
 		private var usedQV:Object = {};
-		private var pos:int = 0;
+		private var pos:Point;
 
+		private var kinds:Object = {};
+		private var names:Array = [];
 
 		private var lastButton:VButton;
 		private var stack:Array = [];
@@ -64,40 +68,84 @@ package {
 
 			var lb:VLabel =  new VLabel('жди!')
 			searchBox.add(lb, {left:40, top:25});
-			var button:VButton = UIFactory.createButton(AssetManager.getEmbedSkin('VToolOrangeButtonBg', VSkin.STRETCH),
+			startbn = UIFactory.createButton(AssetManager.getEmbedSkin('VToolOrangeButtonBg', VSkin.STRETCH),
 					{w:100, h:20,vCenter:0, hCenter:0}, new VLabel('жми!'), {vCenter:0, hCenter:0});
-			searchBox.add(button, {left:20, top:20});
+			searchBox.add(startbn, {left:20, top:20});
 
-			button.addClickListener(onClick);
+			startbn.addClickListener(onClick);
 
 			mainpanel.addListener(MouseEvent.MOUSE_DOWN, dragStart);
 			mainpanel.addListener(MouseEvent.MOUSE_UP, dragStop);
-			mainpanel.addListener(MouseEvent.MOUSE_WHEEL, scal);
+			mainpanel.addListener(MouseEvent.CLICK, click);
+			searchBox.addListener(MouseEvent.CLICK, clickLevels);
+			//mainpanel.addListener(MouseEvent.MOUSE_WHEEL, scal);
 
 			searchBox.add(helpPanel, {hCenter:0, top:100});
 			helpPanel.visible = false;
 		}
 
+		private var isClick:Boolean = true;
+
 		private function dragStart(e:MouseEvent):void {
-			pos = mouseX + mouseY * 100;mainpanel.startDrag();
+			isClick = true;
+			pos = new Point(mouseX, mouseY);mainpanel.startDrag();
 		}
+
 		private function dragStop(e:MouseEvent):void {
+			isClick = pos.x == mouseX && pos.y == mouseY;
 			mainpanel.stopDrag();
 		}
+
+		private static const SCALE:Number = 0.05;
+
+		private function scaleMinus(e:MouseEvent):void {
+			mainpanel.scaleX -= SCALE;
+			mainpanel.scaleY -= SCALE;
+		}
+		private function scalePlus(e:MouseEvent):void {
+			mainpanel.scaleX += SCALE;
+			mainpanel.scaleY += SCALE;
+		}
+
 		private function scal(e:MouseEvent):void {
 			var delta:Number = 0.02 * (e.delta < 0 ? 1 : -1);
 			mainpanel.scaleX -= delta;
 			mainpanel.scaleY -= delta;
 		}
 
+		private function saveKinds(e:MouseEvent):void {
+/*			mainpanel.x = 0;
+			mainpanel.y = 120;
+
+			if (questPanel){
+				mainpanel.remove(questPanel);
+			}
+
+			questPanel = new VBox(null, true, 15, VBox.TL_ALIGN);
+			mainpanel.add(questPanel, {left:20, top:100});*/
+
+			var text:String = 'Кайнды таргетов по алфавиту:';
+			var a:Array = [];
+			for (var kind:String in kinds){
+				a.push(kind + ':' + kinds[kind]);
+			}
+			a.sort();
+			for each(kind in a){
+				text += '\n' + kind;
+			}
+			var byteArray:ByteArray = new ByteArray();
+			byteArray.writeMultiByte(text, 'utf-8');
+			var fileReference:FileReference=new FileReference();
+			fileReference.save(byteArray, '.txt');
+
+			//questPanel.add(new VLabel(text));
+		}
 
 		/**
 		 * Выбор файла с конфом
 		 * @param e
 		 */
 		private function onClick(e:MouseEvent):void{
-
-			e.target.visible = false;
 			var filter:FileFilter = new FileFilter("Quests.conf", "*.conf;*.conf.example");
 			fileR.browse([filter]);
 			fileR.addEventListener(Event.SELECT, selectHandler);
@@ -107,10 +155,32 @@ package {
 		}
 
 		/**
+		 * клик по борде
+		 * @param e
+		 */
+		private function click(e:MouseEvent):void {
+			if (isClick && e.target is VButton){
+				if (e.target.data != null){
+					onClickQuest(e.target);
+				}
+			}
+		}
+		private function clickLevels(e:MouseEvent):void {
+			if (e.target is VButton && !(e.target == lastButton)){
+				if (e.target.data != null){
+					onClickQuest(e.target);
+				}
+			}
+		}
+
+		/**
 		 * Загрузка файла
 		 * @param e
 		 */
 		private function selectHandler(e:Event):void{
+			startbn.visible = false;
+			startbn.removeListener(MouseEvent.CLICK, onClick);
+			startbn.dispose();
 			fileR.load();
 		}
 
@@ -128,8 +198,16 @@ package {
 			//вырезаем закомментированные строки
 			var r:RegExp = /\/\/.*?\n/;
 			str = replaceAll(r,str);
+			names = getNames(str);
+			var obj:*;
+			try {
+				obj = JSON.parse(str);
+			} catch (e:Error) {
+				trace (e, e.message, e.name, e.getStackTrace());
+				searchBox.add(new VLabel('Выбранный файл содержит ошибку!'), {left:200, top:20});
+				return;
+			}
 
-			var obj:* = JSON.parse(str);
 			for (var name:String in obj){
 				var voq:VOQuest = new VOQuest();
 				voq.qname = name;
@@ -139,6 +217,19 @@ package {
 					}
 				}
 				quests[voq.qname] = voq;
+
+				// вычитаем кайнды таргетов
+				if (obj[name]['targets']){
+					for each (var targ:Object in obj[name]['targets']){
+						if (targ.kind != ''){
+							if (kinds.hasOwnProperty(targ.kind)){
+								kinds[targ.kind]++;
+							} else {
+								kinds[targ.kind] = 1;
+							}
+						}
+					}
+				}
 			}
 
 			linkQuests();
@@ -173,16 +264,31 @@ package {
 
 			button = UIFactory.createButton(AssetManager.getEmbedSkin('VToolOrangeButtonBg', VSkin.STRETCH),
 					{w:150, h:30, vCenter:0, hCenter:0}, new VLabel('сохр'), {vCenter:0, hCenter:0});
-			searchBox.add(button, {left:550, top:20});
+			searchBox.add(button, {left:500, top:20});
 			button.addClickListener(onClickSave);
 
 			stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp);
 
 			lastButton = UIFactory.createButton(AssetManager.getEmbedSkin('VToolOrangeButtonBg', VSkin.STRETCH),
 					{w:150, h:30, vCenter:0, hCenter:0}, new VLabel('назад'), {vCenter:0, hCenter:0});
-			searchBox.add(lastButton, {left:480, top:20});
+			searchBox.add(lastButton, {left:440, top:20});
 			lastButton.addClickListener(onClickBack);
 			lastButton.disabled = true;
+
+			searchBox.add(new VLabel('Масштаб'), {left:565, top:8});
+			button = UIFactory.createButton(AssetManager.getEmbedSkin('VToolOrangeButtonBg', VSkin.STRETCH),
+					{w:30, h:30, vCenter:0, hCenter:0}, new VLabel('-'), {vCenter:0, hCenter:0});
+			searchBox.add(button, {left:560, top:20});
+			button.addClickListener(scaleMinus);
+			button = UIFactory.createButton(AssetManager.getEmbedSkin('VToolOrangeButtonBg', VSkin.STRETCH),
+					{w:30, h:30, vCenter:0, hCenter:0}, new VLabel('+'), {vCenter:0, hCenter:0});
+			searchBox.add(button, {left:590, top:20});
+			button.addClickListener(scalePlus);
+
+			button = UIFactory.createButton(AssetManager.getEmbedSkin('VToolOrangeButtonBg', VSkin.STRETCH),
+					{w:30, h:30, vCenter:0, hCenter:0}, new VLabel('kinds'), {vCenter:0, hCenter:0});
+			searchBox.add(button, {left:630, top:20});
+			button.addClickListener(saveKinds);
 
 		}
 
@@ -212,11 +318,53 @@ package {
 							}
 							if (voq1 && voq1.qname == voq.qname){
 								voq.nextQ.push(voq2);
+								voq2.likeness[voq.qname] = calcLikeness(voq.qname, voq2.qname);
 							}
 						}
 					}
 				}
+
+				//voq.nextQ.sortOn('likeness', Array.NUMERIC);
+				voq.nextQ.sortOn('qname', Array.CASEINSENSITIVE);
 			}
+
+/*			for (var qname:String in quests){
+				var str:String = qname + ':'
+				voq = quests[qname];
+
+				for each (voq1 in voq.nextQ){
+					str += voq1.qname + ' '
+				}
+				if (voq.nextQ.length > 1)
+				trace(str)
+			}*/
+		}
+
+
+		/**
+		 * Вычислим схожесть названия.
+		 *
+		 * если квест в файле стоит выше на 1 позицию, то выставляем принудительно максимум
+		 *
+		 * @param a имя квеста-родителя
+		 * @param b имя самого проверяемого на сходство квеста
+		 * @return
+		 */
+		private function calcLikeness(a:String, b:String):int {
+			var len:int = Math.min(a.length, b.length);
+
+			// принудительная вставка
+			if (names.indexOf(b) > 0 && names.indexOf(a) == names.indexOf(b) - 1){
+				return len;
+			}
+
+			for (var i:uint = 0; i < len; i++){
+				if (a.charAt(i) != b.charAt(i)){
+					//trace (a,b,i, a.charAt(i), b.charAt(i))
+					return i;
+				}
+			}
+			return 0;
 		}
 
 		/**
@@ -232,6 +380,7 @@ package {
 			}
 			levels.sort(Array.NUMERIC);
 			var arr:Array = [];
+			arr.push(createQuestButton(0));
 			for each (var i:uint in levels){
 				arr.push(createQuestButton(i));
 			}
@@ -254,6 +403,18 @@ package {
 			return s;
 		}
 
+		private function getNames(s:String):Array {
+			var a:Array = s.split('\n');
+			function qnfilter(element:String, index:int, arr:Array):Boolean{
+				return element.charAt(element.length - 1) == '{';
+			}
+			a = a.filter(qnfilter);
+			for each (s in a){
+				s = s.split('"')[1];
+			}
+			return a;
+		}
+
 		/**
 		 * Делаем, чтобы кнопочка доп. зависимости кукожилась по наведению
 		 * @param bn
@@ -261,50 +422,70 @@ package {
 		private function addFold(bn:VButton):void {
 			bn.skin.setLayout({w:16, h:16});
 			bn.icon.setLayout({w:16, h:16});
-			bn.geometryPhase();
-			bn.addListener(MouseEvent.MOUSE_OVER, function(e:MouseEvent):void{bn.skin.setLayout({w:200});bn.icon.setLayout({w:200});(bn.parent as VBox).geometryPhase();});
-			bn.addListener(MouseEvent.MOUSE_OUT, function(e:MouseEvent):void{bn.skin.setLayout({w:16});bn.icon.setLayout({w:16});(bn.parent as VBox).geometryPhase();});
-			if (usedQV[bn.data]){
-				usedQV[bn.data].push(bn);
+			//bn.geometryPhase();
+			bn.addListener(MouseEvent.MOUSE_OVER, foldOn);
+			bn.addListener(MouseEvent.MOUSE_OUT, foldOff);
+			var index:String = (bn.data is VOQuest) ? bn.data.qname : (bn.data + 'l');
+			if (usedQV[index]){
+				usedQV[index].push(bn);
 			} else {
-				usedQV[bn.data] = [bn];
+				usedQV[index] = [bn];
 			}
+			//trace(index, usedQV[index].length)
  		}
+
+		private function foldOn(e:MouseEvent):void {
+			var bn:VButton = e.target as VButton;
+			bn.icon.setLayout({w:0});
+			//bn.icon.geometryPhase();
+			bn.skin.setLayout({w:bn.icon.contentWidth + 5});
+			//(bn.parent as VBox).geometryPhase();
+		}
+		private function foldOff(e:MouseEvent):void {
+			var bn:VButton = e.target as VButton;
+			bn.skin.setLayout({w:16});
+			bn.icon.setLayout({w:16});
+			//(bn.parent as VBox).geometryPhase();
+
+		}
 
 		/**
 		 * клик по любому квесту
 		 * @param e
 		 */
 		private function onClickQuest(e:*):void {
-			folds = [];
-			mainpanel.x = 0;
-			mainpanel.y = 120;
+			try {
+				folds = [];
+				//usedQV = {};
+				//usedVoqn = [];
+				mainpanel.x = 0;
+				mainpanel.y = 120;
 
-			if (questPanel){
-				mainpanel.remove(questPanel);
+				if (questPanel){
+					mainpanel.remove(questPanel);
+				}
+
+				questPanel = new VBox(null, true, 15, VBox.TL_ALIGN);
+				mainpanel.add(questPanel, {left:20, top:100});
+				var cur:VButton = e is VButton ? e : e.target as VButton;
+
+				if (flagback){
+					flagback = false;
+				} else {
+					lastButton.data = currentData;
+					lastButton.disabled = false;
+					stack.push(currentData);
+					currentData = cur.data is VOQuest ? cur.data.qname : cur.data;
+				}
+
+				var qv:QuestView = new QuestView(cur.data/*, onClickQuest*/);
+				usedVoqn = cur.data is VOQuest ? [cur.data] : [];
+				usedQV = {};
+				questPanel.add(qv);
+				rec(qv, cur.data, true);
+			} catch (e:Error){
+				trace("Global Error:", e, e.message, e.getStackTrace());
 			}
-
-			questPanel = new VBox(null, true, 15, VBox.TL_ALIGN);
-			mainpanel.add(questPanel, {left:20, top:100});
-			var cur:VButton = e is VButton ? e : e.target as VButton;
-
-			if (flagback){
-				flagback = false;
-			} else {
-				lastButton.data = currentData;
-				lastButton.disabled = false;
-				stack.push(currentData);
-				currentData = cur.data is VOQuest ? cur.data.qname : cur.data;
-			}
-
-			var qv:QuestView = new QuestView(cur.data, onClickQuest);
-			usedVoqn = cur.data is VOQuest ? [cur.data] : [];
-			usedQV = {};
-			questPanel.add(qv);
-			//trace('start rec')
-			rec(qv, cur.data, true);
-			//trace('end rec');
-
 		}
 
 		//флаг, что мы тычем кнопку бэк и в стек не надо добавлять эти данные
@@ -327,6 +508,19 @@ package {
 
 		}
 
+		private var currlikeness:String;
+
+		private function sortLikeness(a:VOQuest, b:VOQuest):int {
+			if (a.likeness[currlikeness] > b.likeness[currlikeness]){
+				return -1;
+			}
+			if (a.likeness[currlikeness] < b.likeness[currlikeness]){
+				return 1;
+			}
+			return 0;
+		}
+
+
 		/**
 		 * добавляем всю хурму рекурсивно до упора
 		 * @param qv вьюха
@@ -336,12 +530,17 @@ package {
 		 */
 		public function rec(qv:QuestView, voq:*, isFirst:Boolean = false, parentvoq:* = null):void {
 			var next:Array = [];
+			var button:VButton;
 			if (voq is VOQuest){
-
+				currlikeness = voq.qname;
+				voq.nextQ = voq.nextQ.sort(sortLikeness);
+				//trace("QUEST " + voq.qname)
 				for each (var voqn:VOQuest in voq.nextQ){
+					//trace(voqn.qname, voqn.likeness[voq.qname]);
+
 					if (usedVoqn.indexOf(voqn) == -1){
 						usedVoqn.push(voqn);
-						var qv1:QuestView = new QuestView(voqn, onClickQuest);
+						var qv1:QuestView = new QuestView(voqn);
 						//if ((voq.nextQ.length == 1) || isFirst){
 							rec(qv1, voqn, false, qv.data);
 						//}
@@ -349,12 +548,12 @@ package {
 					} else {
 						qv.button.setSkin(AssetManager.getEmbedSkin('VToolBlueButtonBg', VSkin.STRETCH | VSkin.CONTAIN), {h:30, vCenter:0, hCenter:0, w:50});
 						qv.button.skin.setLayout({w:qv.button.icon.contentWidth+20})
-						qv.geometryPhase();
+						//qv.geometryPhase();
 
-						if (usedQV[voq]){
-							for each (var button:VButton in usedQV[voq]){
+						if (usedQV[voq.qname]){
+							for each (button in usedQV[voq.qname]){
 								button.setSkin(AssetManager.getEmbedSkin('VToolBlueButtonBg', VSkin.STRETCH), {h:16, vCenter:0, hCenter:0, w:16});
-								button.geometryPhase();
+								//button.geometryPhase();
 							}
 						}
 					}
@@ -376,7 +575,6 @@ package {
 
 						if (quests[button.data] && quests[button.data] != parentvoq){
 							button.data = quests[button.data];
-							button.addClickListener(onClickQuest);
 							prev.push(button);
 							addFold(button);
 						}
@@ -387,20 +585,29 @@ package {
 					button = UIFactory.createButton(AssetManager.getEmbedSkin('VToolRedButtonBg', VSkin.STRETCH),
 							{h:30,vCenter:0, hCenter:0}, new VLabel(voq.level + ' level'), {vCenter:0, hCenter:0});
 					button.data = voq.level;
-					button.addClickListener(onClickQuest);
 					addFold(button);
 					prev.push(button);
 				}
 
-				if (prev.length > 1 || (prev.length > 0 && isFirst)){
+				if (prev.length > 0){
 					qv.setPrev(prev);
 				}
 
 			} else {
-				for each (var voq1:VOQuest in quests){
+				//quests.sortOn('qname', Array.CASEINSENSITIVE);
+				if (voq == 0){
+					for each (voq1 in quests){
+						if (!voq1.level && voq1.prevQ.length == 0){
+							usedVoqn.push(voq1);
+							qv1 = new QuestView(voq1);
+							rec(qv1, voq1, false, qv.data);
+							next.push(qv1);
+						}
+					}
+				} else for each (var voq1:VOQuest in quests){
 					if (voq1.level == voq){
 						usedVoqn.push(voq1);
-						qv1 = new QuestView(voq1, onClickQuest);
+						qv1 = new QuestView(voq1/*, onClickQuest*/);
 						//if (next.length == 0 || isFirst){
 							rec(qv1, voq1, false, qv.data);
 						//}
@@ -467,6 +674,7 @@ package {
 			helpPanel.visible = !helpPanel.visible;
 		}
 
+
 		private function onClickSave(e:MouseEvent):void {
 			var bitmapData:BitmapData=new BitmapData(mainpanel.contentWidth, mainpanel.contentHeight);
 			bitmapData.draw(mainpanel);
@@ -506,7 +714,7 @@ package {
 					{h:30, vCenter:0, hCenter:0}, new VLabel(
 					data is VOQuest ? data.qname + getMaxNestingLevel(data) : '' + data), {vCenter:0, hCenter:0});
 			button.data = data;
-			button.addClickListener(onClickQuest);
+			//button.addClickListener(onClickQuest);
 			return button;
 		}
 	}
