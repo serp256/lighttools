@@ -51,10 +51,6 @@ typedef char TErrorBuffer[ERRORBUFFER_MAX];
 // HELPER FUNCTIONS
 //-----------------------------------------------------------------------------
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 // In-memory texture containers; mainly used to transition textures from file to mem and from
 // format to format in memory
 // Main app should only hold pointers to textures and use these functions to alloc and free
@@ -161,9 +157,5 @@ bool MipMapAndCompress(TQonvertImage* pTexture,
 					   unsigned int nWidth, unsigned int nHeight, 
 					   unsigned int nNumMipLevels,
 					   TErrorBuffer err = 0);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // QCOMPRESS_LIB_H
