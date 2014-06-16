@@ -2,7 +2,7 @@ BIN_FNAME = texcmprss
 COMPILER = g++ -m32 -g -Wno-write-strings
 
 all:
-	$(COMPILER) -I../include -L../linux/lib -lpthread -lfreeimage -lTextureConverter -lQCompressLib main.cpp -o $(BIN_FNAME)
+	$(COMPILER) -I../include -L../linux/lib -lpthread main.cpp -lTextureConverter -lQCompressLib -lfreeimage -o $(BIN_FNAME)
 
 clean:
 	rm -f *.o $(BIN_FNAME)
