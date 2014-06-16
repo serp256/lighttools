@@ -1,5 +1,6 @@
 #include <getopt.h>
 #include "QCompressLib.h"
+#include <unistd.h>
 
 #define ERR_IF(cond, fmt, args...) if (cond) { printf("\n"); printf(fmt, ## args); printf("\n"); exit(1); }
 #define PRINT(fmt, args...) if (!silent) { printf(fmt, ## args); fflush(stdout); }
