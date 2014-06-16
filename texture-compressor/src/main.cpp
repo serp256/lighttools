@@ -77,6 +77,8 @@ void compress(char *inp) {
 		PRINT("\tmaking etc... ");
 
 		char *tmpdir = getenv("TMPDIR");
+    if (!tmpdir) tmpdir = "."; 
+
 		size_t tmpdir_len = strlen(tmpdir);
 		char *speed = etc_slow ? (char*)"slow" : (char*)"fast";
 		char *fmt = "etcpack %s %s -s %s -c etc1 -as -ktx > /dev/null";
