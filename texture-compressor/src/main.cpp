@@ -79,7 +79,7 @@ void compress(char *inp) {
 		char *tmpdir = getenv("TMPDIR");
 		size_t tmpdir_len = strlen(tmpdir);
 		char *speed = etc_slow ? (char*)"slow" : (char*)"fast";
-		char *fmt = "etcpack %s %s -s %s -c etc1 -as -ktx > /dev/null 2>&1";
+		char *fmt = "etcpack %s %s -s %s -c etc1 -as -ktx > /dev/null";
 		char *cmd = (char*)malloc(strlen(fmt) - 4 + strlen(inp) + tmpdir_len + 1);
 		sprintf(cmd, fmt, inp, tmpdir, speed);
 		ERR_IF(system(cmd), "error when running etcpack tool on %s", inp);
@@ -87,7 +87,6 @@ void compress(char *inp) {
 		char *fname = strrchr(inp, '/');
 		fname = fname ? fname + 1 : inp;
 		size_t fname_len = strlen(fname);
-
 
 		char *tmp_fname = (char*)malloc(tmpdir_len + fname_len + 1);
 		memcpy(tmp_fname, tmpdir, tmpdir_len);
