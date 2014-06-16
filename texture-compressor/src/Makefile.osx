@@ -1,0 +1,9 @@
+BIN_FNAME = texcmprss
+COMPILER = g++ -arch i386 -g -Wno-write-strings
+
+all:
+	$(COMPILER) -I../osx/include -c main.cpp
+	$(COMPILER) -L../osx/lib -lFreeImage -lTextureConverter -lQCompressLib main.o -o $(BIN_FNAME)
+
+clean:
+	rm -f *.o $(BIN_FNAME)
