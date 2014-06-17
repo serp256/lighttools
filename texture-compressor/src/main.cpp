@@ -9,9 +9,10 @@
 #define AST_EXT "atc"
 #define DXT_EXT "dxt"
 #define ETC_EXT "etc"
+#define ETC2_EXT "etc2"
 #define KTX_EXT "ktx"
 
-int pvr = 0, atc = 0, dxt = 0, etc_fast = 0, etc_slow = 0, no_alpha = 0, silent = 0;
+int pvr = 0, atc = 0, dxt = 0, etc_fast = 0, etc_slow = 0, etc2_fast = 0, etc2_slow = 0, no_alpha = 0, silent = 0;
 
 char* change_ext(char *inp, char *new_ext) {
 	char *cur_ext = strrchr(inp, '.');
@@ -64,7 +65,7 @@ void compress(char *inp) {
 	if (pvr) {
 		PRINT("\tmaking pvr... ");
 		out = change_ext(inp, PVR_EXT);
-		char *fmt = "PVRTexTool -yflip0 -fOGLPVRTC4 -premultalpha -pvrtcbest -i %s -o %s > /dev/null 2>&1";
+		char *fmt = "PVRTexTool -yflip0 -fOGLPVRTC4 -premultalpha -pvrtcbest -i %s -o %s 1>&- 2>&-";
 		char *cmd = (char*)malloc(strlen(fmt) - 4 + strlen(inp) + strlen(out) + 1);
 		sprintf(cmd, fmt, inp, out);
 		ERR_IF(system(cmd), "error when running pvr tool on %s", inp);
@@ -73,26 +74,36 @@ void compress(char *inp) {
 		PRINT("done\n");
 	}
 
+#define RESAVE(inp, out) { \
+	TQonvertImage *ktx_img = CreateEmptyTexture(); \
+	ERR_IF(!LoadImageKTX((const char*)inp, ktx_img, true), "error when reading ktx file '%s' produced by etcpack", inp); \
+	ERR_IF(!SaveImageDDS(out, &ktx_img, 1), "error when saving compressed '%s' to '%s'", inp, out); \
+	FreeTexture(ktx_img); \
+};
+
+#define TMPDIR char *tmpdir = getenv("TMPDIR"); \
+	if (!tmpdir) tmpdir = "."; \
+	size_t tmpdir_len = strlen(tmpdir);
+
+#define FNAMES char *fname = strrchr(inp, '/'); \
+	fname = fname ? fname + 1 : inp; \
+	size_t fname_len = strlen(fname); \
+	char *tmp_fname = (char*)malloc(tmpdir_len + fname_len + 1); \
+	memcpy(tmp_fname, tmpdir, tmpdir_len); \
+	strcpy(tmp_fname + tmpdir_len, fname);
+
 	if (etc_slow || etc_fast) {
 		PRINT("\tmaking etc... ");
 
-		char *tmpdir = getenv("TMPDIR");
-    if (!tmpdir) tmpdir = "./"; 
+		TMPDIR;
 
-		size_t tmpdir_len = strlen(tmpdir);
 		char *speed = etc_slow ? (char*)"slow" : (char*)"fast";
-		char *fmt = "etcpack %s %s -s %s -c etc1 -as -ktx > /dev/null";
+		char *fmt = "etcpack %s %s -s %s -c etc1 -as -ktx 1>&- 2>&-";
 		char *cmd = (char*)malloc(strlen(fmt) - 4 + strlen(inp) + tmpdir_len + 1);
 		sprintf(cmd, fmt, inp, tmpdir, speed);
 		ERR_IF(system(cmd), "error when running etcpack tool on %s", inp);
 
-		char *fname = strrchr(inp, '/');
-		fname = fname ? fname + 1 : inp;
-		size_t fname_len = strlen(fname);
-
-		char *tmp_fname = (char*)malloc(tmpdir_len + fname_len + 1);
-		memcpy(tmp_fname, tmpdir, tmpdir_len);
-		strcpy(tmp_fname + tmpdir_len, fname);
+		FNAMES;
 
 #define ALPHA_FNAME(src, res) { \
 	size_t src_len = strlen(src); \
@@ -102,13 +113,6 @@ void compress(char *inp) {
 	memcpy(res, src, src_len); \
 	strcpy(res + src_len - ext_len, "_alpha"); \
 	strcpy(res + src_len - ext_len + 6, ext); \
-};
-
-#define RESAVE(inp, out) { \
-	TQonvertImage *ktx_img = CreateEmptyTexture(); \
-	ERR_IF(!LoadImageKTX((const char*)inp, ktx_img, true), "error when reading ktx file '%s' produced by etcpack", inp); \
-	ERR_IF(!SaveImageDDS(out, &ktx_img, 1), "error when saving compressed '%s' to '%s'", inp, out); \
-	FreeTexture(ktx_img); \
 };
 
 		char *ktx = change_ext(tmp_fname, KTX_EXT);
@@ -125,7 +129,6 @@ void compress(char *inp) {
 		unlink(ktx);
 		unlink(ktx_alpha);
 
-#undef RESAVE
 #undef ALPHA_FNAME
 
 		free(out);
@@ -137,6 +140,36 @@ void compress(char *inp) {
 
 		PRINT("done\n");
 	}
+
+	if (etc2_slow || etc2_fast) {
+		PRINT("\tmaking etc2... ");
+
+		TMPDIR;
+
+		char *speed = etc_slow ? (char*)"slow" : (char*)"fast";
+		char *pxl_fmt = no_alpha ? (char*)"RGB" : (char*)"RGBA";
+		char *fmt = "etcpack %s %s -s %s -f %s -c etc2 -ktx 1>&- 2>&-";
+		char *cmd = (char*)malloc(strlen(fmt) - 4 + strlen(inp) + tmpdir_len + 1);
+		sprintf(cmd, fmt, inp, tmpdir, speed, pxl_fmt);
+		ERR_IF(system(cmd), "error when running etcpack tool on %s", inp);
+
+		FNAMES;
+
+		char *ktx = change_ext(tmp_fname, KTX_EXT);
+		out = change_ext(inp, ETC2_EXT);
+		RESAVE(ktx, out);
+		unlink(ktx);
+
+		free(out);
+		free(ktx);
+		free(tmp_fname);
+		free(cmd);
+
+		PRINT("done\n");
+	}
+
+#undef RESAVE
+#undef TMPDIR
 }
 
 int main(int argc, char **argv) {
@@ -145,7 +178,9 @@ int main(int argc, char **argv) {
 		{"atc", no_argument, &atc, 1},
 		{"dxt", no_argument, &dxt, 1},
 		{"etc-fast", no_argument, &etc_fast, 1},
+		{"etc2-fast", no_argument, &etc2_fast, 1},
 		{"etc-slow", no_argument, &etc_slow, 1},
+		{"etc2-slow", no_argument, &etc2_slow, 1},
 		{"no-alpha", no_argument, &no_alpha, 1},
 		{"silent", no_argument, &silent, 1},
 		{0, 0, 0, 0}
