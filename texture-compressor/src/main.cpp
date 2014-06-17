@@ -82,7 +82,7 @@ void compress(char *inp) {
 };
 
 #define TMPDIR char *tmpdir = getenv("TMPDIR"); \
-	if (!tmpdir) tmpdir = "."; \
+	if (!tmpdir) tmpdir = "./"; \
 	size_t tmpdir_len = strlen(tmpdir);
 
 #define FNAMES char *fname = strrchr(inp, '/'); \
