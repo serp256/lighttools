@@ -77,7 +77,7 @@ void compress(char *inp) {
 		PRINT("\tmaking etc... ");
 
 		char *tmpdir = getenv("TMPDIR");
-    if (!tmpdir) tmpdir = "."; 
+    if (!tmpdir) tmpdir = "./"; 
 
 		size_t tmpdir_len = strlen(tmpdir);
 		char *speed = etc_slow ? (char*)"slow" : (char*)"fast";
