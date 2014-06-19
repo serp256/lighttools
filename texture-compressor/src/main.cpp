@@ -154,10 +154,11 @@ void compress(char *inp) {
 
 		TMPDIR;
 
-		char *speed = etc_slow ? (char*)"slow" : (char*)"fast";
-		char *fmt = "etcpack %s %s -s %s -c etc1 -as -ktx 1>&- 2>&-";
-		char *cmd = (char*)malloc(strlen(fmt) - 6 + strlen(inp) + tmpdir_len + 1);
-		sprintf(cmd, fmt, inp, tmpdir, speed);
+		const char *speed = etc_slow ? "slow" : "fast";
+		const char *alpha = no_alpha ? "" : "-as ";
+		char *fmt = "etcpack %s %s -s %s -c etc1 %s-ktx 1>&- 2>&-";
+		char *cmd = (char*)malloc(strlen(fmt) - 8 + strlen(inp) + tmpdir_len + strlen(speed) + strlen(alpha) + 1);
+		sprintf(cmd, fmt, inp, tmpdir, speed, alpha);
 		ERR_IF(system(cmd), "error when running etcpack tool on %s", inp);
 
 		FNAMES;
@@ -173,25 +174,28 @@ void compress(char *inp) {
 };
 
 		char *ktx = change_ext(tmp_fname, KTX_EXT);
-		char *ktx_alpha;
-		ALPHA_FNAME(ktx, ktx_alpha);
-
 		out = insert_dirname(inp, ETC_EXT, 1, COMPRESSED_EXT);
 		RESAVE(ktx, out);
-		
-		char *out_alpha;
-		ALPHA_FNAME(out, out_alpha);
-		RESAVE(ktx_alpha, out_alpha);
+
+		if (!no_alpha) {
+			char *ktx_alpha;
+			ALPHA_FNAME(ktx, ktx_alpha);
+
+			char *out_alpha;
+			ALPHA_FNAME(out, out_alpha);
+			RESAVE(ktx_alpha, out_alpha);
+
+			unlink(ktx_alpha);
+			free(out_alpha);
+			free(ktx_alpha);
+		}
 
 		unlink(ktx);
-		unlink(ktx_alpha);
 
 #undef ALPHA_FNAME
 
 		free(out);
-		free(out_alpha);
 		free(ktx);
-		free(ktx_alpha);
 		free(tmp_fname);
 		free(cmd);
 
@@ -203,10 +207,10 @@ void compress(char *inp) {
 
 		TMPDIR;
 
-		char *speed = etc_slow ? (char*)"slow" : (char*)"fast";
-		char *pxl_fmt = no_alpha ? (char*)"RGB" : (char*)"RGBA";
+		const char *speed = etc_slow ? "slow" : "fast";
+		const char *pxl_fmt = no_alpha ? "RGB" : "RGBA";
 		char *fmt = "etcpack %s %s -s %s -f %s -c etc2 -ktx 1>&- 2>&-";
-		char *cmd = (char*)malloc(strlen(fmt) - 8 + strlen(inp) + tmpdir_len + 1);
+		char *cmd = (char*)malloc(strlen(fmt) - 8 + strlen(inp) + tmpdir_len + strlen(speed) + strlen(pxl_fmt) + 1);
 		sprintf(cmd, fmt, inp, tmpdir, speed, pxl_fmt);
 		ERR_IF(system(cmd), "error when running etcpack tool on %s", inp);
 
