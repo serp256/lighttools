@@ -219,11 +219,19 @@ value makeProject () = (
                 <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>
                 <uses-permission android:name=\"android.permission.READ_PHONE_STATE\"/>
                 <uses-permission android:name=\"android.permission.RECEIVE_BOOT_COMPLETED\" />
-                <uses-feature android:glEsVersion=\"0x00020000\"></uses-feature>
                 <uses-sdk android:targetSdkVersion=\"10\" android:minSdkVersion=\"8\"></uses-sdk>
 
+                <xsl:choose>
+                    <xsl:when test=\"opengl3\">
+                        <uses-feature android:glEsVersion=\"0x00030000\"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <uses-feature android:glEsVersion=\"0x00020000\"/>
+                        <xsl:apply-templates select=\"//texture\"/>
+                    </xsl:otherwise>
+                </xsl:choose>                
+
                 <xsl:apply-templates select=\"screens\"/>
-                <xsl:apply-templates select=\"//texture\"/>
             </manifest>
         </xsl:template>
 
