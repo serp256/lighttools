@@ -15,7 +15,7 @@
 
 #define COMPRESSED_EXT "cmprs"
 
-int pvr = 0, atc = 0, dxt = 0, etc_fast = 0, etc_slow = 0, etc2_fast = 0, etc2_slow = 0, ffff = 0, no_alpha = 0, silent = 0;
+int pvr = 0, atc = 0, dxt = 0, etc_fast = 0, etc_slow = 0, etc2_fast = 0, etc2_slow = 0, ffff = 0, no_alpha = 0, silent = 0, help = 0;
 
 char *change_ext(char *inp, char *new_ext) {
 	char *cur_ext = strrchr(inp, '.');
@@ -154,10 +154,11 @@ void compress(char *inp) {
 
 		TMPDIR;
 
-		char *speed = etc_slow ? (char*)"slow" : (char*)"fast";
-		char *fmt = "etcpack %s %s -s %s -c etc1 -as -ktx 1>&- 2>&-";
-		char *cmd = (char*)malloc(strlen(fmt) - 6 + strlen(inp) + tmpdir_len + 1);
-		sprintf(cmd, fmt, inp, tmpdir, speed);
+		const char *speed = etc_slow ? "slow" : "fast";
+		const char *alpha = no_alpha ? "" : "-as ";
+		char *fmt = "etcpack %s %s -s %s -c etc1 %s-ktx 1>&- 2>&-";
+		char *cmd = (char*)malloc(strlen(fmt) - 8 + strlen(inp) + tmpdir_len + strlen(speed) + strlen(alpha) + 1);
+		sprintf(cmd, fmt, inp, tmpdir, speed, alpha);
 		ERR_IF(system(cmd), "error when running etcpack tool on %s", inp);
 
 		FNAMES;
@@ -173,25 +174,28 @@ void compress(char *inp) {
 };
 
 		char *ktx = change_ext(tmp_fname, KTX_EXT);
-		char *ktx_alpha;
-		ALPHA_FNAME(ktx, ktx_alpha);
-
 		out = insert_dirname(inp, ETC_EXT, 1, COMPRESSED_EXT);
 		RESAVE(ktx, out);
-		
-		char *out_alpha;
-		ALPHA_FNAME(out, out_alpha);
-		RESAVE(ktx_alpha, out_alpha);
+
+		if (!no_alpha) {
+			char *ktx_alpha;
+			ALPHA_FNAME(ktx, ktx_alpha);
+
+			char *out_alpha;
+			ALPHA_FNAME(out, out_alpha);
+			RESAVE(ktx_alpha, out_alpha);
+
+			unlink(ktx_alpha);
+			free(out_alpha);
+			free(ktx_alpha);
+		}
 
 		unlink(ktx);
-		unlink(ktx_alpha);
 
 #undef ALPHA_FNAME
 
 		free(out);
-		free(out_alpha);
 		free(ktx);
-		free(ktx_alpha);
 		free(tmp_fname);
 		free(cmd);
 
@@ -203,10 +207,10 @@ void compress(char *inp) {
 
 		TMPDIR;
 
-		char *speed = etc_slow ? (char*)"slow" : (char*)"fast";
-		char *pxl_fmt = no_alpha ? (char*)"RGB" : (char*)"RGBA";
+		const char *speed = etc_slow ? "slow" : "fast";
+		const char *pxl_fmt = no_alpha ? "RGB" : "RGBA";
 		char *fmt = "etcpack %s %s -s %s -f %s -c etc2 -ktx 1>&- 2>&-";
-		char *cmd = (char*)malloc(strlen(fmt) - 8 + strlen(inp) + tmpdir_len + 1);
+		char *cmd = (char*)malloc(strlen(fmt) - 8 + strlen(inp) + tmpdir_len + strlen(speed) + strlen(pxl_fmt) + 1);
 		sprintf(cmd, fmt, inp, tmpdir, speed, pxl_fmt);
 		ERR_IF(system(cmd), "error when running etcpack tool on %s", inp);
 
@@ -230,6 +234,8 @@ void compress(char *inp) {
 }
 
 int main(int argc, char **argv) {
+	char usage[] = "Universal textures compressor.\nUsage: texcmprss [-atc] [-dxt] [-etc-fast | -etc-slow] [-etc2-fast | -etc2-slow ] [-4444] [-no-alpha] [-silent] [-h] [ source ... ]\nOptions:\n\t-atc\t\tCreate ATC texture.\n\t-dxt\t\tCreate DXT texture.\n\t-etc-fast\tCreate ETC texture as fast as possible.\n\t-etc-slow\tCreate best-quality ETC texture.\n\t-etc2-fast\tCreate ETC2 texture as fast as possible.\n\t-etc2-slow\tCreate best-quality ETC2 texture.\n\t-no-alpha\tCreate texture without alpha channel. In case of ETC texture do not create separate alpha texture.\n\t-4444\t\tCreate RGBA_4444 texture.\n\t-silent\t\tSwitch off all verbose.\n\t-h\t\tDisplay this message.";
+
 	struct option long_opts[] = {
 		{"pvr", no_argument, &pvr, 1},
 		{"atc", no_argument, &atc, 1},
@@ -241,10 +247,23 @@ int main(int argc, char **argv) {
 		{"no-alpha", no_argument, &no_alpha, 1},
 		{"4444", no_argument, &ffff, 1},
 		{"silent", no_argument, &silent, 1},
+		{"h", no_argument, &help, 1},
 		{0, 0, 0, 0}
 	};
 
-	while (getopt_long_only(argc, argv, "", long_opts, NULL) != -1) {}
+	int c;
+
+	while ((c = getopt_long_only(argc, argv, "", long_opts, NULL)) != -1) {
+		if (c) {
+			printf("%s\n", usage);
+			return 0;			
+		}
+	}
+
+	if (help) {
+		printf("%s\n", usage);
+		return 0;
+	}
 
 	for (int i = optind; i < argc; i++) {
 		PRINT("processing %s\n", argv[i]);
