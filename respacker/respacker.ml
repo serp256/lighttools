@@ -359,8 +359,10 @@ value do_work isXml pack_mode fmt indir suffix outdir =
           match fmt with
           [ FPvr ->
             (
+              (*
               Utils.dxt_png (outdir // imgbasename);
               Utils.pvr_png (outdir // imgbasename);
+              *)
             )
           | FPlx plt -> Utils.plx_png plt (outdir // imgbasename)
           | FPng -> ()

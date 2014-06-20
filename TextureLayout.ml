@@ -364,7 +364,7 @@ value layout_page_pot ~sqr rects =
   loop !min_size !min_size where
     rec loop w h =
       let main_rect = { x = 0; y = 0; w; h; isRotate = False  } in
-      let () = Printf.printf "Layout page x:%d y:%d w:%d h:%d \n%!" 0 0 w h in
+      let () = Printf.printf "Layout page sqr:%b; x:%d y:%d w:%d h:%d \n%!" sqr 0 0 w h in
       let (placed_images, empty_rects, rest) = MaxRects.maxrects sqr rects [main_rect] in
       match rest with 
       [ [] -> ({width = w; height = h; placed_images; empty_rects}, rest) (* разместили все *)
@@ -498,7 +498,7 @@ value layout_max ?(tsize=Npot) images =
       match rects with
       [ [] -> ([],[ page :: pages])
       | rects ->
-        let (placed_images,empty_rects,unfit) = MaxRects.maxrects False rects page.empty_rects  in
+        let (placed_images,empty_rects,unfit) = MaxRects.maxrects (tsize=Sqr) rects page.empty_rects  in
         match unfit with
         [ [] -> 
           ([],
@@ -545,7 +545,7 @@ value layout_max ?(tsize=Npot) images =
   let () = 
     Printf.printf "ALL allocated!!!! pages: %d [%s]\n%!" 
       (List.length pages) 
-      (String.concat ";" (List.map (fun page -> Printf.sprintf "[%d:(%s)]" (List.length page.placed_images) (String.concat "," (List.map (fun (id,_) -> string_of_int id) page.placed_images))) pages)) 
+      (String.concat ";" (List.map (fun page -> Printf.sprintf "[%d:(%s)]" (List.length page.placed_images) (String.concat "," (List.map (fun (_,(x,y,_,image)) -> Printf.sprintf "x : %d; y=%d; w=%d; h=%d\n" x y) page.placed_images))) pages)) 
   in
   List.map begin fun page -> 
     (* здесь покромсать пэйджи в соответствии с алгоритмом tsize *)
