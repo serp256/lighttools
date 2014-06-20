@@ -542,11 +542,13 @@ value layout_max ?(tsize=Npot) images =
       ]
     end [ create_page !max_size !max_size ] images
   in
+  (*
   let () = 
     Printf.printf "ALL allocated!!!! pages: %d [%s]\n%!" 
       (List.length pages) 
       (String.concat ";" (List.map (fun page -> Printf.sprintf "[%d:(%s)]" (List.length page.placed_images) (String.concat "," (List.map (fun (_,(x,y,_,image)) -> Printf.sprintf "x : %d; y=%d; w=%d; h=%d\n" x y) page.placed_images))) pages)) 
   in
+  *)
   List.map begin fun page -> 
     (* здесь покромсать пэйджи в соответствии с алгоритмом tsize *)
     let images = List.map (fun (info,(_,_,_,image)) -> (info,image)) page.placed_images in
