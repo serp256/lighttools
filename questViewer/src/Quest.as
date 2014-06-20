@@ -39,6 +39,7 @@ package {
 		private var pos:Point;
 
 		private var kinds:Object = {};
+		private var names:Array = [];
 
 		private var lastButton:VButton;
 		private var stack:Array = [];
@@ -197,10 +198,12 @@ package {
 			//вырезаем закомментированные строки
 			var r:RegExp = /\/\/.*?\n/;
 			str = replaceAll(r,str);
+			names = getNames(str);
 			var obj:*;
 			try {
 				obj = JSON.parse(str);
 			} catch (e:Error) {
+				trace (e, e.message, e.name, e.getStackTrace());
 				searchBox.add(new VLabel('Выбранный файл содержит ошибку!'), {left:200, top:20});
 				return;
 			}
@@ -315,11 +318,53 @@ package {
 							}
 							if (voq1 && voq1.qname == voq.qname){
 								voq.nextQ.push(voq2);
+								voq2.likeness[voq.qname] = calcLikeness(voq.qname, voq2.qname);
 							}
 						}
 					}
 				}
+
+				//voq.nextQ.sortOn('likeness', Array.NUMERIC);
+				voq.nextQ.sortOn('qname', Array.CASEINSENSITIVE);
 			}
+
+/*			for (var qname:String in quests){
+				var str:String = qname + ':'
+				voq = quests[qname];
+
+				for each (voq1 in voq.nextQ){
+					str += voq1.qname + ' '
+				}
+				if (voq.nextQ.length > 1)
+				trace(str)
+			}*/
+		}
+
+
+		/**
+		 * Вычислим схожесть названия.
+		 *
+		 * если квест в файле стоит выше на 1 позицию, то выставляем принудительно максимум
+		 *
+		 * @param a имя квеста-родителя
+		 * @param b имя самого проверяемого на сходство квеста
+		 * @return
+		 */
+		private function calcLikeness(a:String, b:String):int {
+			var len:int = Math.min(a.length, b.length);
+
+			// принудительная вставка
+			if (names.indexOf(b) > 0 && names.indexOf(a) == names.indexOf(b) - 1){
+				return len;
+			}
+
+			for (var i:uint = 0; i < len; i++){
+				if (a.charAt(i) != b.charAt(i)){
+					//trace (a,b,i, a.charAt(i), b.charAt(i))
+					return i;
+				}
+			}
+			return 0;
 		}
 
 		/**
@@ -335,6 +380,7 @@ package {
 			}
 			levels.sort(Array.NUMERIC);
 			var arr:Array = [];
+			arr.push(createQuestButton(0));
 			for each (var i:uint in levels){
 				arr.push(createQuestButton(i));
 			}
@@ -355,6 +401,18 @@ package {
 				s = s.replace(r, "");
 			}
 			return s;
+		}
+
+		private function getNames(s:String):Array {
+			var a:Array = s.split('\n');
+			function qnfilter(element:String, index:int, arr:Array):Boolean{
+				return element.charAt(element.length - 1) == '{';
+			}
+			a = a.filter(qnfilter);
+			for each (s in a){
+				s = s.split('"')[1];
+			}
+			return a;
 		}
 
 		/**
@@ -424,9 +482,7 @@ package {
 				usedVoqn = cur.data is VOQuest ? [cur.data] : [];
 				usedQV = {};
 				questPanel.add(qv);
-				//trace('start rec')
 				rec(qv, cur.data, true);
-				//trace('end rec');
 			} catch (e:Error){
 				trace("Global Error:", e, e.message, e.getStackTrace());
 			}
@@ -452,6 +508,19 @@ package {
 
 		}
 
+		private var currlikeness:String;
+
+		private function sortLikeness(a:VOQuest, b:VOQuest):int {
+			if (a.likeness[currlikeness] > b.likeness[currlikeness]){
+				return -1;
+			}
+			if (a.likeness[currlikeness] < b.likeness[currlikeness]){
+				return 1;
+			}
+			return 0;
+		}
+
+
 		/**
 		 * добавляем всю хурму рекурсивно до упора
 		 * @param qv вьюха
@@ -463,8 +532,12 @@ package {
 			var next:Array = [];
 			var button:VButton;
 			if (voq is VOQuest){
-
+				currlikeness = voq.qname;
+				voq.nextQ = voq.nextQ.sort(sortLikeness);
+				//trace("QUEST " + voq.qname)
 				for each (var voqn:VOQuest in voq.nextQ){
+					//trace(voqn.qname, voqn.likeness[voq.qname]);
+
 					if (usedVoqn.indexOf(voqn) == -1){
 						usedVoqn.push(voqn);
 						var qv1:QuestView = new QuestView(voqn);
@@ -521,7 +594,17 @@ package {
 				}
 
 			} else {
-				for each (var voq1:VOQuest in quests){
+				//quests.sortOn('qname', Array.CASEINSENSITIVE);
+				if (voq == 0){
+					for each (voq1 in quests){
+						if (!voq1.level && voq1.prevQ.length == 0){
+							usedVoqn.push(voq1);
+							qv1 = new QuestView(voq1);
+							rec(qv1, voq1, false, qv.data);
+							next.push(qv1);
+						}
+					}
+				} else for each (var voq1:VOQuest in quests){
 					if (voq1.level == voq){
 						usedVoqn.push(voq1);
 						qv1 = new QuestView(voq1/*, onClickQuest*/);

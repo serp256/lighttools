@@ -24,7 +24,7 @@ package {
 			var skin:String = data is VOQuest && data.nextQ.length == 0 ? 'VToolRedButtonBg' : 'VToolGreenButtonBg';
 			button = UIFactory.createButton(AssetManager.getEmbedSkin(skin, VSkin.STRETCH | VSkin.CONTAIN),
 					{h:30, vCenter:0, hCenter:0}, new VLabel(
-							data is VOQuest ? (data.line == -1? '' : '<span fontWeight="bold" color="#3333FF">[' + data.line + ']</span>') + data.qname /*+ data.maxnestinglevel*/ : 'level ' + data), {vCenter:0, hCenter:0});
+							data is VOQuest ? (data.line == -1? '' : '<span fontWeight="bold" color="#3333FF">[' + data.line + ']</span>') + '<span color="#' + (data.story ? '3333FF' : '000000') + '">' + data.qname + '</span>'/*+ data.maxnestinglevel*/ : (data == 0 ? 'no level, no prev' : 'level ' + data)), {vCenter:0, hCenter:0});
 			button.data = data;
 			//button.addClickListener(callback);
 
