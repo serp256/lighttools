@@ -72,7 +72,8 @@ void compress_using_qonvert(char *inp, char *out, unsigned int format) {
 
 	ERR_IF(!LoadImage(inp, src_tex), "error when loading '%s'", inp);
 	TQonvertImage *mips[1] = { CreateEmptyTexture() };
-	ERR_IF(!MipMapAndCompress(src_tex, mips, format, src_tex->nHeight, src_tex->nHeight, 1), "error when compressing '%s'", inp);
+	printf("w %d h %d\n", src_tex->nWidth, src_tex->nHeight);
+	ERR_IF(!MipMapAndCompress(src_tex, mips, format, src_tex->nWidth, src_tex->nHeight, 1), "error when compressing '%s'", inp);
 
 	/* qcompress lib bug workaround */
 	if (format == Q_FORMAT_ATC_RGBA_EXPLICIT_ALPHA) mips[0]->nFormat = Q_FORMAT_ATC_RGBA_INTERPOLATED_ALPHA;
