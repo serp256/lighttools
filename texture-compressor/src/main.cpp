@@ -72,7 +72,6 @@ void compress_using_qonvert(char *inp, char *out, unsigned int format) {
 
 	ERR_IF(!LoadImage(inp, src_tex), "error when loading '%s'", inp);
 	TQonvertImage *mips[1] = { CreateEmptyTexture() };
-	printf("w %d h %d\n", src_tex->nWidth, src_tex->nHeight);
 	ERR_IF(!MipMapAndCompress(src_tex, mips, format, src_tex->nWidth, src_tex->nHeight, 1), "error when compressing '%s'", inp);
 
 	/* qcompress lib bug workaround */
@@ -88,7 +87,7 @@ void compress_using_qonvert(char *inp, char *out, unsigned int format) {
 void compress_using_pvrtextool(char *inp, char *out, char *format) {
 	char *pvr_out = change_ext(out, PVR_EXT);
 	char *fmt = "PVRTexTool -yflip0 -f%s -premultalpha -pvrtcbest -i %s -o %s > /dev/null 2>&1";
-	char *cmd = (char*)malloc(strlen(fmt) - 6 + strlen(inp) + strlen(pvr_out) + 1);
+	char *cmd = (char*)malloc(strlen(fmt) - 6 + strlen(inp) + strlen(pvr_out) + strlen(format) + 1);
 	sprintf(cmd, fmt, format, inp, pvr_out);
 	// printf("cmd %s\n", cmd);
 	ERR_IF(system(cmd), "error when running pvr tool on %s", inp);
