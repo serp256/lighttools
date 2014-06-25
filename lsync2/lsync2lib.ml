@@ -1,10 +1,12 @@
 module Filter = struct
-  type t = [ I of string | E of string | P of string | M of string | DM of string | H of string | S of string | R of string ];
+  type t = [ I of string | IF of string |  E of string | EF of string | P of string | M of string | DM of string | H of string | S of string | R of string ];
 
   value toStr t =
     match t with
     [ I s -> "+ " ^ s
+    | IF s -> "+! " ^ s
     | E s -> "- " ^ s
+    | EF s -> "-! " ^ s
     | P s -> "P " ^ s
     | M s -> "." ^ s
     | DM s -> ":" ^ s
