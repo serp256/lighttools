@@ -1,0 +1,4 @@
+name = "lsync2lib"
+version = "1.0"
+description = "lsync2 tool library"
+archive(byte) = "lsync2lib.cmo"

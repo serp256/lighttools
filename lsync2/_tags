@@ -1,0 +1,2 @@
+<*.ml>: package(camlp4),syntax(camlp4r),package(unix),package(redspell.debug)
+<*.{native,byte}>: package(unix)

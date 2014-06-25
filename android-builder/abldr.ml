@@ -229,7 +229,7 @@ value makeProject () = (
                         <uses-feature android:glEsVersion=\"0x00020000\"/>
                         <xsl:apply-templates select=\"//texture\"/>
                     </xsl:otherwise>
-                </xsl:choose>                
+                </xsl:choose>
 
                 <xsl:apply-templates select=\"screens\"/>
             </manifest>
