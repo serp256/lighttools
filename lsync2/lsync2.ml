@@ -6,10 +6,14 @@ value compile () =
   if Sys.file_exists rulesPath
   then
     let cmd = Printf.sprintf "ocamlfind ocamlc -package camlp4 -syntax camlp4r -package lsync2lib -linkpkg %s -o %s" rulesPath binFname in
-    let () = Printf.printf "running cmd %s\n%!" cmd in
-      if Sys.command cmd <> 0
-      then failwith ("Error when making '" ^ binFname ^ "' binary")
-      else ()
+    let ret = Sys.command cmd in
+      (
+        Sys.command "rm -f *.cm{o,i}";
+
+        if ret <> 0
+        then failwith ("Error when making '" ^ binFname ^ "' binary")
+        else ();        
+      )
   else failwith "Rules file not found";
 
 if Sys.file_exists binPath
