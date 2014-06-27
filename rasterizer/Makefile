@@ -1,7 +1,7 @@
 default: compile run
 
 compile:
-	amxmlc -swf-version 21 -library-path+=lib src/Rasterizer.mxml -output=bin/rasterizer.swf
+	amxmlc -debug=true -swf-version 21 -library-path+=lib src/Rasterizer.mxml -output=bin/rasterizer.swf
 
 run:
 	adl rasterizer-app.xml

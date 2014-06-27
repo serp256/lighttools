@@ -37,9 +37,12 @@ package ru.redspell.rasterizer.flatten {
 			var name:String = obj.name;
 
             for each (var fltr:BitmapFilter in fltrs) {
+                trace('src rect ' + fltrRect);
                 var srcRect:Rectangle = new Rectangle(0, 0, obj.width, obj.height);
                 var fltrRect:Rectangle = obj.generateFilterRect(srcRect, fltr);
                 var fltrLayer:FlattenImage = new FlattenImage(fltrRect.width, fltrRect.height, true, 0x00000000);
+
+                trace('fltrRect ' + fltrRect);
 
                 finalRect = finalRect.union(fltrRect);
                 fltrLayer.applyFilter(obj, srcRect, new Point(-fltrRect.x, -fltrRect.y), fltr);
@@ -95,11 +98,20 @@ package ru.redspell.rasterizer.flatten {
             //trace("rect", rect);
             //trace("Math.ceil(rect.width), Math.ceil(rect.height)", Math.ceil(rect.width), Math.ceil(rect.height));
 
-            var objBmpData:FlattenImage = new FlattenImage(Math.ceil(rect.width), Math.ceil(rect.height), true, 0x00000000);
+            trace("rect " + Math.ceil(rect.width) + " " + Math.ceil(rect.height));
+
+            var objBmpData:FlattenImage = new FlattenImage(Math.round(rect.width), Math.round(rect.height), true, 0x00000000);
             var m:Matrix = mtx.clone();
 
             m.translate(-rect.x, -rect.y);
-            objBmpData.draw(obj, m, color, null, null, true);
+
+            /*var pizda:Matrix = m.clone();
+            pizda.concat(obj.transform.matrix);
+            obj.transform.matrix = pizda;
+            objBmpData.draw(obj, null, color, null, null, true);*/
+
+            objBmpData.drawWithQuality(obj, m, color, null, null, true, flash.display.StageQuality.BEST);
+
             objBmpData.matrix = new Matrix(1, 0, 0, 1, rect.x, rect.y);
             objBmpData.name = obj.name;
 

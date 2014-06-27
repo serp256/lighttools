@@ -31,9 +31,9 @@
 			clsProf.scale = newVal;
 
 			if (scales.hasOwnProperty(prof.label) && (newVal == prof.scale)) {
-				delete scales[prof.label];
+				delete scales[clsProf.profileLabel];
 			} else {
-				scales[prof.label] = newVal;
+				scales[clsProf.profileLabel] = newVal;
 			}
 
 			Facade.runCommand(Facade.commandsFactory.getRefreshClassMetaCommand(cls));
