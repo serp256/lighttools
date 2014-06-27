@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<application xmlns="http://ns.adobe.com/air/application/3.1">
+<application xmlns="http://ns.adobe.com/air/application/3.9">
 
 <!-- Adobe AIR Application Descriptor File Template.
 
@@ -45,7 +45,7 @@
 	<!-- Settings for the application's initial window. Required. -->
 	<initialWindow>
 		<!-- The main SWF or HTML file of the application. Required. -->
-		<content>Rasterizer.swf</content>
+		<content>bin/rasterizer.swf</content>
 		
 		<!-- The title of the main window. Optional. -->
 		<title>Rasterizer</title>
