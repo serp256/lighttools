@@ -98,9 +98,15 @@ package ru.redspell.rasterizer.flatten {
             //trace("rect", rect);
             //trace("Math.ceil(rect.width), Math.ceil(rect.height)", Math.ceil(rect.width), Math.ceil(rect.height));
 
-            trace("rect " + Math.ceil(rect.width) + " " + Math.ceil(rect.height));
+            trace("rect " + Math.round(rect.width) + " " + Math.round(rect.height));
 
-            var objBmpData:FlattenImage = new FlattenImage(Math.round(rect.width), Math.round(rect.height), true, 0x00000000);
+            rect.width = Math.round(rect.width);
+            rect.width = rect.width < 1 ? 1 : rect.width;
+
+            rect.height = Math.round(rect.height);
+            rect.height = rect.height < 1 ? 1 : rect.height;
+
+            var objBmpData:FlattenImage = new FlattenImage(rect.width, rect.height, true, 0x00000000);
             var m:Matrix = mtx.clone();
 
             m.translate(-rect.x, -rect.y);
