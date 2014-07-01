@@ -408,6 +408,13 @@ value do_work isXml pack_mode fmt indir suffix outdir =
     ]
   in
 (*   let () = print_endline "textures created" in *)
+  let pageOfImg (id, _, _) =
+    match (DynArray.get items (DynArray.index_of (fun i -> i.item_id = id) items)).item with
+    [ `image texinf -> texinf.page
+    | _ -> assert False
+    ]
+  in
+
   let group_children = 
     if not !use_atlases 
     then fun children ->  ((DynArray.to_list children) :> (list [= child | `atlas of list img ]))
@@ -419,8 +426,23 @@ value do_work isXml pack_mode fmt indir suffix outdir =
           [ `chld _ as chld when Stack.is_empty qchld -> Stack.push chld qchld
           | `chld img as chld -> 
               match Stack.pop qchld with
-              [ `chld pimg -> Stack.push (`atlas [ img ; pimg ]) qchld
-              | `atlas els -> Stack.push (`atlas [ img :: els ]) qchld
+              [ `chld pimg as pchld ->
+                if pageOfImg img = pageOfImg pimg
+                then Stack.push (`atlas [ img ; pimg ]) qchld
+                else
+                  (
+                    Stack.push pchld qchld;
+                    Stack.push chld qchld;
+                  )
+              | `atlas ([ el :: _ ] as els) as atl ->
+                if pageOfImg img = pageOfImg el
+                then Stack.push (`atlas [ img :: els ]) qchld
+                else
+                  (
+                    Stack.push atl qchld;
+                    Stack.push chld qchld;
+                  )
+              | `atlas _ -> assert False
               | `box _ as b -> (Stack.push b qchld; Stack.push chld qchld)
               ]
           | `box _ as b -> Stack.push b qchld
