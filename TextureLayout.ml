@@ -55,6 +55,7 @@ module MaxRects = struct
     let str = ref "" in
     let rects =  
       let bx = bound.x in
+      let () = assert (bx mod 4 = 0) in
       match rect.x < bx && bound.x <= rect.x + rect.w && ((bound.y >= rect.y && bound.y <= rect.y + rect.h) || (bound.y < rect.y && bound.y + bound.h > rect.y)) with (*left rect *)
       [ True -> 
           (
@@ -83,7 +84,12 @@ module MaxRects = struct
       [ True ->
           (
             str.val := !str ^ "right ";
-            [ {x = x + !countEmptyPixels; y = rect.y; w = rect_right - x - !countEmptyPixels; h =rect.h; isRotate = False} :: rects];
+            let l = do_degree4 (x + !countEmptyPixels) in
+            let w = rect_right - l in
+            match w > 0 with
+            [ True -> [ {x = l; y = rect.y; w = w; h =rect.h; isRotate = False} :: rects]
+            | _ -> rects 
+            ]
           )
       | _ -> rects
       ]
@@ -96,7 +102,12 @@ module MaxRects = struct
       [ True ->
           (
             str.val := !str ^ "bottom ";
-            [ {x = rect.x; y = y + !countEmptyPixels; w = rect.w; h = rect_bottom - y - !countEmptyPixels; isRotate = False} :: rects ]
+            let t = do_degree4 (y + !countEmptyPixels) in
+            let h = rect_bottom - t in
+            match h > 0 with
+            [ True -> [ {x = rect.x; y = t; w = rect.w; h = h; isRotate = False} :: rects ]
+            | _ -> rects
+            ]
           )
       | _ -> rects
       ]
@@ -233,7 +244,9 @@ module MaxRects = struct
             [ []  -> (List.rev placed, empty, (List.append rects unfit))
             | _   -> 
                 let (rw,rh) = Images.size img in
+                (*
                 let (rw,rh) = match isDegree4 with [ True -> (do_degree4 rw,do_degree4 rh) | False -> (rw,rh) ] in
+                *)
                 let (rect, containers) = 
                   List.fold_left begin fun (res, containers) c ->
                     let container = 
@@ -305,16 +318,16 @@ module MaxRects = struct
                     in
                     let containers = find_subrects containers [] in
                     let containers = 
-                      let y = c.y + rh + !countEmptyPixels in
+                      let y = do_degree4 (c.y + rh + !countEmptyPixels) in
                       match y < c.y + c.h with
-                      [ True -> [ { (c) with y; h = c.h - rh - !countEmptyPixels; isRotate = False } :: containers ]
+                      [ True -> [ { (c) with y; h = c.h + c.y - y; isRotate = False } :: containers ]
                       | _ -> containers
                       ]
                     in
                     let containers = 
-                      let x = c.x + rw + !countEmptyPixels in
+                      let x = do_degree4 (c.x + rw + !countEmptyPixels) in
                       match x < c.x + c.w with
-                      [ True -> [ { (c) with x; w = c.w - rw - !countEmptyPixels; isRotate = False  } :: containers ]
+                      [ True -> [ { (c) with x; w = c.x + c.w - x; isRotate = False  } :: containers ]
                       | _ -> containers
                       ]
                     in
