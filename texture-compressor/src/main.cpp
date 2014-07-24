@@ -15,7 +15,7 @@
 
 #define COMPRESSED_EXT "cmprs"
 
-int pvr = 0, atc = 0, dxt = 0, etc_fast = 0, etc_slow = 0, etc2_fast = 0, etc2_slow = 0, ffff = 0, no_alpha = 0, silent = 0, help = 0;
+int pvr = 0, atc = 0, dxt = 0, etc_fast = 0, etc_slow = 0, etc2_fast = 0, etc2_slow = 0, ffff = 0, no_alpha = 0, silent = 0, help = 0, no_gzip = 0;
 
 char *change_ext(char *inp, char *new_ext) {
 	char *cur_ext = strrchr(inp, '.');
@@ -96,6 +96,23 @@ void compress_using_pvrtextool(char *inp, char *out, char *format) {
 	free(pvr_out);
 }
 
+void gzip(char *fname) {
+	char *fmt = "gzip %s > /dev/null 2>&1";
+	char *cmd = (char*)malloc(strlen(fmt) - 2 + strlen(fname) + 1);
+	sprintf(cmd, fmt, fname);
+	ERR_IF(system(cmd), "error when running gzip on %s", fname);
+
+	char *gziped_fname = (char*)malloc(strlen(fname) + 3 + 1);
+	strcpy(gziped_fname, fname);
+	strcat(gziped_fname, ".gz");
+	ERR_IF(rename(gziped_fname, fname), "error when renaming '%s' to '%s'", gziped_fname, fname);
+
+	free(cmd);
+	free(gziped_fname);
+}
+
+#define GZIP(fname) if (!no_gzip) gzip(fname);
+
 void compress(char *inp) {
 	char *out;
 
@@ -103,6 +120,7 @@ void compress(char *inp) {
 		PRINT("\tmaking atc... ");
 		out = insert_dirname(inp, AST_EXT, 1, COMPRESSED_EXT);
 		compress_using_qonvert(inp, out, no_alpha ? Q_FORMAT_ATC_RGB : Q_FORMAT_ATC_RGBA_EXPLICIT_ALPHA);
+		GZIP(out);
 		free(out);
 		PRINT("done\n");
 	}
@@ -111,6 +129,7 @@ void compress(char *inp) {
 		PRINT("\tmaking dxt... ");
 		out = insert_dirname(inp, DXT_EXT, 1, COMPRESSED_EXT);
 		compress_using_qonvert(inp, out, no_alpha ? Q_FORMAT_S3TC_DXT1_RGB : Q_FORMAT_S3TC_DXT5_RGBA);
+		GZIP(out);
 		free(out);
 		PRINT("done\n");
 	}
@@ -119,6 +138,7 @@ void compress(char *inp) {
 		PRINT("\tmaking 4444... ");
 		out = change_ext(inp, COMPRESSED_EXT);
 		compress_using_pvrtextool(inp, out, "OGL4444");
+		GZIP(out);
 		free(out);
 		PRINT("done\n");
 	}
@@ -127,6 +147,7 @@ void compress(char *inp) {
 		PRINT("\tmaking pvr... ");
 		out = insert_dirname(inp, PVR_EXT, 1, COMPRESSED_EXT);
 		compress_using_pvrtextool(inp, out, "OGLPVRTC4");
+		GZIP(out);
 		free(out);
 		PRINT("done\n");
 	}
@@ -176,6 +197,7 @@ void compress(char *inp) {
 		char *ktx = change_ext(tmp_fname, KTX_EXT);
 		out = insert_dirname(inp, ETC_EXT, 1, COMPRESSED_EXT);
 		RESAVE(ktx, out);
+		GZIP(out);
 
 		if (!no_alpha) {
 			char *ktx_alpha;
@@ -184,6 +206,7 @@ void compress(char *inp) {
 			char *out_alpha;
 			ALPHA_FNAME(out, out_alpha);
 			RESAVE(ktx_alpha, out_alpha);
+			GZIP(out_alpha);
 
 			unlink(ktx_alpha);
 			free(out_alpha);
@@ -219,6 +242,7 @@ void compress(char *inp) {
 		char *ktx = change_ext(tmp_fname, KTX_EXT);
 		out = insert_dirname(inp, ETC2_EXT, 1, COMPRESSED_EXT);
 		RESAVE(ktx, out);
+		GZIP(out);
 		unlink(ktx);
 
 		free(out);
@@ -234,7 +258,7 @@ void compress(char *inp) {
 }
 
 int main(int argc, char **argv) {
-	char usage[] = "Universal textures compressor.\nUsage: texcmprss [-atc] [-dxt] [-etc-fast | -etc-slow] [-etc2-fast | -etc2-slow ] [-4444] [-no-alpha] [-silent] [-h] [ source ... ]\nOptions:\n\t-atc\t\tCreate ATC texture.\n\t-dxt\t\tCreate DXT texture.\n\t-etc-fast\tCreate ETC texture as fast as possible.\n\t-etc-slow\tCreate best-quality ETC texture.\n\t-etc2-fast\tCreate ETC2 texture as fast as possible.\n\t-etc2-slow\tCreate best-quality ETC2 texture.\n\t-no-alpha\tCreate texture without alpha channel. In case of ETC1 texture compressor doesn't create separate alpha texture.\n\t-4444\t\tCreate RGBA_4444 texture.\n\t-silent\t\tSwitch off all verbose.\n\t-h\t\tDisplay this message.";
+	char usage[] = "Universal textures compressor.\nUsage: texcmprss [-atc] [-dxt] [-etc-fast | -etc-slow] [-etc2-fast | -etc2-slow ] [-4444] [-no-alpha] [-silent] [-no-gzip] [-h] [ source ... ]\nOptions:\n\t-atc\t\tCreate ATC texture.\n\t-dxt\t\tCreate DXT texture.\n\t-etc-fast\tCreate ETC texture as fast as possible.\n\t-etc-slow\tCreate best-quality ETC texture.\n\t-etc2-fast\tCreate ETC2 texture as fast as possible.\n\t-etc2-slow\tCreate best-quality ETC2 texture.\n\t-no-alpha\tCreate texture without alpha channel. In case of ETC1 texture compressor doesn't create separate alpha texture.\n\t-4444\t\tCreate RGBA_4444 texture.\n\t-silent\t\tSwitch off all verbose.\n\t-no-gzip\tDo not gzip compressed texture.\n\t-h\t\tDisplay this message.";
 
 	struct option long_opts[] = {
 		{"pvr", no_argument, &pvr, 1},
@@ -247,6 +271,7 @@ int main(int argc, char **argv) {
 		{"no-alpha", no_argument, &no_alpha, 1},
 		{"4444", no_argument, &ffff, 1},
 		{"silent", no_argument, &silent, 1},
+		{"no-gzip", no_argument, &no_gzip, 1},
 		{"h", no_argument, &help, 1},
 		{0, 0, 0, 0}
 	};
