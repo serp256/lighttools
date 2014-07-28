@@ -1,0 +1,8 @@
+BIN_FNAME = texcmprss
+COMPILER = clang++ -m32 -g -Wno-write-strings --stdlib=libstdc++
+
+all:
+	$(COMPILER) -I../include -L../osx/lib main.cpp -lTextureConverter -lQCompressLib -lFreeImage -lc++ -o $(BIN_FNAME)
+
+clean:
+	rm -f *.o $(BIN_FNAME)
