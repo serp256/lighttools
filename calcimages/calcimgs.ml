@@ -98,7 +98,7 @@ value calc_file fn ((cnt,size) as res) =
       let w = IO.read_ui16 gzin in
       let h = IO.read_ui16 gzin in
       add_result res fn (w*h)
-    | "pvr" | "dds" | "atc" | "etc" -> 
+    | "cmprs" | "pvr" | "dds" | "atc" | "etc" -> 
         let size = gzip_size fn in
         add_result res fn (size - 52) (* FIXME: meta in pvr3, ну да хуй с ней *)
     | "plx" ->
@@ -162,7 +162,6 @@ let () = Arg.parse
     ("-v",Arg.Set verbose,"verbose mode"); 
     ("-r",Arg.Set recursive,"recursive"); 
     ("-nop",Arg.Set nop,"use NextPowerTwo");
-    ("-pvr",Arg.Set pvr, "pvr mode");
     ("-suffix",Arg.String (fun s -> suffix.val := Some s),"set suffix");
     ("-esuffix",Arg.String (fun es -> esuffix.val := [ es :: !esuffix ] ),"exclude suffix")
   ] 
