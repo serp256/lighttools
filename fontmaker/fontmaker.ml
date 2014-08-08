@@ -237,6 +237,7 @@ value read_chars fname = pattern.val := String.strip (Std.input_file fname);
 value output = ref None;
 
 value read_sizes fname = parse_sizes (String.strip (Std.input_file fname));
+value styles = ref "Regular";
 
 (* use xmlm for writing xml *)
 Arg.parse 
@@ -251,6 +252,7 @@ Arg.parse
     ("-scale", Arg.Float (fun s -> scale.val := s ), "scale factor");
     ("-xml", Arg.Set xml, "xml format" ) ;
     ("-suf", Arg.Set_string suffix, "suffix");
+    ("-styles", Arg.Set_string styles, "comma-separated list of styles from");
     ("-pmaxt", Arg.Int (fun v -> TextureLayout.max_size.val := v), "max texture size");
   ] 
   (fun f -> fontFile.val := f) "Usage msg";
@@ -270,187 +272,188 @@ value str_of_float v =
 (* Printf.printf "chars: [%s] = %d\n%!" !pattern (BatUTF8.length !pattern); *)
 let t = Freetype.init () in
 let (face,face_info) = Freetype.new_face t !fontFile 0 in
-let chars = Hashtbl.create 1 in
-let postfix = 
-  match !suffix with
-  [ "" ->
-      if !scale = 1. then "" else "x" ^ (str_of_float !scale) 
-  | _ -> !suffix 
-  ]
-in
-let fname = Filename.chop_extension (Filename.basename !fontFile) in
-let resfname =  fname ^ postfix ^  ".fnt" in
-let resfname = match !output with [ None -> resfname | Some dir -> Filename.concat dir resfname ] in
-let font = empty_font in
-  (
-    font.face := face_info.Ft.family_name;
-    font.style := face_info.Ft.style_name;
-    font.kerning :=(if face_info.Ft.has_kerning then 1 else 0);
-    let imgs = ref [] in
+let availStyles = List.init face_info.Freetype.num_faces (fun i -> Freetype.new_face t !fontFile i) in
+let faces = List.map (fun styleName -> try List.find (fun (_, face_info) -> face_info.Freetype.style_name = styleName) availStyles with [ Not_found -> failwith ("Style '" ^ styleName ^  "' not found") ]) (ExtString.String.nsplit !styles ",") in
+
+  List.iter (fun (face, face_info) ->
+    let chars = Hashtbl.create 1 in
+    let postfix = 
+      match !suffix with
+      [ "" ->
+          if !scale = 1. then "" else "x" ^ (str_of_float !scale) 
+      | _ -> !suffix 
+      ]
+    in
+    let fname = Filename.chop_extension (Filename.basename !fontFile) ^ face_info.Freetype.style_name in
+    let resfname = fname ^ postfix ^  ".fnt" in
+    let resfname = match !output with [ None -> resfname | Some dir -> Filename.concat dir resfname ] in
+    let font = empty_font in
       (
-        List.iter begin fun size ->
-          make_size face (float size) begin fun code xadvance xoffset yoffset img ->
-            let key = (code,size) in
-            (
-              imgs.val := [ (key,Images.Rgba32 img) :: !imgs ];
-              Hashtbl.add chars key {id=code;xadvance=(int_of_float xadvance);xoffset;yoffset;width=img.Rgba32.width;height=img.Rgba32.height;x=0;y=0;page=0 };
-            )
-          end
-        end !sizes;
-        Printf.printf "len imgs: %d\n%!" (List.length !imgs);
-
-        let () = TextureLayout.rotate.val := False in
-        let textures = TextureLayout.layout ~tsize:TextureLayout.Npot !imgs in
-        List.iteri begin fun i {TextureLayout.width = w;height = h; placed_images = imgs} ->
-          let texture = Rgba32.make w h bgcolor in
+        font.face := face_info.Ft.family_name;
+        font.style := face_info.Ft.style_name;
+        font.kerning :=(if face_info.Ft.has_kerning then 1 else 0);
+        let imgs = ref [] in
           (
-            List.iter begin fun (key,(x,y,_,img)) ->
-              (
-                let img = match img with [ Images.Rgba32 img -> img | _ -> assert False ] in
-                Rgba32.blit img 0 0 texture x y img.Rgba32.width img.Rgba32.height;
-                let r = Hashtbl.find chars key in
-                ( r.x := x; r.y := y; r.page := i;)
-              )
-            end imgs;
-            (* let ext = match !alpha_texture with [ True -> "alpha" | False -> "png" ] in *)
-            let ext = if !stroke > 0. then "lumal" else "alpha" in
-            let imgname =  Printf.sprintf "%s_%d%s.%s" fname i postfix ext in
-            let fname = match !output with [ None -> imgname | Some o -> Filename.concat o imgname] in
-            (
-              Utils.save_alpha ~with_lum:(!stroke > 0.) (Images.Rgba32 texture) fname;
-              font.pages := [ imgname :: font.pages ];
-            );
-          )
-        end textures;
-      );    
+            List.iter begin fun size ->
+              make_size face (float size) begin fun code xadvance xoffset yoffset img ->
+                let key = (code,size) in
+                (
+                  imgs.val := [ (key,Images.Rgba32 img) :: !imgs ];
+                  Hashtbl.add chars key {id=code;xadvance=(int_of_float xadvance);xoffset;yoffset;width=img.Rgba32.width;height=img.Rgba32.height;x=0;y=0;page=0 };
+                )
+              end
+            end !sizes;
+            Printf.printf "len imgs: %d\n%!" (List.length !imgs);
 
-      List.iter begin fun size ->
-        (
-          Freetype.set_char_size face (!scale *. (float size)) 0. !dpi 0;
-          let spaceIndex = Freetype.get_char_index face (int_of_char ' ') in
-          let (spaceXAdv, spaceYAdv) = Freetype.render_glyph face spaceIndex [] Freetype.Render_Normal in
-          let sizeInfo = Freetype.get_size_metrics face in
-          (
-            let () = Printf.printf "descender: %f, max_advance: %f, x_ppem: %d, y_ppem: %d, ascender: %f, height: %f\n%!" sizeInfo.Freetype.descender sizeInfo.Freetype.max_advance sizeInfo.Freetype.x_ppem
-            sizeInfo.Freetype.y_ppem sizeInfo.Freetype.ascender sizeInfo.Freetype.height in
-            let chars' = 
-              {
-                space = spaceXAdv;
-                size  = size;
-                lineHeight = sizeInfo.Freetype.height;
-                ascender = sizeInfo.Freetype.ascender;
-                descender = ~-. (sizeInfo.Freetype.descender);
-                char_list = [];
-              }
-            in
+            let () = TextureLayout.rotate.val := False in
+            let textures = TextureLayout.layout ~tsize:TextureLayout.Npot !imgs in
+            List.iteri begin fun i {TextureLayout.width = w;height = h; placed_images = imgs} ->
+              let texture = Rgba32.make w h bgcolor in
               (
-                UTF8.iter begin fun uchar ->
-                  let code = UChar.code uchar in
-                  let info = Hashtbl.find chars (code,size) in
-        (*           let () = Printf.printf "char: %C, xoffset: %d, yoffset: %d\n%!" (char_of_int code) info.xoffset info.yoffset in *)
-                  chars'.char_list := 
-                    [ {id=code; xadvance=info.xadvance; xoffset=info.xoffset; yoffset = (truncate (sizeInfo.Freetype.ascender -. (float info.yoffset))); x=info.x; y=info.y; width=info.width; height=info.height; page=info.page; } :: chars'.char_list ]
-                end !pattern;
-                font.chars := [ chars' :: font.chars]
-              )
-          );
-        )
-      end !sizes;
-
-      match !xml with
-      [ True ->
-      (*save in xmpl*)
-          let out = open_out resfname in
-          let xmlout = Xmlm.make_output ~nl:True ~indent:(Some 4) (`Channel (open_out resfname)) in
-          (
-            Xmlm.output xmlout (`Dtd None);
-            let fattribs = 
-              [ "face" =|= font.face 
-              ; "style" =|= font.style
-              ; "kerning" =*= font.kerning
-              ]
-            in
-            Xmlm.output xmlout (`El_start (("","Font"),fattribs));
-            Xmlm.output xmlout (`El_start (("","Pages"),[]));
-            List.iter (fun imgname ->
-              (
-                    Xmlm.output xmlout (`El_start (("","page"),["file" =|= imgname]));
-                    Xmlm.output xmlout `El_end;
-              )
-            ) (List.rev font.pages);
-            Xmlm.output xmlout `El_end;
-            List.iter begin fun chars ->
-              (
-                Xmlm.output xmlout (`El_start (("","Chars"),
-                  [ "space" =.= chars.space; 
-                    "size" =*= chars.size ; 
-                    "lineHeight" =.= chars.lineHeight; 
-                    "ascender" =.= chars.ascender;
-                    "descender" =.= chars.descender;
-                  ])
-                );
-                List.iter begin fun ch -> 
-                  let attribs = 
-                    [ "id" =*= ch.id
-                    ; "xadvance" =*= ch.xadvance
-                    ; "xoffset" =*= ch.xoffset
-                    ; "yoffset" =*= ch.yoffset
-                    ; "x" =*= ch.x
-                    ; "y" =*= ch.y
-                    ; "width" =*= ch.width
-                    ; "height" =*= ch.height
-                    ; "page" =*= ch.page
-                    ]
-                  in
+                List.iter begin fun (key,(x,y,_,img)) ->
                   (
-                    Xmlm.output xmlout (`El_start (("","char"),attribs));
+                    let img = match img with [ Images.Rgba32 img -> img | _ -> assert False ] in
+                    Rgba32.blit img 0 0 texture x y img.Rgba32.width img.Rgba32.height;
+                    let r = Hashtbl.find chars key in
+                    ( r.x := x; r.y := y; r.page := i;)
+                  )
+                end imgs;
+                (* let ext = match !alpha_texture with [ True -> "alpha" | False -> "png" ] in *)
+                let ext = if !stroke > 0. then "lumal" else "alpha" in
+                let imgname =  Printf.sprintf "%s_%d%s.%s" fname i postfix ext in
+                let fname = match !output with [ None -> imgname | Some o -> Filename.concat o imgname] in
+                (
+                  Utils.save_alpha ~with_lum:(!stroke > 0.) (Images.Rgba32 texture) fname;
+                  font.pages := [ imgname :: font.pages ];
+                );
+              )
+            end textures;
+          );    
+
+          List.iter begin fun size ->
+            (
+              Freetype.set_char_size face (!scale *. (float size)) 0. !dpi 0;
+              let spaceIndex = Freetype.get_char_index face (int_of_char ' ') in
+              let (spaceXAdv, spaceYAdv) = Freetype.render_glyph face spaceIndex [] Freetype.Render_Normal in
+              let sizeInfo = Freetype.get_size_metrics face in
+              (
+                let () = Printf.printf "descender: %f, max_advance: %f, x_ppem: %d, y_ppem: %d, ascender: %f, height: %f\n%!" sizeInfo.Freetype.descender sizeInfo.Freetype.max_advance sizeInfo.Freetype.x_ppem
+                sizeInfo.Freetype.y_ppem sizeInfo.Freetype.ascender sizeInfo.Freetype.height in
+                let chars' = 
+                  {
+                    space = spaceXAdv;
+                    size  = size;
+                    lineHeight = sizeInfo.Freetype.height;
+                    ascender = sizeInfo.Freetype.ascender;
+                    descender = ~-. (sizeInfo.Freetype.descender);
+                    char_list = [];
+                  }
+                in
+                  (
+                    UTF8.iter begin fun uchar ->
+                      let code = UChar.code uchar in
+                      let info = Hashtbl.find chars (code,size) in
+            (*           let () = Printf.printf "char: %C, xoffset: %d, yoffset: %d\n%!" (char_of_int code) info.xoffset info.yoffset in *)
+                      chars'.char_list := 
+                        [ {id=code; xadvance=info.xadvance; xoffset=info.xoffset; yoffset = (truncate (sizeInfo.Freetype.ascender -. (float info.yoffset))); x=info.x; y=info.y; width=info.width; height=info.height; page=info.page; } :: chars'.char_list ]
+                    end !pattern;
+                    font.chars := [ chars' :: font.chars]
+                  )
+              );
+            )
+          end !sizes;
+
+          match !xml with
+          [ True ->
+          (*save in xmpl*)
+              let out = open_out resfname in
+              let xmlout = Xmlm.make_output ~nl:True ~indent:(Some 4) (`Channel (open_out resfname)) in
+              (
+                Xmlm.output xmlout (`Dtd None);
+                let fattribs = 
+                  [ "face" =|= font.face 
+                  ; "style" =|= font.style
+                  ; "kerning" =*= font.kerning
+                  ]
+                in
+                Xmlm.output xmlout (`El_start (("","Font"),fattribs));
+                Xmlm.output xmlout (`El_start (("","Pages"),[]));
+                List.iter (fun imgname ->
+                  (
+                        Xmlm.output xmlout (`El_start (("","page"),["file" =|= imgname]));
+                        Xmlm.output xmlout `El_end;
+                  )
+                ) (List.rev font.pages);
+                Xmlm.output xmlout `El_end;
+                List.iter begin fun chars ->
+                  (
+                    Xmlm.output xmlout (`El_start (("","Chars"),
+                      [ "space" =.= chars.space; 
+                        "size" =*= chars.size ; 
+                        "lineHeight" =.= chars.lineHeight; 
+                        "ascender" =.= chars.ascender;
+                        "descender" =.= chars.descender;
+                      ])
+                    );
+                    List.iter begin fun ch -> 
+                      let attribs = 
+                        [ "id" =*= ch.id
+                        ; "xadvance" =*= ch.xadvance
+                        ; "xoffset" =*= ch.xoffset
+                        ; "yoffset" =*= ch.yoffset
+                        ; "x" =*= ch.x
+                        ; "y" =*= ch.y
+                        ; "width" =*= ch.width
+                        ; "height" =*= ch.height
+                        ; "page" =*= ch.page
+                        ]
+                      in
+                      (
+                        Xmlm.output xmlout (`El_start (("","char"),attribs));
+                        Xmlm.output xmlout `El_end;
+                      )
+                    end chars.char_list;
                     Xmlm.output xmlout `El_end;
                   )
-                end chars.char_list;
+                end font.chars;
                 Xmlm.output xmlout `El_end;
+                close_out out;
               )
-            end font.chars;
-            Xmlm.output xmlout `El_end;
-            close_out out;
-          )
-      | _ -> 
-          let out = open_out resfname in
-          let binout = IO.output_channel out in 
-            (
-              IO.write_string binout font.face;
-              IO.write_string binout font.style;
-              IO.write_byte binout font.kerning;
-              IO.write_ui16 binout (List.length font.pages);
-              List.iter (IO.write_string binout) font.pages;
-              IO.write_ui16 binout (List.length font.chars);
-              List.iter begin fun chars ->
+          | _ -> 
+              let out = open_out resfname in
+              let binout = IO.output_channel out in 
                 (
-                  IO.write_double binout chars.space;
-                  IO.write_ui16 binout chars.size;
-                  IO.write_double binout chars.lineHeight;
-                  IO.write_double binout chars.ascender;
-                  IO.write_double binout chars.descender;
-                  IO.write_ui16 binout (List.length chars.char_list);
-                  List.iter begin fun ch ->
+                  IO.write_string binout font.face;
+                  IO.write_string binout font.style;
+                  IO.write_byte binout font.kerning;
+                  IO.write_ui16 binout (List.length font.pages);
+                  List.iter (IO.write_string binout) font.pages;
+                  IO.write_ui16 binout (List.length font.chars);
+                  List.iter begin fun chars ->
                     (
-                      IO.write_i32 binout ch.id;
-                      IO.write_ui16 binout ch.xadvance;
-                      IO.write_i16 binout ch.xoffset;
-                      IO.write_i16 binout ch.yoffset;
-                      IO.write_ui16 binout ch.x;
-                      IO.write_ui16 binout ch.y;
-                      IO.write_ui16 binout ch.width;
-                      IO.write_ui16 binout ch.height;
-                      IO.write_ui16 binout ch.page;
+                      IO.write_double binout chars.space;
+                      IO.write_ui16 binout chars.size;
+                      IO.write_double binout chars.lineHeight;
+                      IO.write_double binout chars.ascender;
+                      IO.write_double binout chars.descender;
+                      IO.write_ui16 binout (List.length chars.char_list);
+                      List.iter begin fun ch ->
+                        (
+                          IO.write_i32 binout ch.id;
+                          IO.write_ui16 binout ch.xadvance;
+                          IO.write_i16 binout ch.xoffset;
+                          IO.write_i16 binout ch.yoffset;
+                          IO.write_ui16 binout ch.x;
+                          IO.write_ui16 binout ch.y;
+                          IO.write_ui16 binout ch.width;
+                          IO.write_ui16 binout ch.height;
+                          IO.write_ui16 binout ch.page;
+                        )
+                      end chars.char_list;
                     )
-                  end chars.char_list;
+                  end font.chars;
+                  close_out out;
                 )
-              end font.chars;
-              close_out out;
-            )
-      ];
-  );
-
-
-
-
+          ];
+      )    
+  ) faces;
