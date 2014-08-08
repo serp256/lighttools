@@ -2,10 +2,10 @@
 
 
 all: 
-	ocamlbuild -use-ocamlfind calcimages.byte
+	ocamlbuild -use-ocamlfind calcimgs.byte
 
 alln: 
-	ocamlbuild -use-ocamlfind calcimages.native
+	ocamlbuild -use-ocamlfind calcimgs.native
 
 %.byte:
 	ocamlbuild -use-ocamlfind $@
