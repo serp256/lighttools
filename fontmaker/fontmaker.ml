@@ -219,7 +219,7 @@ type font =
     chars : mutable list chars;
   };
 
-value empty_font = 
+value empty_font () = 
   {
     face = "";
     style = "";
@@ -287,7 +287,7 @@ let faces = List.map (fun styleName -> try List.find (fun (_, face_info) -> face
     let fname = Filename.chop_extension (Filename.basename !fontFile) ^ face_info.Freetype.style_name in
     let resfname = fname ^ postfix ^  ".fnt" in
     let resfname = match !output with [ None -> resfname | Some dir -> Filename.concat dir resfname ] in
-    let font = empty_font in
+    let font = empty_font () in
       (
         font.face := face_info.Ft.family_name;
         font.style := face_info.Ft.style_name;
