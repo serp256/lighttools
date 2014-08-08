@@ -238,6 +238,7 @@ value output = ref None;
 
 value read_sizes fname = parse_sizes (String.strip (Std.input_file fname));
 value styles = ref "Regular";
+value stylesList = ref False;
 
 (* use xmlm for writing xml *)
 Arg.parse 
@@ -252,10 +253,25 @@ Arg.parse
     ("-scale", Arg.Float (fun s -> scale.val := s ), "scale factor");
     ("-xml", Arg.Set xml, "xml format" ) ;
     ("-suf", Arg.Set_string suffix, "suffix");
-    ("-styles", Arg.Set_string styles, "comma-separated list of styles from");
+    ("-styles", Arg.Set_string styles, "comma-separated list of styles to be exported. use -styles-list to display styles list");
+    ("-styles-list", Arg.Set stylesList, "display full styles list of input file");
     ("-pmaxt", Arg.Int (fun v -> TextureLayout.max_size.val := v), "max texture size");
   ] 
   (fun f -> fontFile.val := f) "Usage msg";
+
+if !stylesList
+then
+  let t = Freetype.init () in
+  let (_, face_info) = Freetype.new_face t !fontFile 0 in
+    (
+      for i = 0 to face_info.Freetype.num_faces do {
+        let (_, face_info) = Freetype.new_face t !fontFile i in
+          Printf.printf "family %s, style %s\n" face_info.Freetype.family_name face_info.Freetype.style_name;
+      };
+
+      exit 0;
+    )
+else ();
 
 value bad_arg what = (Printf.printf "bad argument '%s'\n%!" what; exit 1);
 if !pattern = "" 
@@ -269,7 +285,6 @@ else
 value str_of_float v = 
   snd ( ExtString.String.replace ~str:(string_of_float v) ~sub:"." ~by:"");
 
-(* Printf.printf "chars: [%s] = %d\n%!" !pattern (BatUTF8.length !pattern); *)
 let t = Freetype.init () in
 let (face,face_info) = Freetype.new_face t !fontFile 0 in
 let availStyles = List.init face_info.Freetype.num_faces (fun i -> Freetype.new_face t !fontFile i) in
