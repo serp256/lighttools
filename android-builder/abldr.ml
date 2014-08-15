@@ -176,6 +176,8 @@ value makeProject () = (
                     android:installLocation=\"auto\">
 
                 <application android:label=\"{document('../abldr.xml')/apk/name}\" android:icon=\"@drawable/icon\">
+                    <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />
+
                     <activity android:name=\"{document('../abldr.xml')/apk/activity}\"
                             android:label=\"{document('../abldr.xml')/apk/name}\"
                             android:screenOrientation=\"portrait\"
@@ -220,7 +222,7 @@ value makeProject () = (
                 <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>
                 <uses-permission android:name=\"android.permission.READ_PHONE_STATE\"/>
                 <uses-permission android:name=\"android.permission.RECEIVE_BOOT_COMPLETED\" />
-                <uses-sdk android:targetSdkVersion=\"10\" android:minSdkVersion=\"8\"></uses-sdk>
+                <uses-sdk android:targetSdkVersion=\"10\" android:minSdkVersion=\"9\"></uses-sdk>
 
                 <xsl:choose>
                     <xsl:when test=\"opengl3\">
@@ -301,6 +303,12 @@ value makeProject () = (
     output_string out (Printf.sprintf "\nandroid.library.reference.1=%s/src/android/java\n" !projLightning);
     close_out out;
   );
+
+  let out = open_out (!projPath // "res/values/ints.xml") in
+    (
+      output_string out "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n\t<integer name=\"google_play_services_version\">4452000</integer>\n</resources>";
+      close_out out;
+    );
 );
 
 value args = [
