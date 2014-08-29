@@ -105,6 +105,7 @@ value projKeystorePass = ref "xyupizda";
 value projWithExp = ref False;
 value projSo = ref "";
 value projLightning = ref "";
+value lsync = ref False;
 
 value makeProject () = (
   myassert (!projPackage <> "") "-proj-package is required";
@@ -141,7 +142,7 @@ value makeProject () = (
     );
   );
 
-  
+
   (*let lsyncDir = !projPath // "lsync" in (
     mkdir (lsyncDir // "assets" // "common");
     if !projWithExp then mkdir (lsyncDir // "expansions") else ();
@@ -339,6 +340,8 @@ value args = [
   ("-proj-so", Set_string projSo, "\t\tnative library name");
   ("-proj-lightning", Set_string projLightning, "\tpath to lightning");
   ("-do-not-clean-assets", Set doNotCleanAssets, "\tdon't clen assets folder");
+
+  ("-lsync", Set lsync, "\tuse lsync instead of lsync2");
 ];
 
 parse args (fun arg -> builds.val := [ arg :: !builds ]) "android multiple apks generator";
@@ -452,21 +455,24 @@ value genAssets build = (
 
   mkdir assetsAresmkrDir;
 
-  let cmd = lsync2Cmd () in
-  let cwd = Sys.getcwd () in
-  let assetsDir = cwd // "_aresmkr/assets-raw" in
-    (
-      Sys.chdir "..";
-      runCommand (Printf.sprintf "%s -def assetsDir=%s %s_assets" cmd assetsDir build) "lsync2 failed when copying assets";
-      Sys.chdir cwd;
-    );
-
-    (*let commonAss = try Array.map (fun fname -> lsyncCommonAssets // fname) (Sys.readdir lsyncCommonAssets) with [ _ -> [||] ] in
+  if !lsync
+  then
+    let commonAss = try Array.map (fun fname -> lsyncCommonAssets // fname) (Sys.readdir lsyncCommonAssets) with [ _ -> [||] ] in
     let buildAssDir = lsyncAssets build in
     let buildAss = try Array.map (fun fname -> buildAssDir // fname) (Sys.readdir buildAssDir) with [ _ -> [||] ] in
     let lsyncRules = Array.to_list (ExtArray.Array.filter (fun fname -> Sys.file_exists fname && not (Sys.is_directory fname)) (Array.concat [ commonAss; buildAss ])) in
     let lsyncRules = List.filter (fun rulesFname -> not ExtString.String.(starts_with (Filename.basename rulesFname) "." || ends_with rulesFname ".m4.include")) lsyncRules in
-      runCommand ("lsync -i " ^ resDir ^ " -o " ^ assetsAresmkrDir ^ " " ^ (String.concat " " lsyncRules)) "lsync failed when copying assets";*)
+      runCommand ("lsync -i " ^ resDir ^ " -o " ^ assetsAresmkrDir ^ " " ^ (String.concat " " lsyncRules)) "lsync failed when copying assets"
+  else
+    let cmd = lsync2Cmd () in
+    let cwd = Sys.getcwd () in
+    let assetsDir = cwd // "_aresmkr/assets-raw" in
+      (
+        Sys.chdir "..";
+        runCommand (Printf.sprintf "%s -def assetsDir=%s %s_assets" cmd assetsDir build) "lsync2 failed when copying assets";
+        Sys.chdir cwd;
+      );
+
 
   let md5Fname = aresmkrDir // "assets.md5" in
   let files = assetsAresmkrDir // "*" in
@@ -563,20 +569,23 @@ value genExpansion build =
         printf "\n\n[ generating expansions for build %s... ]\n%!" build;
         mkdir expDir;
 
-        let cmd = lsync2Cmd () in
-        let cwd = Sys.getcwd () in
-        let expDir = cwd // expDir in
-          (
-            Sys.chdir "..";
-            runCommand (Printf.sprintf "%s -def expDir=%s %s_exp" cmd expDir build) "lsync2 failed when copying expansions";
-            Sys.chdir cwd;
-          );
-          (*let commonExp = try Array.map (fun fname -> lsyncCommonExp // fname) (Sys.readdir lsyncCommonExp) with [ _ -> [||] ] in
+        if !lsync
+        then
+          let commonExp = try Array.map (fun fname -> lsyncCommonExp // fname) (Sys.readdir lsyncCommonExp) with [ _ -> [||] ] in
           let buildExpDir = lsyncExp build in
           let buildExp = try Array.map (fun fname -> buildExpDir // fname) (Sys.readdir buildExpDir) with [ _ -> [||] ] in
           let lsyncRules = Array.to_list (ExtArray.Array.filter (fun fname -> Sys.file_exists fname && not (Sys.is_directory fname)) (Array.concat [ commonExp; buildExp ])) in
           let lsyncRules = List.filter (fun rulesFname -> not ExtString.String.(starts_with (Filename.basename rulesFname) "." || ends_with rulesFname ".m4.include")) lsyncRules in
-            runCommand ("lsync -i " ^ resDir ^ " -o " ^ expDir ^ " " ^ (String.concat " " lsyncRules)) "lsync failed when copying expansions";*)
+            runCommand ("lsync -i " ^ resDir ^ " -o " ^ expDir ^ " " ^ (String.concat " " lsyncRules)) "lsync failed when copying expansions"
+        else
+          let cmd = lsync2Cmd () in
+          let cwd = Sys.getcwd () in
+          let expDir = cwd // expDir in
+            (
+              Sys.chdir "..";
+              runCommand (Printf.sprintf "%s -def expDir=%s %s_exp" cmd expDir build) "lsync2 failed when copying expansions";
+              Sys.chdir cwd;
+            );
 
         let inp = open_in (Filename.concat androidDir "AndroidManifest.xml") in
           let xmlinp = Xmlm.make_input ~strip:True (`Channel inp) in
