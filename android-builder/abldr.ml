@@ -52,7 +52,7 @@ value getAbsolutePath path =
 
     let retval = Filename.concat (Unix.getcwd ()) (Filename.basename path) in (
       Unix.chdir cwd;
-      retval;  
+      retval;
     );
   );
 
@@ -96,12 +96,10 @@ value baseExp = ref False;
 (* value noExp = ref False; *)
 value lib = ref False;
 value allBuilds = ref False;
-value lsync2 = ref False;
 
 value proj = ref False;
 value projPackage = ref "";
 value projAppName = ref "";
-value projActivity = ref "";
 value projPath = ref "android";
 value projKeystorePass = ref "xyupizda";
 value projWithExp = ref False;
@@ -110,14 +108,14 @@ value projLightning = ref "";
 
 value makeProject () = (
   myassert (!projPackage <> "") "-proj-package is required";
-  myassert (!projActivity <> "") "-proj-activity is required";
   myassert (!projAppName <> "") "-proj-app-name is required";
   myassert (!projSo <> "") "-proj-so is required";
   myassert (!projLightning <> "") "-proj-lightning is required";
 
-  runCommand (Printf.sprintf "android create project --target android-10 --name abldr_android_project --path \"%s\" --activity %s --package %s" !projPath !projActivity !projPackage)
+  runCommand (Printf.sprintf "android create project --target android-10 --name abldr_android_project --path \"%s\" --package %s --activity Activity" !projPath !projPackage)
               "android tool failed when creating base android project";
 
+  ignore(Sys.command ("rm -r " ^ (!projPath // "src/*")));
   try Sys.remove (!projPath // "AndroidManifest.xml") with [ Sys_error _ -> () ];
   try Sys.remove (!projPath // "ant.properties") with [ Sys_error _ -> () ];
   try Sys.remove (!projPath // "proguard-project.txt") with [ Sys_error _ -> () ];
@@ -128,9 +126,9 @@ value makeProject () = (
   mkdir (!projPath // "libs" // "armeabi-v7a");
   mkdir (!projPath // "assets");
 
-  let kstore = String.lowercase !projActivity in
+  let kstore = "keystore" in
   let kstoreFname = !projPath // kstore in
-  let cmd = Printf.sprintf 
+  let cmd = Printf.sprintf
               "keytool -genkey -keystore %s.keystore -alias %s -dname \"CN=%s, OU=Unknown, O=Redspell, L=Orel, ST=Unknown, C=RU\" -keypass %s -storepass %s -keyalg RSA -keysize 2048 -validity 10000"
               kstoreFname kstore (Unix.getlogin ()) !projKeystorePass !projKeystorePass
   in (
@@ -143,10 +141,11 @@ value makeProject () = (
     );
   );
 
-  let lsyncDir = !projPath // "lsync" in (
+  
+  (*let lsyncDir = !projPath // "lsync" in (
     mkdir (lsyncDir // "assets" // "common");
-    if !projWithExp then mkdir (lsyncDir // "expansions") else ();    
-  );
+    if !projWithExp then mkdir (lsyncDir // "expansions") else ();
+  );*)
 
   let manifestsDir = !projPath // "manifests" in
 
@@ -178,15 +177,16 @@ value makeProject () = (
                 <application android:label=\"{document('../abldr.xml')/apk/name}\" android:icon=\"@drawable/icon\">
                     <meta-data android:name=\"com.google.android.gms.version\" android:value=\"@integer/google_play_services_version\" />
 
-                    <activity android:name=\"{document('../abldr.xml')/apk/activity}\"
-                            android:label=\"{document('../abldr.xml')/apk/name}\"
-                            android:screenOrientation=\"portrait\"
-                            android:launchMode=\"singleTop\"
-                            android:configChanges=\"orientation\">
-                        <intent-filter>
-                            <action android:name=\"android.intent.action.MAIN\" />
-                            <category android:name=\"android.intent.category.LAUNCHER\" />
-                        </intent-filter>                    
+                    <activity android:name=\"ru.redspell.lightning.NativeActivity\"
+                      android:label=\"@string/app_name\"
+                      android:screenOrientation=\"landscape\"
+                      android:launchMode=\"singleTop\"
+                      android:configChanges=\"orientation|screenSize\">
+                      <meta-data android:name=\"android.app.lib_name\" android:value=\"{document('../abldr.xml')/apk/lib}\"
+                      <intent-filter>
+                          <action android:name=\"android.intent.action.MAIN\" />
+                          <category android:name=\"android.intent.category.LAUNCHER\" />
+                      </intent-filter>
                     </activity>
 
                     <service android:name=\"ru.redspell.lightning.expansions.LightExpansionsDownloadService\" />
@@ -265,21 +265,21 @@ value makeProject () = (
     </xsl:stylesheet>"
   in (
     mkdir manifestsDir;
-    
-    let out = open_out (manifestsDir // "manifest.xslt") in (    
+
+    let out = open_out (manifestsDir // "manifest.xslt") in (
       output_string out manifest;
       close_out out;
     );
 
     let out = open_out (manifestsDir // "default.xml") in (
       output_string out defaultManifest;
-      close_out out;      
+      close_out out;
     );
   );
 
   let out = open_out (!projPath // "abldr.xml") in (
-    output_string out (Printf.sprintf "<?xml version=\"1.0\"?>\n<apk>\n\t<package>%s</package>\n\t<activity>%s</activity>\n\t<name>%s</name>\n\t<version>1.0.0</version>\n\t<withexp>%B</withexp>\n</apk>"
-                                        !projPackage !projActivity !projAppName !projWithExp);
+    output_string out (Printf.sprintf "<?xml version=\"1.0\"?>\n<apk>\n\t<package>%s</package>\n\t<name>%s</name>\n\t<version>1.0.0</version>\n\t<withexp>%B</withexp>\n\t<lib>%s</lib>\n</apk>"
+                                        !projPackage !projAppName !projWithExp !projSo);
     close_out out;
   );
 
@@ -288,7 +288,7 @@ value makeProject () = (
     close_out out;
   );
 
-  let activity =
+  (*let activity =
     Printf.sprintf "package %s;\n\nimport ru.redspell.lightning.LightActivity;\n\npublic class %s extends LightActivity {\n\tstatic {\n\t\tru.redspell.lightning.utils.Log.enabled = false;\n\t\tSystem.loadLibrary(\"%s\");\n\t}\n}"
                     !projPackage !projActivity !projSo
   in
@@ -296,7 +296,7 @@ value makeProject () = (
   let out = open_out (!projPath // "src" // packagePath // (!projActivity ^ ".java")) in (
     output_string out activity;
     close_out out;
-  );
+  );*)
 
   let out = open_out_gen [ Open_append ] 0o755 (!projPath // "local.properties") in (
     seek_out out (out_channel_length out);
@@ -332,7 +332,6 @@ value args = [
 
   ("-proj", Set proj, "\t\tcreate android project with all needed for light android builder");
   ("-proj-package", Set_string projPackage, "\tjava package of new project");
-  ("-proj-activity", Set_string projActivity, "\tactivity class name");
   ("-proj-app-name", Set_string projAppName, "\tapplication name");
   ("-proj-path", Set_string projPath, "\t\tdirectory, where project structure will be created, by default './android'");
   ("-proj-keystore-pass", Set_string projKeystorePass, "\tkeystore password, by default 'xyupizda'");
@@ -340,8 +339,6 @@ value args = [
   ("-proj-so", Set_string projSo, "\t\tnative library name");
   ("-proj-lightning", Set_string projLightning, "\tpath to lightning");
   ("-do-not-clean-assets", Set doNotCleanAssets, "\tdon't clen assets folder");
-
-  ("-lsync2", Set lsync2, "\t\tuse lsync2 tool instead of lsync")
 ];
 
 parse args (fun arg -> builds.val := [ arg :: !builds ]) "android multiple apks generator";
@@ -406,7 +403,7 @@ value readProjConfig () =
           [ `El_start ((_, "package"), _) -> match Xmlm.input xmlinp with [ `Data data -> projConfig.package := data | _ -> () ]
           | `El_start ((_, "version"), _) -> match Xmlm.input xmlinp with [ `Data data -> projConfig.version := data | _ -> () ]
           | `El_start ((_, "withexp"), _) -> match Xmlm.input xmlinp with [ `Data data -> projConfig.withExp := bool_of_string data | _ -> () ]
-          | `El_start ((_, "lsync2-def"), attrs) -> 
+          | `El_start ((_, "lsync2-def"), attrs) ->
             let k = try List.find_map (fun ((_, n), v) -> if n = "key" then Some v else None) attrs with [ Not_found -> failwith "error parsing abldr.xml: <lsync2-def/> should contain 'key' attribute" ] in
             let v = try List.find_map (fun ((_, n), v) -> if n = "val" then Some v else None) attrs with [ Not_found -> failwith "error parsing abldr.xml: <lsync2-def/> should contain 'val' attribute" ] in
             let () = Printf.printf "new lsync2 def %s %s\n%!" k v in
@@ -455,23 +452,21 @@ value genAssets build = (
 
   mkdir assetsAresmkrDir;
 
-  if !lsync2
-  then
-    let cmd = lsync2Cmd () in
-    let cwd = Sys.getcwd () in
-    let assetsDir = cwd // "_aresmkr/assets-raw" in
-      (
-        Sys.chdir "..";
-        runCommand (Printf.sprintf "%s -def assetsDir=%s %s_assets" cmd assetsDir build) "lsync2 failed when copying assets";
-        Sys.chdir cwd;
-      )
-  else
-    let commonAss = try Array.map (fun fname -> lsyncCommonAssets // fname) (Sys.readdir lsyncCommonAssets) with [ _ -> [||] ] in
+  let cmd = lsync2Cmd () in
+  let cwd = Sys.getcwd () in
+  let assetsDir = cwd // "_aresmkr/assets-raw" in
+    (
+      Sys.chdir "..";
+      runCommand (Printf.sprintf "%s -def assetsDir=%s %s_assets" cmd assetsDir build) "lsync2 failed when copying assets";
+      Sys.chdir cwd;
+    );
+
+    (*let commonAss = try Array.map (fun fname -> lsyncCommonAssets // fname) (Sys.readdir lsyncCommonAssets) with [ _ -> [||] ] in
     let buildAssDir = lsyncAssets build in
     let buildAss = try Array.map (fun fname -> buildAssDir // fname) (Sys.readdir buildAssDir) with [ _ -> [||] ] in
     let lsyncRules = Array.to_list (ExtArray.Array.filter (fun fname -> Sys.file_exists fname && not (Sys.is_directory fname)) (Array.concat [ commonAss; buildAss ])) in
     let lsyncRules = List.filter (fun rulesFname -> not ExtString.String.(starts_with (Filename.basename rulesFname) "." || ends_with rulesFname ".m4.include")) lsyncRules in
-      runCommand ("lsync -i " ^ resDir ^ " -o " ^ assetsAresmkrDir ^ " " ^ (String.concat " " lsyncRules)) "lsync failed when copying assets";
+      runCommand ("lsync -i " ^ resDir ^ " -o " ^ assetsAresmkrDir ^ " " ^ (String.concat " " lsyncRules)) "lsync failed when copying assets";*)
 
   let md5Fname = aresmkrDir // "assets.md5" in
   let files = assetsAresmkrDir // "*" in
@@ -501,7 +496,7 @@ value archiveApk ?(apk = True) ?(expansions = True) build =
         runCommand ("rm -f " ^ (Filename.concat apkArchiveDir "*.apk")) "rm failed when trying to remove previous apk";
         runCommand ("cp -Rv `find " ^ androidDir ^ "/bin -name '*-release.apk'` " ^ apkArchiveDir) "cp failed when trying to copy apk to archive";
       ) else ();
-      
+
       if expansions then
       (
         printf "\n\n[ archiving expansions version %s for build %s... ]\n%!" ver build;
@@ -568,23 +563,20 @@ value genExpansion build =
         printf "\n\n[ generating expansions for build %s... ]\n%!" build;
         mkdir expDir;
 
-        if !lsync2
-        then
-          let cmd = lsync2Cmd () in
-          let cwd = Sys.getcwd () in
-          let expDir = cwd // expDir in
-            (
-              Sys.chdir "..";
-              runCommand (Printf.sprintf "%s -def expDir=%s %s_exp" cmd expDir build) "lsync2 failed when copying expansions";
-              Sys.chdir cwd;
-            )
-        else
-          let commonExp = try Array.map (fun fname -> lsyncCommonExp // fname) (Sys.readdir lsyncCommonExp) with [ _ -> [||] ] in
+        let cmd = lsync2Cmd () in
+        let cwd = Sys.getcwd () in
+        let expDir = cwd // expDir in
+          (
+            Sys.chdir "..";
+            runCommand (Printf.sprintf "%s -def expDir=%s %s_exp" cmd expDir build) "lsync2 failed when copying expansions";
+            Sys.chdir cwd;
+          );
+          (*let commonExp = try Array.map (fun fname -> lsyncCommonExp // fname) (Sys.readdir lsyncCommonExp) with [ _ -> [||] ] in
           let buildExpDir = lsyncExp build in
           let buildExp = try Array.map (fun fname -> buildExpDir // fname) (Sys.readdir buildExpDir) with [ _ -> [||] ] in
           let lsyncRules = Array.to_list (ExtArray.Array.filter (fun fname -> Sys.file_exists fname && not (Sys.is_directory fname)) (Array.concat [ commonExp; buildExp ])) in
           let lsyncRules = List.filter (fun rulesFname -> not ExtString.String.(starts_with (Filename.basename rulesFname) "." || ends_with rulesFname ".m4.include")) lsyncRules in
-            runCommand ("lsync -i " ^ resDir ^ " -o " ^ expDir ^ " " ^ (String.concat " " lsyncRules)) "lsync failed when copying expansions";
+            runCommand ("lsync -i " ^ resDir ^ " -o " ^ expDir ^ " " ^ (String.concat " " lsyncRules)) "lsync failed when copying expansions";*)
 
         let inp = open_in (Filename.concat androidDir "AndroidManifest.xml") in
           let xmlinp = Xmlm.make_input ~strip:True (`Channel inp) in
@@ -617,12 +609,12 @@ value genExpansion build =
                     )
                   else
                     let outFname = Filename.concat expAresmkrDir (expFname (getPackage ()) verCode True) in
-                    let command = "aresmkr -concat -i " ^ expDir ^ " -o " ^ outFname in                      
+                    let command = "aresmkr -concat -i " ^ expDir ^ " -o " ^ outFname in
                       runCommand command ("aresmkr failed when making main expansion for build '" ^ build ^ "'")
                 )
               with [ Not_found -> failwith "no versionCode in your manifest" ]
             | _ -> failwith "no manifest tag in your manifest"
-            ];                  
+            ];
           );
       );
 
@@ -667,7 +659,7 @@ value compileApk build =
     )
   else
     runCommand ("aresmkr -o " ^ (Filename.concat assetsDir "index") ^ " -merge " ^ assetsAresmkrFname) "failed when making assets binary index";
-  
+
   printf "\n\n[ compiling apk for build %s... ]\n%!" build;
   runCommand ("ant -f " ^ (Filename.concat androidDir "build.xml") ^ " release") "ant failed when compiling apk";
 
@@ -704,7 +696,7 @@ value install () =
         installObb main;
         installObb patch;
       )
-    else ();        
+    else ();
   );
 );
 
@@ -728,5 +720,5 @@ else
       if !expansions || !patchFor <> "" || !expVer <> "" then genExpansion build else ();
       if !apk then compileApk build else ();
     )
-  ) !builds;    
+  ) !builds;
 );

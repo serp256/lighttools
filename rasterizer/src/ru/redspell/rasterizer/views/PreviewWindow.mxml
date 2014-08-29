@@ -28,6 +28,8 @@
 		}
 
 		public function preview(obj:IFlatten):void {
+			trace("preview1");
+
 			_obj = obj;
 			_obj.render();
 
@@ -70,6 +72,8 @@
 			if (fltMc != null) {
 				_timer.start();
 			}
+
+			trace("preview2");
 		}
 
 		protected function switchFrame(next:Boolean = true):void {

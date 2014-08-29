@@ -27,7 +27,9 @@
 
 			PopUpManager.addPopUp(previewWin, (FlexGlobals.topLevelApplication as WindowedApplication), true);
 			PopUpManager.centerPopUp(previewWin);
+			trace("qwe");
 			previewWin.preview(flatten.fromDisplayObject(src, Utils.getClsScale(cls, data.profile)));
+			trace("asd");
 		}
 		]]></fx:Script>
 

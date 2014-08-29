@@ -333,24 +333,34 @@ package ru.redspell.rasterizer.flatten {
                     continue;
                 }
 
+                trace("1");
+
                 if (_namedMasks.hasOwnProperty(fimg.name)) {
                     i = applyMask(_namedMasks[fimg.name], fimg);
                     continue;
                 }
+
+                trace("2");
 
                 if (maskForAll != null) {
                     i = applyMask(maskForAll, fimg, false);
                     continue;
                 }
 
+                trace("3");
+
                 i++;
             }
+
+            trace("4");
 
             if (maskForAll != null) {
                 _childs.splice(_childs.indexOf(maskForAll), 1);
                 maskForAll.dispose();
             }
 			//clipTransparency();
+
+            trace("5");
 
             return this;
         }
