@@ -11,6 +11,7 @@ package {
 	import flash.geom.Point;
 	import flash.net.FileFilter;
 	import flash.net.FileReference;
+	import flash.system.System;
 	import flash.text.TextField;
 	import flash.text.TextFieldType;
 	import flash.text.TextFormat;
@@ -23,6 +24,8 @@ package {
 	import ui.vbase.*;
 
 	import vo.VOQuest;
+
+	import vo.VOQuest;
 	[SWF(backgroundColor="0xDDFFBB" , width="680" , height="720")]
 	public class Quest extends Sprite {
 		private var startbn:VButton;
@@ -32,6 +35,7 @@ package {
 
 		private var quests:Object = {};
 		private var tf:TextField = new TextField();
+		private var sizetf:TextField = new TextField();
 		private var questPanel:VBox;
 
 		private var usedVoqn:Array = [];
@@ -47,6 +51,10 @@ package {
 		private var helpPanel:HelpPanel = new HelpPanel();
 
 		public static var instance:Quest;
+		public var buttonsCount:int = 0;
+		public static var maxButtonsCount:int = 100;
+
+
 		public var folds:Array = []/*of QuestView*/;
 
 		/**
@@ -290,6 +298,22 @@ package {
 			searchBox.add(button, {left:630, top:20});
 			button.addClickListener(saveKinds);
 
+			var lb:VLabel = new VLabel('max cnt');
+			searchBox.add(lb, {left:700, top:10});
+
+
+			sizetf.border = true;
+			sizetf.text = '100';
+			sizetf.width = 40;
+			sizetf.height = 30;
+			sizetf.backgroundColor = 0xFFFFFF;
+			sizetf.background = true;
+			sizetf.type = TextFieldType.INPUT;
+			sizetf.defaultTextFormat = format1;
+			sizetf.x = 700;
+			sizetf.y = 20;
+			searchBox.addChild(sizetf);
+
 		}
 
 		private function linkQuests():void {
@@ -449,12 +473,17 @@ package {
 
 		}
 
+		private var qlist:Object = {};
+
 		/**
 		 * клик по любому квесту
 		 * @param e
 		 */
 		private function onClickQuest(e:*):void {
 			try {
+				buttonsCount = 1;
+				sizetf.text = String(int(sizetf.text));
+				maxButtonsCount = int(sizetf.text);
 				folds = [];
 				//usedQV = {};
 				//usedVoqn = [];
@@ -479,13 +508,22 @@ package {
 				}
 
 				var qv:QuestView = new QuestView(cur.data/*, onClickQuest*/);
+				qlist = {};
+				qlist[qv.toString()] = [];
 				usedVoqn = cur.data is VOQuest ? [cur.data] : [];
 				usedQV = {};
-				questPanel.add(qv);
+				//questPanel.add(qv);
+				recsize = 0;
 				rec(qv, cur.data, true);
+				questPanel.add(qv);
+
 			} catch (e:Error){
 				trace("Global Error:", e, e.message, e.getStackTrace());
 			}
+		}
+
+		private function recadd(qv:QuestView):void {
+
 		}
 
 		//флаг, что мы тычем кнопку бэк и в стек не надо добавлять эти данные
@@ -521,6 +559,8 @@ package {
 		}
 
 
+		private var recsize:int = 0;
+
 		/**
 		 * добавляем всю хурму рекурсивно до упора
 		 * @param qv вьюха
@@ -529,35 +569,14 @@ package {
 		 * @param parentvoq квест родитель
 		 */
 		public function rec(qv:QuestView, voq:*, isFirst:Boolean = false, parentvoq:* = null):void {
+			trace("rec size " + recsize +' freememory ' + System.freeMemory);
+			recsize++;
 			var next:Array = [];
 			var button:VButton;
 			if (voq is VOQuest){
 				currlikeness = voq.qname;
 				voq.nextQ = voq.nextQ.sort(sortLikeness);
 				//trace("QUEST " + voq.qname)
-				for each (var voqn:VOQuest in voq.nextQ){
-					//trace(voqn.qname, voqn.likeness[voq.qname]);
-
-					if (usedVoqn.indexOf(voqn) == -1){
-						usedVoqn.push(voqn);
-						var qv1:QuestView = new QuestView(voqn);
-						//if ((voq.nextQ.length == 1) || isFirst){
-							rec(qv1, voqn, false, qv.data);
-						//}
-						next.push(qv1);
-					} else {
-						qv.button.setSkin(AssetManager.getEmbedSkin('VToolBlueButtonBg', VSkin.STRETCH | VSkin.CONTAIN), {h:30, vCenter:0, hCenter:0, w:50});
-						qv.button.skin.setLayout({w:qv.button.icon.contentWidth+20})
-						//qv.geometryPhase();
-
-						if (usedQV[voq.qname]){
-							for each (button in usedQV[voq.qname]){
-								button.setSkin(AssetManager.getEmbedSkin('VToolBlueButtonBg', VSkin.STRETCH), {h:16, vCenter:0, hCenter:0, w:16});
-								//button.geometryPhase();
-							}
-						}
-					}
-				}
 
 				var prev:Array = [];
 				if (voq.prev){
@@ -593,6 +612,34 @@ package {
 					qv.setPrev(prev);
 				}
 
+				for each (var voqn:VOQuest in voq.nextQ){
+					//trace(voqn.qname, voqn.likeness[voq.qname]);
+
+
+
+					if (usedVoqn.indexOf(voqn) == -1){
+						usedVoqn.push(voqn);
+
+						var qv1:QuestView = new QuestView(voqn);
+						next.push(qv1);
+						buttonsCount++;
+						if (buttonsCount <= maxButtonsCount){
+							rec(qv1, voqn, false, qv.data);
+						}
+
+					} else {
+						qv.button.setSkin(AssetManager.getEmbedSkin('VToolBlueButtonBg', VSkin.STRETCH | VSkin.CONTAIN), {h:30, vCenter:0, hCenter:0, w:50});
+						qv.button.skin.setLayout({w:qv.button.icon.contentWidth+20})
+						//qv.geometryPhase();
+
+						if (usedQV[voq.qname]){
+							for each (button in usedQV[voq.qname]){
+								button.setSkin(AssetManager.getEmbedSkin('VToolBlueButtonBg', VSkin.STRETCH), {h:16, vCenter:0, hCenter:0, w:16});
+								//button.geometryPhase();
+							}
+						}
+					}
+				}
 			} else {
 				//quests.sortOn('qname', Array.CASEINSENSITIVE);
 				if (voq == 0){
@@ -600,7 +647,11 @@ package {
 						if (!voq1.level && voq1.prevQ.length == 0){
 							usedVoqn.push(voq1);
 							qv1 = new QuestView(voq1);
-							rec(qv1, voq1, false, qv.data);
+							buttonsCount++;
+							if (buttonsCount <= maxButtonsCount){
+								rec(qv1, voq1, false, qv.data);
+							}
+
 							next.push(qv1);
 						}
 					}
@@ -608,20 +659,30 @@ package {
 					if (voq1.level == voq){
 						usedVoqn.push(voq1);
 						qv1 = new QuestView(voq1/*, onClickQuest*/);
-						//if (next.length == 0 || isFirst){
-							rec(qv1, voq1, false, qv.data);
-						//}
 						next.push(qv1);
+						//if (next.length == 0 || isFirst){
+						buttonsCount++;
+						if (buttonsCount <= maxButtonsCount){
+							rec(qv1, voq1, false, qv.data);
+						}
+						//}
+
 					}
 				}
 			}
 
 			if (next.length){
-				qv.setNext(next);
+				if (qv.parent && qv.parent.parent){
+					if ((qv.parent.parent as QuestView).nextBox.list.length == 1){
+						qv.parentbox = (qv.parent.parent as QuestView).parentbox ? (qv.parent.parent as QuestView).parentbox : (qv.parent.parent as QuestView).container;
+					}
+				}
+				qv.setNext(next, qv.parentbox);
 				if (next.length > 1){
 					folds.push(qv);
 				}
 			}
+			return;
 		}
 
 		private function onKeyUp(e:KeyboardEvent):void {
