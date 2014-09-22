@@ -190,28 +190,14 @@ value makeProject () = (
                       </intent-filter>
                     </activity>
 
-                    <service android:name=\"ru.redspell.lightning.expansions.LightExpansionsDownloadService\" />
-                    <receiver android:name=\"ru.redspell.lightning.expansions.LightExpansionsAlarmReceiver\" />
+                    <service android:name=\"ru.redspell.lightning.expansions.DownloadService\" />
+                    <receiver android:name=\"ru.redspell.lightning.expansions.AlarmReceiver\" />
 
-                    <service android:name=\"ru.redspell.lightning.payments.BillingService\" />
-                    <receiver android:name=\"ru.redspell.lightning.payments.BillingReceiver\">
-                        <intent-filter>
-                            <action android:name=\"com.android.vending.billing.IN_APP_NOTIFY\" />
-                            <action android:name=\"com.android.vending.billing.RESPONSE_CODE\" />
-                            <action android:name=\"com.android.vending.billing.PURCHASE_STATE_CHANGED\" />
-                        </intent-filter>
-                    </receiver>
-
-                    <receiver android:name=\"ru.redspell.lightning.LightNotificationsReceiver\">
+                    <receiver android:name=\"ru.redspell.lightning.notifications.Receiver\">
                       <intent-filter>
                         <action android:name=\"android.intent.action.BOOT_COMPLETED\" />
                       </intent-filter>
                     </receiver>
-
-                    <activity android:name=\"com.tapjoy.TJCOffersWebView\" android:configChanges=\"keyboardHidden|orientation\" />
-                    <activity android:name=\"com.tapjoy.TapjoyFeaturedAppWebView\" android:configChanges=\"keyboardHidden|orientation\" />
-                    <activity android:name=\"com.tapjoy.TapjoyVideoView\" android:configChanges=\"keyboardHidden|orientation\" />
-                    <activity android:name=\"com.facebook.LoginActivity\"/>
                 </application>
 
                 <uses-permission android:name=\"android.permission.INTERNET\" />
@@ -307,7 +293,7 @@ value makeProject () = (
 
   let out = open_out (!projPath // "res/values/ints.xml") in
     (
-      output_string out "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n\t<integer name=\"google_play_services_version\">4452000</integer>\n</resources>";
+      output_string out "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n\t<integer name=\"google_play_services_version\">5089000</integer>\n</resources>";
       close_out out;
     );
 );
