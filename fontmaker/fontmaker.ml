@@ -5,9 +5,9 @@ open ExtList;
 
 module Ft = Freetype;
 
-value print_face_info fi = 
-  Printf.printf 
-    "num_faces: %d, num_glyphs: %d, fname: %s, sname: %s\n" 
+value print_face_info fi =
+  Printf.printf
+    "num_faces: %d, num_glyphs: %d, fname: %s, sname: %s\n"
     fi.Ft.num_faces fi.Ft.num_glyphs fi.Ft.family_name fi.Ft.style_name
 ;
 
@@ -29,11 +29,11 @@ value xml = ref False;
 value bgcolor = {Color.color = {Color.r = 0; g = 0; b = 0}; alpha = 0};
 value scale = ref 1.;
 
-value make_size face size callback = 
+value make_size face size callback =
   (
     Freetype.set_char_size face (!scale *. size) 0. !dpi 0;
 
-    
+
       UTF8.iter (fun uchar ->
         (
           let code = UChar.code uchar in
@@ -121,7 +121,7 @@ value make_size face size callback =
 
                     Printf.printf "\n%!";
                   done;
-                  
+
                   Printf.printf "blank rows: %d, cols %d\n%!" blankRows blankCols; *)
                   callback code xadv (int_of_float metrics.gm_hori.bearingx - bearingx + blankCols) (int_of_float metrics.gm_hori.bearingy + bearingy - blankRows) img;
                 );
@@ -141,10 +141,10 @@ value make_size face size callback =
     (* take bitmap as is for now *)
     let open Freetype in
 (*     let () = Printf.printf "%C: bi.left = %d, bi.top = %d,bi.width: %d, bi.height: %d\n%!" (char_of_int code) bi.bitmap_left bi.bitmap_top bi.bitmap_width bi.bitmap_height in *)
-    
+
 (*     let w = bi.bitmap_width in
     let h = bi.bitmap_height in *)
-    
+
     (* let img =  Rgba32.make bi.bitmap_width bi.bitmap_height bgcolor in *)
     (
 (*       for y = 0 to bi.bitmap_height - 1 do
@@ -155,10 +155,10 @@ value make_size face size callback =
         done
       done; *)
 
-      
 
 
-      let (stroke, xadv, yadv) = Freetype.stroke_render face char_index [] Freetype.Render_Normal (size *. !stroke) in 
+
+      let (stroke, xadv, yadv) = Freetype.stroke_render face char_index [] Freetype.Render_Normal (size *. !stroke) in
       let (w, h) = Freetype.stroke_dims stroke in
       let strokeImg =  Rgba32.make w h bgcolor in
         (
@@ -175,19 +175,19 @@ value make_size face size callback =
 
           callback code mertics.gm_hori.advance (int_of_float mertics.gm_hori.bearingx) (int_of_float mertics.gm_hori.bearingy) strokeImg;
           (* callback code xadv bi.bitmap_left bi.bitmap_top strokeImg; *)
-        );   
+        );
     )
   )
   end !pattern; *)
 
 (*
-type sdescr = 
+type sdescr =
   {
-    id: int; xadvance: float; xoffset: int; yoffset: int; 
+    id: int; xadvance: float; xoffset: int; yoffset: int;
     width: int; height: int; x: mutable int; y: mutable int; page: mutable int
   };
 *)
-type char_info = 
+type char_info =
   {
     id : mutable int;
     xadvance : mutable int;
@@ -200,7 +200,7 @@ type char_info =
     page : mutable int;
   };
 
-type chars = 
+type chars =
   {
     space : mutable float;
     size : mutable int;
@@ -210,7 +210,7 @@ type chars =
     char_list : mutable list char_info;
   };
 
-type font = 
+type font =
   {
     face : mutable string;
     style : mutable string;
@@ -219,7 +219,7 @@ type font =
     chars : mutable list chars;
   };
 
-value empty_font () = 
+value empty_font () =
   {
     face = "";
     style = "";
@@ -228,7 +228,7 @@ value empty_font () =
     chars = [];
   };
 
-value parse_sizes str = 
+value parse_sizes str =
   try
     sizes.val := List.map int_of_string (String.nsplit str ",")
   with [ _ -> failwith "Failure parse sizes" ];
@@ -241,7 +241,7 @@ value styles = ref "Regular";
 value stylesList = ref False;
 
 (* use xmlm for writing xml *)
-Arg.parse 
+Arg.parse
   [
     ("-c",Arg.Set_string pattern,"chars");
     ("-s",Arg.String parse_sizes,"sizes");
@@ -256,7 +256,7 @@ Arg.parse
     ("-styles", Arg.Set_string styles, "comma-separated list of styles to be exported. use -styles-list to display styles list");
     ("-styles-list", Arg.Set stylesList, "display full styles list of input file");
     ("-pmaxt", Arg.Int (fun v -> TextureLayout.max_size.val := v), "max texture size");
-  ] 
+  ]
   (fun f -> fontFile.val := f) "Usage msg";
 
 if !stylesList
@@ -264,7 +264,8 @@ then
   let t = Freetype.init () in
   let (_, face_info) = Freetype.new_face t !fontFile 0 in
     (
-      for i = 0 to face_info.Freetype.num_faces do {
+      Printf.printf "face_info.Freetype.num_faces %d\n%!" (face_info.Freetype.num_faces);
+      for i = 0 to face_info.Freetype.num_faces - 1 do {
         let (_, face_info) = Freetype.new_face t !fontFile i in
           Printf.printf "family %s, style %s\n" face_info.Freetype.family_name face_info.Freetype.style_name;
       };
@@ -274,15 +275,15 @@ then
 else ();
 
 value bad_arg what = (Printf.printf "bad argument '%s'\n%!" what; exit 1);
-if !pattern = "" 
+if !pattern = ""
 then bad_arg "chars"
-else 
+else
   if !sizes = [] then bad_arg "sizes"
-  else 
+  else
     if !fontFile = "" then bad_arg "font file"
     else ();
 
-value str_of_float v = 
+value str_of_float v =
   snd ( ExtString.String.replace ~str:(string_of_float v) ~sub:"." ~by:"");
 
 let t = Freetype.init () in
@@ -292,11 +293,11 @@ let faces = List.map (fun styleName -> try List.find (fun (_, face_info) -> face
 
   List.iter (fun (face, face_info) ->
     let chars = Hashtbl.create 1 in
-    let postfix = 
+    let postfix =
       match !suffix with
       [ "" ->
-          if !scale = 1. then "" else "x" ^ (str_of_float !scale) 
-      | _ -> !suffix 
+          if !scale = 1. then "" else "x" ^ (str_of_float !scale)
+      | _ -> !suffix
       ]
     in
     let fname = Filename.chop_extension (Filename.basename !fontFile) ^ face_info.Freetype.style_name in
@@ -343,7 +344,7 @@ let faces = List.map (fun styleName -> try List.find (fun (_, face_info) -> face
                 );
               )
             end textures;
-          );    
+          );
 
           List.iter begin fun size ->
             (
@@ -354,7 +355,7 @@ let faces = List.map (fun styleName -> try List.find (fun (_, face_info) -> face
               (
                 let () = Printf.printf "descender: %f, max_advance: %f, x_ppem: %d, y_ppem: %d, ascender: %f, height: %f\n%!" sizeInfo.Freetype.descender sizeInfo.Freetype.max_advance sizeInfo.Freetype.x_ppem
                 sizeInfo.Freetype.y_ppem sizeInfo.Freetype.ascender sizeInfo.Freetype.height in
-                let chars' = 
+                let chars' =
                   {
                     space = spaceXAdv;
                     size  = size;
@@ -369,7 +370,7 @@ let faces = List.map (fun styleName -> try List.find (fun (_, face_info) -> face
                       let code = UChar.code uchar in
                       let info = Hashtbl.find chars (code,size) in
             (*           let () = Printf.printf "char: %C, xoffset: %d, yoffset: %d\n%!" (char_of_int code) info.xoffset info.yoffset in *)
-                      chars'.char_list := 
+                      chars'.char_list :=
                         [ {id=code; xadvance=info.xadvance; xoffset=info.xoffset; yoffset = (truncate (sizeInfo.Freetype.ascender -. (float info.yoffset))); x=info.x; y=info.y; width=info.width; height=info.height; page=info.page; } :: chars'.char_list ]
                     end !pattern;
                     font.chars := [ chars' :: font.chars]
@@ -385,8 +386,8 @@ let faces = List.map (fun styleName -> try List.find (fun (_, face_info) -> face
               let xmlout = Xmlm.make_output ~nl:True ~indent:(Some 4) (`Channel (open_out resfname)) in
               (
                 Xmlm.output xmlout (`Dtd None);
-                let fattribs = 
-                  [ "face" =|= font.face 
+                let fattribs =
+                  [ "face" =|= font.face
                   ; "style" =|= font.style
                   ; "kerning" =*= font.kerning
                   ]
@@ -403,15 +404,15 @@ let faces = List.map (fun styleName -> try List.find (fun (_, face_info) -> face
                 List.iter begin fun chars ->
                   (
                     Xmlm.output xmlout (`El_start (("","Chars"),
-                      [ "space" =.= chars.space; 
-                        "size" =*= chars.size ; 
-                        "lineHeight" =.= chars.lineHeight; 
+                      [ "space" =.= chars.space;
+                        "size" =*= chars.size ;
+                        "lineHeight" =.= chars.lineHeight;
                         "ascender" =.= chars.ascender;
                         "descender" =.= chars.descender;
                       ])
                     );
-                    List.iter begin fun ch -> 
-                      let attribs = 
+                    List.iter begin fun ch ->
+                      let attribs =
                         [ "id" =*= ch.id
                         ; "xadvance" =*= ch.xadvance
                         ; "xoffset" =*= ch.xoffset
@@ -434,9 +435,9 @@ let faces = List.map (fun styleName -> try List.find (fun (_, face_info) -> face
                 Xmlm.output xmlout `El_end;
                 close_out out;
               )
-          | _ -> 
+          | _ ->
               let out = open_out resfname in
-              let binout = IO.output_channel out in 
+              let binout = IO.output_channel out in
                 (
                   IO.write_string binout font.face;
                   IO.write_string binout font.style;
@@ -470,5 +471,5 @@ let faces = List.map (fun styleName -> try List.find (fun (_, face_info) -> face
                   close_out out;
                 )
           ];
-      )    
+      )
   ) faces;
