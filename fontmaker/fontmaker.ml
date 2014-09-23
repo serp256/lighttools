@@ -239,6 +239,7 @@ value output = ref None;
 value read_sizes fname = parse_sizes (String.strip (Std.input_file fname));
 value styles = ref "Regular";
 value stylesList = ref False;
+value skip_style_suffix = ref False;
 
 (* use xmlm for writing xml *)
 Arg.parse
@@ -256,6 +257,7 @@ Arg.parse
     ("-styles", Arg.Set_string styles, "comma-separated list of styles to be exported. use -styles-list to display styles list");
     ("-styles-list", Arg.Set stylesList, "display full styles list of input file");
     ("-pmaxt", Arg.Int (fun v -> TextureLayout.max_size.val := v), "max texture size");
+    ("-skip-style-suffix", Arg.Set skip_style_suffix, "skip_style_suffix");
   ]
   (fun f -> fontFile.val := f) "Usage msg";
 
@@ -300,7 +302,13 @@ let faces = List.map (fun styleName -> try List.find (fun (_, face_info) -> face
       | _ -> !suffix
       ]
     in
-    let fname = Filename.chop_extension (Filename.basename !fontFile) ^ face_info.Freetype.style_name in
+    let style_suffix = 
+      match !skip_style_suffix with
+      [ True -> ""
+      | _ -> face_info.Freetype.style_name 
+      ]
+    in
+    let fname = Filename.chop_extension (Filename.basename !fontFile) ^ style_suffix in
     let resfname = fname ^ postfix ^  ".fnt" in
     let resfname = match !output with [ None -> resfname | Some dir -> Filename.concat dir resfname ] in
     let font = empty_font () in
