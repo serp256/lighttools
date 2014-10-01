@@ -1,6 +1,0 @@
-[
-	{
-		"path":"/",
-		"include":["ui_res/common/*.png"]
-	}
-]
