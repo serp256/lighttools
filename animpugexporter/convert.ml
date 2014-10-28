@@ -147,6 +147,7 @@ Utils.makeDir !outdir;
 
 module Pug = Pug.Make(
   	struct
+    value suffix       = !suffix;
 		value prjName      = "farm";
 		value prjDir       = !inp_dir;
 		value outDir       = !outdir;
@@ -231,7 +232,13 @@ let packs	= getActualLibsFromJson allObjs in
 
 match !without_cntr with
 	[ False -> 
-		let cmd = Printf.sprintf "cntrgen -i %s" !outdir in (
+    let sfx = 
+      match !suffix with
+      [ "" -> ""
+      | sfx -> "-s " ^ sfx 
+      ]
+    in
+		let cmd = Printf.sprintf "cntrgen %s  -i %s" sfx !outdir in (
 			Printf.printf "\n%s\n%!" cmd;
 			match Sys.command cmd with
 			[ 0 -> ()

@@ -3,6 +3,7 @@ open Images;
 
 module type P =
   sig
+  value suffix : string;
 	value prjName:  	string;
 	value prjDir:   	string;
 	value outDir:		string;
@@ -145,7 +146,7 @@ module Make(P:P) =
 			numFrames
 		) in
 		let animsOut	= IO.close_out animsOut in
-        let out			= open_out (P.outDir /// oname /// "animations.dat") in (
+        let out			= open_out (P.outDir /// oname /// "animations" ^ P.suffix ^ ".dat") in (
         	output out animsOut 0 (String.length animsOut);
             close_out out;
             numFrames
@@ -221,7 +222,7 @@ module Make(P:P) =
 
 		) in
 		let framesOut	= IO.close_out framesOut in
-        let out			= open_out (P.outDir /// oname /// "frames.dat") in (
+        let out			= open_out (P.outDir /// oname /// "frames" ^ P.suffix ^ ".dat") in (
         	output out framesOut 0 (String.length framesOut);
             close_out out;
         )
@@ -279,7 +280,7 @@ module Make(P:P) =
                 	imgIndex + 1
             	)
             )) 0 imgs;
-			let pathSaveImg = (P.outDir /// packname) in (
+			let pathSaveImg = (P.outDir /// packname ^ P.suffix) in (
 				(* Если гамма *)
 	            match P.is_gamma with
 		            [ True -> 
@@ -458,7 +459,7 @@ module Make(P:P) =
 
 			) in
 			let texOut	= IO.close_out texOut in
-	        let out		= open_out (P.outDir /// oname /// "texInfo.dat") in (
+	        let out		= open_out (P.outDir /// oname /// "texInfo" ^ P.suffix ^".dat") in (
 	        	output out texOut 0 (String.length texOut);
 	            close_out out;
 	        )
