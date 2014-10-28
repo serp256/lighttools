@@ -1,6 +1,7 @@
 {
 	"main": {
-		"include": [ "" ]
+		"include" : [ "" ],
+		"exclude": [ "un_hero_level1_old" ]
 
 	}
 }

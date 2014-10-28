@@ -83,7 +83,7 @@ value get_packs objs =
 								  let reg = Str.regexp reg_str in
 								  let (exclude_libs,libs_filter) = List.partition (fun lib -> Str.string_match reg lib 0) res in
 									(
-									  (* Printf.printf "reg_str : %S; exclude_libs  : [%s]  \n%!" reg_str (String.concat "; " exclude_libs); *)
+									  Printf.printf "reg_str : %S; exclude_libs  : [%s]  \n%!" reg_str (String.concat "; " exclude_libs);
 									  libs.val := !libs @ exclude_libs ;
 									  libs_filter 
 									)
@@ -185,12 +185,13 @@ value split_pack pack =
 (* Record актуальных либ *)
 value getActualLibsFromJson allObjs = (
 	let (libs, other_libs)	= get_packs allObjs in (
-	let libs_split			= List.fold_left (fun packs' pack -> (
+	let libs_split = 
+    List.fold_left (fun packs' pack -> (
   		let split_packs		= split_pack pack in
 	  	packs' @ split_packs
-	)) [] libs in (
-	  	libs_split
-	)
+	  )) [] libs 
+  in 
+	(libs_split,other_libs)
   )
 );
 
@@ -200,6 +201,7 @@ value writeInfoObjects infObjs = (
 	let _			= (
 	  	IO.write_i16 infobjOut (List.length infObjs);
 	  	List.iter (fun (w,h,name) -> (
+      Printf.printf "write to info_objects %s \n%!" name;
 			IO.write_byte   infobjOut (int_of_float w);
 			IO.write_byte   infobjOut (int_of_float h);
 			Utils.writeUTF  infobjOut name;
@@ -222,8 +224,10 @@ let (allObjs, infObjs) =
 		(objsLst @ [Node.Object.name o], [(Node.Object.width o, Node.Object.height o, Node.Object.name o)::infObjs])
   	)) ([],[]) (Node.Project.objects prj)
 in
+let (packs, other_libs)	= getActualLibsFromJson allObjs in
+let () = Printf.printf "Count other_libs : %d\n%!" (List.length other_libs) in 
+let infObjs = List.filter (fun (_,_,name) -> not (List.mem name other_libs)) infObjs in
 let _		= writeInfoObjects infObjs in
-let packs	= getActualLibsFromJson allObjs in
   	(* let _ = List.iter (fun pack -> Printf.printf "Pack %s : [%s]\n%!" pack.name (String.concat "; " pack.objs)) packs in *)
 	List.iter (fun pack -> (
 		(* Записать данных либы *)
