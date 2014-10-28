@@ -136,7 +136,8 @@ value round (v:float) : float =
   [ True -> mult *. (v' -. 1.)
   | _ -> mult *. v'
   ];
-  
+
+  value roundi (v:float) : int = int_of_float (round v);
 
 
   (* Создание директории *)

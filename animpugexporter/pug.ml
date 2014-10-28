@@ -58,7 +58,7 @@ module Make(P:P) =
 					Utils.pngDims (P.imgDir /// (Layer.imgPath l))
 				  with [
 					Sys_error e -> (
-					  Printf.printf "\nWARNING ERROR!\t%s" e;
+					  Printf.printf "\nWARNING ERROR!\t%s\n%!" e;
 					  (0, 0)
 					)
 				  ]
@@ -120,7 +120,9 @@ module Make(P:P) =
 							)
 						)
 					);
-					let _			= Printf.printf "\n NO ANIM %b\n" (P.no_anim) in
+          (*
+					let _			= Printf.printf "\n NO ANIM %b\n%!" (P.no_anim) in
+      *)
 					let frmIndx = 
 						match P.no_anim with
 						[ False -> (
@@ -164,10 +166,10 @@ module Make(P:P) =
 				let animLst = if (P.no_anim) then [List.hd animLst] else animLst in
 				List.iter (fun f -> (
 					
-					let fx			= Utils.round (P.scale *. (Frame.x f)) in
-					let fy			= Utils.round (P.scale *. (Frame.y f)) in
-					let iconX		= Utils.round (P.scale *. (Animation.iconX a)) in
-					let iconY		= Utils.round (P.scale *. (Animation.iconY a)) in
+					let fx			= Utils.roundi (P.scale *. (Frame.x f)) in
+					let fy			= Utils.roundi (P.scale *. (Frame.y f)) in
+					let iconX		= Utils.roundi (P.scale *. (Animation.iconX a)) in
+					let iconY		= Utils.roundi (P.scale *. (Animation.iconY a)) in
 					let points		= Frame.points f in
 					let numPoints	= List.length points in
 					let _			= (
@@ -179,8 +181,8 @@ module Make(P:P) =
 
 						(* Cписок свойств точек *)
 						List.iter (fun p -> (
-							let px    = Utils.round (P.scale *. (Point.x p)) in
-							let py    = Utils.round (P.scale *. (Point.y p)) in
+							let px    = Utils.roundi (P.scale *. (Point.x p)) in
+							let py    = Utils.roundi (P.scale *. (Point.y p)) in
 							let label = Point.label p in (
 								IO.write_i16	framesOut px;
 								IO.write_i16	framesOut py;
@@ -193,10 +195,11 @@ module Make(P:P) =
 					let _			= IO.write_byte	framesOut numLayers in
 					List.iter (fun l -> (
 						let imgPath		= Layer.imgPath l in
-						let imgRcd		= Hashtbl.find ttInfHash imgPath in
+						let imgRcd		= Hashtbl.find ttInfHash (oname, imgPath) in
+            let () = Printf.printf "imgPath : %s; imgRcd : %d \n%!" imgPath imgRcd.img_index  in
 						(* let imgRcd		= List.find (fun (i:img) -> i.path = imgPath)	imgsInfLst in *)
-						let lx			= Utils.round (P.scale *. (Layer.x l)) + fx in
-						let ly			= Utils.round (P.scale *. (Layer.y l)) + fy in
+						let lx			= Utils.roundi (P.scale *. (Layer.x l)) + fx in
+						let ly			= Utils.roundi (P.scale *. (Layer.y l)) + fy in
 						(* let lx			= Utils.round (P.scale *. ((Layer.x l) +. (Frame.x fstFrm)) -.  (float fx)) in *)
 						let alpha		= int_of_float (Layer.alpha l ) in
 						let flip		= Utils.int_of_bool (Layer.flip l ) in
@@ -233,7 +236,7 @@ module Make(P:P) =
 					if (List.mem imgPath imgsl) then
 						imgsl
 					else (
-						imgsl @ [imgPath]
+						 [imgPath :: imgsl]
 					)
 				)) imgsf (Common.childs f)
 			)) allimgs (Common.childs a)
@@ -244,6 +247,7 @@ module Make(P:P) =
 
 	(* Запись файла атласа либы *)
 	(* Добавляем в хэштаблицу imgRcd типа img *)
+
 	value writeLibAtlasFile ttIndex imginfo packname ttInfHash = (
         let w				= imginfo.TextureLayout.width in
         let h				= imginfo.TextureLayout.height in
@@ -251,8 +255,9 @@ module Make(P:P) =
         let rgb				= Rgba32.make w h {Color.color = {Color.r = 0; g = 0; b = 0}; alpha = 0} in
         let new_img			= Images.Rgba32 rgb in
         (
-			List.fold_left (fun imgIndex ((texId, recId, fname, dummy ), (sx, sy, isRotate, img)) -> (
+			      List.fold_left (fun imgIndex ((texId, recId, (objname, fname), dummy ), (sx, sy, isRotate, img)) -> (
               	let (iw,ih) = Images.size img in (
+                  Printf.printf "texId : %d; recId : %d; fname : %s\n%!" texId recId fname;
 					(* Printf.printf "\n fname %s oname %s\n" fname oname; *)
 					(* let ()		= Printf.printf "\n Sx Sy iw ih %d %d %d %d\n" sx sy iw ih in  *)
                     try (
@@ -269,8 +274,8 @@ module Make(P:P) =
                             raise Exit;
                       	)
                       ];
-                    let imgRcd:img = { tt_index = ttIndex; img_index = imgIndex; rect = {rx = sx; ry = sy; rw = iw; rh = ih} } in
-                    	Hashtbl.add ttInfHash fname imgRcd;
+                    let imgRcd:img = { tt_index = ttIndex; img_index = recId; rect = {rx = sx; ry = sy; rw = iw; rh = ih} } in
+                    	Hashtbl.add ttInfHash (objname, fname) imgRcd;
                 	imgIndex + 1
             	)
             )) 0 imgs;
@@ -294,26 +299,26 @@ module Make(P:P) =
 		            	(* Обычное сохранение *)
 		                Images.save (pathSaveImg ^ ".png") (Some Images.Png) [] new_img
 		            ];
-		        match P.gen_pvr with
+		              match P.gen_pvr with
 	                [ True -> 
 	                    (
 	                    	try
-								Utils.pvr_png	pathSaveImg;
-								Utils.gzip_img	(pathSaveImg ^ ".pvr");	                    		
+								          Utils.pvr_png	pathSaveImg;
+								          Utils.gzip_img	(pathSaveImg ^ ".pvr");	                    		
 	                    	with
-	                    	[ _ -> Printf.printf "\n === WARNING!!! NO PVR TOOL ===\n"]
+	                    	[ _ -> Printf.printf "\n === WARNING!!! NO PVR TOOL ===\n%!"]
 
 	                    )
 	                | _ -> ()
 	                ];
-		        match P.gen_dxt with
+		              match P.gen_dxt with
 	                [ True -> 
 	                    (
 	                    	try
-								Utils.dxt_png	pathSaveImg;
+								          Utils.dxt_png	pathSaveImg;
                   				Utils.gzip_img	(pathSaveImg ^ ".dds");	                    		
 	                    	with
-	                    	[ _ -> Printf.printf "\n === WARNING!!! NO DDS TOOL ===\n"]
+	                    	[ _ -> Printf.printf "\n === WARNING!!! NO DDS TOOL ===\n%!"]
 
 	                    )
 	                | _ -> ()
@@ -326,7 +331,7 @@ module Make(P:P) =
 
 	(* Получить картинку *)
 	value getImg fname = (
-
+    let () = Printf.printf "getImg :%s \n%!" fname in
 		let srcImg		= OImages.load (P.imgDir /// fname) [] in
 		(* let srcImg	= OImages.rgba32 srcImg in *)
 		let image		= srcImg#image in
@@ -346,11 +351,11 @@ module Make(P:P) =
 					let img = Images.load dstFname [] in
 					(
 					  match img with
-					  [ Images.Index8	 _ -> Printf.printf("img type: Index8\n")
-					  | Images.Rgb24	 _ -> Printf.printf("img type: Rgb24\n")
-					  | Images.Index16	 _ -> Printf.printf("img type: Index16\n")
-					  | Images.Rgba32	 _ -> Printf.printf("img type: Rgba32\n")
-					  | Images.Cmyk32	 _ -> Printf.printf("img type: Cmyk32\n")
+					  [ Images.Index8	 _ -> Printf.printf("img type: Index8\n%!")
+					  | Images.Rgb24	 _ -> Printf.printf("img type: Rgb24\n%!")
+					  | Images.Index16	 _ -> Printf.printf("img type: Index16\n%!")
+					  | Images.Rgba32	 _ -> Printf.printf("img type: Rgba32\n%!")
+					  | Images.Cmyk32	 _ -> Printf.printf("img type: Cmyk32\n%!")
 					  ];
 
 					  Sys.remove srcFname;
@@ -379,18 +384,26 @@ module Make(P:P) =
 
 
 	(* Запись атласа либы *)
-	value writeLibAtlas packname lstImgs ttInfHash isWholly = (
+	value writeLibAtlas packname (lstImgs: list (string * list string)) ttInfHash isWholly = (
 		(* Собираем список текстурной информации *)
+    let () = Printf.printf "writeLibAtlas pack :%s; lstImgs : [ %s ]  \n%!" packname (String.concat "; " (List.map (fun (name, fnames) -> Printf.sprintf "%s : [ %s ]\n " name (String.concat "; " fnames)  ) lstImgs)) in
 		let images = 
 			(* List.fold_left (fun accLst (oname, fnameLst) -> ( *)
-			List.fold_left (fun accLst fname -> (
-				let img = getImg fname in
-				[((0, 0, fname, ""), img)::accLst]
+			List.fold_left (fun accLst (objname, fnames) -> (
+        let (_,res) =
+          List.fold_right (fun fname  (recId, result)-> 
+            let img = getImg fname in
+            (recId + 1, [((0, recId, (objname, fname), ""), img):: result])
+          ) fnames (0,[])
+        in
+        [ (True, res) :: accLst ] 
 			)) [] lstImgs in
+    (*
 		let images		= [(isWholly, images)] in
-		let _			= Printf.printf "\n PROCESSING TEXTURE START %s\n" (packname) in
-		let (textures:list (TextureLayout.page (int * int * string * string))) = TextureLayout.layout_min images in 
-		let _			= Printf.printf "\n PROCESSING TEXTURE END %s\n" (packname) in
+    *)
+		let _			= Printf.printf "\n PROCESSING TEXTURE START %s\n%!" (packname) in
+		let (textures:list (TextureLayout.page (int * int * (string * string) * string))) = TextureLayout.layout_min images in 
+		let _			= Printf.printf "\n PROCESSING TEXTURE END %s\n%!" (packname) in
 		let ttIndex		= List.fold_left (fun ttIndex imginfo -> (
 			(* Имя либы + "_номер текстуры" *)
 			let packname = packname ^ "_" ^ (string_of_int ttIndex) in
@@ -414,7 +427,7 @@ module Make(P:P) =
 				)) (Project.objects prj) in 
 			let uniqObjImgsLst = makeLstImgs obj in
 			let imgsInfLst	= List.fold_left (fun imgRcdLst path -> (
-				let imgRcd = Hashtbl.find ttInfHash path in
+				let imgRcd = Hashtbl.find ttInfHash  (oname, path) in
 				[imgRcd::imgRcdLst]
 			)) [] uniqObjImgsLst in
 			(* let ()			= Printf.printf "\n ONAME  %s\n" (oname) in *)
@@ -422,7 +435,7 @@ module Make(P:P) =
 				IO.write_byte	texOut numAtlases;
 				(* Printf.printf "\n numAtlases %d\n" (numAtlases); *)
 				for i = 0 to numAtlases - 1 do
-					(* let packname = Printf.sprintf "%s_%d.png" packname i in *)
+					let packname = Printf.sprintf "%s_%d.png" packname i in 
 					let _		 = Utils.writeUTF	texOut packname in
 					(* Ищем в общем списке текстур, картинки принадлежащие текущей текстуре *)
 					let ttImgs	= List.find_all (fun img -> (
@@ -456,16 +469,18 @@ module Make(P:P) =
 	(* Записать данных либы *)
 	value writeLibData prj packname lstObjs isWholly = (
 		let ttInfHash							= Hashtbl.create 30 in
-		let lstImgs:list string	= 
-			let lstImgs = List.fold_left (fun lstImgs oname -> 
-				let obj	= List.find (fun o -> (
-					(Object.name o) = oname
-				)) (Project.objects prj) in (
-					let uniqObjImgsLst = makeLstImgs obj in (
-						lstImgs @ uniqObjImgsLst
-					)
-				)
-			) [] lstObjs in
+		let lstImgs:list (string * list string) =
+			let lstImgs = 
+        List.fold_left (fun lstImgs oname -> 
+          let obj	= 
+            List.find (fun o -> (
+              (Object.name o) = oname
+            )) (Project.objects prj) 
+          in 
+          let uniqObjImgsLst = makeLstImgs obj in
+          [ (oname, uniqObjImgsLst) :: lstImgs ]
+			  ) [] lstObjs 
+      in
 			ExtList.List.unique lstImgs
 		in
 		if (List.length lstImgs) > 0 then (

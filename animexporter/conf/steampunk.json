@@ -1,5 +1,5 @@
 {
 	"main": {
-		"include": [ "" ]
+		"include": [ "gb_" ]
 	}
 }
