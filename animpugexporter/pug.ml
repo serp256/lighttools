@@ -298,7 +298,9 @@ module Make(P:P) =
 		                )
 		            | _ -> 
 		            	(* Обычное сохранение *)
+                    (
 		                Images.save (pathSaveImg ^ ".png") (Some Images.Png) [] new_img
+                    )
 		            ];
 		              match P.gen_pvr with
 	                [ True -> 
@@ -436,7 +438,7 @@ module Make(P:P) =
 				IO.write_byte	texOut numAtlases;
 				(* Printf.printf "\n numAtlases %d\n" (numAtlases); *)
 				for i = 0 to numAtlases - 1 do
-					let packname = Printf.sprintf "%s_%d.png" packname i in 
+					let packname = Printf.sprintf "%s_%d%s.png" packname i P.suffix in 
 					let _		 = Utils.writeUTF	texOut packname in
 					(* Ищем в общем списке текстур, картинки принадлежащие текущей текстуре *)
 					let ttImgs	= List.find_all (fun img -> (
