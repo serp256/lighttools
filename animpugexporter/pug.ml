@@ -346,10 +346,18 @@ module Make(P:P) =
 				let dstFname = Filename.temp_file "dst" ""  in
 				(
 					Images.save srcFname (Some Images.Png) [] image;
-					if Sys.command 
-						(Printf.sprintf "convert -resize %d%% -filter catrom %s png32:%s" (int_of_float (scale *. 100.)) srcFname dstFname) <> 0
-						then failwith "convert returns non-zero exit code"
-					else ();
+          let cmd = 
+            match scale > 1. with
+            [ True -> Printf.sprintf "convert -resize %d%% -filter catrom %s png32:%s" (int_of_float (scale *. 100.)) srcFname dstFname
+            | _ ->Printf.sprintf "convert -interpolative-resize %d%% -sharpen 0x.1 %s png32:%s" (int_of_float (scale *. 100.)) srcFname dstFname 
+            ]
+          in
+            (
+              Printf.printf "%s\n%!" cmd;
+              if Sys.command cmd <> 0
+                then failwith "convert returns non-zero exit code"
+              else ();
+            );
 
 					let img = Images.load dstFname [] in
 					(
