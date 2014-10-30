@@ -302,6 +302,8 @@ module Layer =
     value y t = Common.floatProp t "y";
     value visible t = Common.boolProp t "visible";
     value scale t = Common.floatProp t "scale";
+    value scaleX t = Common.floatProp t "scaleX";
+    value scaleY t = Common.floatProp t "scaleY";
 
     value setImgPath t s = Common.setStrProp t "imgPath" s;
     value setFlip t b = Common.setBoolProp t "flip" b;
@@ -310,6 +312,8 @@ module Layer =
     value setY t f = Common.setFloatProp t "y" f;
     value setVisible t b = Common.setBoolProp t "visible" b;
     value setScale t f = Common.setFloatProp t "scale" f;
+    value setScaleX t f = Common.setFloatProp t "scaleX" f;
+    value setScaleY t f = Common.setFloatProp t "scaleY" f;
 
     (* value toString t = Printf.sprintf "\t\t\tlayer %s, flip %B, alpha %f, pos %f,%f, visible %B, scale %f" (imgPath t) (flip t) (alpha t) (x t) (y t) (visible t) (scale t); *)
     value toString t = Printf.sprintf "\t\t\tlayer %s" Common.(Properties.toString t.properties);

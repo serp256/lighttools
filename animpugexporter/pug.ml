@@ -16,6 +16,7 @@ module type P =
 	value without_cntr:	bool;
 	value is_android:	bool;
 	value no_anim:		bool;
+  value useScaleXY  : bool;
   end;
 
 
@@ -204,7 +205,19 @@ module Make(P:P) =
 						(* let lx			= Utils.round (P.scale *. ((Layer.x l) +. (Frame.x fstFrm)) -.  (float fx)) in *)
 						let alpha		= int_of_float (Layer.alpha l ) in
 						let flip		= Utils.int_of_bool (Layer.flip l ) in
-						let scale		= Int32.bits_of_float (Layer.scale l ) in (
+						let scale		= Int32.bits_of_float (Layer.scale l )  in
+            let scaleXY =
+              match P.useScaleXY with
+              [ True -> 
+                  let sx = Layer.scaleX l in
+                  let sy = Layer.scaleY l in
+                  (
+                    Printf.printf "scaleX : %f; scaleY : %f\n%!" sx sy;
+                    Some (Int32.bits_of_float sx, Int32.bits_of_float sy )
+                  )
+              | _ -> None
+              ]
+            in (
 							(* TODO Возможно на клиенте индекс начинается с 1 *)
 							IO.write_byte		framesOut imgRcd.tt_index; (*texID*)
 							IO.write_i32		framesOut imgRcd.img_index; (* rectId *)
@@ -213,6 +226,14 @@ module Make(P:P) =
 		          IO.write_byte		framesOut alpha;
 		          IO.write_byte		framesOut flip;
 		          IO.write_real_i32	framesOut scale;
+              match scaleXY with
+              [ Some (scaleX, scaleY) -> 
+                  (
+                    IO.write_real_i32	framesOut scaleX;
+                    IO.write_real_i32	framesOut scaleY;
+                  )
+              | _ -> ()
+              ]
 						)
 					)) (Common.childs f)
 
