@@ -1,4 +1,7 @@
 {
+	"spells" : {
+		"include" : [ "sp_" ]
+	},
 	"main": {
 		"include" : [ "" ],
 		"exclude": [ "un_hero_level1_old" ]
