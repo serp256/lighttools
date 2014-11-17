@@ -1,6 +1,15 @@
 value binFname = "lsync2run";
 value binPath = Filename.concat "." binFname;
-value rulesPath = Filename.concat "." "lsync2_rules.ml";
+value rulesFile = ref "lsync2_rules.ml";
+
+Arg.parse 
+  [
+    ("-rule-file",  Arg.Set_string rulesFile, "rules name file bu default lsync2_rules.ml");
+  ]
+  (fun _ -> ())
+  "";
+
+  value rulesPath = Filename.concat "." !rulesFile;
 
 value compile () =
   if Sys.file_exists rulesPath
