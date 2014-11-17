@@ -298,8 +298,6 @@ value makeProject () = (
     );
 );
 
-value lsync2_rule_name = ref None;
-
 value args = [
   ("-i", Set_string inDir, "\t\t\tinput directory (for example, farm root directory, which contains android subdirectory)");
   ("-manifest", Set manifest, "\t\tgenerate manifest for builds");
@@ -330,7 +328,6 @@ value args = [
   ("-do-not-clean-assets", Set doNotCleanAssets, "\tdon't clen assets folder");
 
   ("-lsync", Set lsync, "\tuse lsync instead of lsync2");
-  ("-lsync-rule-file", String (fun name -> lsync2_rule_name.val := Some name), "\tname rules file for lsync2");
 ];
 
 parse args (fun arg -> builds.val := [ arg :: !builds ]) "android multiple apks generator";
@@ -417,13 +414,7 @@ value readProjConfig () =
 value projConfig () = Lazy.force (Lazy.from_fun readProjConfig);
 
 value lsync2Cmd = 
-  let rule_file =
-    match !lsync2_rule_name with
-    [ Some name -> Printf.sprintf  " -rule-file %s " name 
-    | _ -> ""
-    ]
-  in
-  lazy ("lsync2 " ^ rule_file ^ (String.concat " " (projConfig ()).lsync2Defs));
+  lazy ("lsync2 " ^ (String.concat " " (projConfig ()).lsync2Defs));
 
 value lsync2Cmd () = Lazy.force lsync2Cmd;
 
