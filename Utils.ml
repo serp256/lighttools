@@ -118,6 +118,17 @@ value plx_png plt img =
     ];
   );
 
+value texcmprss img =
+  let cmd = Printf.sprintf "texcmprss -pvr -atc -etc-fast -etc2-fast -dxt %s.png " img in
+    (
+      Printf.printf "%s \n%!" cmd;
+      match Sys.command cmd with
+      [ 0 -> ()
+      |_ -> failwith (Printf.sprintf "Fail to call %s" cmd)
+      ];
+    );
+
+
 value gzip_img img =
   let cmd = Printf.sprintf "gzip %s" img in
   (

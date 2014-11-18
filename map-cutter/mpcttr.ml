@@ -6,9 +6,8 @@ value src = ref "";
 value outDir = ref "";
 value suffix = ref  "";
 value scale = ref 1.;
-value gen_dds = ref False;
-value gen_pvr = ref False;
 value gamma = ref 0.;
+value need_compress = ref False;
 
 value write_utf out str =
 (
@@ -23,8 +22,7 @@ value args =
     ("-o", Arg.Set_string outDir, "\t\toutDirput directory for images and metadata");
     ("-suffix", Arg.Set_string suffix,"\t\tSuffix for name images");
     ("-scale", Arg.Set_float scale, "\t\tScaling factor");
-    ("-pvr", Arg.Set gen_pvr, "\t\tCompress to pvr");
-    ("-dds", Arg.Set gen_dds, "\t\tCompress to dds");
+    ("-compress", Arg.Set need_compress, "\t\tCompress map");
     ("-gamma", Arg.Set_float gamma, "\t\tGamma");
   ];
 
@@ -160,20 +158,11 @@ let i = ref ~-1 in
           (
             let file_name = Filename.chop_extension (Filename.concat !outDir fname) in
               (
-                if !gen_dds then
-                (
-                  Utils.dxt_png file_name;
-                  Utils.gzip_img (file_name ^ ".dds");
-                )
+                if !need_compress then 
+                  (
+                    Utils.texcmprss file_name;
+                  )
                 else ();
-                match !gen_pvr with
-                [ True -> 
-                    (
-                      Utils.pvr_png file_name;
-                      Utils.gzip_img (file_name ^ ".pvr");
-                    )
-                | _ -> ()
-                ];
 
               );
             write_utf out fname;
