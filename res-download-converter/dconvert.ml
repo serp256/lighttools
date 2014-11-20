@@ -8,6 +8,8 @@ value raw_path = main_path ^ "raw/";
 value tmp_data = main_path ^ "tmp_data/";
 value data_path = main_path ^ "data/";
 
+value rule_file = ref "lsync2_rules.ml";
+
 value version = ref 0;
 value conf_file = ref "resconfig";
 value only_raw = ref False;
@@ -48,12 +50,13 @@ value getFile fname md5 =
 
 value final json = 
 (
-	not (List.exists (fun (name, json) -> (
-		match json with 
-		[ `String _ -> False
-		| _ -> True 
-		]
-	) ) json);
+	if json = [] then True else False;
+(* 	not (List.exists (fun (name, json) -> ( *)
+(* 		match json with  *)
+(* 		[ `String _ -> False *)
+(* 		| _ -> True  *)
+(* 		] *)
+(* 	) ) json); *)
 );
 
 value getParamName lst = 
@@ -79,7 +82,7 @@ value start_convert lst =
 	let (path, param) = getParamName lst in
 	(
 		let in_file = Printf.sprintf "%s%s" raw_path path in 
-		let command = (Printf.sprintf "lsync2 %s -def path=\"%s\" downloader" param in_file) in 
+		let command = (Printf.sprintf "lsync2 -def rule_file=\"%s\" %s -def path=\"%s\" downloader" !rule_file param in_file) in 
 		(
 			Printf.printf "%s\n\n" command;
 (* 			if True then () else *)
@@ -157,6 +160,7 @@ value rec read_json ~key ~json ~params ~list_files () =
 				in
 				let new_files_list = ref list_files in 
 				(
+(* 					Printf.printf "PARAM_NAME %s" param_name_value ; *)
 					List.iter ( fun (name,json) -> 
 						if name = param_name then () else
 						(
@@ -225,7 +229,8 @@ value () =
 		("-i", Set_string conf_file, "configuration file - default resconfig");
 		("-only_raw",Set only_raw, "only raw");
 		("-ios-vers",Set_string ios_vers, "ios apps version (for json name)");
-		("-android-vers",Set_string android_vers, "android apps version (for json name)")
+		("-android-vers",Set_string android_vers, "android apps version (for json name)");
+		("-lsync2-file",Set_string rule_file, "lsync file")
 	] ( fun _ -> () ) "";
 
 	if !ios_vers = "" then failwith "Need -ios-vers param" else ();
