@@ -17,7 +17,7 @@ value rulesPath = Filename.concat "." !rulesFile;
 value compile () =
   if Sys.file_exists rulesPath
   then
-    let cmd = Printf.sprintf "ocamlfind ocamlc -package camlp4 -syntax camlp4r -package lsync2lib -package ojson -package str -linkpkg %s -o %s" rulesPath binFname in
+    let cmd = Printf.sprintf "ocamlfind ocamlc -package camlp4  -syntax camlp4r -package lsync2lib -package ojson -package str -g -linkpkg %s -o %s" rulesPath binFname in
     let ret = Sys.command cmd in
       (
         Sys.command "rm -f *.cm{o,i}";
