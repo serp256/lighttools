@@ -78,6 +78,11 @@ value getParamName lst =
 	);
 );
 
+value cmnd text = 
+(
+	assert(Sys.command text = 0);
+);
+
 value start_convert lst = 
 	let (path, param) = getParamName lst in
 	(
@@ -87,9 +92,9 @@ value start_convert lst =
 			Printf.printf "%s\n\n" command;
 (* 			if True then () else *)
 			(
-			ignore(Sys.command (Printf.sprintf "rm -rf %s" in_file ));
-			ignore(Sys.command (Printf.sprintf "mkdir -p %s" in_file ));
-			ignore(Sys.command command);
+			ignore(cmnd (Printf.sprintf "rm -rf %s" in_file ));
+			ignore(cmnd (Printf.sprintf "mkdir -p %s" in_file ));
+			ignore(cmnd command);
 			);
 
 			if !only_raw then [] else
@@ -104,8 +109,8 @@ value start_convert lst =
 					(
 (* 						if True then () else *)
 						(
-						ignore(Sys.command (Printf.sprintf "mkdir -p %s%s" tmp_data path));
-						ignore(Sys.command command);
+						ignore(cmnd (Printf.sprintf "mkdir -p %s%s" tmp_data path));
+						ignore(cmnd command);
 						);
 
 						let md5 = (Digest.to_hex (Digest.file out_file))
@@ -121,7 +126,7 @@ value start_convert lst =
 									(
 										Hashtbl.replace htbl (!version, Printf.sprintf "%s_%s" path fname) md5;
 										Printf.printf "%s" command;
-										ignore(Sys.command command);
+										ignore(cmnd command);
 										(path_data, md5)
 									)
 								)
