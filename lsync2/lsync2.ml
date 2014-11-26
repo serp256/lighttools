@@ -32,7 +32,7 @@ if Sys.file_exists binPath
 then
   let binStat = Unix.stat binPath in
   let rulesStat = try Unix.stat rulesPath with [ _ -> failwith "Rules file not found" ] in
-    if binStat.Unix.st_mtime < rulesStat.Unix.st_mtime
+    if binStat.Unix.st_mtime < rulesStat.Unix.st_mtime || True
     then compile ()
     else ()
 else compile ();

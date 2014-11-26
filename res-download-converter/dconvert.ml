@@ -3,6 +3,9 @@ open Arg;
 value all_const = "all";
 value param_name = "param_name";
 value empty_param_name = "empty_param_name";
+value include_param = "include";
+value header_param = "header";
+
 value main_path = "download_pack/";
 value raw_path = main_path ^ "raw/";
 value tmp_data = main_path ^ "tmp_data/";
@@ -90,7 +93,7 @@ value start_convert lst =
 		let in_file = Printf.sprintf "%s%s" raw_path path in 
 		let command = (Printf.sprintf "lsync2 -def rule_file=\"%s\" %s -def path=\"%s\" downloader" !rule_file param in_file) in 
 		(
-			Printf.printf "%s\n\n" command;
+(* 			Printf.printf "[%s]\n\n" command; *)
 (* 			if True then () else *)
 			(
 			ignore(cmnd (Printf.sprintf "rm -rf %s" in_file ));
@@ -141,8 +144,15 @@ value start_convert lst =
 
 value json_names = Hashtbl.create 10;
 
-value rec read_json ~key ~json ~params ~list_files () = 
+value rec read_json ~key ~json ~params ~list_files ~header_files () = 
 (
+(*
+	Printf.printf "<< %s " key;
+	List.iter (fun (a,b) -> (
+		Printf.printf "[%s/%s]" a b;
+	) ) params;
+	Printf.printf ">>\n";
+	*)
 	match json with
 	[ `Assoc packs ->
 		(
@@ -167,14 +177,56 @@ value rec read_json ~key ~json ~params ~list_files () =
 					with [ Not_found -> empty_param_name ] 
 				in
 				let new_files_list = ref list_files in 
+				let headers = ref header_files in 
 				(
 (* 					Printf.printf "PARAM_NAME %s" param_name_value ; *)
 					List.iter ( fun (name,json) -> 
 						if name = param_name then () else
+						if name = header_param then
+						(
+							match json with
+							[ `Assoc json ->
+								List.iter (fun (n,j) -> (
+									let call_params = [(name, n) :: params] in 
+									(
+										let files = read_json ~key:n ~json:j ~params:call_params ~list_files ~header_files () in
+										(
+											headers.val := [ (n,files) :: !headers ];
+										);
+									);
+								) ) json
+							| _ -> assert False
+							];
+						)
+						else 
+						if name = include_param then 
+						(
+							match json with
+							[ `List include_list -> 
+								(
+									List.iter (fun text -> (
+										match text with 
+										[ `String text -> 
+											let params = 
+												List.find (fun (name, params) -> (
+													name = text 
+												) ) header_files
+											in
+											(
+												new_files_list.val := (snd params) @ !new_files_list;
+											)
+										| _ -> assert False
+										];
+									) ) include_list;
+								)
+							| _ -> ()
+							];
+						)
+						else
 						(
 							let call_params = [(param_name_value, name) :: params] in 
 							(
-								let files = read_json ~key:name ~json ~params:call_params ~list_files:!new_files_list () in
+								let files = read_json ~key:name ~json ~params:call_params ~list_files:!new_files_list ~header_files:!headers () in
 								(
 									if name = all_const then
 										new_files_list.val := files @ !new_files_list
@@ -215,7 +267,7 @@ value rec read_json ~key ~json ~params ~list_files () =
 								failwith "В строках где должно быть имена json-ок должны указываться тип устройства в начале строки"
 						in
             match Hashtbl.mem json_names name with
-            [ True ->
+            [ True when False ->
                 match Ojson.from_file name with
                 [ `Assoc ls ->  
                     match (Ojson.from_string (Printf.sprintf "{%s}" text)) with
@@ -241,7 +293,7 @@ value rec read_json ~key ~json ~params ~list_files () =
 
 value run conf_name = 
 (
-	ignore (read_json ~key:"" ~json:(Ojson.from_file conf_name) ~params:[] ~list_files:[] ());
+	ignore (read_json ~key:"" ~json:(Ojson.from_file conf_name) ~params:[] ~list_files:[] ~header_files:[] ());
 );
 
 
