@@ -80,6 +80,7 @@ value getParamName lst =
 
 value cmnd text = 
 (
+  Printf.printf "%s\n%!" text;
 	assert(Sys.command text = 0);
 );
 
