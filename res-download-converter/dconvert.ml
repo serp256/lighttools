@@ -139,6 +139,8 @@ value start_convert lst =
 		);
 	);
 
+value json_names = Hashtbl.create 10;
+
 value rec read_json ~key ~json ~params ~list_files () = 
 (
 	match json with
@@ -212,7 +214,22 @@ value rec read_json ~key ~json ~params ~list_files () =
 							else
 								failwith "В строках где должно быть имена json-ок должны указываться тип устройства в начале строки"
 						in
-							Ojson.to_file name (Ojson.from_string (Printf.sprintf "{%s}" text));
+            match Hashtbl.mem json_names name with
+            [ True ->
+                match Ojson.from_file name with
+                [ `Assoc ls ->  
+                    match (Ojson.from_string (Printf.sprintf "{%s}" text)) with
+                    [ `Assoc ls2 -> Ojson.to_file name (`Assoc (ls @ ls2)) 
+                    | _ -> assert False
+                    ]
+                | _ -> assert False
+                ]
+            | _ -> 
+                (
+                  Hashtbl.add json_names name name;
+                  Ojson.to_file name (Ojson.from_string (Printf.sprintf "{%s}" text));
+                )
+            ]
 					);
 				);
 			);
@@ -242,6 +259,7 @@ value () =
 	if !ios_vers = "" then failwith "Need -ios-vers param" else ();
 	if !android_vers = "" then failwith "Need -android-vers param" else ();
 	if !version = 0 then failwith "Need -v param" else ();
+
 
 
 	createHtbl ();
