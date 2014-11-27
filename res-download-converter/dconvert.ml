@@ -142,7 +142,7 @@ value start_convert lst =
 		);
 	);
 
-value json_names = Hashtbl.create 10;
+value used_resources = ref [];
 
 value rec read_json ~key ~json ~params ~list_files ~header_files () = 
 (
@@ -248,6 +248,7 @@ value rec read_json ~key ~json ~params ~list_files ~header_files () =
 				(
 					List.iter (fun (fname,md5) -> (
 						Printf.printf "JSON [%s][%s]\n" fname md5;
+						used_resources.val := [ fname :: !used_resources ];
 					) ) (data_list @ list_files);
 
 					let text  =
@@ -266,22 +267,7 @@ value rec read_json ~key ~json ~params ~list_files ~header_files () =
 							else
 								failwith "В строках где должно быть имена json-ок должны указываться тип устройства в начале строки"
 						in
-            match Hashtbl.mem json_names name with
-            [ True when False ->
-                match Ojson.from_file name with
-                [ `Assoc ls ->  
-                    match (Ojson.from_string (Printf.sprintf "{%s}" text)) with
-                    [ `Assoc ls2 -> Ojson.to_file name (`Assoc (ls @ ls2)) 
-                    | _ -> assert False
-                    ]
-                | _ -> assert False
-                ]
-            | _ -> 
-                (
-                  Hashtbl.add json_names name name;
-                  Ojson.to_file name (Ojson.from_string (Printf.sprintf "{%s}" text));
-                )
-            ]
+							Ojson.to_file name (Ojson.from_string (Printf.sprintf "{%s}" text))
 					);
 				);
 			);
@@ -296,6 +282,18 @@ value run conf_name =
 	ignore (read_json ~key:"" ~json:(Ojson.from_file conf_name) ~params:[] ~list_files:[] ~header_files:[] ());
 );
 
+value show_unused () =
+(
+	Printf.printf "============ UNUSED FILES ==============\n";
+	Array.iter (fun fname -> (
+		if ExtString.String.ends_with fname ".json" then () 
+		else
+		if List.exists (fun name -> fname = name) !used_resources then () 
+		else
+			Printf.printf "%s" fname ;
+	) ) (Sys.readdir data_path);
+	Printf.printf "============ UNUSED FILES END ==========\n";
+);
 
 value () = 
 (
@@ -315,6 +313,7 @@ value () =
 
 
 	createHtbl ();
-	run !conf_file; 
+	run !conf_file; 	
+	show_unused ();
 );
 
