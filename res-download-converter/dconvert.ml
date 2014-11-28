@@ -290,7 +290,7 @@ value show_unused () =
 		else
 		if List.exists (fun name -> fname = name) !used_resources then () 
 		else
-			Printf.printf "%s" fname ;
+			Printf.printf "%s\n" fname ;
 	) ) (Sys.readdir data_path);
 	Printf.printf "============ UNUSED FILES END ==========\n";
 );
