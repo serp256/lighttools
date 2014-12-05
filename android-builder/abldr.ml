@@ -107,7 +107,7 @@ value projWithDownload = ref False;
 value projSo = ref "";
 value projLightning = ref "";
 value lsync = ref False;
-value abldr_xml = ref "abldr.xml";
+value abldr_xml = ref "";
 
 value makeProject () = (
   myassert (!projPackage <> "") "-proj-package is required";
@@ -385,37 +385,46 @@ type projConfig = {
 };
 
 value readProjConfig () =
-  let inp = open_in (Filename.concat !inDir !abldr_xml) in
+  let rec readProjConfig xmlinp projConfig =
+    if Xmlm.eoi xmlinp then projConfig
+    else (
+      match Xmlm.input xmlinp with
+      [ `El_start ((_, "package"), _) -> match Xmlm.input xmlinp with [ `Data data -> projConfig.package := data | _ -> () ]
+      | `El_start ((_, "version"), _) -> match Xmlm.input xmlinp with [ `Data data -> projConfig.version := data | _ -> () ]
+      | `El_start ((_, "withexp"), _) -> match Xmlm.input xmlinp with [ `Data data -> projConfig.withExp := bool_of_string data | _ -> () ]
+      | `El_start ((_, "withdownload"), _) -> match Xmlm.input xmlinp with [ `Data data -> projConfig.withDownload := bool_of_string data | _ -> () ]
+      | `El_start ((_, "lsync2-def"), attrs) ->
+        let k = try List.find_map (fun ((_, n), v) -> if n = "key" then Some v else None) attrs with [ Not_found -> failwith "error parsing abldr.xml: <lsync2-def/> should contain 'key' attribute" ] in
+        let v = try List.find_map (fun ((_, n), v) -> if n = "val" then Some v else None) attrs with [ Not_found -> failwith "error parsing abldr.xml: <lsync2-def/> should contain 'val' attribute" ] in
+        let () = Printf.printf "new lsync2 def %s %s\n%!" k v in
+          projConfig.lsync2Defs := [ (Printf.sprintf "-def %s=%s" k v) :: projConfig.lsync2Defs ]
+      | _ -> ()
+      ];
+
+      readProjConfig xmlinp projConfig;
+    )
+  in
+  let readAbldrXml file retval = 
+    let inp = open_in (Filename.concat !inDir file) in
     let xmlinp = Xmlm.make_input ~strip:True (`Channel inp) in
-    (
-      ignore(Xmlm.input xmlinp);
+      (
+        ignore(Xmlm.input xmlinp);
 
-      let rec readProjConfig projConfig =
-        if Xmlm.eoi xmlinp then projConfig
-        else (
-          match Xmlm.input xmlinp with
-          [ `El_start ((_, "package"), _) -> match Xmlm.input xmlinp with [ `Data data -> projConfig.package := data | _ -> () ]
-          | `El_start ((_, "version"), _) -> match Xmlm.input xmlinp with [ `Data data -> projConfig.version := data | _ -> () ]
-          | `El_start ((_, "withexp"), _) -> match Xmlm.input xmlinp with [ `Data data -> projConfig.withExp := bool_of_string data | _ -> () ]
-          | `El_start ((_, "withdownload"), _) -> match Xmlm.input xmlinp with [ `Data data -> projConfig.withDownload := bool_of_string data | _ -> () ]
-          | `El_start ((_, "lsync2-def"), attrs) ->
-            let k = try List.find_map (fun ((_, n), v) -> if n = "key" then Some v else None) attrs with [ Not_found -> failwith "error parsing abldr.xml: <lsync2-def/> should contain 'key' attribute" ] in
-            let v = try List.find_map (fun ((_, n), v) -> if n = "val" then Some v else None) attrs with [ Not_found -> failwith "error parsing abldr.xml: <lsync2-def/> should contain 'val' attribute" ] in
-            let () = Printf.printf "new lsync2 def %s %s\n%!" k v in
-              projConfig.lsync2Defs := [ (Printf.sprintf "-def %s=%s" k v) :: projConfig.lsync2Defs ]
-          | _ -> ()
-          ];
-
-          readProjConfig projConfig;
+        let retval = readProjConfig xmlinp retval in (
+          close_in inp;
+          myassert (retval.package <> "") "package not found in abldr project config";
+          myassert (retval.version <> "") "version not found in abldr project config";
+          retval;
         )
-      in
-      let retval = readProjConfig { package = ""; version = ""; withExp = False; lsync2Defs = []; withDownload= False  } in (
-        close_in inp;
-        myassert (retval.package <> "") "package not found in abldr project config";
-        myassert (retval.version <> "") "version not found in abldr project config";
-        retval;
-      );
-    );
+      )
+  in
+  let retval = { package = ""; version = ""; withExp = False; lsync2Defs = []; withDownload= False  } in 
+  let retval = readAbldrXml "abldr.xml" retval in
+  match !abldr_xml with
+  [ "" -> retval 
+  | file -> readAbldrXml file retval 
+  ];
+
 
 value projConfig () = Lazy.force (Lazy.from_fun readProjConfig);
 
