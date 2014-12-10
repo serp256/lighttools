@@ -183,7 +183,7 @@ value makeProject () = (
                       android:screenOrientation=\"landscape\"
                       android:launchMode=\"singleTop\"
                       android:configChanges=\"orientation|screenSize\">
-                      <meta-data android:name=\"android.app.lib_name\" android:value=\"{document('../abldr.xml')/apk/lib}\"
+                      <meta-data android:name=\"android.app.lib_name\" android:value=\"{document('../abldr.xml')/apk/lib}\"/>
                       <intent-filter>
                           <action android:name=\"android.intent.action.MAIN\" />
                           <category android:name=\"android.intent.category.LAUNCHER\" />
