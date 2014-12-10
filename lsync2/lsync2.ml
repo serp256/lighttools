@@ -13,14 +13,21 @@ Array.iter (fun param ->
 ) Sys.argv;
 
 value rulesPath = Filename.concat "." !rulesFile;
+value rulesMD5 = Filename.concat "." ".lsync2rule.md5";
 
 value compile () =
   if Sys.file_exists rulesPath
   then
-    let cmd = Printf.sprintf "ocamlfind ocamlc -package camlp4 -syntax camlp4r -package lsync2lib -linkpkg %s -o %s" rulesPath binFname in
+    let cmd = Printf.sprintf "ocamlfind ocamlc -g -package camlp4 -syntax camlp4r -package lsync2lib -package ojson -package str -linkpkg %s -o %s" rulesPath binFname in
     let ret = Sys.command cmd in
       (
         Sys.command "rm -f *.cm{o,i}";
+        let cur_md5 = Digest.to_hex (Digest.file rulesPath) in
+        let out = open_out rulesMD5 in
+          (
+            Digest.output out cur_md5;
+            close_out out;
+          );
 
         if ret <> 0
         then failwith ("Error when making '" ^ binFname ^ "' binary")
@@ -28,13 +35,23 @@ value compile () =
       )
   else failwith "Rules file not found";
 
-if Sys.file_exists binPath
+
+
+if Sys.file_exists rulesMD5
 then
-  let binStat = Unix.stat binPath in
-  let rulesStat = try Unix.stat rulesPath with [ _ -> failwith "Rules file not found" ] in
-    if binStat.Unix.st_mtime < rulesStat.Unix.st_mtime
-    then compile ()
-    else ()
+  let cur_md5 = Digest.to_hex (Digest.file rulesPath) in
+  let inp = open_in rulesMD5 in
+  let old_md5 = Digest.input inp in
+    (
+      close_in inp;
+      match cur_md5 = old_md5 with
+      [ True ->  ()
+      | _ -> 
+          (
+            compile ();
+          )
+      ]
+    )
 else compile ();
 
 let args = String.concat " " (List.tl (Array.to_list Sys.argv)) in

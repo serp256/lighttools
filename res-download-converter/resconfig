@@ -1,0 +1,15 @@
+		{
+			"header" : 
+			{
+				"x1" : {},
+				"x2" : {}
+			},
+			"param_name" : "device",
+			"ios" : {
+				"param_name" : "size",
+				"all" : {},
+				"include" : ["x1","x2"],
+				"x1" : "android_x1_atc_fs.json",
+				"x2" : "android_x2_atc_fs.json" 
+			}
+		}
