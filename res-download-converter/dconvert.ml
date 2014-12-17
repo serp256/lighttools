@@ -121,8 +121,10 @@ value start_convert lst =
 						in
 						(
 							Printf.printf "%s_%s md5 %s\n" path fname md5;
-							match getFile (Printf.sprintf "%s_%s" path fname) md5 with
-							[ Some vers -> (Printf.sprintf "%d_%s_%s" vers path fname, md5)
+              let file_name =(Printf.sprintf "%s_%s" path fname)  in
+              let size_file = (Unix.stat out_file).Unix.st_size in 
+							match getFile file_name md5 with
+							[ Some vers -> (Printf.sprintf "%d_%s_%s" vers path fname, md5, size_file)
 							| _ -> 
 								(
 									let path_data = Printf.sprintf "%d_%s_%s" !version path fname in
@@ -131,7 +133,7 @@ value start_convert lst =
 										Hashtbl.replace htbl (!version, Printf.sprintf "%s_%s" path fname) md5;
 										Printf.printf "%s" command;
 										ignore(cmnd command);
-										(path_data, md5)
+										(path_data, md5, size_file)
 									)
 								)
 							];
@@ -246,15 +248,15 @@ value rec read_json ~key ~json ~params ~list_files ~header_files () =
 				let data_list = start_convert call_params
 				in
 				(
-					List.iter (fun (fname,md5) -> (
+					List.iter (fun (fname,md5,_) -> (
 						Printf.printf "JSON [%s][%s]\n" fname md5;
 						used_resources.val := [ fname :: !used_resources ];
 					) ) (data_list @ list_files);
 
 					let text  =
-						List.fold_left (fun str (elem,md5) -> (
-							if str = "" then Printf.sprintf "\"%s\":\"%s\"" elem md5 
-							else Printf.sprintf "%s,\"%s\":\"%s\"" str elem md5
+						List.fold_left (fun str (elem,md5,size) -> (
+              if str = "" then Printf.sprintf "\"%s\": [\"%s\", \"%d\"]" elem md5 size
+              else Printf.sprintf "%s,\"%s\": [\"%s\", \"%d\"]" str elem md5 size
 						) ) "" (data_list @ list_files)
 					in
 					(

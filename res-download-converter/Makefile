@@ -1,6 +1,6 @@
 
 all:
-	ocamlbuild -use-ocamlfind -lflag -g dconvert.byte
+	ocamlbuild -use-ocamlfind -lflag -g dconvert.native
 
 clean:
 	ocamlbuild -clean
