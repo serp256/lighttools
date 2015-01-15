@@ -85,6 +85,7 @@ value ofProject p =
   let h = Hashtbl.create 0 in
     (
       List.iter (fun o ->
+        let () = Printf.printf "OBJECT %s \n%!" (Object.toString o) in
         match Object.lib o with
         [ Some l ->
           (

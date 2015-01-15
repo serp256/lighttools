@@ -430,9 +430,18 @@ module Make(P:P) =
         in
         [ (True, res) :: accLst ] 
 			)) [] lstImgs in
-    (*
-		let images		= [(isWholly, images)] in
-    *)
+    let images = 
+      match isWholly with
+      [ True -> 
+          let imgs = 
+            List.fold_left (fun res (_,images) -> 
+              res @ images
+            ) [] images 
+          in
+          [ (True, imgs) ]
+      | _ -> images 
+      ]
+    in
 		let _			= Printf.printf "\n PROCESSING TEXTURE START %s\n%!" (packname) in
 		let (textures:list (TextureLayout.page (int * int * (string * string) * string))) = TextureLayout.layout_min images in 
 		let _			= Printf.printf "\n PROCESSING TEXTURE END %s\n%!" (packname) in
