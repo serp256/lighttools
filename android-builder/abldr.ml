@@ -103,7 +103,6 @@ value projAppName = ref "";
 value projPath = ref "android";
 value projKeystorePass = ref "xyupizda";
 value projWithExp = ref False;
-value projWithDownload = ref False;
 value projSo = ref "";
 value projLightning = ref "";
 value lsync = ref False;
@@ -267,8 +266,8 @@ value makeProject () = (
   );
 
   let out = open_out (!projPath // "abldr.xml") in (
-    output_string out (Printf.sprintf "<?xml version=\"1.0\"?>\n<apk>\n\t<package>%s</package>\n\t<name>%s</name>\n\t<version>1.0.0</version>\n\t<withexp>%B</withexp>\n\t<withdownload>%B</withdownload>\n\t<lib>%s</lib>\n</apk>"
-                                        !projPackage !projAppName !projWithExp !projWithDownload !projSo);
+    output_string out (Printf.sprintf "<?xml version=\"1.0\"?>\n<apk>\n\t<package>%s</package>\n\t<name>%s</name>\n\t<version>1.0.0</version>\n\t<withexp>%B</withexp>\n\t<lib>%s</lib>\n</apk>"
+                                        !projPackage !projAppName !projWithExp !projSo);
     close_out out;
   );
 
@@ -325,7 +324,6 @@ value args = [
   ("-proj-path", Set_string projPath, "\t\tdirectory, where project structure will be created, by default './android'");
   ("-proj-keystore-pass", Set_string projKeystorePass, "\tkeystore password, by default 'xyupizda'");
   ("-proj-with-exp", Set projWithExp, "\tpass with option if application with expansions");
-  ("-proj-with-download", Set projWithDownload, "\tpass with option if application with expansions");
   ("-proj-so", Set_string projSo, "\t\tnative library name");
   ("-proj-lightning", Set_string projLightning, "\tpath to lightning");
   ("-do-not-clean-assets", Set doNotCleanAssets, "\tdon't clen assets folder");
@@ -381,7 +379,7 @@ type projConfig = {
   version:mutable string;
   withExp:mutable bool;
   lsync2Defs: mutable list string;
-  withDownload:mutable bool;
+  targetName : mutable option string;
 };
 
 value readProjConfig () =
@@ -392,7 +390,7 @@ value readProjConfig () =
       [ `El_start ((_, "package"), _) -> match Xmlm.input xmlinp with [ `Data data -> projConfig.package := data | _ -> () ]
       | `El_start ((_, "version"), _) -> match Xmlm.input xmlinp with [ `Data data -> projConfig.version := data | _ -> () ]
       | `El_start ((_, "withexp"), _) -> match Xmlm.input xmlinp with [ `Data data -> projConfig.withExp := bool_of_string data | _ -> () ]
-      | `El_start ((_, "withdownload"), _) -> match Xmlm.input xmlinp with [ `Data data -> projConfig.withDownload := bool_of_string data | _ -> () ]
+      | `El_start ((_, "target_name"), _) -> match Xmlm.input xmlinp with [ `Data data -> projConfig.targetName := Some data | _ -> () ]
       | `El_start ((_, "lsync2-def"), attrs) ->
         let k = try List.find_map (fun ((_, n), v) -> if n = "key" then Some v else None) attrs with [ Not_found -> failwith "error parsing abldr.xml: <lsync2-def/> should contain 'key' attribute" ] in
         let v = try List.find_map (fun ((_, n), v) -> if n = "val" then Some v else None) attrs with [ Not_found -> failwith "error parsing abldr.xml: <lsync2-def/> should contain 'val' attribute" ] in
@@ -418,7 +416,7 @@ value readProjConfig () =
         )
       )
   in
-  let retval = { package = ""; version = ""; withExp = False; lsync2Defs = []; withDownload= False  } in 
+  let retval = { package = ""; version = ""; withExp = False; lsync2Defs = []; targetName=None;  } in 
   let retval = readAbldrXml "abldr.xml" retval in
   match !abldr_xml with
   [ "" -> retval 
@@ -436,7 +434,7 @@ value lsync2Cmd () = Lazy.force lsync2Cmd;
 value getPackage () = (projConfig ()).package;
 value getVersion () = (projConfig ()).version;
 value getWithExp () = (projConfig ()).withExp;
-value getWithDownload () = (projConfig ()).withDownload;
+value getTargetName () = (projConfig ()).targetName;
 
 value expFname package ver main = (if main then "main" else "patch") ^ "." ^ ver ^ "." ^ package ^ ".obb";
 
@@ -636,8 +634,13 @@ value genExpansion build =
 
 value compileLib () =
   let target = if !release then "release" else "debug" in
-  let target = if (getWithDownload ()) then target ^ "-download" else target in
-    runCommand ("make -f " ^ makefilePath ^ " " ^ target) "make failed when compiling lib";
+  let target = 
+    match getTargetName () with
+    [ Some t -> target ^ "-" ^ t
+    | _ -> target
+    ]
+  in
+  runCommand ("make -f " ^ makefilePath ^ " " ^ target) "make failed when compiling lib";
 
 value compileApk build =
 (

@@ -98,6 +98,7 @@ value start_convert lst =
 			(
 			ignore(cmnd (Printf.sprintf "rm -rf %s" in_file ));
 			ignore(cmnd (Printf.sprintf "mkdir -p %s" in_file ));
+      Printf.printf "%s\n%!" command ;
 			ignore(cmnd command);
 			);
 
