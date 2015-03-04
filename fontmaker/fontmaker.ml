@@ -90,7 +90,7 @@ value make_size face size callback =
               in
               let (xadv, _) = Freetype.load_glyph face char_index [] in
               let metrics = Freetype.get_glyph_metrics face in
-              let (stroke, bearingx, bearingy) = Freetype.stroke_render face (size *. !stroke) in
+              let (stroke, bearingx, bearingy) = Freetype.stroke_render face (size *. !scale *. !stroke) in
               let (w, h) = Freetype.stroke_dims stroke in
               let img =  Rgba32.make w h bgcolor in
                 (
