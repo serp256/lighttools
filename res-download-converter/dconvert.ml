@@ -20,6 +20,7 @@ value only_raw = ref False;
 value htbl = Hashtbl.create 100;
 value ios_vers = ref "";
 value android_vers = ref "";
+value skip_check_json_name = ref False;
 
 value createHtbl () = 
 (
@@ -268,7 +269,10 @@ value rec read_json ~key ~json ~params ~list_files ~header_files () =
 							if ExtString.String.starts_with name "android" then  
 								(Printf.sprintf "%s%s_%s" data_path !android_vers name)
 							else
-								failwith "В строках где должно быть имена json-ок должны указываться тип устройства в начале строки"
+                match !skip_check_json_name with
+                [ True  -> data_path ^ name
+                | _ ->failwith "В строках где должно быть имена json-ок должны указываться тип устройства в начале строки"
+                ]
 						in
 							Ojson.to_file name (Ojson.from_string (Printf.sprintf "{%s}" text))
 					);
@@ -306,6 +310,7 @@ value () =
 		("-only_raw",Set only_raw, "only raw");
 		("-ios-vers",Set_string ios_vers, "ios apps version (for json name)");
 		("-android-vers",Set_string android_vers, "android apps version (for json name)");
+    ("-skip-check-json-name", Set skip_check_json_name, "skip check app version for device");
 		("-lsync2-file",Set_string rule_file, "lsync file")
 	] ( fun _ -> () ) "";
 
