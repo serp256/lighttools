@@ -27,7 +27,7 @@ value createHtbl () =
 	ignore(Sys.command (Printf.sprintf "mkdir -p %s" data_path));
 
 	Array.iter (fun fname -> (
-		if ExtString.String.ends_with fname ".json" then () 
+		if ExtString.String.ends_with fname ".json" || ExtString.String.ends_with fname ".zip"  then () 
 		else
 			let index = (ExtString.String.find fname "_") in
 			let vers = int_of_string (String.sub fname 0 index )
