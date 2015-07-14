@@ -13,9 +13,15 @@
 #define ETC2_EXT "etc2"
 #define KTX_EXT "ktx"
 
+#define OLD_4444 "OGL4444"
+#define NEW_4444 "r4g4b4a4"
+#define OLD_PVR "OGLPVRTC4"
+#define NEW_PVR_RGB "PVRTC1_4_RGB"
+#define NEW_PVR_RGBA "PVRTC1_4"
+
 #define COMPRESSED_EXT "cmprs"
 
-int pvr = 0, atc = 0, dxt = 0, etc_fast = 0, etc_slow = 0, etc2_fast = 0, etc2_slow = 0, ffff = 0, no_alpha = 0, silent = 0, help = 0, no_gzip = 0;
+int pvr = 0, atc = 0, dxt = 0, etc_fast = 0, etc_slow = 0, etc2_fast = 0, etc2_slow = 0, ffff = 0, no_alpha = 0, silent = 0, help = 0, no_gzip = 0, use_old_tool= 0, sep_alpha = 0;
 
 char *change_ext(char *inp, char *new_ext) {
 	char *cur_ext = strrchr(inp, '.');
@@ -25,6 +31,19 @@ char *change_ext(char *inp, char *new_ext) {
 	memcpy(ret, inp, inp_len);
 	strcpy(ret + inp_len + 1, new_ext);
 	ret[inp_len] = '.';
+
+	return ret;
+}
+
+char *make_alpha_name(char *inp) {
+	char *alpha_prefix = "_alpha";
+	char *cur_ext = strrchr(inp, '.');
+	int inp_len = cur_ext ? inp_len = strlen(inp) - strlen(cur_ext) : strlen(inp);
+	char *ret = (char*)malloc(strlen(inp) + strlen(alpha_prefix) + 1);
+
+	memcpy(ret, inp, inp_len);
+	strcpy(ret + inp_len, alpha_prefix);
+	strcpy(ret + inp_len + (strlen (alpha_prefix)), cur_ext);
 
 	return ret;
 }
@@ -84,12 +103,14 @@ void compress_using_qonvert(char *inp, char *out, unsigned int format) {
 	FreeTexture(mips[0]);
 }
 
-void compress_using_pvrtextool(char *inp, char *out, char *format) {
+void compress_using_pvrtextool(char *inp, char *out, const char *format) {
 	char *pvr_out = change_ext(out, PVR_EXT);
-	char *fmt = "PVRTexTool -yflip0 -f%s -premultalpha -pvrtcbest -i %s -o %s > /dev/null 2>&1";
+	const char *fmt = use_old_tool ? 
+		"PVRTexTool -yflip0 -f%s -premultalpha -pvrtcbest -i %s -o %s > /dev/null 2>&1":
+		"PVRTexToolCLI -f %s -q pvrtcbest -i %s -o %s > /dev/null 2>&1";
 	char *cmd = (char*)malloc(strlen(fmt) - 6 + strlen(inp) + strlen(pvr_out) + strlen(format) + 1);
 	sprintf(cmd, fmt, format, inp, pvr_out);
-	// printf("cmd %s\n", cmd);
+	 printf("cmd %s\n", cmd);
 	ERR_IF(system(cmd), "error when running pvr tool on %s", inp);
 	ERR_IF(rename(pvr_out, out), "error when renaming '%s' to '%s'", pvr_out, out);
 	free(cmd);
@@ -97,6 +118,7 @@ void compress_using_pvrtextool(char *inp, char *out, char *format) {
 }
 
 void gzip(char *fname) {
+	PRINT("\tgzip... %s ", fname);
 	char *fmt = "gzip %s > /dev/null 2>&1";
 	char *cmd = (char*)malloc(strlen(fmt) - 2 + strlen(fname) + 1);
 	sprintf(cmd, fmt, fname);
@@ -112,6 +134,27 @@ void gzip(char *fname) {
 }
 
 #define GZIP(fname) if (!no_gzip) gzip(fname);
+
+char* create_alpha_pvr (char *fname) {
+	char *fmt = "ae %s %s > /dev/null 2>&1";
+	char *cmd = (char*)malloc(strlen(fmt) - 2 + strlen(fname) + strlen(fname) + 6 + 1);
+	char *alpha_out = make_alpha_name(fname);
+	sprintf(cmd, fmt, fname, alpha_out);
+	PRINT("\tmaking alpha... %s ", alpha_out);
+	ERR_IF(system(cmd), "error when create alpha texture on %s %s", fname, alpha_out);
+
+	free(cmd);
+	return alpha_out;
+}
+void rm_alpha_png (char *fname) {
+	char *fmt = "rm %s > /dev/null 2>&1";
+	char *cmd = (char*)malloc(strlen(fmt) - 2 + strlen(fname) + 1);
+	sprintf(cmd, fmt, fname);
+	PRINT("\trm alpha... %s ", fname);
+	ERR_IF(system(cmd), "error when rm alpha texture on %s", fname);
+
+	free(cmd);
+}
 
 void compress(char *inp) {
 	char *out;
@@ -137,16 +180,25 @@ void compress(char *inp) {
 	if (ffff) {
 		PRINT("\tmaking 4444... ");
 		out = change_ext(inp, COMPRESSED_EXT);
-		compress_using_pvrtextool(inp, out, "OGL4444");
+		compress_using_pvrtextool(inp, out, (use_old_tool ? OLD_4444 : NEW_4444));
 		GZIP(out);
 		free(out);
-		PRINT("done\n");
+		PRINT("Done\n");
 	}
 
 	if (pvr) {
 		PRINT("\tmaking pvr... ");
 		out = insert_dirname(inp, PVR_EXT, 1, COMPRESSED_EXT);
-		compress_using_pvrtextool(inp, out, "OGLPVRTC4");
+		compress_using_pvrtextool(inp, out, use_old_tool ? OLD_PVR : (sep_alpha? NEW_PVR_RGB : NEW_PVR_RGBA));
+		if (sep_alpha) {
+			char *alpha_out = create_alpha_pvr(inp);
+			char *temp_out =(insert_dirname(alpha_out, PVR_EXT, 1, COMPRESSED_EXT));
+			compress_using_pvrtextool(alpha_out, temp_out, use_old_tool ? OLD_PVR : NEW_PVR_RGB);
+			GZIP(temp_out);
+			rm_alpha_png(alpha_out);
+			free(alpha_out);
+			free(temp_out);
+		}
 		GZIP(out);
 		free(out);
 		PRINT("done\n");
@@ -258,7 +310,7 @@ void compress(char *inp) {
 }
 
 int main(int argc, char **argv) {
-	char usage[] = "Universal textures compressor.\nUsage: texcmprss [-atc] [-dxt] [-etc-fast | -etc-slow] [-etc2-fast | -etc2-slow ] [-4444] [-no-alpha] [-silent] [-no-gzip] [-h] [ source ... ]\nOptions:\n\t-atc\t\tCreate ATC texture.\n\t-dxt\t\tCreate DXT texture.\n\t-etc-fast\tCreate ETC texture as fast as possible.\n\t-etc-slow\tCreate best-quality ETC texture.\n\t-etc2-fast\tCreate ETC2 texture as fast as possible.\n\t-etc2-slow\tCreate best-quality ETC2 texture.\n\t-no-alpha\tCreate texture without alpha channel. In case of ETC1 texture compressor doesn't create separate alpha texture.\n\t-4444\t\tCreate RGBA_4444 texture.\n\t-silent\t\tSwitch off all verbose.\n\t-no-gzip\tDo not gzip compressed texture.\n\t-h\t\tDisplay this message.";
+	char usage[] = "Universal textures compressor.\nUsage: texcmprss [-atc] [-dxt] [-etc-fast | -etc-slow] [-etc2-fast | -etc2-slow ] [-4444] [-use-old-tool] [-no-alpha] [-separate-alpha] [-silent] [-no-gzip] [-h] [ source ... ]\nOptions:\n\t-atc\t\tCreate ATC texture.\n\t-dxt\t\tCreate DXT texture.\n\t-etc-fast\tCreate ETC texture as fast as possible.\n\t-etc-slow\tCreate best-quality ETC texture.\n\t-etc2-fast\tCreate ETC2 texture as fast as possible.\n\t-etc2-slow\tCreate best-quality ETC2 texture.\n\t-use-old-tool\tUse old PVRTexTool\n\t-no-alpha\tCreate texture without alpha channel. In case of ETC1 texture compressor doesn't create separate alpha texture.\n\t-separate-alpha\tCreate separate texture with alpha channel. Use only for PVR to increase quality\n\t-4444\t\tCreate RGBA_4444 texture.\n\t-silent\t\tSwitch off all verbose.\n\t-no-gzip\tDo not gzip compressed texture.\n\t-h\t\tDisplay this message.";
 
 	struct option long_opts[] = {
 		{"pvr", no_argument, &pvr, 1},
@@ -269,8 +321,10 @@ int main(int argc, char **argv) {
 		{"etc-slow", no_argument, &etc_slow, 1},
 		{"etc2-slow", no_argument, &etc2_slow, 1},
 		{"no-alpha", no_argument, &no_alpha, 1},
+		{"separate-alpha", no_argument, &sep_alpha, 1},
 		{"4444", no_argument, &ffff, 1},
 		{"silent", no_argument, &silent, 1},
+		{"use-old-tool", no_argument, &use_old_tool, 1},
 		{"no-gzip", no_argument, &no_gzip, 1},
 		{"h", no_argument, &help, 1},
 		{0, 0, 0, 0}
