@@ -23,6 +23,16 @@
 
 int pvr = 0, atc = 0, dxt = 0, etc_fast = 0, etc_slow = 0, etc2_fast = 0, etc2_slow = 0, ffff = 0, no_alpha = 0, silent = 0, help = 0, no_gzip = 0, use_old_tool= 0, sep_alpha = 0;
 
+#define ALPHA_FNAME(src, res) { \
+	size_t src_len = strlen(src); \
+	res = (char*)malloc(src_len + 6 + 1); \
+	char *ext = strrchr(src, '.'); \
+	size_t ext_len = strlen(ext); \
+	memcpy(res, src, src_len); \
+	memcpy(res + src_len - ext_len, "_alpha", 6); \
+	strcpy(res + src_len - ext_len + 6, ext); \
+};
+
 char *change_ext(char *inp, char *new_ext) {
 	char *cur_ext = strrchr(inp, '.');
 	int inp_len = cur_ext ? inp_len = strlen(inp) - strlen(cur_ext) : strlen(inp);
@@ -31,19 +41,6 @@ char *change_ext(char *inp, char *new_ext) {
 	memcpy(ret, inp, inp_len);
 	strcpy(ret + inp_len + 1, new_ext);
 	ret[inp_len] = '.';
-
-	return ret;
-}
-
-char *make_alpha_name(char *inp) {
-	char *alpha_prefix = "_alpha";
-	char *cur_ext = strrchr(inp, '.');
-	int inp_len = cur_ext ? inp_len = strlen(inp) - strlen(cur_ext) : strlen(inp);
-	char *ret = (char*)malloc(strlen(inp) + strlen(alpha_prefix) + 1);
-
-	memcpy(ret, inp, inp_len);
-	strcpy(ret + inp_len, alpha_prefix);
-	strcpy(ret + inp_len + (strlen (alpha_prefix)), cur_ext);
 
 	return ret;
 }
@@ -138,7 +135,8 @@ void gzip(char *fname) {
 char* create_alpha_pvr (char *fname) {
 	char *fmt = "ae -pot %s %s > /dev/null 2>&1";
 	char *cmd = (char*)malloc(strlen(fmt) - 2 + strlen(fname) + strlen(fname) + 6 + 1);
-	char *alpha_out = make_alpha_name(fname);
+	char *alpha_out;
+	ALPHA_FNAME(fname, alpha_out);
 	sprintf(cmd, fmt, fname, alpha_out);
 	PRINT("\tmaking alpha... %s ", alpha_out);
 	ERR_IF(system(cmd), "error when create alpha texture on %s %s", fname, alpha_out);
@@ -222,6 +220,12 @@ void compress(char *inp) {
 	memcpy(tmp_fname, tmpdir, tmpdir_len); \
 	strcpy(tmp_fname + tmpdir_len, fname);
 
+#define FNAMES_ALPHA char *fname = strrchr(alpha_out, '/'); \
+	fname = fname ? fname + 1 : alpha_out; \
+	size_t fname_len = strlen(fname); \
+	char *tmp_fname = (char*)malloc(tmpdir_len + fname_len + 1); \
+	memcpy(tmp_fname, tmpdir, tmpdir_len); \
+	strcpy(tmp_fname + tmpdir_len, fname);
 	if (etc_slow || etc_fast) {
 		PRINT("\tmaking etc... ");
 
@@ -236,15 +240,6 @@ void compress(char *inp) {
 
 		FNAMES;
 
-#define ALPHA_FNAME(src, res) { \
-	size_t src_len = strlen(src); \
-	res = (char*)malloc(src_len + 6 + 1); \
-	char *ext = strrchr(src, '.'); \
-	size_t ext_len = strlen(ext); \
-	memcpy(res, src, src_len); \
-	memcpy(res + src_len - ext_len, "_alpha", 6); \
-	strcpy(res + src_len - ext_len + 6, ext); \
-};
 
 		char *ktx = change_ext(tmp_fname, KTX_EXT);
 		out = insert_dirname(inp, ETC_EXT, 1, COMPRESSED_EXT);
@@ -283,7 +278,7 @@ void compress(char *inp) {
 		TMPDIR;
 
 		const char *speed = etc_slow ? "slow" : "fast";
-		const char *pxl_fmt = no_alpha ? "RGB" : "RGBA";
+		const char *pxl_fmt = sep_alpha ? "RGB" : "RGBA";
 		char *fmt = "etcpack %s %s -s %s -f %s -c etc2 -ktx 1>&- 2>&-";
 		char *cmd = (char*)malloc(strlen(fmt) - 8 + strlen(inp) + tmpdir_len + strlen(speed) + strlen(pxl_fmt) + 1);
 		sprintf(cmd, fmt, inp, tmpdir, speed, pxl_fmt);
@@ -297,6 +292,24 @@ void compress(char *inp) {
 		GZIP(out);
 		unlink(ktx);
 
+		if (sep_alpha) {
+
+			char *alpha_out = create_alpha_pvr(inp);
+			const char *speed = etc_slow ? "slow" : "fast";
+			const char *pxl_fmt = "RGB";
+			char *fmt = "etcpack %s %s -s %s -f %s -c etc2 -ktx 1>&- 2>&-";
+			char *cmd = (char*)malloc(strlen(fmt) - 8 + strlen(inp) + tmpdir_len + strlen(speed) + strlen(pxl_fmt) + 1);
+			sprintf(cmd, fmt, alpha_out, tmpdir, speed, pxl_fmt);
+			ERR_IF(system(cmd), "error when running etcpack tool on %s", alpha_out);
+
+			FNAMES_ALPHA;
+
+			char *ktx = change_ext(tmp_fname, KTX_EXT);
+			out = insert_dirname(alpha_out, ETC2_EXT, 1, COMPRESSED_EXT);
+			RESAVE(ktx, out);
+			GZIP(out);
+			unlink(ktx);
+		}
 		free(out);
 		free(ktx);
 		free(tmp_fname);
@@ -305,12 +318,13 @@ void compress(char *inp) {
 		PRINT("done\n");
 	}
 
+
 #undef RESAVE
 #undef TMPDIR
 }
 
 int main(int argc, char **argv) {
-	char usage[] = "Universal textures compressor.\nUsage: texcmprss [-atc] [-dxt] [-etc-fast | -etc-slow] [-etc2-fast | -etc2-slow ] [-4444] [-use-old-tool] [-no-alpha] [-separate-alpha] [-silent] [-no-gzip] [-h] [ source ... ]\nOptions:\n\t-atc\t\tCreate ATC texture.\n\t-dxt\t\tCreate DXT texture.\n\t-etc-fast\tCreate ETC texture as fast as possible.\n\t-etc-slow\tCreate best-quality ETC texture.\n\t-etc2-fast\tCreate ETC2 texture as fast as possible.\n\t-etc2-slow\tCreate best-quality ETC2 texture.\n\t-use-old-tool\tUse old PVRTexTool\n\t-no-alpha\tCreate texture without alpha channel. In case of ETC1 texture compressor doesn't create separate alpha texture.\n\t-separate-alpha\tCreate separate texture with alpha channel. Use only for PVR to increase quality\n\t-4444\t\tCreate RGBA_4444 texture.\n\t-silent\t\tSwitch off all verbose.\n\t-no-gzip\tDo not gzip compressed texture.\n\t-h\t\tDisplay this message.";
+	char usage[] = "Universal textures compressor.\nUsage: texcmprss [-atc] [-dxt] [-etc-fast | -etc-slow] [-etc2-fast | -etc2-slow ] [-4444] [-use-old-tool] [-no-alpha] [-separate-alpha] [-silent] [-no-gzip] [-h] [ source ... ]\nOptions:\n\t-atc\t\tCreate ATC texture.\n\t-dxt\t\tCreate DXT texture.\n\t-etc-fast\tCreate ETC texture as fast as possible.\n\t-etc-slow\tCreate best-quality ETC texture.\n\t-etc2-fast\tCreate ETC2 texture as fast as possible.\n\t-etc2-slow\tCreate best-quality ETC2 texture.\n\t-use-old-tool\tUse old PVRTexTool\n\t-no-alpha\tCreate texture without alpha channel. In case of ETC1 texture compressor doesn't create separate alpha texture.\n\t-separate-alpha\tCreate separate texture with alpha channel. Use only for PVR to increase quality & ETC2 to fix partly transparent images\n\t-4444\t\tCreate RGBA_4444 texture.\n\t-silent\t\tSwitch off all verbose.\n\t-no-gzip\tDo not gzip compressed texture.\n\t-h\t\tDisplay this message.";
 
 	struct option long_opts[] = {
 		{"pvr", no_argument, &pvr, 1},
