@@ -132,12 +132,13 @@ void gzip(char *fname) {
 
 #define GZIP(fname) if (!no_gzip) gzip(fname);
 
-char* create_alpha_pvr (char *fname) {
-	char *fmt = "ae -pot %s %s > /dev/null 2>&1";
-	char *cmd = (char*)malloc(strlen(fmt) - 2 + strlen(fname) + strlen(fname) + 6 + 1);
+char* create_alpha_tex (char *fname, bool pot) {
+	char *fmt = "ae %s %s %s > /dev/null 2>&1";
+	const char *pot_flag = pot? "-pot" : "";
+	char *cmd = (char*)malloc(strlen(fmt) - 2 + strlen(pot_flag) + strlen(fname) + strlen(fname) + 6 + 1);
 	char *alpha_out;
 	ALPHA_FNAME(fname, alpha_out);
-	sprintf(cmd, fmt, fname, alpha_out);
+	sprintf(cmd, fmt, pot_flag, fname, alpha_out);
 	PRINT("\tmaking alpha... %s ", alpha_out);
 	ERR_IF(system(cmd), "error when create alpha texture on %s %s", fname, alpha_out);
 
@@ -189,7 +190,7 @@ void compress(char *inp) {
 		out = insert_dirname(inp, PVR_EXT, 1, COMPRESSED_EXT);
 		compress_using_pvrtextool(inp, out, use_old_tool ? OLD_PVR : (sep_alpha? NEW_PVR_RGB : NEW_PVR_RGBA));
 		if (sep_alpha) {
-			char *alpha_out = create_alpha_pvr(inp);
+			char *alpha_out = create_alpha_tex(inp, true);
 			char *temp_out =(insert_dirname(alpha_out, PVR_EXT, 1, COMPRESSED_EXT));
 			compress_using_pvrtextool(alpha_out, temp_out, use_old_tool ? OLD_PVR : NEW_PVR_RGB);
 			GZIP(temp_out);
@@ -294,7 +295,7 @@ void compress(char *inp) {
 
 		if (sep_alpha) {
 
-			char *alpha_out = create_alpha_pvr(inp);
+			char *alpha_out = create_alpha_tex(inp, false);
 			const char *speed = etc_slow ? "slow" : "fast";
 			const char *pxl_fmt = "RGB";
 			char *fmt = "etcpack %s %s -s %s -f %s -c etc2 -ktx 1>&- 2>&-";
