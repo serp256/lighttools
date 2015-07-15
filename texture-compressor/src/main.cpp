@@ -107,7 +107,7 @@ void compress_using_pvrtextool(char *inp, char *out, const char *format) {
 	char *pvr_out = change_ext(out, PVR_EXT);
 	const char *fmt = use_old_tool ? 
 		"PVRTexTool -yflip0 -f%s -premultalpha -pvrtcbest -i %s -o %s > /dev/null 2>&1":
-		"PVRTexToolCLI -f %s -q pvrtcbest -i %s -o %s > /dev/null 2>&1";
+		"PVRTexToolCLI -l -f %s -q pvrtcbest -i %s -o %s > /dev/null 2>&1";
 	char *cmd = (char*)malloc(strlen(fmt) - 6 + strlen(inp) + strlen(pvr_out) + strlen(format) + 1);
 	sprintf(cmd, fmt, format, inp, pvr_out);
 	 printf("cmd %s\n", cmd);
