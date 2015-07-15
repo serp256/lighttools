@@ -107,7 +107,7 @@ void compress_using_pvrtextool(char *inp, char *out, const char *format) {
 	char *pvr_out = change_ext(out, PVR_EXT);
 	const char *fmt = use_old_tool ? 
 		"PVRTexTool -yflip0 -f%s -premultalpha -pvrtcbest -i %s -o %s > /dev/null 2>&1":
-		"PVRTexToolCLI -l -f %s -q pvrtcbest -i %s -o %s > /dev/null 2>&1";
+		"PVRTexToolCLI -squarecanvas + -potcanvas + -l -f %s -q pvrtcbest -i %s -o %s > /dev/null 2>&1";
 	char *cmd = (char*)malloc(strlen(fmt) - 6 + strlen(inp) + strlen(pvr_out) + strlen(format) + 1);
 	sprintf(cmd, fmt, format, inp, pvr_out);
 	 printf("cmd %s\n", cmd);
@@ -136,7 +136,7 @@ void gzip(char *fname) {
 #define GZIP(fname) if (!no_gzip) gzip(fname);
 
 char* create_alpha_pvr (char *fname) {
-	char *fmt = "ae %s %s > /dev/null 2>&1";
+	char *fmt = "ae -pot %s %s > /dev/null 2>&1";
 	char *cmd = (char*)malloc(strlen(fmt) - 2 + strlen(fname) + strlen(fname) + 6 + 1);
 	char *alpha_out = make_alpha_name(fname);
 	sprintf(cmd, fmt, fname, alpha_out);
