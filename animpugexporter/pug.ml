@@ -278,6 +278,12 @@ module Make(P:P) =
         let new_img			= Images.Rgba32 rgb in
         (
 			      List.fold_left (fun imgIndex ((texId, recId, (objname, fname), dummy ), (sx, sy, isRotate, img)) -> (
+              let img = 
+                match img with
+                [ Images.Index8 img -> Images.Rgba32 (Index8.to_rgba32 ~failsafe:{Color.Rgba.color={Color.Rgb.r=0;b=0;g=0}; alpha=0} img)
+                | _ -> img
+                ]
+              in
               	let (iw,ih) = Images.size img in (
                   Printf.printf "texId : %d; recId : %d; fname : %s\n%!" texId recId fname;
 					(* Printf.printf "\n fname %s oname %s\n" fname oname; *)
@@ -308,7 +314,10 @@ module Make(P:P) =
 		                let tmp_name = pathSaveImg ^ "_tmp.png" in
 		                (
 		                  Images.save tmp_name (Some Images.Png) [] new_img;
+                      (*
 		                  let cmd = Printf.sprintf "convert -gamma 1.1 %s %s.png" tmp_name pathSaveImg in
+    *)
+		                  let cmd = Printf.sprintf "convert -brightness-contrast \"5 x5\" -sharpen \"1x0.2\" %s %s.png" tmp_name pathSaveImg in
 		                    (
 		                      Printf.printf "%s\n%!" cmd;
 		                      match Sys.command cmd with
