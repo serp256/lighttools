@@ -278,12 +278,6 @@ module Make(P:P) =
         let new_img			= Images.Rgba32 rgb in
         (
 			      List.fold_left (fun imgIndex ((texId, recId, (objname, fname), dummy ), (sx, sy, isRotate, img)) -> (
-              let img = 
-                match img with
-                [ Images.Index8 img -> Images.Rgba32 (Index8.to_rgba32 ~failsafe:{Color.Rgba.color={Color.Rgb.r=0;b=0;g=0}; alpha=0} img)
-                | _ -> img
-                ]
-              in
               	let (iw,ih) = Images.size img in (
                   Printf.printf "texId : %d; recId : %d; fname : %s\n%!" texId recId fname;
 					(* Printf.printf "\n fname %s oname %s\n" fname oname; *)
@@ -365,20 +359,38 @@ module Make(P:P) =
 	(* Получить картинку *)
 	value getImg fname = (
     let () = Printf.printf "getImg :%s \n%!" fname in
-		let srcImg		= OImages.load (P.imgDir /// fname) [] in
+    let src_path = P.imgDir /// fname in
+    let srcImg		= OImages.load src_path [] in
 		(* let srcImg	= OImages.rgba32 srcImg in *)
 		let image		= srcImg#image in
+    let need_convert = 
+      match image with
+      [ Images.Index8 img -> True
+      | _ -> False
+      ]
+    in
 		let image		=
 			match P.scale with
-			[ 1. -> image
+			[ 1. when not need_convert -> image
 			| scale ->
 				let srcFname = Filename.temp_file "src" "" in
 				let dstFname = Filename.temp_file "dst" ""  in
 				(
+          (*
 					Images.save srcFname (Some Images.Png) [] image;
+          *)
+          let cmd_copy = Printf.sprintf "cp %s %s" src_path srcFname in
+            (
+              Printf.printf "%s\n%!" cmd_copy;
+              if Sys.command cmd_copy <> 0
+                then failwith "not cipy"
+              else ();
+            );
+
           let cmd = 
-            match scale > 1. with
-            [ True -> Printf.sprintf "convert -resize %d%% -filter catrom %s png32:%s" (int_of_float (scale *. 100.)) srcFname dstFname
+            match scale with
+            [ 1.-> Printf.sprintf "convert %s png32:%s" srcFname dstFname
+            | sc when sc > 1. -> Printf.sprintf "convert -resize %d%% -filter catrom %s png32:%s" (int_of_float (scale *. 100.)) srcFname dstFname
             | _ ->Printf.sprintf "convert -interpolative-resize %d%% -sharpen 0x.1 %s png32:%s" (int_of_float (scale *. 100.)) srcFname dstFname 
             ]
           in
