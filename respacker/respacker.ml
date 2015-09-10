@@ -812,6 +812,7 @@ value do_work isXml pack_mode fmt indir suffix outdir =
   ];
 );
 
+
 value () = 
   let xml = ref False in
   let pack_mode = ref PackGroup in
@@ -850,7 +851,8 @@ value () =
         );
         ("-npot",Arg.Set npot, "Not power of 2");
         ("-alpha",Arg.Set alpha, "Save as alpha");
-        ("-skip-atlases",Arg.Clear use_atlases, "Dont use atlases")
+        ("-skip-atlases",Arg.Clear use_atlases, "Dont use atlases");
+        ("-min-diff", Arg.Set_int TextureLayout.min_diff, "diff ")
       ] 
       (fun id -> libs.val := [id :: !libs]) "usage msg";
     match !libs with

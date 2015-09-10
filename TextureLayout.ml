@@ -399,7 +399,7 @@ value layout_page_pot ~sqr rects =
             loop w' h'
       ];
 
-value min_diff = 1;
+value min_diff = ref 1;
 
 value layout_page_npot ?(width=max_size.val) ?(height=max_size.val) rects =
   loop width height (width / 2) (height/ 2) `none where
@@ -409,18 +409,18 @@ value layout_page_npot ?(width=max_size.val) ?(height=max_size.val) rects =
       match rest with 
       [ [] ->
          let () = Printf.printf "All in rect : w : %d; h : %d; dw : %d; dh : %d \n%!" w h dw dh in  
-        match dw = min_diff && dh = min_diff with
+        match dw = !min_diff && dh = !min_diff with
         [ True -> ({width=w; height=h; placed_images; empty_rects}, rest) (* разместили все *)
         | _ -> 
           let (w', h', changeH) =
             match w < h  with
             [ True -> 
-                match dh = min_diff with
+                match dh = !min_diff with
                 [ True -> (w - dw, h, `width)
                 | _ -> (w, h - dh, `height)
                 ]
             | _ ->
-                match dw = min_diff with
+                match dw = !min_diff with
                 [ True -> (w, h - dh, `height)
                 | _ -> (w-dw,h,`width)
                 ]
@@ -435,12 +435,12 @@ value layout_page_npot ?(width=max_size.val) ?(height=max_size.val) rects =
             let (w',h', dw', dh', changeH') =
               match changeH with
               [ `width -> 
-                  match dw = min_diff with
+                  match dw = !min_diff with
                   [ True -> ( w, h , dw, dh / 2, `none)
                   | _ -> (w + dw, h, dw / 2, dh, `none)
                   ]
               | `height -> 
-                  match dh = min_diff with
+                  match dh = !min_diff with
                   [ True -> (w, h, dw / 2, dh, `none)
                   | _ -> (w, h + dh, dw, dh / 2, `none)
                   ]
