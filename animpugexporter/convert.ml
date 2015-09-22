@@ -23,6 +23,7 @@ value suffix         = ref "";
 
 value json_name      = ref "";
 value useScaleXY     = ref False;
+value alpha_for_crop = ref 0;
 value get_postfix () = !suffix;
 
 type pack_info        = {
@@ -136,6 +137,7 @@ Gc.set {(Gc.get()) with Gc.max_overhead = 2000000};
 		("-suffix",			Arg.Set_string suffix,	"add suffix to library name");
 		("-gamma",			Arg.Set is_gamma,		"add conver -gamma 1.1 call for result image");
 		("-useScaleXY",			Arg.Set useScaleXY,		"use in params scaleX scaleY only match3 ");
+		("-alpha_for_crop",	Arg.Set_int alpha_for_crop,		"value alpha for crop image, by default 0");
 	]
 	(fun name -> json_name.val := name)
 	"";
@@ -164,6 +166,7 @@ module Pug = Pug.Make(
 		value without_cntr = !without_cntr;
 		value is_android   = !is_android;
 		value no_anim      = !no_anim;
+    value alpha_for_crop  = !alpha_for_crop;
   	end
 );
 

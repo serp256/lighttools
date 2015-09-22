@@ -17,6 +17,7 @@ module type P =
 	value is_android:	bool;
 	value no_anim:		bool;
   value useScaleXY  : bool;
+  value alpha_for_crop : int;
   end;
 
 
@@ -276,8 +277,6 @@ module Make(P:P) =
 
 
 
-  value alpha_check_value = ref 0;
-
   value crop_image img_src = 
     let (w,h) = Images.size img_src in
     let () = Printf.printf "CROP IMAGE %dx%d  \n%!" w h in
@@ -288,7 +287,7 @@ module Make(P:P) =
            match y < h with
            [ True -> 
               let rgba = Rgba32.get img x y  in
-              match rgba.Color.alpha > !alpha_check_value with
+              match rgba.Color.alpha > P.alpha_for_crop with
               [ True -> False
               | _ -> loop (y + 1)
               ]
@@ -302,7 +301,7 @@ module Make(P:P) =
            match x < w with
            [ True -> 
               let rgba = Rgba32.get img x y  in
-              match rgba.Color.alpha > !alpha_check_value with
+              match rgba.Color.alpha > P.alpha_for_crop with
               [ True -> False
               | _ -> loop (x + 1)
               ]
