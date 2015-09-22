@@ -49,6 +49,9 @@ lib-compressed:
 
 lib: clean-output lib-compressed
 
+test: clean-output
+	animpugexport -gamma -p 4 -inp ../../steampunk_graphic -scale 0.5 -suffix x1 -degree4 -max 2048 -o ${LIB_DIR} conf/test.json
+
 #lib-notcompressed:
 #	./convert.native -inp 2 -wholly -n 100500 -scale ${SCALE} -o ${LIB_DIR} 
 #	./convert.native -inp 1 -degree4 -scale ${SCALE} -o ${LIB_DIR} 

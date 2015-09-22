@@ -74,11 +74,20 @@ module Make(P:P) =
 	  )
 	);
 
+  type crop_info = 
+    {
+      t : int;
+      b : int;
+      l : int;
+      r : int;
+    };
+
 	type img = 
 	  {
 	  	tt_index:	int;
 	  	img_index:	int;
-		rect :		rects;
+		  rect :		rects;
+      crop_info : crop_info;
 	  };
 
 
@@ -200,8 +209,8 @@ module Make(P:P) =
 						let imgRcd		= Hashtbl.find ttInfHash (oname, imgPath) in
             let () = Printf.printf "imgPath : %s; imgRcd : %d \n%!" imgPath imgRcd.img_index  in
 						(* let imgRcd		= List.find (fun (i:img) -> i.path = imgPath)	imgsInfLst in *)
-						let lx			= Utils.roundi (P.scale *. (Layer.x l)) + fx in
-						let ly			= Utils.roundi (P.scale *. (Layer.y l)) + fy in
+						let lx			= Utils.roundi (P.scale *. (Layer.x l)) + fx + imgRcd.crop_info.l in
+						let ly			= Utils.roundi (P.scale *. (Layer.y l)) + fy + imgRcd.crop_info.t in
 						(* let lx			= Utils.round (P.scale *. ((Layer.x l) +. (Frame.x fstFrm)) -.  (float fx)) in *)
 						let alpha		= int_of_float (Layer.alpha l ) in
 						let flip		= Utils.int_of_bool (Layer.flip l ) in
@@ -267,6 +276,71 @@ module Make(P:P) =
 
 
 
+  value alpha_check_value = ref 0;
+
+  value crop_image img_src = 
+    let (w,h) = Images.size img_src in
+    let () = Printf.printf "CROP IMAGE %dx%d  \n%!" w h in
+    match img_src with
+    [ Images.Rgba32 img ->
+       let is_empty_col x =
+         let rec loop y =
+           match y < h with
+           [ True -> 
+              let rgba = Rgba32.get img x y  in
+              match rgba.Color.alpha > !alpha_check_value with
+              [ True -> False
+              | _ -> loop (y + 1)
+              ]
+           | _ -> True
+           ]
+         in
+         loop 0
+       in
+       let is_empty_row y =
+         let rec loop x =
+           match x < w with
+           [ True -> 
+              let rgba = Rgba32.get img x y  in
+              match rgba.Color.alpha > !alpha_check_value with
+              [ True -> False
+              | _ -> loop (x + 1)
+              ]
+           | _ -> True
+           ]
+         in
+         loop 0
+       in
+       let left = ref 0 in
+       let right = ref 0 in
+       let top = ref 0 in
+       let bottom = ref 0 in
+        (
+           while is_empty_col !left do
+            incr left
+           done;
+
+           while is_empty_col (w - !right - 1) do
+             incr right;
+           done;
+
+           while is_empty_row !top do
+            incr top
+           done;
+
+           while is_empty_row (h - !bottom - 1) do
+             incr bottom;
+           done;
+           Printf.printf "CROP INFO : l = %d; r=%d; t=%d; b=%d \n%!" !left !right !top !bottom ;
+           (
+             Images.sub img_src !left !top (w - !left - !right) (h - !top - !bottom),
+             {t= !top; b= !bottom; l = !left; r = !right}
+           )
+        )
+    | _ -> 
+        (img_src, {t=0;b=0;l=0; r=0})
+    ];
+
 	(* Запись файла атласа либы *)
 	(* Добавляем в хэштаблицу imgRcd типа img *)
 
@@ -277,28 +351,28 @@ module Make(P:P) =
         let rgb				= Rgba32.make w h {Color.color = {Color.r = 0; g = 0; b = 0}; alpha = 0} in
         let new_img			= Images.Rgba32 rgb in
         (
-			      List.fold_left (fun imgIndex ((texId, recId, (objname, fname), dummy ), (sx, sy, isRotate, img)) -> (
-              	let (iw,ih) = Images.size img in (
-                  Printf.printf "texId : %d; recId : %d; fname : %s\n%!" texId recId fname;
-					(* Printf.printf "\n fname %s oname %s\n" fname oname; *)
-					(* let ()		= Printf.printf "\n Sx Sy iw ih %d %d %d %d\n" sx sy iw ih in  *)
-                    try (
-                        Images.blit img 0 0 new_img sx sy iw ih;
+			      List.fold_left (fun imgIndex ((texId, recId, (objname, fname), dummy, crop_info ), (sx, sy, isRotate, img)) -> (
+              let (iw,ih) = Images.size img in (
+                Printf.printf "texId : %d; recId : %d; fname : %s\n%!" texId recId fname;
+        (* Printf.printf "\n fname %s oname %s\n" fname oname; *)
+        (* let ()		= Printf.printf "\n Sx Sy iw ih %d %d %d %d\n" sx sy iw ih in  *)
+                try (
+                    Images.blit img 0 0 new_img sx sy iw ih;
+                )
+                with 
+                  [ Invalid_argument _ -> (
+                        match img with
+                        [ Images.Index8	 _ -> prerr_endline "index8"
+                        | Images.Rgb24	 _ -> prerr_endline "rgb24"
+                        | Images.Rgba32	 _ -> prerr_endline "rgba32"
+                        | _ -> prerr_endline "other"
+                        ];
+                        raise Exit;
                     )
-                    with 
-                      [ Invalid_argument _ -> (
-                            match img with
-                            [ Images.Index8	 _ -> prerr_endline "index8"
-                            | Images.Rgb24	 _ -> prerr_endline "rgb24"
-                            | Images.Rgba32	 _ -> prerr_endline "rgba32"
-                            | _ -> prerr_endline "other"
-                            ];
-                            raise Exit;
-                      	)
-                      ];
-                    let imgRcd:img = { tt_index = ttIndex; img_index = recId; rect = {rx = sx; ry = sy; rw = iw; rh = ih} } in
-                    	Hashtbl.add ttInfHash (objname, fname) imgRcd;
-                	imgIndex + 1
+                  ];
+                let imgRcd:img = { tt_index = ttIndex; img_index = recId; rect = {rx = sx; ry = sy; rw = iw; rh = ih}; crop_info } in
+                Hashtbl.add ttInfHash (objname, fname) imgRcd;
+                imgIndex + 1
             	)
             )) 0 imgs;
 			let pathSaveImg = (P.outDir /// packname ^ P.suffix) in (
@@ -383,7 +457,7 @@ module Make(P:P) =
             (
               Printf.printf "%s\n%!" cmd_copy;
               if Sys.command cmd_copy <> 0
-                then failwith "not cipy"
+                then failwith "not copy"
               else ();
             );
 
@@ -417,22 +491,24 @@ module Make(P:P) =
 					);
 				)
 			] in
+    let (image, crop_info) = crop_image image in
 		let image = 
-		match P.degree4 with
-		[ True -> 
-		    let (iw', ih') = Images.size image in
-		    let iw = TextureLayout.do_degree4 iw' 
-		    and ih = TextureLayout.do_degree4 ih' 
-		    in
-		    let rgb = Rgba32.make iw ih {Color.color={Color.r=0;g=0;b=0}; alpha=0;} in
-		    let res_img = Images.Rgba32 rgb in
-		      ( 
-		        Images.blit image 0 0 res_img 0 0 iw' ih';
-		        res_img
-		      )
-		| _ -> image
-		] in
-		image
+      match P.degree4 with
+      [ True -> 
+          let (iw', ih') = Images.size image in
+          let iw = TextureLayout.do_degree4 iw' 
+          and ih = TextureLayout.do_degree4 ih' 
+          in
+          let rgb = Rgba32.make iw ih {Color.color={Color.r=0;g=0;b=0}; alpha=0;} in
+          let res_img = Images.Rgba32 rgb in
+            ( 
+              Images.blit image 0 0 res_img 0 0 iw' ih';
+              res_img
+            )
+      | _ -> image
+      ] 
+    in
+		(image,crop_info)
 	);
 
 
@@ -445,8 +521,8 @@ module Make(P:P) =
 			List.fold_left (fun accLst (objname, fnames) -> (
         let (_,res) =
           List.fold_right (fun fname  (recId, result)-> 
-            let img = getImg fname in
-            (recId + 1, [((0, recId, (objname, fname), ""), img):: result])
+            let (img,crop_info) = getImg fname in
+            (recId + 1, [((0, recId, (objname, fname), "", crop_info), img):: result])
           ) fnames (0,[])
         in
         [ (True, res) :: accLst ] 
@@ -464,7 +540,7 @@ module Make(P:P) =
       ]
     in
 		let _			= Printf.printf "\n PROCESSING TEXTURE START %s\n%!" (packname) in
-		let (textures:list (TextureLayout.page (int * int * (string * string) * string))) = TextureLayout.layout_min images in 
+		let (textures:list (TextureLayout.page (int * int * (string * string) * string * crop_info))) = TextureLayout.layout_min images in 
 		let _			= Printf.printf "\n PROCESSING TEXTURE END %s\n%!" (packname) in
 		let ttIndex		= List.fold_left (fun ttIndex imginfo -> (
 			(* Имя либы + "_номер текстуры" *)
