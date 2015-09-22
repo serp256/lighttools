@@ -209,8 +209,8 @@ module Make(P:P) =
 						let imgRcd		= Hashtbl.find ttInfHash (oname, imgPath) in
             let () = Printf.printf "imgPath : %s; imgRcd : %d \n%!" imgPath imgRcd.img_index  in
 						(* let imgRcd		= List.find (fun (i:img) -> i.path = imgPath)	imgsInfLst in *)
-						let lx			= Utils.roundi (P.scale *. (Layer.x l)) + fx + imgRcd.crop_info.l in
-						let ly			= Utils.roundi (P.scale *. (Layer.y l)) + fy + imgRcd.crop_info.t in
+						let lx			= Utils.roundi (P.scale *. (Layer.x l)) + fx + (Utils.roundi ((float imgRcd.crop_info.l) *. (Layer.scale l))) in
+						let ly			= Utils.roundi (P.scale *. (Layer.y l)) + fy + (Utils.roundi ((float imgRcd.crop_info.t) *. (Layer.scale l))) in
 						(* let lx			= Utils.round (P.scale *. ((Layer.x l) +. (Frame.x fstFrm)) -.  (float fx)) in *)
 						let alpha		= int_of_float (Layer.alpha l ) in
 						let flip		= Utils.int_of_bool (Layer.flip l ) in
