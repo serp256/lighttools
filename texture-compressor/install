@@ -1,12 +1,12 @@
-sudo cp src/texcmprss /usr/bin/ 
+sudo cp src/texcmprss /usr/local/bin/ 
 os=`uname`
 
 if [ $os == "Darwin" ]; then
-	sudo cp osx/lib/libTextureConverter.dylib /usr/lib/
-	sudo cp osx/tools/* /usr/bin/
+	sudo cp osx/lib/libTextureConverter.dylib /usr/local/lib/
+	sudo cp osx/tools/* /usr/local/bin/
 elif [ $os == "Linux" ]; then
-	sudo cp linux/lib/libTextureConverter.so /usr/lib/
-	sudo cp linux/tools/* /usr/bin/
+	sudo cp linux/lib/libTextureConverter.so /usr/local/lib/
+	sudo cp linux/tools/* /usr/local/bin/
 else
 	echo "unsuppotred platform"
 fi
