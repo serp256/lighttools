@@ -410,18 +410,23 @@ value readProjConfig () =
 
         let retval = readProjConfig xmlinp retval in (
           close_in inp;
-          myassert (retval.package <> "") "package not found in abldr project config";
-          myassert (retval.version <> "") "version not found in abldr project config";
           retval;
         )
       )
   in
   let retval = { package = ""; version = ""; withExp = False; lsync2Defs = []; targetName=None;  } in 
   let retval = readAbldrXml "abldr.xml" retval in
-  match !abldr_xml with
-  [ "" -> retval 
-  | file -> readAbldrXml file retval 
-  ];
+	let retval = 
+		match !abldr_xml with
+		[ "" -> retval 
+		| file -> readAbldrXml file retval 
+		]
+	in
+	(
+		myassert (retval.package <> "") "package not found in abldr project config";
+		myassert (retval.version <> "") "version not found in abldr project config";
+		retval;
+	);
 
 
 value projConfig () = Lazy.force (Lazy.from_fun readProjConfig);
