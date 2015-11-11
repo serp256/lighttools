@@ -8,7 +8,7 @@ lsync2lib:
 
 install:
 	sudo ocamlfind install lsync2lib META _build/lsync2lib.cmo _build/lsync2lib.cmi
-	sudo cp lsync2.native /usr/bin/lsync2
+	sudo cp lsync2.native /usr/local/bin/lsync2
 
 uninstall:
 	sudo ocamlfind remove lsync2lib

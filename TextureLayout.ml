@@ -402,15 +402,33 @@ value layout_page_pot ~sqr rects =
 value min_diff = ref 1;
 
 value layout_page_npot ?(width=max_size.val) ?(height=max_size.val) rects =
+  let cash = Hashtbl.create 10 in
   loop width height (width / 2) (height/ 2) `none where
     rec loop w h dw dh changeH =
       let main_rect = { x = 0; y = 0; w; h; isRotate = False  } in
-      let (placed_images, empty_rects, rest) = MaxRects.maxrects False rects [main_rect] in
+      let (placed_images, empty_rects, rest) =
+        try
+          Hashtbl.find cash (w,h)
+        with
+          [ Not_found -> 
+              (
+                Printf.printf "FIND RECT FOR %dx%d\n%!" w h;
+                let res = MaxRects.maxrects False rects [main_rect]  in
+                  (
+                    Hashtbl.replace cash (w,h) res;
+                    res;
+                  )
+              )
+          ]
+      in
       match rest with 
       [ [] ->
          let () = Printf.printf "All in rect : w : %d; h : %d; dw : %d; dh : %d \n%!" w h dw dh in  
         match dw = !min_diff && dh = !min_diff with
-        [ True -> ({width=w; height=h; placed_images; empty_rects}, rest) (* разместили все *)
+        [ True ->
+            (
+              ({width=w; height=h; placed_images; empty_rects}, rest) (* разместили все *)
+            )
         | _ -> 
           let (w', h', changeH) =
             match w < h  with
