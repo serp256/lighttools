@@ -25,6 +25,7 @@ value color = {Color.r = 255; g = 255; b = 255};
 value dpi = ref 72;
 (* value alpha_texture = ref False; *)
 value xml = ref False;
+value with_png = ref False;
 
 value bgcolor = {Color.color = {Color.r = 0; g = 0; b = 0}; alpha = 0};
 value scale = ref 1.;
@@ -38,6 +39,9 @@ value make_size face size callback =
         (
           let code = UChar.code uchar in
           let char_index = Freetype.get_char_index face code in
+          (*
+          let () = Printf.printf "code : %d; char_index : %d \n%!" code (Freetype.int_of_char_index char_index) in
+          *)
           let (xadv,yadv) = Freetype.render_glyph face char_index [] Freetype.Render_Normal in
           let bi = Freetype.get_bitmap_info face in
           let open Freetype in
@@ -61,7 +65,7 @@ value make_size face size callback =
             done; *)
 
             if !stroke = 0.
-            then callback code xadv bi.bitmap_left bi.bitmap_top img
+            then callback code char_index xadv bi.bitmap_left bi.bitmap_top img
             else
               let blankLinesNum ~img ~nextLine ~nextInLine ~linesScaned ~lineScaned () =
                 let rec scanLine ((col, row) as pixel) = if lineScaned pixel then True else if (Rgba32.get img col row).Color.alpha = 0 then scanLine (nextInLine pixel) else False in
@@ -123,7 +127,7 @@ value make_size face size callback =
                   done;
 
                   Printf.printf "blank rows: %d, cols %d\n%!" blankRows blankCols; *)
-                  callback code xadv (int_of_float metrics.gm_hori.bearingx - bearingx + blankCols) (int_of_float metrics.gm_hori.bearingy + bearingy - blankRows) img;
+                  callback code char_index  xadv (int_of_float metrics.gm_hori.bearingx - bearingx + blankCols) (int_of_float metrics.gm_hori.bearingy + bearingy - blankRows) img;
                 );
             )
         )
@@ -258,6 +262,7 @@ Arg.parse
     ("-styles-list", Arg.Set stylesList, "display full styles list of input file");
     ("-pmaxt", Arg.Int (fun v -> TextureLayout.max_size.val := v), "max texture size");
     ("-skip-style-suffix", Arg.Set skip_style_suffix, "skip_style_suffix");
+    ("-with-png", Arg.Set with_png, "save fonts png file" ) ;
   ]
   (fun f -> fontFile.val := f) "Usage msg";
 
@@ -294,7 +299,7 @@ let availStyles = List.init face_info.Freetype.num_faces (fun i -> Freetype.new_
 let faces = List.map (fun styleName -> try List.find (fun (_, face_info) -> face_info.Freetype.style_name = styleName) availStyles with [ Not_found -> failwith ("Style '" ^ styleName ^  "' not found") ]) (ExtString.String.nsplit !styles ",") in
 
   List.iter (fun (face, face_info) ->
-    let chars = Hashtbl.create 1 in
+    let chars_images = Hashtbl.create 1 in
     let postfix =
       match !suffix with
       [ "" ->
@@ -319,12 +324,16 @@ let faces = List.map (fun styleName -> try List.find (fun (_, face_info) -> face
         let imgs = ref [] in
           (
             List.iter begin fun size ->
-              make_size face (float size) begin fun code xadvance xoffset yoffset img ->
-                let key = (code,size) in
-                (
-                  imgs.val := [ (key,Images.Rgba32 img) :: !imgs ];
-                  Hashtbl.add chars key {id=code;xadvance=(int_of_float xadvance);xoffset;yoffset;width=img.Rgba32.width;height=img.Rgba32.height;x=0;y=0;page=0 };
-                )
+              make_size face (float size) begin fun code char_index xadvance xoffset yoffset img ->
+                let key = (char_index,size) in
+                match Hashtbl.mem chars_images key with
+                [ True -> ()
+                | _ -> 
+                  (
+                    imgs.val := [ (key,Images.Rgba32 img) :: !imgs ];
+                    Hashtbl.add chars_images key {id=code;xadvance=(int_of_float xadvance);xoffset;yoffset;width=img.Rgba32.width;height=img.Rgba32.height;x=0;y=0;page=0 };
+                  )
+                ]
               end
             end !sizes;
             Printf.printf "len imgs: %d\n%!" (List.length !imgs);
@@ -338,15 +347,21 @@ let faces = List.map (fun styleName -> try List.find (fun (_, face_info) -> face
                   (
                     let img = match img with [ Images.Rgba32 img -> img | _ -> assert False ] in
                     Rgba32.blit img 0 0 texture x y img.Rgba32.width img.Rgba32.height;
-                    let r = Hashtbl.find chars key in
+                    let r = Hashtbl.find chars_images key in
                     ( r.x := x; r.y := y; r.page := i;)
                   )
                 end imgs;
                 (* let ext = match !alpha_texture with [ True -> "alpha" | False -> "png" ] in *)
                 let ext = if !stroke > 0. then "lumal" else "alpha" in
                 let imgname =  Printf.sprintf "%s_%d%s.%s" fname i postfix ext in
+                let png_name =  Printf.sprintf "%s_%d%s.png" fname i postfix in
                 let fname = match !output with [ None -> imgname | Some o -> Filename.concat o imgname] in
                 (
+                  match !with_png with
+                  [ True -> 
+                      Images.save png_name (Some Images.Png) [] (Images.Rgba32 texture)
+                  | _ -> ()
+                  ];
                   Utils.save_alpha ~with_lum:(!stroke > 0.) (Images.Rgba32 texture) fname;
                   font.pages := [ imgname :: font.pages ];
                 );
@@ -376,7 +391,8 @@ let faces = List.map (fun styleName -> try List.find (fun (_, face_info) -> face
                   (
                     UTF8.iter begin fun uchar ->
                       let code = UChar.code uchar in
-                      let info = Hashtbl.find chars (code,size) in
+                      let char_index = Freetype.get_char_index face code in
+                      let info = Hashtbl.find chars_images (char_index,size) in
             (*           let () = Printf.printf "char: %C, xoffset: %d, yoffset: %d\n%!" (char_of_int code) info.xoffset info.yoffset in *)
                       chars'.char_list :=
                         [ {id=code; xadvance=info.xadvance; xoffset=info.xoffset; yoffset = (truncate (sizeInfo.Freetype.ascender -. (float info.yoffset))); x=info.x; y=info.y; width=info.width; height=info.height; page=info.page; } :: chars'.char_list ]
