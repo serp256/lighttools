@@ -359,7 +359,7 @@ let faces = List.map (fun styleName -> try List.find (fun (_, face_info) -> face
                 (
                   match !with_png with
                   [ True -> 
-                      Images.save png_name (Some Images.Png) [] (Images.Rgba32 texture)
+                      Images.save (match !output with [ Some o -> Filename.concat o png_name | _ -> png_name]) (Some Images.Png) [] (Images.Rgba32 texture)
                   | _ -> ()
                   ];
                   Utils.save_alpha ~with_lum:(!stroke > 0.) (Images.Rgba32 texture) fname;
