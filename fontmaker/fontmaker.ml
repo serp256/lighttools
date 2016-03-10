@@ -237,7 +237,46 @@ value parse_sizes str =
     sizes.val := List.map int_of_string (String.nsplit str ",")
   with [ _ -> failwith "Failure parse sizes" ];
 
-value read_chars fname = pattern.val := String.strip (Std.input_file fname);
+value read_chars_from_json fname = 
+      let rslt = Hashtbl.create 100 in
+      let checkSymbols str =
+        (
+          let is_whitespace ch = 
+            match UChar.uint_code ch with
+            [ 010 | 013 | 009 | 026 | 032 | 012 -> True
+            |_ -> False
+            ] in
+          UTF8.iter (fun ch -> if Hashtbl.mem rslt ch || is_whitespace ch then () else Hashtbl.add rslt ch True) str
+        ) in
+      let json  = Ojson.from_file fname in
+      (
+        match json with
+        [`Assoc jsons ->
+          (
+            List.iter (fun (key, json) ->
+              match json with
+              [`String v ->
+                checkSymbols v
+              | _ -> ()
+              ];
+            ) jsons;
+          )
+        | _ -> assert False
+        ];
+        let keys = ExtLib.List.of_enum(ExtLib.Hashtbl.keys rslt) in
+        let str =  (UTF8.init (Hashtbl.length rslt) (fun i -> List.nth keys i)) in
+        (
+          Printf.printf "%s\n%!" (String.strip str);
+          pattern.val := String.strip str;
+        );
+      );
+
+value read_chars fname = 
+  match Filename.check_suffix fname "json" with
+  [False -> pattern.val := String.strip (Std.input_file fname)
+  | _ -> read_chars_from_json fname
+  ];
+
 value output = ref None;
 
 value read_sizes fname = parse_sizes (String.strip (Std.input_file fname));
