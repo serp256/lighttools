@@ -94,9 +94,10 @@ module Make(P:P) =
 
 	(* Запись animations.dat *)
 	(* @return	int	numFrames	число фреймов в объекте *)
-	value writeAnimationsDat o = (
+	value writeAnimationsDat o pack_scale  = (
 		let oname		= Object.name o in
 		let animsOut	= IO.output_string () in
+    let scale = P.scale *. pack_scale in
 		let numFrames	= (
 			IO.write_ui16 animsOut 1;
 			Utils.writeUTF animsOut oname;
@@ -116,19 +117,19 @@ module Make(P:P) =
 						if numRects > 0 then
 							List.iter (fun r -> (
 									(* Printf.printf "\n1oname %s; %f %f %f %f\n" oname r.Rect.x r.Rect.y r.Rect.width r.Rect.height; *)
-									IO.write_i16 animsOut (truncate (P.scale *. r.Rect.x));
-									IO.write_i16 animsOut (truncate (P.scale *. r.Rect.y));
-									IO.write_i16 animsOut (truncate (P.scale *. r.Rect.width));
-									IO.write_i16 animsOut (truncate (P.scale *. r.Rect.height));
+									IO.write_i16 animsOut (truncate (scale *. r.Rect.x));
+									IO.write_i16 animsOut (truncate (scale *. r.Rect.y));
+									IO.write_i16 animsOut (truncate (scale *. r.Rect.width));
+									IO.write_i16 animsOut (truncate (scale *. r.Rect.height));
 								)
 							) rects
 						else (
 							let (x, y, w, h) = calcAnimRects a in (
 								(* Printf.printf "\n2oname %s; %f %f %f %f\n" oname x y w h; *)
-								IO.write_i16 animsOut (truncate (P.scale *. x));
-								IO.write_i16 animsOut (truncate (P.scale *. y));
-								IO.write_i16 animsOut (truncate (P.scale *. w));
-								IO.write_i16 animsOut (truncate (P.scale *. h));
+								IO.write_i16 animsOut (truncate (scale *. x));
+								IO.write_i16 animsOut (truncate (scale *. y));
+								IO.write_i16 animsOut (truncate (scale *. w));
+								IO.write_i16 animsOut (truncate (scale *. h));
 							)
 						)
 					);
@@ -165,7 +166,8 @@ module Make(P:P) =
 	);
 
 	(* Запись frames.dat *)
-	value writeFramesDat o numFrames ttInfHash = (
+	value writeFramesDat o numFrames ttInfHash pack_scale = (
+    let scale = P.scale *. pack_scale in
 		let oname		= Object.name o in
 		(* let imgsInfLst	= Hashtbl.find_all ttInfHash oname in *)
 		let framesOut	= IO.output_string () in
@@ -178,10 +180,10 @@ module Make(P:P) =
 				let animLst = if (P.no_anim) then [List.hd animLst] else animLst in
 				List.iter (fun f -> (
 					
-					let fx			= Utils.roundi (P.scale *. (Frame.x f)) in
-					let fy			= Utils.roundi (P.scale *. (Frame.y f)) in
-					let iconX		= Utils.roundi (P.scale *. (Animation.iconX a)) in
-					let iconY		= Utils.roundi (P.scale *. (Animation.iconY a)) in
+					let fx			= Utils.roundi (scale *. (Frame.x f)) in
+					let fy			= Utils.roundi (scale *. (Frame.y f)) in
+					let iconX		= Utils.roundi (scale *. (Animation.iconX a)) in
+					let iconY		= Utils.roundi (scale *. (Animation.iconY a)) in
 					let points		= Frame.points f in
 					let numPoints	= List.length points in
 					let _			= (
@@ -193,8 +195,8 @@ module Make(P:P) =
 
 						(* Cписок свойств точек *)
 						List.iter (fun p -> (
-							let px    = Utils.roundi (P.scale *. (Point.x p)) in
-							let py    = Utils.roundi (P.scale *. (Point.y p)) in
+							let px    = Utils.roundi (scale *. (Point.x p)) in
+							let py    = Utils.roundi (scale *. (Point.y p)) in
 							let label = Point.label p in (
 								IO.write_i16	framesOut px;
 								IO.write_i16	framesOut py;
@@ -210,9 +212,9 @@ module Make(P:P) =
 						let imgRcd		= Hashtbl.find ttInfHash (oname, imgPath) in
             let () = Printf.printf "imgPath : %s; imgRcd : %d \n%!" imgPath imgRcd.img_index  in
 						(* let imgRcd		= List.find (fun (i:img) -> i.path = imgPath)	imgsInfLst in *)
-						let lx			= Utils.roundi (P.scale *. (Layer.x l)) + fx + (Utils.roundi ((float imgRcd.crop_info.l) *. (Layer.scale l))) in
-						let ly			= Utils.roundi (P.scale *. (Layer.y l)) + fy + (Utils.roundi ((float imgRcd.crop_info.t) *. (Layer.scale l))) in
-						(* let lx			= Utils.round (P.scale *. ((Layer.x l) +. (Frame.x fstFrm)) -.  (float fx)) in *)
+						let lx			= Utils.roundi (scale *. (Layer.x l)) + fx + (Utils.roundi ((float imgRcd.crop_info.l) *. (Layer.scale l))) in
+						let ly			= Utils.roundi (scale *. (Layer.y l)) + fy + (Utils.roundi ((float imgRcd.crop_info.t) *. (Layer.scale l))) in
+						(* let lx			= Utils.round (scale *. ((Layer.x l) +. (Frame.x fstFrm)) -.  (float fx)) in *)
 						let alpha		= int_of_float (Layer.alpha l ) in
 						let flip		= Utils.int_of_bool (Layer.flip l ) in
 						let scale		= Int32.bits_of_float (Layer.scale l )  in
@@ -430,7 +432,7 @@ module Make(P:P) =
 	);
 
 	(* Получить картинку *)
-	value getImg fname = (
+	value getImg fname pack_scale = (
     let () = Printf.printf "getImg :%s \n%!" fname in
     let src_path = P.imgDir /// fname in
     let srcImg		= OImages.load src_path [] in
@@ -442,8 +444,9 @@ module Make(P:P) =
       | _ -> False
       ]
     in
+    let scale = pack_scale *. P.scale in
 		let image		=
-			match P.scale with
+			match scale with
 			[ 1. when not need_convert -> image
 			| scale ->
 				let srcFname = Filename.temp_file "src" "" in
@@ -512,7 +515,7 @@ module Make(P:P) =
 
 
 	(* Запись атласа либы *)
-	value writeLibAtlas packname (lstImgs: list (string * list string)) ttInfHash isWholly = (
+	value writeLibAtlas packname (lstImgs: list (string * list string)) ttInfHash isWholly pack_scale = (
 		(* Собираем список текстурной информации *)
     let () = Printf.printf "writeLibAtlas pack :%s; lstImgs : [ %s ]  \n%!" packname (String.concat "; " (List.map (fun (name, fnames) -> Printf.sprintf "%s : [ %s ]\n " name (String.concat "; " fnames)  ) lstImgs)) in
 		let images = 
@@ -520,7 +523,7 @@ module Make(P:P) =
 			List.fold_left (fun accLst (objname, fnames) -> (
         let (_,res) =
           List.fold_right (fun fname  (recId, result)-> 
-            let (img,crop_info) = getImg fname in
+            let (img,crop_info) = getImg fname pack_scale in
             (recId + 1, [((0, recId, (objname, fname), "", crop_info), img):: result])
           ) fnames (0,[])
         in
@@ -604,7 +607,7 @@ module Make(P:P) =
 
 
 	(* Записать данных либы *)
-	value writeLibData prj packname lstObjs isWholly = (
+	value writeLibData prj packname lstObjs isWholly pack_scale = (
 		let ttInfHash							= Hashtbl.create 30 in
 		let lstImgs:list (string * list string) =
 			let lstImgs = 
@@ -622,19 +625,19 @@ module Make(P:P) =
 		in
 		if (List.length lstImgs) > 0 then (
 			(* Запись атласа *)
-			let numAtlases	= writeLibAtlas		packname lstImgs ttInfHash isWholly in (
+			let numAtlases	= writeLibAtlas		packname lstImgs ttInfHash isWholly pack_scale in (
 				(* Printf.printf "\n NUM ATLASES %d\n" (numAtlases); *)
 
 				(* Запись texInfo.dat *)
-				writeTexDat	prj	packname lstObjs numAtlases ttInfHash;
+				writeTexDat	prj	packname lstObjs numAtlases ttInfHash ;
 			);
 			List.iter (fun oname -> 
 					(* Ищем объект в проекте *)
 					let obj	= List.find (fun o -> (Object.name o) = oname) (Project.objects prj) in (
 						(* Запись animations.dat *)
-						let numFrames = writeAnimationsDat obj in
+						let numFrames = writeAnimationsDat obj pack_scale in
 						(* Запись frames.dat *)
-						writeFramesDat obj numFrames ttInfHash;
+						writeFramesDat obj numFrames ttInfHash pack_scale;
 					)
 			) lstObjs;
 			Hashtbl.clear ttInfHash;
