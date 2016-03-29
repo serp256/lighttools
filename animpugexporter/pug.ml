@@ -210,13 +210,20 @@ module Make(P:P) =
 					List.iter (fun l -> (
 						let imgPath		= Layer.imgPath l in
 						let imgRcd		= Hashtbl.find ttInfHash (oname, imgPath) in
-            let () = Printf.printf "imgPath : %s; imgRcd : %d \n%!" imgPath imgRcd.img_index  in
+						let flip		= Utils.int_of_bool (Layer.flip l ) in
+            let crop_l = 
+              match flip with
+              [ 0 -> imgRcd.crop_info.l
+              | _ -> imgRcd.crop_info.r
+              ]
+            in
+            let () = Printf.printf "imgPath : %s; imgRcd : %d ; layer_scale : %f \n%!" imgPath imgRcd.img_index (Layer.scale l) in
+            let () = Printf.printf "scale : %f; lx =%f; ly=%f; fx=%d; fy=%d; crop_info.l =%d; crop_info.t=%d \n%!" scale (Layer.x l) (Layer.y l) fx fy crop_l imgRcd.crop_info.t  in
 						(* let imgRcd		= List.find (fun (i:img) -> i.path = imgPath)	imgsInfLst in *)
-						let lx			= Utils.roundi (scale *. (Layer.x l)) + fx + (Utils.roundi ((float imgRcd.crop_info.l) *. (Layer.scale l))) in
+            let lx			= Utils.roundi (scale *. (Layer.x l)) + fx + (Utils.roundi ((float crop_l) *. (Layer.scale l))) in
 						let ly			= Utils.roundi (scale *. (Layer.y l)) + fy + (Utils.roundi ((float imgRcd.crop_info.t) *. (Layer.scale l))) in
 						(* let lx			= Utils.round (scale *. ((Layer.x l) +. (Frame.x fstFrm)) -.  (float fx)) in *)
 						let alpha		= int_of_float (Layer.alpha l ) in
-						let flip		= Utils.int_of_bool (Layer.flip l ) in
 						let scale		= Int32.bits_of_float (Layer.scale l )  in
             let scaleXY =
               match P.useScaleXY with
