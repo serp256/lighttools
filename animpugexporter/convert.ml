@@ -30,6 +30,7 @@ type pack_info        = {
 	name :		string;
 	objs :		list string;
 	wholly :	bool;
+  scale : float;
 };
 
 value get_packs objs = 
@@ -103,8 +104,21 @@ value get_packs objs =
 					with
 					  [ Not_found -> include_libs ]
 				  in
+          let scale = 
+            try
+              let scale = List.assoc "scale" params in
+              match scale with
+              [ `Float sc -> sc
+              | `Int sc -> float sc
+              | _ -> assert False
+              ]
+            with
+              [
+                Not_found -> 1.
+              ]
+          in
 					(
-					  {name; objs=pack_libs; wholly}
+            {name; objs=pack_libs; wholly; scale}
 					)
 			  | _ -> assert False 
 			  ]
@@ -183,7 +197,7 @@ value split_pack pack =
 	List.fold_left (fun (res, pack) pstfx  ->
 	  	let new_name				= pack.name ^ pstfx in
 	  	let (new_libs, remain_libs)	= List.partition (fun lib -> String.ends_with lib "_ex" || String.ends_with lib "_sh") pack.objs in
-	  	( [ {name					= new_name; objs = new_libs; wholly = pack.wholly} :: res ], {(pack) with objs=remain_libs})
+      ( [ {name					= new_name; objs = new_libs; wholly = pack.wholly; scale= pack.scale} :: res ], {(pack) with objs=remain_libs})
 	)  ([], pack) [ "_ex" ]
   in
   packs @ [ remain_pack ];
@@ -237,7 +251,7 @@ let _		= writeInfoObjects infObjs in
   	(* let _ = List.iter (fun pack -> Printf.printf "Pack %s : [%s]\n%!" pack.name (String.concat "; " pack.objs)) packs in *)
 	List.iter (fun pack -> (
 		(* Записать данных либы *)
-		Pug.writeLibData prj pack.name pack.objs pack.wholly
+		Pug.writeLibData prj pack.name pack.objs pack.wholly pack.scale
 	)) packs;
 
 match !without_cntr with

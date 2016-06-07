@@ -3,3 +3,6 @@
 android-exp-maker/aem.native
 _build
 eit
+.idea
+*.iml
+.DS_store

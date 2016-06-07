@@ -304,6 +304,7 @@ type contourSement = {
  *)
 
 value genContour regions frames anim =
+  if anim.frames = [] then Printf.printf "WARNING : EMPTY ANIMATION \n%!" else
   let frame = DynArray.get frames (List.hd anim.frames) in
   let (x, y, w, h) =
     List.fold_left (fun (x, y, w, h) layer ->
