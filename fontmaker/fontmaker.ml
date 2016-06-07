@@ -267,7 +267,7 @@ value read_chars_from_json fname =
         let str =  (UTF8.init (Hashtbl.length rslt) (fun i -> List.nth keys i)) in
         (
           Printf.printf "%s\n%!" (String.strip str);
-          pattern.val := String.strip str;
+          pattern.val := !pattern ^ (String.strip str);
         );
       );
 
@@ -276,6 +276,7 @@ value read_chars fname =
   [False -> pattern.val := String.strip (Std.input_file fname)
   | _ -> read_chars_from_json fname
   ];
+value set_pattern p = pattern.val := !pattern ^ p;
 
 value output = ref None;
 
@@ -287,7 +288,7 @@ value skip_style_suffix = ref False;
 (* use xmlm for writing xml *)
 Arg.parse
   [
-    ("-c",Arg.Set_string pattern,"chars");
+    ("-c",Arg.String set_pattern,"chars");
     ("-s",Arg.String parse_sizes,"sizes");
     ("-cf",Arg.String read_chars,"chars from file");
     ("-sf",Arg.String read_sizes,"sizes from file");
