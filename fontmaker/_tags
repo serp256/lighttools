@@ -1,4 +1,4 @@
-<*.ml>: package(camlp4),syntax(camlp4r),package(camlimages),package(extlib),package(zip),package(ojson)
-<fontmaker.{ml,byte,native}>: package(camlimages.png),package(camlimages.freetype),package(extlib),package(xmlm),package(zip),linkall,package(ojson)
+<*.ml>: package(camlp4),syntax(camlp4r),package(camlimages),package(ojson),package(extlib),package(zip)
+<fontmaker.{ml,byte,native}>: package(camlimages.png),package(camlimages.freetype),package(extlib),package(xmlm),package(zip),package(ojson),linkall
 true: debug
 
