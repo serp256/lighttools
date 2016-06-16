@@ -12,7 +12,8 @@ module type P =
 	value gen_pvr:		bool;
 	value gen_dxt:		bool;
 	value degree4:		bool;
-	value is_gamma:		bool;
+	value is_gamma_steam:		bool;
+	value is_gamma_gin:		bool;
 	value without_cntr:	bool;
 	value is_android:	bool;
 	value no_anim:		bool;
@@ -385,29 +386,48 @@ module Make(P:P) =
             )) 0 imgs;
 			let pathSaveImg = (P.outDir /// packname ^ P.suffix) in (
 				(* Если гамма *)
-	            match P.is_gamma with
-		            [ True -> 
-		                let tmp_name = pathSaveImg ^ "_tmp.png" in
-		                (
-		                  Images.save tmp_name (Some Images.Png) [] new_img;
-                      (*
-		                  let cmd = Printf.sprintf "convert -gamma 1.1 %s %s.png" tmp_name pathSaveImg in
-    *)
-		                  let cmd = Printf.sprintf "convert -brightness-contrast \"5 x5\" -sharpen \"1x0.2\" %s %s.png" tmp_name pathSaveImg in
-		                    (
-		                      Printf.printf "%s\n%!" cmd;
-		                      match Sys.command cmd with
-		                      [ 0 -> Sys.remove tmp_name
-		                      | _ -> failwith "conver gamma return non-zero"
-		                      ];
-		                    )
-		                )
-		            | _ -> 
-		            	(* Обычное сохранение *)
-                    (
-		                Images.save (pathSaveImg ^ ".png") (Some Images.Png) [] new_img
-                    )
-		            ];
+	            match P.is_gamma_steam with
+              [ True -> 
+                  let tmp_name = pathSaveImg ^ "_tmp.png" in
+                  (
+                    Images.save tmp_name (Some Images.Png) [] new_img;
+                    (*
+                    let cmd = Printf.sprintf "convert -gamma 1.1 %s %s.png" tmp_name pathSaveImg in
+  *)
+                    let cmd = Printf.sprintf "convert -brightness-contrast \"5 x5\" -sharpen \"1x0.2\" %s %s.png" tmp_name pathSaveImg in
+                      (
+                        Printf.printf "%s\n%!" cmd;
+                        match Sys.command cmd with
+                        [ 0 -> Sys.remove tmp_name
+                        | _ -> failwith "conver gamma return non-zero"
+                        ];
+                      )
+                  )
+              | _ -> 
+                  match P.is_gamma_gin with
+                  [ True ->
+                      let tmp_name = pathSaveImg ^ "_tmp.png" in
+                      (
+                        Images.save tmp_name (Some Images.Png) [] new_img;
+                        (*
+                        let cmd = Printf.sprintf "convert -gamma 1.1 %s %s.png" tmp_name pathSaveImg in
+      *)
+                        let cmd = Printf.sprintf "convert -brightness-contrast \"7 x7\" -sharpen \"1x0.2\" -set option:modulate:colorspace hsb -modulate 100,110 %s %s.png" tmp_name pathSaveImg in
+                          (
+                            Printf.printf "%s\n%!" cmd;
+                            match Sys.command cmd with
+                            [ 0 -> Sys.remove tmp_name
+                            | _ -> failwith "conver gamma return non-zero"
+                            ];
+                          )
+                      )
+                  | _ -> 
+                    (* Обычное сохранение *)
+                      (
+                      Images.save (pathSaveImg ^ ".png") (Some Images.Png) [] new_img
+                      )
+                  ]
+              ];
 		              match P.gen_pvr with
 	                [ True -> 
 	                    (

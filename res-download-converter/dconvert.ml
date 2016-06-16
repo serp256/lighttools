@@ -89,12 +89,13 @@ value cmnd text =
 );
 
 value start_convert lst = 
+  let () = Printf.printf "start_convert \n%!" in
 	let (path, param) = getParamName lst in
 	(
 		let in_file = Printf.sprintf "%s%s" raw_path path in 
 		let command = (Printf.sprintf "lsync2 -def rule_file=\"%s\" %s -def path=\"%s\" downloader" !rule_file param in_file) in 
 		(
-(* 			Printf.printf "[%s]\n\n" command; *)
+ 			Printf.printf "[%s]\n\n" command; 
 (* 			if True then () else *)
 			(
 			ignore(cmnd (Printf.sprintf "rm -rf %s" in_file ));
@@ -150,13 +151,11 @@ value used_resources = ref [];
 
 value rec read_json ~key ~json ~params ~list_files ~header_files () = 
 (
-(*
 	Printf.printf "<< %s " key;
 	List.iter (fun (a,b) -> (
 		Printf.printf "[%s/%s]" a b;
 	) ) params;
 	Printf.printf ">>\n";
-	*)
 	match json with
 	[ `Assoc packs ->
 		(
@@ -211,6 +210,7 @@ value rec read_json ~key ~json ~params ~list_files ~header_files () =
 									List.iter (fun text -> (
 										match text with 
 										[ `String text -> 
+                      let () = Printf.printf "Find param %s \n%!" text in
 											let params = 
 												List.find (fun (name, params) -> (
 													name = text 
