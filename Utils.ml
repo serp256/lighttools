@@ -1,4 +1,7 @@
 
+value add_suffix path suffix =
+  Filename.chop_extension path ^ suffix ^ ".png";
+
 value chop_ext f = 
   try
     let idx = String.rindex f '.' in

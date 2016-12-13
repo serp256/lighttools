@@ -19,6 +19,7 @@ module type P =
 	value no_anim:		bool;
   value useScaleXY  : bool;
   value alpha_for_crop : int;
+  value filter_conf : option FiltersConf.t;
   end;
 
 
@@ -98,7 +99,10 @@ module Make(P:P) =
 	value writeAnimationsDat o pack_scale  = (
 		let oname		= Object.name o in
 		let animsOut	= IO.output_string () in
+    (*
     let scale = P.scale *. pack_scale in
+    *)
+    let scale = P.scale *. (FiltersConf.get_scale P.filter_conf oname) in
 		let numFrames	= (
 			IO.write_ui16 animsOut 1;
 			Utils.writeUTF animsOut oname;
@@ -168,8 +172,11 @@ module Make(P:P) =
 
 	(* Запись frames.dat *)
 	value writeFramesDat o numFrames ttInfHash pack_scale = (
-    let scale = P.scale *. pack_scale in
 		let oname		= Object.name o in
+    (*
+    let scale = P.scale *. pack_scale in
+    *)
+    let scale = P.scale *. (FiltersConf.get_scale P.filter_conf oname) in
 		(* let imgsInfLst	= Hashtbl.find_all ttInfHash oname in *)
 		let framesOut	= IO.output_string () in
 		let _			= (
@@ -405,7 +412,7 @@ module Make(P:P) =
                   )
               | _ -> 
                   match P.is_gamma_gin with
-                  [ True ->
+                  [ True when False ->
                       let tmp_name = pathSaveImg ^ "_tmp.png" in
                       (
                         Images.save tmp_name (Some Images.Png) [] new_img;
@@ -458,20 +465,43 @@ module Make(P:P) =
         )
 	);
 
+  value get_conver_cmd src dst fltrs = 
+    let cmd = 
+      String.concat ";\n" @@ List.map (fun options ->
+        if options = ""
+        then ""
+        else
+          let path_filter = src ^ "_filter" in
+          "convert " ^ options ^ " '" ^ src ^ "' 'png32:" ^ path_filter ^ "';
+          mv -f '" ^ path_filter ^ "' '" ^ src ^ "'";
+      ) fltrs
+    in
+    match cmd with
+    [ "" -> "convert " ^ src ^ " png32:" ^  dst
+    | _ -> 
+        let mv = (Printf.sprintf "mv -f %s %s" src dst) in
+        cmd ^";\n" ^ mv
+    ];
+
 	(* Получить картинку *)
-	value getImg fname pack_scale = (
-    let () = Printf.printf "getImg :%s \n%!" fname in
+	value getImg obj fname pack_scale = (
+    let () = Printf.printf "getImg[%s] :%s \n%!" obj fname in
     let src_path = P.imgDir /// fname in
     let srcImg		= OImages.load src_path [] in
 		(* let srcImg	= OImages.rgba32 srcImg in *)
 		let image		= srcImg#image in
-    let need_convert = 
+    let need_convert = True
+      (*
       match image with
       [ Images.Index8 img -> True
       | _ -> False
       ]
+      *)
     in
+    (*
     let scale = pack_scale *. P.scale in
+    *)
+    let scale = P.scale *. (FiltersConf.get_scale P.filter_conf obj) in
 		let image		=
 			match scale with
 			[ 1. when not need_convert -> image
@@ -490,13 +520,44 @@ module Make(P:P) =
               else ();
             );
 
-          let cmd = 
+          let filters = 
             match scale with
-            [ 1.-> Printf.sprintf "convert %s png32:%s" srcFname dstFname
-            | sc when sc > 1. -> Printf.sprintf "convert -resize %d%% -filter catrom %s png32:%s" (int_of_float (scale *. 100.)) srcFname dstFname
-            | _ ->Printf.sprintf "convert -interpolative-resize %d%% -sharpen 0x.1 %s png32:%s" (int_of_float (scale *. 100.)) srcFname dstFname 
+            [ 1.->  []
+            | _ -> [ Printf.sprintf "-interpolative-resize %f%% " ((scale *. 100.))  ] 
+            ]
+            (*
+            match scale with
+            [ 1.->  []
+            | sc when sc > 1. ->  [ Printf.sprintf "-resize %d%% -filter catrom" (int_of_float (scale *. 100.))  ]
+            | _ -> [ Printf.sprintf "-interpolative-resize %d%% -sharpen 0x.1" (int_of_float (scale *. 100.))  ] 
+            ]
+      *)
+          in
+          let filters = (FiltersConf.get_filter P.filter_conf obj fname)  @ filters in 
+          let filters = 
+            match P.is_gamma_gin with
+            [ True ->
+              (*
+              [ "-brightness-contrast \"7 x7\" -sharpen \"1x0.2\" -set option:modulate:colorspace hsb -modulate 100,110" :: params ]
+            *)
+              match FiltersConf.in_shadows P.filter_conf fname with
+              [ True -> filters
+              | _ -> 
+                  [ "-brightness-contrast \"9 x7\" -sharpen \"1x0.2\" -set option:modulate:colorspace hsb -modulate 100,110" :: filters ]
+              ]
+            | _ -> filters
             ]
           in
+          let cmd = get_conver_cmd srcFname dstFname filters in
+          (*
+          let cmd = 
+            match scale with
+            [ 1.-> Printf.sprintf "convert %s %s png32:%s" params srcFname dstFname
+            | sc when sc > 1. -> Printf.sprintf "convert %s -resize %d%% -filter catrom %s png32:%s" params (int_of_float (scale *. 100.)) srcFname dstFname
+            | _ ->Printf.sprintf "convert %s -interpolative-resize %d%% -sharpen 0x.1 %s png32:%s" params (int_of_float (scale *. 100.)) srcFname dstFname 
+            ]
+          in
+      *)
             (
               Printf.printf "%s\n%!" cmd;
               if Sys.command cmd <> 0
@@ -514,8 +575,10 @@ module Make(P:P) =
 					  | Images.Cmyk32	 _ -> Printf.printf("img type: Cmyk32\n%!")
 					  ];
 
+            (*
 					  Sys.remove srcFname;
 					  Sys.remove dstFname;
+            *)
 					  img;
 					);
 				)
@@ -550,7 +613,7 @@ module Make(P:P) =
 			List.fold_left (fun accLst (objname, fnames) -> (
         let (_,res) =
           List.fold_right (fun fname  (recId, result)-> 
-            let (img,crop_info) = getImg fname pack_scale in
+            let (img,crop_info) = getImg objname fname pack_scale in
             (recId + 1, [((0, recId, (objname, fname), "", crop_info), img):: result])
           ) fnames (0,[])
         in

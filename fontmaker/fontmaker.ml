@@ -35,16 +35,23 @@ value make_size face size callback =
     Freetype.set_char_size face (!scale *. size) 0. !dpi 0;
 
 
+    Printf.printf "count symbols : %d\n%!" (UTF8.length !pattern); 
+    let i = ref 0 in
       UTF8.iter (fun uchar ->
         (
           let code = UChar.code uchar in
           let char_index = Freetype.get_char_index face code in
-          (*
-          let () = Printf.printf "code : %d; char_index : %d \n%!" code (Freetype.int_of_char_index char_index) in
-          *)
+          let () = Printf.printf "%d; uchar : %s; code : %d; char_index : %d \n%!" !i (UTF8.init 1 (fun _ -> uchar )) code (Freetype.int_of_char_index char_index) in
+          let () = incr i in
           let (xadv,yadv) = Freetype.render_glyph face char_index [] Freetype.Render_Normal in
           let bi = Freetype.get_bitmap_info face in
           let open Freetype in
+          let () = Printf.printf "bitmap: %d x %d\n%!" bi.bitmap_width bi.bitmap_height in
+          if bi.bitmap_width = 0 || bi.bitmap_height = 0
+          then
+            let img = Rgba32.make 1 1 bgcolor in
+            callback code char_index xadv bi.bitmap_left bi.bitmap_top img
+          else
           let img =  Rgba32.make bi.bitmap_width bi.bitmap_height bgcolor in
           (
             for y = 0 to bi.bitmap_height - 1 do
@@ -273,7 +280,7 @@ value read_chars_from_json fname =
 
 value read_chars fname = 
   match Filename.check_suffix fname "json" with
-  [False -> pattern.val := String.strip (Std.input_file fname)
+  [False -> pattern.val := !pattern ^ (String.strip (Std.input_file fname))
   | _ -> read_chars_from_json fname
   ];
 value set_pattern p = pattern.val := !pattern ^ p;

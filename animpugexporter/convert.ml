@@ -25,6 +25,7 @@ value suffix         = ref "";
 value json_name      = ref "";
 value useScaleXY     = ref False;
 value alpha_for_crop = ref 0;
+value filter_conf   = ref None;
 value get_postfix () = !suffix;
 
 type pack_info        = {
@@ -154,6 +155,7 @@ Gc.set {(Gc.get()) with Gc.max_overhead = 2000000};
 		("-gamma-gin",			Arg.Set is_gamma_gin,		"add conver -gamma 1.1 call for result image");
 		("-useScaleXY",			Arg.Set useScaleXY,		"use in params scaleX scaleY only match3 ");
 		("-alpha_for_crop",	Arg.Set_int alpha_for_crop,		"value alpha for crop image, by default 0");
+    ("-filter",        Arg.String (fun str -> filter_conf.val := Some str), "path to config");
 	]
 	(fun name -> json_name.val := name)
 	"";
@@ -167,23 +169,24 @@ Utils.makeDir !outdir;
 
 module Pug = Pug.Make(
   	struct
-    value suffix       = !suffix;
-		value prjName      = "farm";
-		value prjDir       = !inp_dir;
-		value outDir       = !outdir;
-		value imgDir       = Filename.concat prjDir "img";
-		value scale        = !scale;
-    value useScaleXY   = !useScaleXY;
+      value suffix       = !suffix;
+      value prjName      = "farm";
+      value prjDir       = !inp_dir;
+      value outDir       = !outdir;
+      value imgDir       = Filename.concat prjDir "img";
+      value scale        = !scale;
+      value useScaleXY   = !useScaleXY;
 
-		value gen_pvr      = !gen_pvr;
-		value gen_dxt      = !gen_dxt;
-		value degree4      = !degree4;
-		value is_gamma_steam     = !is_gamma_steam;
-		value is_gamma_gin     = !is_gamma_gin;
-		value without_cntr = !without_cntr;
-		value is_android   = !is_android;
-		value no_anim      = !no_anim;
-    value alpha_for_crop  = !alpha_for_crop;
+      value gen_pvr      = !gen_pvr;
+      value gen_dxt      = !gen_dxt;
+      value degree4      = !degree4;
+      value is_gamma_steam     = !is_gamma_steam;
+      value is_gamma_gin     = !is_gamma_gin;
+      value without_cntr = !without_cntr;
+      value is_android   = !is_android;
+      value no_anim      = !no_anim;
+      value alpha_for_crop  = !alpha_for_crop;
+      value filter_conf = FiltersConf.get !filter_conf;
   	end
 );
 
