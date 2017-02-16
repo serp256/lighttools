@@ -50,6 +50,19 @@ value get = fun
             | _ -> assert False
             ]
           in
+          let mobile_shadows = 
+            match List.assoc "mobile_shadows" json with
+            [ `List l -> 
+                List.map (fun json -> 
+                  match json with
+                  [ `String str | `Intlit str -> str
+                  | _ -> assert False
+                  ]
+                ) l
+            | _ -> assert False
+            ]
+          in
+          let shadows = shadows @ mobile_shadows in
           let filters = 
             match List.assoc "filters" json with
             [ `Assoc l -> 
@@ -61,6 +74,26 @@ value get = fun
                 ) l
             | _ -> assert False
             ]
+          in
+          let mobile_filters = 
+            match List.assoc "mobile_filters" json with
+            [ `Assoc l -> 
+                List.map (fun (name, js) -> 
+                  match js with
+                  [ `String str -> (name, str)
+                  | _ -> assert False
+                  ]
+                ) l
+            | _ -> assert False
+            ]
+          in
+          let filters = 
+            List.fold_left (fun res (name, str) -> 
+              match List.mem_assoc name res with
+              [ False -> [ (name, str) :: res ]
+              | _ -> res 
+              ]
+            ) mobile_filters filters
           in
           Some {scales; filters; shadows; cannons  }
       |  _ -> assert False
@@ -96,3 +129,16 @@ value get_scale conf obj =
     scale
   with
   [ Not_found -> 1. ];
+
+value test () = 
+  (
+    let sh = "sh" in
+    let filname = "fjadgdsjghds.sh" in
+      (
+    Printf.printf "name sh %b\n%!" (String.exists filname sh);
+    Printf.printf "sh name %b\n%!" (String.exists sh filname);
+      );
+      assert False;
+  );
+
+
