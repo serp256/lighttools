@@ -91,7 +91,7 @@ package {
 				var ba:ByteArray = new ByteArray();
 				fs.readBytes(ba);
 				fs.close();
-
+				
 				if (ext == 'swf') {
 					loadSwf(ba, inFile.name);
 				} else {
@@ -114,6 +114,7 @@ package {
 			var context:LoaderContext = new LoaderContext();
 			context.allowCodeImport = true;
 			context.applicationDomain = new ApplicationDomain();
+			
 			try {
 				loader.loadBytes(ba, context);
 			} catch (error:Error) {
@@ -129,6 +130,7 @@ package {
 			try {
 				zip.loadBytes(ba);
 			} catch (error:Error) {
+				trace('loadSwc '+error);
 			}
 		}
 
@@ -143,6 +145,7 @@ package {
 		}
 
 		private function onError(event:IOErrorEvent):void {
+			trace('onError', event);
 		}
 
 		private function onComplete(event:Event):void {
@@ -150,7 +153,7 @@ package {
 			removeLoaderListener(loaderInfo);
 			const dp:Array = grid.getDataProvider();
 			for each (var kind:String in loaderInfo.applicationDomain.getQualifiedDefinitionNames()) {
-				if (kind.indexOf('ESkins::') != 0 && kind.indexOf('Skins::') != 0) {
+				if (kind.indexOf('eSkins::') != 0 && kind.indexOf('Skins::') != 0 && kind.indexOf('ESkins::') != 0) {
 					continue;
 				}
 				var item:VOSkin = new VOSkin();

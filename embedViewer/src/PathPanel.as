@@ -23,7 +23,7 @@ package {
 			var browseBt:VButton = VToolPanel.createTextButton('browse');
 			browseBt.addClickListener(onBrowse);
 			var box:VBox = new VBox(new <VComponent>[
-				new VText('Укажите каталог с swf/swc-файлами\n(будут отображены классы из пакетов ESkins/Skins)', VText.CENTER),
+				new VText('Укажите каталог с swf/swc-файлами\n(будут отображены классы из пакетов eSkins/Skins)', VText.CENTER),
 				browseBt
 			], 10, VBox.VERTICAL);
 			add(box, { hCenter:0, vCenter:0 });

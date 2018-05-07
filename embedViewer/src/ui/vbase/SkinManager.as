@@ -57,9 +57,15 @@
 		 */
 		public static function applyEmbed(target:VSkin, skinName:String):void {
 			try {
-				var clsSkin:Class = getDefinitionByName('ESkins.' + skinName) as Class;
+				var clsSkin:Class = getDefinitionByName('eSkins.' + skinName) as Class;
 				var skin:Object = new clsSkin();
 			} catch (error:ReferenceError) {
+				try {
+					clsSkin = getDefinitionByName('ESkins.' + skinName) as Class;
+					skin = new clsSkin();
+				} catch (error:ReferenceError) {
+					trace('applyEmbed', error);
+				}
 			}
 			target.applyContent(skin);
 		}

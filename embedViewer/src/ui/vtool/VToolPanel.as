@@ -142,7 +142,7 @@ package ui.vtool {
 
 		public static function createTextButton(text:String, listener:Function = null, skinName:String = 'Green'):VButton {
 			var bt:VButton = new VButton();
-			bt.setSkin(SkinManager.getEmbed('VToolBt' + skinName, VSkin.STRETCH), { wP:100, hP:100 });
+			bt.setSkin(SkinManager.getEmbed('VTool' + skinName+'ButtonBg', VSkin.STRETCH), { wP:100, hP:100 });
 			var label:VLabel = new VLabel('<div fontFamily="Myriad Pro" fontSize="16" color="0x000055">' + text + '</div>', VLabel.CENTER | VLabel.CONTAIN);
 			bt.icon = label;
 			bt.add(label, { left:6, right:6, vCenter:0 });

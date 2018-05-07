@@ -7,6 +7,7 @@ package {
 
 	import ui.vbase.VComponent;
 	import ui.vtool.VToolPanel;
+	
 
 	public class ViewerMain extends Sprite {
 		public static var instance:ViewerMain;
