@@ -2,16 +2,21 @@
 <s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark"
 	xmlns:mx="library://ns.adobe.com/flex/mx" title="Preview" width="500" height="400" close="closeHandler()" initialize="init()">
 	<fx:Script><![CDATA[
+		import flash.display.Bitmap;
+		import flash.display.BitmapData;
+		import flash.display.DisplayObject;
 		import mx.managers.PopUpManager;
-
 		import ru.redspell.rasterizer.flatten.FlattenMovieClip;
 		import ru.redspell.rasterizer.flatten.IFlatten;
+		import spark.filters.GlowFilter;
+
 
 		protected var _obj:IFlatten;
 		protected var _timer:Timer = new Timer(40);
 
 		protected function init():void {
 			_timer.addEventListener(TimerEvent.TIMER, timerHandler);
+			bg.addChild(new Bitmap(new BitmapData(500, 300, false, 0x0)));
 		}
 
 		protected function timerHandler(event:TimerEvent):void {
@@ -33,8 +38,13 @@
 			_obj = obj;
 			_obj.render();
 
-			var dobj:DisplayObject = _obj as DisplayObject;
-			container.addChild(dobj);
+			if (_obj is DisplayObject) {
+				var dobj:DisplayObject = _obj as DisplayObject;
+				container.addChild(dobj);
+			} else {
+				var bmp:Bitmap = new Bitmap(_obj as BitmapData);
+				container.addChild(bmp);
+			}
 
 			var rect:Rectangle = container.getBounds(this);
 			var fltMc:FlattenMovieClip = _obj as FlattenMovieClip
@@ -106,16 +116,24 @@
 				_timer.start();
 			}
 		}
+		
+		private function toggleBg():void {
+			var val:Boolean = !bg.visible;
+			bg.visible = val;
+			toggleBgBtn.filters = val ? [new GlowFilter(0xbbbbbb, 1, 4, 4, 2, 1, true)] : null;
+		}
 	]]></fx:Script>
 
 	<s:VGroup width="100%" height="100%" verticalAlign="middle" horizontalAlign="center" paddingBottom="5">
 		<s:Group id="containerGrp" width="100%" height="100%">
+			<s:SpriteVisualElement visible="false" id="bg"/>
 			<s:SpriteVisualElement id="container"/>
 		</s:Group>
 		<s:HGroup width="100%" horizontalAlign="center">
 			<s:Button click="switchFrame(false)" label="prev"/>
 			<s:Button click="togglePlay()" id="playBtn" label="stop"/>
 			<s:Button click="switchFrame()" label="next"/>
+			<s:Button click="toggleBg()" id="toggleBgBtn" label="background"/>
 		</s:HGroup>
 		<s:Label id="frameLbl"/>
 	</s:VGroup>

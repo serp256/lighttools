@@ -13,6 +13,7 @@
 		import mx.collections.XMLListCollection;
 		import mx.events.CollectionEvent;
 		import mx.events.MenuEvent;
+		import ru.redspell.rasterizer.commands.BatchProcessSwfCommand;
 
 		import ru.redspell.rasterizer.models.Profile;
 
@@ -21,6 +22,8 @@
 		public static const EXPORT_ALL:String = 'mainMenu_exportAll';
 		public static const CREATE_PROFILE:String = 'mainMenu_createProfile';
 		public static const CHOOSE_PROFILE:String = 'mainMenu_chooseProfile';
+		public static const BATCH_PROCESS1:String = 'mainMenu_batchProcess1';
+		public static const BATCH_PROCESS2:String = 'mainMenu_batchProcess2';
 
 		protected var chooseItem:Object = { label:'Choose', children:[] };
 
@@ -29,7 +32,9 @@
 			{ label:'File', children:[
 				{ label:'Open', action:OPEN },
 				{ label:'Export', action:EXPORT },
-				{ label:'Export All Profiles', action:EXPORT_ALL }
+				{ label:'Export All Profiles', action:EXPORT_ALL },
+				{ label:'Batch: check folder', action:BATCH_PROCESS1 },
+				{ label:'Batch: process folder', action:BATCH_PROCESS2 }
 			] },
 			{ label:'Profiles', children:[
 				{ label:'Create', action:CREATE_PROFILE },
@@ -60,6 +65,14 @@
 
 				case CHOOSE_PROFILE:
 					Facade.runCommand(Facade.commandsFactory.getChooseProfileCommand(event.item.data as Profile))
+					break;
+					
+				case BATCH_PROCESS1:
+					Facade.runCommand(new BatchProcessSwfCommand(false));
+					break;
+					
+				case BATCH_PROCESS2:
+					Facade.runCommand(new BatchProcessSwfCommand(true));
 					break;
 			}
 		}

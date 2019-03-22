@@ -3,8 +3,12 @@
 	xmlns:mx="library://ns.adobe.com/flex/mx">
 
 	<fx:Script><![CDATA[
+		import flash.display.Bitmap;
+		import flash.display.MovieClip;
+		import flash.display.Sprite;
 		import mx.core.FlexGlobals;
 		import mx.managers.PopUpManager;
+		import ru.redspell.rasterizer.flatten.FlattenImage;
 
 		import ru.redspell.rasterizer.flatten.FlattenMovieClip;
 		import ru.redspell.rasterizer.flatten.FlattenSprite;
@@ -18,8 +22,9 @@
 		protected function showPreview():void {
 			var cls:SwfClass = data.cls as SwfClass;
 			var previewWin:PreviewWindow = new PreviewWindow();
-			var src:DisplayObject = new cls.definition();
-			var flatten:IFlatten = src is MovieClip ? new FlattenMovieClip() : new FlattenSprite();
+			
+			var src:Object = new cls.definition();
+			var flatten:IFlatten = src is MovieClip ? new FlattenMovieClip() : (src is Sprite ? new FlattenSprite() : new FlattenImage(src.width, src.height, true, 0x00000000));
 
 			//var spt:SpriteVisualElement = new SpriteVisualElement();
 			//spt.addChild(src);
@@ -28,7 +33,8 @@
 			PopUpManager.addPopUp(previewWin, (FlexGlobals.topLevelApplication as WindowedApplication), true);
 			PopUpManager.centerPopUp(previewWin);
 			trace("qwe");
-			previewWin.preview(flatten.fromDisplayObject(src, Utils.getClsScale(cls, data.profile)));
+			//previewWin.preview(flatten.fromDisplayObject(src, Utils.getClsScale(cls, data.profile)));
+			previewWin.preview(flatten.fromSwfClass(cls, Utils.getClsScale(cls, data.profile)));
 			trace("asd");
 		}
 		]]></fx:Script>

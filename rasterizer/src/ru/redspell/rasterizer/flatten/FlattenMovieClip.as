@@ -1,7 +1,11 @@
 package ru.redspell.rasterizer.flatten {
+	import com.codeazur.as3swf.SWF;
+	import com.codeazur.as3swf.tags.IDefinitionTag;
+	import com.codeazur.as3swf.tags.ITag;
 	import flash.display.DisplayObject;
 	import flash.display.MovieClip;
 	import flash.display.Sprite;
+	import ru.redspell.rasterizer.models.SwfClass;
 
 	import ru.redspell.rasterizer.utils.MovieClipExt;
 	import ru.redspell.rasterizer.utils.Utils;
@@ -9,8 +13,14 @@ package ru.redspell.rasterizer.flatten {
 	public class FlattenMovieClip extends Sprite implements IFlatten {
         protected var _frames:Vector.<FlattenSprite> = new Vector.<FlattenSprite>();
         protected var _curFrame:int = 0;
+		public var swf:SWF;
+		
+		public function fromSwfClass(cls:SwfClass, scale:Number):IFlatten {
+			swf = cls.root;
+			return fromDisplayObject(new cls.definition(), scale, cls.tag);
+		}
 
-        public function fromDisplayObject(obj:DisplayObject, scale:Number = 1):IFlatten {
+        public function fromDisplayObject(obj:DisplayObject, scale:Number = 1, tag:IDefinitionTag = null):IFlatten {
 			var clip:MovieClip = obj as MovieClip;
 
 			if (!clip) {
@@ -18,12 +28,14 @@ package ru.redspell.rasterizer.flatten {
 			}
 
 			MovieClipExt.recStop(clip);
-			Utils.traceObj(clip);
+			//Utils.traceObj(clip);
 
 			for (var i:uint = 1; i <= clip.totalFrames; i++) {
 				//trace(i, clip.currentLabel);
 
-				var frame:FlattenSprite = (new FlattenSprite()).fromDisplayObject(obj, scale) as FlattenSprite;
+				var frame:FlattenSprite = new FlattenSprite();
+				frame.swf = swf;
+				frame.fromDisplayObject(obj, scale, tag);
 
 				frame.label = clip.currentLabel;
 				_frames.push(frame);

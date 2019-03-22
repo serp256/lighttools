@@ -35,6 +35,8 @@ package ru.redspell.rasterizer.export {
 						s.writeBytes(binary);
 						s.close();
 					}
+					
+					binary.clear();
 
 					childs.push({
 						name:img.name,
@@ -84,7 +86,34 @@ package ru.redspell.rasterizer.export {
 				meta.frames = frames;
 				writeMeta(dir, meta);
 			} else {
-				throw new Error('Expected obj as FlattenSprite or FlattenMovieClip');
+				meta = { type:'sprite' };
+				var img:FlattenImage = obj as FlattenImage;
+				
+				var binary:ByteArray = PNGEncoder.encode(img);
+				var hash:String = SHA1.hashBytes(binary);
+				var imgFile:File = new File(dir.resolvePath(hash + '.png').nativePath);
+
+				if (!imgFile.exists) {
+					var s:FileStream = new FileStream();
+
+					s.open(imgFile, FileMode.WRITE);
+					s.writeBytes(binary);
+					s.close();
+				}
+				
+				binary.clear();
+
+				meta.children = [{
+					name:img.name,
+					x:img.matrix.tx,
+					y:img.matrix.ty,
+					type:'image',
+					file:dir.getRelativePath(imgFile)
+				}];
+				
+				writeMeta(dir, meta);
+				
+				//throw new Error('Expected obj as FlattenSprite or FlattenMovieClip');
 			}
 
 			return this;

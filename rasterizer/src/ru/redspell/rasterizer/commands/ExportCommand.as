@@ -2,9 +2,11 @@ package ru.redspell.rasterizer.commands {
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
 	import flash.display.MovieClip;
+	import flash.display.Sprite;
 	import flash.filesystem.File;
     import flash.profiler.profile;
     import flash.utils.setTimeout;
+	import ru.redspell.rasterizer.flatten.FlattenImage;
 
 	import ru.nazarov.asmvc.command.AbstractCommand;
 	import ru.nazarov.asmvc.command.CommandError;
@@ -41,6 +43,7 @@ package ru.redspell.rasterizer.commands {
 		}
 
 		protected function exportClass(cls:SwfClass):void {
+			
 			var clsName:String = cls.alias != null && cls.alias != "" ? cls.alias : cls.name.replace('::', '.');
 			var clsDir:File = _packDir.resolvePath(clsName);
 
@@ -50,16 +53,18 @@ package ru.redspell.rasterizer.commands {
 
 			clsDir.createDirectory();
 
-			var instance:DisplayObject = new cls.definition();
+			var instance:Object = new cls.definition();
             var profileLbl:String = (_profiles[0] as Profile).label;
 
 			var animated:Boolean = (!cls.anims.hasOwnProperty(profileLbl) || cls.anims[profileLbl]) && cls.swf.animated;
 
-			Utils.traceObj(instance as DisplayObjectContainer);
+			//Utils.traceObj(instance as DisplayObjectContainer);
 
-			var flatten:IFlatten = (instance is MovieClip) && animated ? new FlattenMovieClip() : new FlattenSprite();
-            trace('pizdalalahoho');
-			flatten.fromDisplayObject(instance, Utils.getClsScale(cls, _profiles[0]));
+			var src:Object = new cls.definition();
+			var flatten:IFlatten = instance is MovieClip ? new FlattenMovieClip() : (instance is Sprite ? new FlattenSprite() : new FlattenImage(src.width, src.height, true, 0x00000000));
+            //trace('pizdalalahoho');
+			//flatten.fromDisplayObject(instance, Utils.getClsScale(cls, _profiles[0]));
+			flatten.fromSwfClass(cls, Utils.getClsScale(cls, _profiles[0]));
 
 			try {
 				var exporter:IExporter = new FlattenExporter();

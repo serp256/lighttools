@@ -1,5 +1,6 @@
 package ru.redspell.rasterizer.commands {
     import com.maccherone.json.JSON;
+	import flash.system.System;
 
     import flash.events.Event;
 	import flash.filesystem.File;
@@ -19,6 +20,7 @@ package ru.redspell.rasterizer.commands {
 	import ru.redspell.rasterizer.utils.Utils;
 
 	public class OpenProjectCommand extends InitProjectCommand {
+		protected var _loadList:Vector.<Swf> = new <Swf>[];
 		protected var _totalSwfs:uint = 0;
 		protected var _loadedSwfs:uint = 0;
 
@@ -68,11 +70,12 @@ package ru.redspell.rasterizer.commands {
 					cls.scales = clsMeta.hasOwnProperty('scales') ? clsMeta.scales : {};
 				}
 			}
-
+			
 			if (++_loadedSwfs == _totalSwfs) {
 				Facade.app.setStatus('project opened', true);
 			} else {
-				Facade.app.setStatus('loading swfs (' + _loadedSwfs + '/' + _totalSwfs + ')', true);
+				Facade.app.setStatus('loading swfs (' + _loadedSwfs + '/' + _totalSwfs + ')', false, true);
+				load_next();
 			}
 		}
 
@@ -142,9 +145,10 @@ package ru.redspell.rasterizer.commands {
 					}
 
 					swf.addEventListener(Event.COMPLETE, swf_completeHandler);
-					swf.loadClasses(dir);
+					//swf.loadClasses(dir);
 
 					pack.addSwf(swf);
+					_loadList.push(swf);
 
 					_totalSwfs++;
 				}
@@ -158,6 +162,8 @@ package ru.redspell.rasterizer.commands {
 			if (_totalSwfs == 0) {
 				_totalSwfs = 1;
 				swf_completeHandler();
+			} else {
+				load_next();
 			}
 
 			var profsFile:File = Facade.projDir.resolvePath(Config.PROFILES_FILENAME);
@@ -179,6 +185,10 @@ package ru.redspell.rasterizer.commands {
 
 				Facade.profiles.refresh();
 			}
+		}
+		
+		private function load_next():void {
+			_loadList.shift().loadClasses(true);
 		}
 
 		protected function projFile_selectHandler(event:Event):void {
