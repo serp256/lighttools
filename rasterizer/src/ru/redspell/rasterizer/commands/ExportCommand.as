@@ -61,7 +61,7 @@ package ru.redspell.rasterizer.commands {
 			//Utils.traceObj(instance as DisplayObjectContainer);
 
 			var src:Object = new cls.definition();
-			var flatten:IFlatten = instance is MovieClip ? new FlattenMovieClip() : (instance is Sprite ? new FlattenSprite() : new FlattenImage(src.width, src.height, true, 0x00000000));
+			var flatten:IFlatten = instance is MovieClip && animated ? new FlattenMovieClip() : (instance is Sprite ? new FlattenSprite() : new FlattenImage(src.width, src.height, true, 0x00000000));
             //trace('pizdalalahoho');
 			//flatten.fromDisplayObject(instance, Utils.getClsScale(cls, _profiles[0]));
 			flatten.fromSwfClass(cls, Utils.getClsScale(cls, _profiles[0]));

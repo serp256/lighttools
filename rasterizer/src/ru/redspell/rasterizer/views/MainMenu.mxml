@@ -24,6 +24,7 @@
 		public static const CHOOSE_PROFILE:String = 'mainMenu_chooseProfile';
 		public static const BATCH_PROCESS1:String = 'mainMenu_batchProcess1';
 		public static const BATCH_PROCESS2:String = 'mainMenu_batchProcess2';
+		public static const BATCH_PROCESS2_NO_ANIM:String = 'mainMenu_batchProcess2_no_anim';
 
 		protected var chooseItem:Object = { label:'Choose', children:[] };
 
@@ -34,7 +35,8 @@
 				{ label:'Export', action:EXPORT },
 				{ label:'Export All Profiles', action:EXPORT_ALL },
 				{ label:'Batch: check folder', action:BATCH_PROCESS1 },
-				{ label:'Batch: process folder', action:BATCH_PROCESS2 }
+				{ label:'Batch: process folder', action:BATCH_PROCESS2 },
+				{ label:'Batch: process folder (no anim)', action:BATCH_PROCESS2_NO_ANIM }
 			] },
 			{ label:'Profiles', children:[
 				{ label:'Create', action:CREATE_PROFILE },
@@ -73,6 +75,10 @@
 					
 				case BATCH_PROCESS2:
 					Facade.runCommand(new BatchProcessSwfCommand(true));
+					break;
+					
+				case BATCH_PROCESS2_NO_ANIM:
+					Facade.runCommand(new BatchProcessSwfCommand(true, false));
 					break;
 			}
 		}

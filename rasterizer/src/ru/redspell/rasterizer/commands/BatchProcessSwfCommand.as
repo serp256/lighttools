@@ -18,13 +18,15 @@ package ru.redspell.rasterizer.commands
 	public class BatchProcessSwfCommand extends InitProjectCommand {
 		
 		private var isExport:Boolean;
+		private var processAnim:Boolean;
 		private var list:Vector.<String> = new <String>[];
 		private var total:uint;
 		private var current:uint;
 		private var outDir:File;
 		
-		public function BatchProcessSwfCommand(isExport:Boolean):void {
+		public function BatchProcessSwfCommand(isExport:Boolean, processAnim:Boolean = true):void {
 			this.isExport = isExport
+			this.processAnim = processAnim
 			super();
 		}
 		
@@ -86,7 +88,7 @@ package ru.redspell.rasterizer.commands
 				trace('SWF: loaded', swf.path);
 				for each (var cls:SwfClass in swf.classes) {
 					var instance:DisplayObject = new cls.definition();
-					var flatten:IFlatten = instance is MovieClip ? new FlattenMovieClip() : new FlattenSprite();
+					var flatten:IFlatten = instance is MovieClip && processAnim ? new FlattenMovieClip() : new FlattenSprite();
 					flatten.fromSwfClass(cls, 1);
 					trace('flatten', cls.name);
 					if (isExport) {
