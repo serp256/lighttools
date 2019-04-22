@@ -2,12 +2,14 @@ package ru.redspell.rasterizer.commands
 {
 	import flash.display.DisplayObject;
 	import flash.display.MovieClip;
+	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.filesystem.File;
 	import flash.system.System;
 	import flash.utils.setTimeout;
 	import ru.redspell.rasterizer.export.FlattenExporter;
 	import ru.redspell.rasterizer.export.IExporter;
+	import ru.redspell.rasterizer.flatten.FlattenImage;
 	import ru.redspell.rasterizer.flatten.FlattenMovieClip;
 	import ru.redspell.rasterizer.flatten.FlattenSprite;
 	import ru.redspell.rasterizer.flatten.IFlatten;
@@ -86,9 +88,10 @@ package ru.redspell.rasterizer.commands
 				var swf:Swf = e.target as Swf;
 				swf.removeEventListener(Event.COMPLETE, onLoadComplete);
 				trace('SWF: loaded', swf.path);
-				for each (var cls:SwfClass in swf.classes) {
-					var instance:DisplayObject = new cls.definition();
-					var flatten:IFlatten = instance is MovieClip && processAnim ? new FlattenMovieClip() : new FlattenSprite();
+				while (swf.classes.length > 0) {
+					var cls:SwfClass = swf.classes[0];
+					var instance:Object = new cls.definition();
+					var flatten:IFlatten = instance is MovieClip && processAnim ? new FlattenMovieClip() : (instance is Sprite ? new FlattenSprite() : new FlattenImage(instance.width, instance.height, true, 0x00000000));
 					flatten.fromSwfClass(cls, 1);
 					trace('flatten', cls.name);
 					if (isExport) {
