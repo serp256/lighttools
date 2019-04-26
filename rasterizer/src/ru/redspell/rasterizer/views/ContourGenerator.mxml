@@ -1,0 +1,400 @@
+<?xml version="1.0"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx" title="Contour Gen" width="500" height="450" close="closeHandler()" initialize="init()">
+	<fx:Script><![CDATA[
+		import flash.display.Bitmap;
+		import flash.display.BitmapData;
+		import flash.display.DisplayObject;
+		import flash.display.GraphicsPathCommand;
+		import flash.display.Sprite;
+		import flash.events.Event;
+		import flash.geom.Matrix;
+		import flash.geom.Point;
+		import flash.geom.Rectangle;
+		import flash.system.System;
+		import mx.managers.PopUpManager;
+		import ru.redspell.rasterizer.flatten.FlattenMovieClip;
+		import ru.redspell.rasterizer.flatten.IFlatten;
+		import spark.filters.GlowFilter;
+
+		private var obj_name:String;
+		protected var _obj:IFlatten;
+
+		protected function init():void {
+			bg.addChild(new Bitmap(new BitmapData(500, 300, false, 0x0)));
+			updateLbText();
+		}
+
+		protected function closeHandler():void {
+			PopUpManager.removePopUp(this);
+			_obj.dispose();
+		}
+		
+		private function getStartingPoint(bitmap:BitmapData):Point {
+			for (var y:int = bitmap.height - 1; y >= 0; y--) {
+				for (var x:int = 1; x < bitmap.width; x++) {
+					if (!isAlpha(bitmap, new Point(x, y))) {
+						if (isAlpha(bitmap, new Point(x - 1, y))) {
+							return new Point(x, y);
+						}
+					}
+				}
+			}
+			return null;
+		}
+		
+		private function isAlpha(bitmap:BitmapData, p:Point):Boolean {
+			return int(bitmap.getPixel32(p.x, p.y) >> 24 & 255) == 0;
+		}
+		
+		private var forward:Point;
+		private var P1:Point;
+		private var P2:Point;
+		private var P3:Point;
+		
+		private var pointsCnt:uint = 0;
+		
+		private function toLeft(p:Point):void {
+			rotate(true, p);
+			toForward(p)
+		}
+		
+		private function toRight(p:Point):void {
+			rotate(false, p);
+			toForward(p)
+		}
+		
+		private function toForward(p:Point):void {
+			p.offset(forward.x, forward.y);
+			updateP(p);
+		}
+		
+		private function rotate(isLeft:Boolean, p:Point):void {
+			if (isLeft) {
+				if (forward.equals(new Point(0, -1))) {
+					forward = new Point(-1, 0);
+				} else
+				if (forward.equals(new Point( -1, 0))) {
+					forward = new Point(0, 1);
+				} else
+				if (forward.equals(new Point(0, 1))) {
+					forward = new Point(1, 0);
+				} else
+				if (forward.equals(new Point(1, 0))) {
+					forward = new Point(0, -1);
+				}
+			} else {
+				if (forward.equals(new Point(0, -1))) {
+					forward = new Point(1, 0);
+				} else
+				if (forward.equals(new Point(1, 0))) {
+					forward = new Point(0, 1);
+				} else
+				if (forward.equals(new Point(0, 1))) {
+					forward = new Point(-1, 0);
+				} else
+				if (forward.equals(new Point(-1, 0))) {
+					forward = new Point(0, -1);
+				}
+			}
+			updateP(p);
+		}
+		
+		private function updateP(p:Point):void {
+			P1 = p.clone();
+			P2 = p.clone();
+			P3 = p.clone();
+			P1.offset(forward.x, forward.y);
+			P2.offset(forward.x, forward.y);
+			P3.offset(forward.x, forward.y);
+			if (forward.equals(new Point(0, -1))) {
+				P1.offset( -1, 0);
+				P3.offset(1, 0);
+			} else
+			if (forward.equals(new Point( -1, 0))) {
+				P1.offset(0, 1);
+				P3.offset(0, -1);
+			} else
+			if (forward.equals(new Point(0, 1))) {
+				P1.offset(1, 0);
+				P3.offset(-1, 0);
+			} else
+			if (forward.equals(new Point(1, 0))) {
+				P1.offset(0, -1);
+				P3.offset(0, 1);
+			}
+		}
+		
+		/**
+		 * Theo Pavlidis' Algorithm implementation
+		 * @param	bitmap
+		 */
+		private function getBoundary(bitmap:BitmapData):void {
+			var B:Vector.<Point> = new <Point>[];
+			var p:Point = getStartingPoint(bitmap);
+			
+			forward = new Point(0, -1);
+			
+			updateP(p);
+			
+			B.push(p);
+			var s:Point = p.clone();
+			
+			var rotateCnt:uint = 0;
+			do {
+				if (!isAlpha(bitmap, P1)) {
+					B.push(P1);
+					toForward(p);
+					toLeft(p);
+					rotateCnt = 0;
+				} else
+				if (!isAlpha(bitmap, P2)) {
+					B.push(P2);
+					toForward(p);
+					rotateCnt = 0;
+				} else
+				if (!isAlpha(bitmap, P3)) {
+					B.push(P3);
+					toRight(p);
+					toLeft(p);
+					rotateCnt = 0;
+				} else
+				if (rotateCnt == 3) {
+					break;
+				} else {
+					rotate(false, p);
+				}
+			} while (!s.equals(p));
+			
+			if (B[0].equals(B[B.length-1])) {
+				B.pop();
+			}
+			
+			B = simplifyDouglasPeucker(B, stepper.value);
+			pointsCnt = B.length;
+			var strs:Vector.<String> = new <String>[];
+			
+			for each (var point:Point in B) {
+				strs.push('new Point(' + point.x + ',' + point.y + ')');
+			}
+			var str:String = "'" + obj_name + "' => [" + strs.join(", ") + "]";
+			pointsField.text = str;
+			
+			var commands:Vector.<int> = new <int>[];
+			var coords:Vector.<Number> = new <Number>[];
+			
+			for each (point in B) {
+				if (commands.length == 0) {
+					commands.push(GraphicsPathCommand.MOVE_TO);
+				} else {
+					commands.push(GraphicsPathCommand.LINE_TO);
+				}
+				coords.push(point.x, point.y);
+			}
+			
+			var bt:Bitmap = new Bitmap(bitmap);
+			var spr:Sprite = new Sprite();
+			spr.addChild(bt);
+			spr.graphics.lineStyle(1, 0xFF0000);
+			spr.graphics.drawPath(commands, coords);
+			
+			var rect:Rectangle = spr.getBounds(this);
+			if (rect.width > containerGrp.width) {
+				container.scaleX = container.scaleY = containerGrp.width / rect.width;
+				rect = container.getBounds(this);
+			}
+
+			if (rect.height > containerGrp.height) {
+				container.scaleX = container.scaleY = containerGrp.height / rect.height * container.scaleX;
+				rect = container.getBounds(this);
+			}
+
+			rect = container.getRect(containerGrp);
+
+			spr.x = (containerGrp.width - rect.width) / 2 - rect.x ;
+			spr.y = (containerGrp.height - rect.height) / 2 - rect.y;
+			
+			if (container.numChildren > 0) {
+				container.removeChildAt(0);
+			}
+			container.addChild(spr);
+		}
+		
+		/**
+		 * https://github.com/fnicollet/simplify-as3/blob/master/simplify/Simplify.as
+		 * @param	points
+		 * @param	sqTolerance
+		 * @return
+		 */
+		public static function simplifyDouglasPeucker(points:Vector.<Point>, sqTolerance:Number):Vector.<Point> {
+			var len:int = points.length;
+			var markers:Vector.<int> = null;
+			markers = new Vector.<int>(len);
+			var first:int = 0;
+			var last:int = len - 1;
+			var i:int;
+			var maxSqDist:int;
+			var sqDist:int;
+			var index:int;
+			
+			var firstStack:Vector.<int> = null;
+			firstStack = new Vector.<int>();
+			var lastStack:Vector.<int> = null;
+			lastStack = new Vector.<int>();
+			
+			var newPoints:Vector.<Point> = null;
+			newPoints = new Vector.<Point>();
+			
+			markers[first] = markers[last] = 1;
+			
+			while (last) {
+				maxSqDist = 0;
+				
+				for (i = first + 1; i < last; i++) {
+					sqDist = getSquareSegmentDistance(points[i], points[first], points[last]);
+					
+					if (sqDist > maxSqDist) {
+						index = i;
+						maxSqDist = sqDist;
+					}
+				}
+				
+				if (maxSqDist > sqTolerance) {
+					markers[index] = 1;
+					
+					firstStack.push(first);
+					lastStack.push(index);
+					
+					firstStack.push(index);
+					lastStack.push(last);
+				}
+				
+				first = firstStack.pop();
+				last = lastStack.pop();
+			}
+			
+			for (i = 0; i < len; i++) {
+				if (markers[i]) {
+					newPoints.push(points[i]);
+				}
+			}
+			
+			return newPoints;
+		}
+		
+		public static function getSquareSegmentDistance(p:Point, p1:Point, p2:Point):Number { // square distance from a point to a segment
+			var x:Number = p1.x;
+			var y:Number = p1.y;
+			var dx:Number = p2.x - x;
+			var dy:Number = p2.y - y;
+			var t:Number;
+			
+			if (dx !== 0 || dy !== 0) {
+				t = ((p.x - x) * dx + (p.y - y) * dy) / (dx * dx + dy * dy);
+				
+				if (t > 1) {
+					x = p2.x;
+					y = p2.y;
+				} else if (t > 0) {
+					x += dx * t;
+					y += dy * t;
+				}
+			}
+			
+			dx = p.x - x;
+			dy = p.y - y;
+			
+			return dx * dx + dy * dy;
+		}
+		
+		public function show(obj:IFlatten, name:String):void {
+			obj_name = name;
+			_obj = obj;
+			_obj.render();
+			render();
+			updateLbText();
+		}
+		
+		public function render():void {
+			var bitmap:BitmapData;
+			
+			if (_obj is DisplayObject) {
+				var dobj:DisplayObject = _obj as DisplayObject;
+				container.addChild(dobj);
+				var rect:Rectangle = container.getRect(containerGrp);
+				var m : Matrix = new Matrix();
+				m.translate(-rect.x, -rect.y);
+				bitmap = new BitmapData(dobj.width, dobj.height, true, 0x00000000);
+				bitmap.draw(dobj, m);
+			} else {
+				var bmp:Bitmap = new Bitmap(_obj as BitmapData);
+				container.addChild(bmp);
+				rect = container.getRect(containerGrp);
+				bitmap = new BitmapData(bmp.width, bmp.height, true, 0x00000000);
+				bitmap.draw(bmp);
+			}
+			
+			getBoundary(bitmap);
+		}
+
+		protected function switchFrame(next:Boolean = true):void {
+			var fmc:FlattenMovieClip = _obj as FlattenMovieClip;
+			
+			if (fmc) {
+				container.removeChildAt(0);
+				if (next) {
+					fmc.nextFrame();
+				} else {
+					fmc.prevFrame();
+				}
+				render();
+				updateLbText();
+			}
+		}
+		
+		private function updateLbText():void {
+			var fmc:FlattenMovieClip = _obj as FlattenMovieClip;
+			var frame:uint = fmc != null ? fmc.curFrame : 0;
+			frameLbl.text = 'frame: ' + frame + ', points: ' + pointsCnt;
+		}
+		
+		private function copyPoints():void {
+			System.setClipboard(pointsField.text);
+		}
+		
+		private function onChange(e:Event):void {
+			container.removeChildAt(0);
+			render();
+			updateLbText();
+		}
+		
+		private function toggleBg():void {
+			var val:Boolean = !bg.visible;
+			bg.visible = val;
+			toggleBgBtn.filters = val ? [new GlowFilter(0xbbbbbb, 1, 4, 4, 2, 1, true)] : null;
+		}
+	]]></fx:Script>
+
+	<s:VGroup width="100%" height="100%" verticalAlign="middle" horizontalAlign="center" paddingBottom="5">
+		<s:Group id="containerGrp" width="100%" height="100%">
+			<s:SpriteVisualElement visible="false" id="bg"/>
+			<s:SpriteVisualElement id="container" />
+		</s:Group>
+		<s:HGroup width="100%" horizontalAlign="center">
+			<s:Button click="switchFrame(false)" label="prev"/>
+			<s:Button click="switchFrame()" label="next"/>
+			<s:Button click="toggleBg()" id="toggleBgBtn" label="background"/>
+		</s:HGroup>
+		<s:Label id="frameLbl"/>
+		<s:HGroup horizontalAlign="center" verticalAlign="middle" >
+			<s:Label text="epsilon:" />
+			<s:NumericStepper id="stepper" minimum="1" maximum="10" stepSize="1" value="10" change="onChange(event)" />
+		</s:HGroup>
+		<s:HGroup width="100%" horizontalAlign="center">
+			<s:TextInput id="pointsField" editable="false" />
+			<s:Button id="btCopy" label="copy" click="copyPoints()" />
+		</s:HGroup>
+		
+	</s:VGroup>
+
+</s:TitleWindow>

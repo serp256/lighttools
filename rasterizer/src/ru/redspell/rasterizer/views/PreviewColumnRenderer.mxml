@@ -34,7 +34,7 @@
 			PopUpManager.centerPopUp(previewWin);
 			trace("qwe");
 			//previewWin.preview(flatten.fromDisplayObject(src, Utils.getClsScale(cls, data.profile)));
-			previewWin.preview(flatten.fromSwfClass(cls, Utils.getClsScale(cls, data.profile)));
+			previewWin.preview(flatten.fromSwfClass(cls, Utils.getClsScale(cls, data.profile)), cls.name.replace('::', '.'));
 			trace("asd");
 		}
 		]]></fx:Script>
