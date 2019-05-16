@@ -129,7 +129,7 @@
 		 * Theo Pavlidis' Algorithm implementation
 		 * @param	bitmap
 		 */
-		private function getBoundary(bitmap:BitmapData):void {
+		private function getBoundary(bitmap:BitmapData, containerRect:Rectangle):void {
 			var B:Vector.<Point> = new <Point>[];
 			var p:Point = getStartingPoint(bitmap);
 			
@@ -175,7 +175,7 @@
 			var strs:Vector.<String> = new <String>[];
 			
 			for each (var point:Point in B) {
-				strs.push('new Point(' + point.x + ',' + point.y + ')');
+				strs.push('new Point(' + (point.x + Math.round(containerRect.x)) + ',' + (point.y + Math.round(containerRect.y)) + ')');
 			}
 			var str:String = "'" + obj_name + "' => [" + strs.join(", ") + "]";
 			pointsField.text = str;
@@ -317,11 +317,11 @@
 		
 		public function render():void {
 			var bitmap:BitmapData;
-			
+			var rect:Rectangle;
 			if (_obj is DisplayObject) {
 				var dobj:DisplayObject = _obj as DisplayObject;
 				container.addChild(dobj);
-				var rect:Rectangle = container.getRect(containerGrp);
+				rect = container.getRect(containerGrp);
 				var m : Matrix = new Matrix();
 				m.translate(-rect.x, -rect.y);
 				bitmap = new BitmapData(dobj.width, dobj.height, true, 0x00000000);
@@ -334,7 +334,7 @@
 				bitmap.draw(bmp);
 			}
 			
-			getBoundary(bitmap);
+			getBoundary(bitmap, rect);
 		}
 
 		protected function switchFrame(next:Boolean = true):void {
