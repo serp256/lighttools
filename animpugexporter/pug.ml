@@ -96,24 +96,19 @@ module Make(P:P) =
 
 	(* Запись animations.dat *)
 	(* @return	int	numFrames	число фреймов в объекте *)
-	value writeAnimationsDat o pack_scale  = (
+	value writeAnimationsDat o pack_scale animated = (
 		let oname		= Object.name o in
 		let animsOut	= IO.output_string () in
-    (*
-    let scale = P.scale *. pack_scale in
-    *)
-    let scale = P.scale *. (FiltersConf.get_scale P.filter_conf oname) in
+        let scale = P.scale *. (FiltersConf.get_scale P.filter_conf oname) in
 		let numFrames	= (
 			IO.write_ui16 animsOut 1;
 			Utils.writeUTF animsOut oname;
-			let numAnims		= Common.childsNum o in
-				IO.write_ui16 animsOut numAnims;
-			let numFrames		= 
+			let numAnims  = Common.childsNum o in	IO.write_ui16 animsOut numAnims;
+			let numFrames= 
 				List.fold_left (fun frmIndx a -> (
 					let aname		= Animation.name a in
 					let _			= Utils.writeUTF animsOut aname in
-					let frmRt		= Int32.bits_of_float (Animation.frameRate a) in
-						IO.write_real_i32 animsOut frmRt;
+					let frmRt		= Int32.bits_of_float (Animation.frameRate a) in IO.write_real_i32 animsOut frmRt;
 					let rects		= Animation.rects a in 
 					let numRects	= List.length rects in (
 						(* Минимум всегда 1 прямоугольник *)
@@ -138,30 +133,33 @@ module Make(P:P) =
 							)
 						)
 					);
-          (*
-					let _			= Printf.printf "\n NO ANIM %b\n%!" (P.no_anim) in
-      *)
+
 					let frmIndx = 
-						match P.no_anim with
-						[ False -> (
-							let numFrames	= Common.childsNum a in 
-								IO.write_ui16 animsOut numFrames;
-							List.fold_left (fun frmIndx' f -> (
-									IO.write_i32 animsOut frmIndx';
-									frmIndx' + 1
+						match (* P.no_anim *) animated with
+						[ True -> (
+							
+							let numFrames = Common.childsNum a 
+							in 	IO.write_ui16 animsOut numFrames;
+					    	
+					    	List.fold_left (fun frmIndx' f -> (
+						        IO.write_i32 animsOut frmIndx';
+								frmIndx' + 1
 							)) frmIndx (Common.childs a)
-						)
+							
+						  )
 						(* Для случая отключение анимации *)
-						| True -> (
+						| False -> (
 							IO.write_ui16 animsOut 1;
-							1
-						)
+							IO.write_i32 animsOut frmIndx; (* KMD *)
+							1 + frmIndx
+						  )
 						]
 					in frmIndx
 					)
 				) 0 (Common.childs o);
 			numFrames
-		) in
+		) 
+		in
 		let animsOut	= IO.close_out animsOut in
         let out			= open_out (P.outDir /// oname /// "animations" ^ P.suffix ^ ".dat") in (
         	output out animsOut 0 (String.length animsOut);
@@ -171,13 +169,9 @@ module Make(P:P) =
 	);
 
 	(* Запись frames.dat *)
-	value writeFramesDat o numFrames ttInfHash pack_scale = (
+	value writeFramesDat o numFrames ttInfHash pack_scale animated = (
 		let oname		= Object.name o in
-    (*
-    let scale = P.scale *. pack_scale in
-    *)
-    let scale = P.scale *. (FiltersConf.get_scale P.filter_conf oname) in
-		(* let imgsInfLst	= Hashtbl.find_all ttInfHash oname in *)
+        let scale = P.scale *. (FiltersConf.get_scale P.filter_conf oname) in
 		let framesOut	= IO.output_string () in
 		let _			= (
 			IO.write_i32 framesOut numFrames;
@@ -185,7 +179,7 @@ module Make(P:P) =
 			List.iter (fun a -> (
 				let animLst = Common.childs a in
 				(* Берем первый кадр если отключена анимация *)
-				let animLst = if (P.no_anim) then [List.hd animLst] else animLst in
+				let animLst = if (not animated) then [List.hd animLst] else animLst in
 				List.iter (fun f -> (
 					
 					let fx			= Utils.roundi (scale *. (Frame.x f)) in
@@ -246,7 +240,8 @@ module Make(P:P) =
               ]
             in (
 							(* TODO Возможно на клиенте индекс начинается с 1 *)
-							IO.write_byte		framesOut imgRcd.tt_index; (*texID*)
+							(* IO.write_byte		framesOut imgRcd.tt_index; *) (*texID*)
+							IO.write_i16		framesOut imgRcd.tt_index; (*texID*)
 							IO.write_i32		framesOut imgRcd.img_index; (* rectId *)
 							IO.write_i16 		framesOut lx;
 							IO.write_i16 		framesOut ly;
@@ -276,9 +271,18 @@ module Make(P:P) =
         )
 	);
 
-	(* Собираем уникальные картинки с объекта *)
-	value makeLstImgs o:list string = (
+
+(* Собираем уникальные картинки с объекта *)
+value makeLstImgs o animated = (
 		List.fold_left (fun allimgs a -> (
+		
+		    let frames = 
+		      if (animated) then
+    		      (Common.childs a) 
+    		  else
+    		      [List.hd (Common.childs a)]
+		    in
+
 			List.fold_left (fun imgsf f -> (
 				List.fold_left (fun imgsl l -> (
 					let imgPath = Layer.imgPath l in
@@ -287,8 +291,10 @@ module Make(P:P) =
 					else (
 						 [imgPath :: imgsl]
 					)
+				
 				)) imgsf (Common.childs f)
-			)) allimgs (Common.childs a)
+				
+			)) allimgs frames
 		)) [] (Common.childs o)
 	);
 
@@ -298,7 +304,7 @@ module Make(P:P) =
     let (w,h) = Images.size img_src in
     let () = Printf.printf "CROP IMAGE %dx%d  \n%!" w h in
     match img_src with
-    [ Images.Rgba32 img ->
+    [ Images.Rgba32 img when (h > 1 && w > 1) ->
        let is_empty_col x =
          let rec loop y =
            match y < h with
@@ -512,7 +518,7 @@ module Make(P:P) =
           (*
 					Images.save srcFname (Some Images.Png) [] image;
           *)
-          let cmd_copy = Printf.sprintf "cp %s %s" src_path srcFname in
+          let cmd_copy = Printf.sprintf "cp \"%s\" \"%s\"" src_path srcFname in
             (
               Printf.printf "%s\n%!" cmd_copy;
               if Sys.command cmd_copy <> 0
@@ -584,7 +590,7 @@ module Make(P:P) =
 				)
 			] in
     let (image, crop_info) = crop_image image in
-		let image = 
+	  let image = 
       match P.degree4 with
       [ True -> 
           let (iw', ih') = Images.size image in
@@ -599,8 +605,7 @@ module Make(P:P) =
             )
       | _ -> image
       ] 
-    in
-		(image,crop_info)
+      in  (image,crop_info)
 	);
 
 
@@ -646,47 +651,46 @@ module Make(P:P) =
 	);
 
 	(* Запись texInfo.dat *)
-	value writeTexDat prj packname lstObjs numAtlases ttInfHash = (
+	value writeTexDat prj packname lstObjs numAtlases ttInfHash animated = (
 
 		List.iter (fun oname -> (
-			Utils.makeDir (P.outDir /// oname);
+			Utils.makeDir (P.outDir /// oname); (* oname - типа dc_tree *)
 			let texOut		= IO.output_string () in
 			(* TODO Можно ускорить, записывать заранее в хеш таблицу *)
-			let obj	= List.find (fun o -> (
-					(Object.name o) = oname
-				)) (Project.objects prj) in 
-			let uniqObjImgsLst = makeLstImgs obj in
+			let obj	= List.find (fun o -> ((Object.name o) = oname)) (Project.objects prj) in 
+			let uniqObjImgsLst = makeLstImgs obj animated in
 			let imgsInfLst	= List.fold_left (fun imgRcdLst path -> (
 				let imgRcd = Hashtbl.find ttInfHash  (oname, path) in
 				[imgRcd::imgRcdLst]
 			)) [] uniqObjImgsLst in
-			(* let ()			= Printf.printf "\n ONAME  %s\n" (oname) in *)
-			let _			= (
-				IO.write_byte	texOut numAtlases;
-				(* Printf.printf "\n numAtlases %d\n" (numAtlases); *)
+			
+			let ()			= Printf.printf "\n ONAME  %s\n" (oname) in			
+    		let _			= (
+
+(*  			IO.write_byte	texOut numAtlases;  *)
+
+			IO.write_i16	texOut numAtlases;
+			Printf.printf "\n numAtlases %d\n" (numAtlases);
+
 				for i = 0 to numAtlases - 1 do
 					let packname = Printf.sprintf "%s_%d%s.png" packname i P.suffix in 
 					let _		 = Utils.writeUTF	texOut packname in
+
 					(* Ищем в общем списке текстур, картинки принадлежащие текущей текстуре *)
-					let ttImgs	= List.find_all (fun img -> (
-						(img.tt_index = i)
-					)) imgsInfLst in (
-						(* Printf.printf "\n Texture %s \n" packname; *)
-						(* Printf.printf "\n Num imgs %d\n" (List.length ttImgs); *)
+					let ttImgs	= List.find_all (fun img -> ((img.tt_index = i))) imgsInfLst in (
 						IO.write_ui16	texOut (List.length ttImgs);
 						List.iter (fun img -> (
-							(* Printf.printf "\n img %d %s\n" img.index img.path; *)
-							(* Printf.printf "\n\t\t (%d,%d,%d,%d) \n" img.rect.rx img.rect.ry img.rect.rw img.rect.rh; *)
-							IO.write_ui16 texOut img.rect.rx;
-              IO.write_ui16 texOut img.rect.ry;
-              IO.write_ui16 texOut img.rect.rw;
-              IO.write_ui16 texOut img.rect.rh;
+        	    			IO.write_ui16 texOut img.rect.rx;
+                            IO.write_ui16 texOut img.rect.ry;
+                            IO.write_ui16 texOut img.rect.rw;
+                            IO.write_ui16 texOut img.rect.rh;
 						)) ttImgs;
 					)
 
 				done;
 
 			) in
+
 			let texOut	= IO.close_out texOut in
 	        let out		= open_out (P.outDir /// oname /// "texInfo" ^ P.suffix ^".dat") in (
 	        	output out texOut 0 (String.length texOut);
@@ -697,39 +701,41 @@ module Make(P:P) =
 
 
 	(* Записать данных либы *)
-	value writeLibData prj packname lstObjs isWholly pack_scale = (
-		let ttInfHash							= Hashtbl.create 30 in
-		let lstImgs:list (string * list string) =
-			let lstImgs = 
-        List.fold_left (fun lstImgs oname -> 
-          let obj	= 
-            List.find (fun o -> (
-              (Object.name o) = oname
-            )) (Project.objects prj) 
-          in 
-          let uniqObjImgsLst = makeLstImgs obj in
-          [ (oname, uniqObjImgsLst) :: lstImgs ]
-			  ) [] lstObjs 
-      in
-			ExtList.List.unique lstImgs
-		in
-		if (List.length lstImgs) > 0 then (
-			(* Запись атласа *)
-			let numAtlases	= writeLibAtlas		packname lstImgs ttInfHash isWholly pack_scale in (
-				(* Printf.printf "\n NUM ATLASES %d\n" (numAtlases); *)
+	value writeLibData prj packname lstObjs isWholly pack_scale animated = (
 
-				(* Запись texInfo.dat *)
-				writeTexDat	prj	packname lstObjs numAtlases ttInfHash ;
-			);
+		let ttInfHash= Hashtbl.create 30 in
+		
+		(* если не aminated, то добавляем только картинки первого кадра *)
+		let lstImgs:list (string * list string) =
+		
+		let lstImgs = 
+          List.fold_left (fun lstImgs oname -> 
+            let obj	= List.find (fun o -> ((Object.name o) = oname)) (Project.objects prj) in 
+            let uniqObjImgsLst = makeLstImgs obj animated
+            in [ (oname, uniqObjImgsLst) :: lstImgs ]
+    		) [] lstObjs         
+          in ExtList.List.unique lstImgs
+		in
+		
+		if (List.length lstImgs) > 0 then (
+		
+			(* Запись атласа *)
+			let numAtlases	= writeLibAtlas	packname lstImgs ttInfHash isWholly pack_scale 
+			in writeTexDat	prj	packname lstObjs numAtlases ttInfHash animated;
+			
+			
 			List.iter (fun oname -> 
-					(* Ищем объект в проекте *)
-					let obj	= List.find (fun o -> (Object.name o) = oname) (Project.objects prj) in (
-						(* Запись animations.dat *)
-						let numFrames = writeAnimationsDat obj pack_scale in
-						(* Запись frames.dat *)
-						writeFramesDat obj numFrames ttInfHash pack_scale;
-					)
+				(* Ищем объект в проекте *)
+				let obj	= List.find (fun o -> (Object.name o) = oname) (Project.objects prj) in (
+					(* Запись animations.dat *)
+					let numFrames = writeAnimationsDat obj pack_scale animated in
+					
+					(* Запись frames.dat *)					
+					let () = Printf.printf "GOT %d Frames in object \n" numFrames in
+					writeFramesDat obj numFrames ttInfHash pack_scale animated;					
+				)
 			) lstObjs;
+
 			Hashtbl.clear ttInfHash;
 		) else ()
 	);

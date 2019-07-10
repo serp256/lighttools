@@ -28,12 +28,16 @@ value alpha_for_crop = ref 0;
 value filter_conf   = ref None;
 value get_postfix () = !suffix;
 
+
 type pack_info        = {
-	name :		string;
-	objs :		list string;
-	wholly :	bool;
-  scale : float;
+		name :		string;
+		objs :		list string;
+		wholly :	bool;
+		animated : bool;
+  	scale : float;
 };
+
+
 
 value get_packs objs = 
   let libs = ref objs in
@@ -43,18 +47,27 @@ value get_packs objs =
 		(
 		  List.map begin fun (name,json) -> 
 			(
+
 			  match json with
 			  [ `Assoc params ->
 				  let wholly = 
-					try
-					  match List.assoc "whooly" params with
-					  [ `Bool wholly -> wholly
-					  | _ -> assert False 
-					  ]
-					with
-					  [ Not_found -> False ]
+						try
+						  match List.assoc "whooly" params with
+						  [ `Bool wholly -> wholly
+						  | _ -> assert False 
+						  ]
+						with
+							[ Not_found -> False ]
+				  
+				  and animated = 
+						try 
+							match List.assoc "animated" params with
+							[ `Bool anim -> anim
+							| _ -> assert False 
+							]						
+						with [ Not_found -> not !no_anim ]
 				  in
-				  (* let () = Printf.printf "WHOOLY : %B\n%!" wholly in *)
+
 				  let include_libs = 
 					let ls = List.assoc "include" params in
 					match ls with
@@ -106,25 +119,24 @@ value get_packs objs =
 					with
 					  [ Not_found -> include_libs ]
 				  in
-          let scale = 
-            try
-              let scale = List.assoc "scale" params in
-              match scale with
-              [ `Float sc -> sc
-              | `Int sc -> float sc
-              | _ -> assert False
-              ]
-            with
-              [
-                Not_found -> 1.
-              ]
-          in
-					(
-            {name; objs=pack_libs; wholly; scale}
-					)
-			  | _ -> assert False 
-			  ]
-			) 
+            let scale = 
+              try
+                let scale = List.assoc "scale" params in
+                match scale with
+                [ `Float sc -> sc
+                | `Int sc -> float sc
+                | _ -> assert False
+                ]
+              with
+                [  Not_found -> 1. ]
+            in
+		    (
+              { name; objs = pack_libs; wholly; scale; animated }
+		    )
+		
+		  | _ -> assert False 
+		  ]
+		  ) 
 		  end packs,
 		  !libs
 		)
@@ -136,6 +148,7 @@ value get_packs objs =
 
 
 Gc.set {(Gc.get()) with Gc.max_overhead = 2000000};
+
   Arg.parse 
 	[
 		("-inp",			Arg.Set_string inp_dir,	"input directory");
@@ -155,14 +168,22 @@ Gc.set {(Gc.get()) with Gc.max_overhead = 2000000};
 		("-gamma-gin",			Arg.Set is_gamma_gin,		"add conver -gamma 1.1 call for result image");
 		("-useScaleXY",			Arg.Set useScaleXY,		"use in params scaleX scaleY only match3 ");
 		("-alpha_for_crop",	Arg.Set_int alpha_for_crop,		"value alpha for crop image, by default 0");
-    ("-filter",        Arg.String (fun str -> filter_conf.val := Some str), "path to config");
+        ("-filter",        Arg.String (fun str -> filter_conf.val := Some str), "path to config");
 	]
+
 	(fun name -> json_name.val := name)
+
 	"";
+
 	TextureLayout.countEmptyPixels.val := 0;
+
 	TextureLayout.rotate.val := False;
 
+
+
+
 (* value prjDir = "/home/xalt/Projects/ScalePrj"; *)
+
 
 (* Если нет out директории, создаём *)
 Utils.makeDir !outdir;
@@ -203,10 +224,12 @@ value split_pack pack =
 	List.fold_left (fun (res, pack) pstfx  ->
 	  	let new_name				= pack.name ^ pstfx in
 	  	let (new_libs, remain_libs)	= List.partition (fun lib -> String.ends_with lib "_ex" || String.ends_with lib "_sh") pack.objs in
-      ( [ {name					= new_name; objs = new_libs; wholly = pack.wholly; scale= pack.scale} :: res ], {(pack) with objs=remain_libs})
+      ( [ {name					= new_name; objs = new_libs; wholly = pack.wholly; scale= pack.scale; animated = pack.animated} :: res ], {(pack) with objs=remain_libs})
 	)  ([], pack) [ "_ex" ]
   in
   packs @ [ remain_pack ];
+
+
 
 (* Record актуальных либ *)
 value getActualLibsFromJson allObjs = (
@@ -221,44 +244,56 @@ value getActualLibsFromJson allObjs = (
   )
 );
 
+
+
 (* Запись info_objects.bin *)
 value writeInfoObjects infObjs = (
+    let () = Printf.printf "WRITE INFO OBJECTS" in
 	let infobjOut	= IO.output_string () in
 	let _			= (
 	  	IO.write_i16 infobjOut (List.length infObjs);
 	  	List.iter (fun (w,h,name) -> (
-      Printf.printf "write to info_objects %s \n%!" name;
-			IO.write_byte   infobjOut (int_of_float w);
-			IO.write_byte   infobjOut (int_of_float h);
-			Utils.writeUTF  infobjOut name;
+            Printf.printf "write to info_objects %s \n%!" name;
+		    IO.write_byte   infobjOut (int_of_float w);
+	  	    IO.write_byte   infobjOut (int_of_float h);
+  		    Utils.writeUTF  infobjOut name;
 	  	)) infObjs
 	) in
+	
 	let infobjOut	= IO.close_out infobjOut in
-		let out		= open_out (!outdir /// "info_objects.bin") in (
-		  	output out infobjOut 0 (String.length infobjOut);
-			close_out out;
-		)
+	let out		= open_out (!outdir /// "info_object.bin") in (
+	  output out infobjOut 0 (String.length infobjOut);
+	  close_out out;
+	)
 );
+
 
 (* TextureLayout.max_size.val := 1024; *)
 
 let dsrlzr  = Deserializer.run !inp_dir in 
+let ()      = Printf.printf "RUN\n" in 
 let prj     = (Deserializer.project dsrlzr) in
+
 (* Список всех объектов проекта *)
 let (allObjs, infObjs) = 
   	List.fold_left (fun (objsLst, infObjs) o -> (
 		(objsLst @ [Node.Object.name o], [(Node.Object.width o, Node.Object.height o, Node.Object.name o)::infObjs])
   	)) ([],[]) (Node.Project.objects prj)
 in
+
+
 let (packs, other_libs)	= getActualLibsFromJson allObjs in
 let () = Printf.printf "Count other_libs : %d\n%!" (List.length other_libs) in 
+
+
 let infObjs = List.filter (fun (_,_,name) -> not (List.mem name other_libs)) infObjs in
-let _		= writeInfoObjects infObjs in
-  	(* let _ = List.iter (fun pack -> Printf.printf "Pack %s : [%s]\n%!" pack.name (String.concat "; " pack.objs)) packs in *)
-	List.iter (fun pack -> (
-		(* Записать данных либы *)
-		Pug.writeLibData prj pack.name pack.objs pack.wholly pack.scale
-	)) packs;
+(
+  writeInfoObjects infObjs;
+	List.iter (fun pack -> (Pug.writeLibData prj pack.name pack.objs pack.wholly pack.scale pack.animated)) packs
+);
+
+
+
 
 match !without_cntr with
 	[ False -> 
