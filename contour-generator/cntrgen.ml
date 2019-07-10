@@ -45,6 +45,8 @@ value round v =
         | _ ->  truncate (mult *. absv)
         ];
 
+
+
 type rect = {
   rx:int;
   ry:int;
@@ -52,7 +54,10 @@ type rect = {
   rh:int;
 };
 
+
+
 value rectToString rect = Printf.sprintf "rect(x:%d; y:%d; w:%d; h:%d)" rect.rx rect.ry rect.rw rect.rh; 
+
 
 type layer = {
   texId:int;
@@ -64,7 +69,9 @@ type layer = {
   scale:float;
 };
 
+
 value layerToString layer = Printf.sprintf "layer(texId:%d; recId:%d; lx:%d; ly:%d; alpha:%d; flip:%d)" layer.texId layer.recId layer.lx layer.ly layer.alpha layer.flip;
+
 
 type frame = {
   fx:int;
@@ -107,11 +114,15 @@ type region = {
   regh:int;
 };
 
+
 value regionToString reg = Printf.sprintf "region(regx:%d; regy:%d; regw:%d; regh:%d)" reg.regx reg.regy reg.regw reg.regh;
+
+
 
 value readTexInfo lib =
   let inp = IO.input_channel (open_in (!indir // lib // ("texInfo" ^ !suffix ^ ".dat"))) in
-  let texNum = IO.read_byte inp in
+   let texNum = IO.read_i16 inp in
+  (* let texNum = IO.read_byte inp in *)
   let regions = DynArray.make texNum in
   (
     Printf.printf "readTexInfo %s texNum : %d\n%!" lib texNum;
@@ -135,6 +146,8 @@ value readTexInfo lib =
     IO.close_in inp;
     regions;
   );
+
+
 
 value readFrames lib =
   let inp = IO.input_channel (open_in (!indir // lib // ("frames" ^ !suffix ^ ".dat"))) in 
@@ -161,7 +174,8 @@ value readFrames lib =
         and layers = ref [] in
         (
           for it = 1 to lnum do {
-            let texId = IO.read_byte inp
+            (* let texId = IO.read_byte inp *)
+            let texId = IO.read_i16 inp
             and recId = IO.read_i32 inp
             and lx = IO.read_i16 inp
             and ly = IO.read_i16 inp
@@ -179,6 +193,10 @@ value readFrames lib =
       IO.close_in inp;
       frames;
     );
+
+
+
+
 
 value readObjs lib =
   let objs = ref [] in
@@ -198,7 +216,7 @@ value readObjs lib =
               for _j = 1 to anum do {
                 let rects = ref []
                 and frames = ref []
-                and aname = read_utf inp (* animname*)
+                and aname = read_utf inp (* animname *)
                 and frameRate = Int32.to_float (IO.read_real_i32 inp) in (* framerate *)
 
                 let () = Printf.printf "pos %d\n%!" (cnt ()) in 
@@ -224,7 +242,7 @@ value readObjs lib =
                   (
                     Printf.printf "fnum %d\n%!" fnum; 
 
-                    for i = 1 to fnum do {
+                     for i = 1 to fnum do {
                       let  frame = IO.read_i32 inp in
                         (
                           Printf.printf "read %s:%s frame %d : %d\n%!" oname aname i frame;
@@ -304,63 +322,89 @@ type contourSement = {
  *)
 
 value genContour regions frames anim =
+  let () = Gc.compact () in
   if anim.frames = [] then Printf.printf "WARNING : EMPTY ANIMATION \n%!" else
+  
   let frame = DynArray.get frames (List.hd anim.frames) in
-  let (x, y, w, h) =
+
+  let (mn_x, mn_y, mx_x, mx_y) =
     List.fold_left (fun (x, y, w, h) layer ->
+
       let () = Printf.printf "texId : %d; recId : %d\n%!" layer.texId layer.recId in
       let (_, regions) = DynArray.get regions layer.texId in
-      let () = Printf.printf "Regions count : %d\n%!" (DynArray.length regions) in
+
+(*       let () = Printf.printf "TX Rects count : %d\n%!" (DynArray.length regions) in      *)
       let region = DynArray.get regions layer.recId in
-        (min x layer.lx, min y layer.ly, max w (layer.lx + region.regw), max h (layer.ly + region.regh))
-    ) (max_int, max_int, 0, 0) frame.layers
+
+      (*
+      let () = Printf.printf "TX Rect w : %d h: %d\n%!" region.regw region.regh in          
+      let () = Printf.printf "LAYER x : %d y: %d\n%!" layer.lx layer.ly in          
+      *)
+      (min x layer.lx, min y layer.ly, max w (layer.lx + region.regw), max h (layer.ly + region.regh))
+      
+    ) (max_int, max_int, -max_int, -max_int) frame.layers
   in
-  if (w <=0) || (h <=0) then
+
+  
+(*   if (w <= 0) || (h <= 0) then *)
+  if ((List.length frame.layers) == 0) then
+    let () = Printf.printf "WARNING NO LAYERS IN FRAME!\n" in
     anim.contour := []
   else
-  let texImgs = Hashtbl.create 0 in
-  let getTexImg texFname = 
-    let () = Printf.printf "getTexImg : %s\n%!" texFname in
-    let texFname = !indir // texFname in 
-    try 
-      Hashtbl.find texImgs texFname 
-    with [ Not_found -> let texImg = Images.load texFname [] in ( Hashtbl.add texImgs texFname texImg; texImg; ) ] 
-  in
-  let frameImg = Rgba32.(make (w - x + 4) (h - y + 4) Color.({ Rgba.color = { Rgb.r = 0xff; g = 0xff; b = 0xff }; alpha = 0 })) in (* width and height more on 4 pixels cause it helps make contour without breaks, where non-transparent pixels of original image are border *)
-  (
-    List.iter (fun layer ->
-      let () = Printf.printf "Try get regions with texId : %d\n%!" layer.texId in 
-      let (texFname, regions) = DynArray.get regions layer.texId in
-      let region = DynArray.get regions layer.recId in
-      let texImg = getTexImg texFname in
-      (
-        match texImg with
-        [ Images.Rgba32 texImg -> Rgba32.map (fun colorA colorB -> Color.Rgba.merge colorA colorB) texImg region.regx region.regy frameImg (layer.lx - x + 2) (layer.ly - y + 2) region.regw region.regh (* inc x and y by 2 pixels cause width and height are more on 4 pixels, see previous comment*)
-        | _ -> assert False
-        ];
-      );                
-    ) frame.layers;
-    Hashtbl.iter (fun _ texImg -> Images.destroy texImg) texImgs;
+    let texImgs = Hashtbl.create 0 in
+    let getTexImg texFname = 
+      let () = Printf.printf "getTexImg : %s\n%!" texFname in
+      let texFname = !indir // texFname in 
+      try 
+        Hashtbl.find texImgs texFname 
+      with [ Not_found -> let texImg = Images.load texFname [] in ( Hashtbl.add texImgs texFname texImg; texImg; ) ] 
+    in
 
-    let w = frameImg.Rgba32.width
-    and h = frameImg.Rgba32.height in
-    let binImg = Array.make_matrix (w - 1) (h - 1) 0 in    
+    let w = mx_x - mn_x
+    and h = mx_y - mn_y
+    in
+
+    let () = Printf.printf "BOUNDING RECT %d %d %d %d\n%!" mn_x mn_y w h  in
+    
+    let frameImg = Rgba32.(make (w + 4) (h + 4) Color.({ Rgba.color = { Rgb.r = 0xff; g = 0xff; b = 0xff }; alpha = 0 })) in (* width and height more on 4 pixels cause it helps make contour without breaks, where non-transparent pixels of original image are border *)
     (
 
-      if !graph then
-        let img = Rgb24.make w h { Color.Rgb.r = 0xff; g = 0xff; b = 0xff; } in
+      List.iter (fun layer ->
+        let () = Printf.printf "Try get regions with texId : %d\n%!" layer.texId in 
+        let (texFname, regions) = DynArray.get regions layer.texId in
+        let region = DynArray.get regions layer.recId in
+        let texImg = getTexImg texFname in
         (
-          for i = 0 to w - 1 do
-            for j = 0 to h - 1 do
-              let c = Rgba32.get frameImg i j in
-                Color.Rgba.(Color.Rgb.(Rgb24.set img i j { r = c.color.r; g = c.color.g; b = c.color.b }))
+          match texImg with
+          (* [ Images.Rgba32 texImg -> Rgba32.map (fun colorA colorB -> Color.Rgba.merge colorA colorB) texImg region.regx region.regy frameImg (layer.lx - x + 2) (layer.ly - y + 2) region.regw region.regh *) (* inc x and y by 2 pixels cause width and height are more on 4 pixels, see previous comment*)
+          [ Images.Rgba32 texImg -> Rgba32.map (fun colorA colorB -> Color.Rgba.merge colorA colorB) texImg region.regx region.regy frameImg (layer.lx - mn_x + 2) (layer.ly - mn_y + 2) region.regw region.regh (* inc x and y by 2 pixels cause width and height are more on 4 pixels, see previous comment*)          
+          | _ -> assert False
+          ];
+        );                
+      ) frame.layers;
+      
+      Hashtbl.iter (fun _ texImg -> Images.destroy texImg) texImgs;
+
+      let w = frameImg.Rgba32.width
+      and h = frameImg.Rgba32.height in
+      let binImg = Array.make_matrix (w - 1) (h - 1) 0 in    
+      (
+
+        if !graph then
+          let img = Rgb24.make w h { Color.Rgb.r = 0xff; g = 0xff; b = 0xff; } in
+          (
+            for i = 0 to w - 1 do
+              for j = 0 to h - 1 do
+                let c = Rgba32.get frameImg i j in
+                  Color.Rgba.(Color.Rgb.(Rgb24.set img i j { r = c.color.r; g = c.color.g; b = c.color.b }))
+              done;
             done;
-          done;
 
           Graphic_image.draw_image (Images.Rgb24 img) !imgPos (600 - h);
           Rgb24.destroy img;          
         )
-      else ();
+      else 
+      ();
 
       (* making binary image. in this implementation, "pixel" means block 2x2 pixels *)
       let applyThreshold col row =
@@ -379,7 +423,6 @@ value genContour regions frames anim =
         done;
       
       (* filling inner object holes, we need only transparent areas, which borders on frame border *)
-
       (* filling needed areas by 2 *)
       (* Printf.printf "w, h %d %d\n%!" w h; *)
 
@@ -523,6 +566,7 @@ value genContour regions frames anim =
             let (fstCol, fstRow) = List.hd points in
             let (contour, _) = (* approximating contour *)
               List.fold_left (fun (contour, approxPnts) (col, row) ->
+
                 let (_col, _row) = List.hd contour in
                 let k = (row -. _row) /. (col -. _col) in
                 let b = row -. col *. k in
@@ -537,7 +581,7 @@ value genContour regions frames anim =
         let contour = List.map (fun (x, y) -> (int_of_float x, int_of_float y)) contour in
         (
           (* Printf.printf "%d %s\n" (List.length contour) (String.concat " " (List.map (fun (x, y) -> Printf.sprintf "(%d, %d)" x y) contour)); *)
-          Printf.printf "%d\n%!" (List.length contour);
+          
 
           if (!graph) then
           (
@@ -562,7 +606,7 @@ if !graph then
 )
 else ();
 
-Gc.set {(Gc.get()) with Gc.max_overhead = 2000000};
+Gc.set {(Gc.get()) with Gc.max_overhead = 20000000};
 
 Array.iter (fun fname ->
   if Sys.is_directory (!indir // fname) && (!libName <> "" && !libName = fname || !libName = "") then
@@ -576,8 +620,10 @@ Array.iter (fun fname ->
 
         List.iter (fun obj ->
           let () = Printf.printf "processing object %s...\n%!" obj.oname in
-            List.iter (fun anim -> let () = Printf.printf "\tprocessing animation %s... %!" anim.aname in genContour regions frames anim) obj.anims
+            List.iter (fun anim -> let () = Printf.printf "\n\tprocessing animation %s... %!" anim.aname in genContour regions frames anim) obj.anims
         ) objs;
+
+        
 
         if !graph then
         (
