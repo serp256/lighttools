@@ -1,0 +1,3 @@
+#!/bin/sh
+::foreach PACKS::
+::RESPACKER:: -i rasterized -o packed ::pack.name:: -maxt ::pack.max_tx_size:: -pack ::pack.mode:: ::pack.merge::::end::

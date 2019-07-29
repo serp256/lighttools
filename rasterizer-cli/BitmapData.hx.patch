@@ -1,0 +1,88 @@
+--- 8,9,1/src/openfl/display/BitmapData.hx	2019-07-29 11:27:04.000000000 +0300
++++ 8,9,0/src/openfl/display/BitmapData.hx	2019-04-15 09:47:33.000000000 +0300
+@@ -370,14 +370,11 @@
+ 
+ 		if (filter.__preserveObject)
+ 		{
+-			// KMD
+-			bitmapData3.copyPixels(sourceBitmapData, rect, destPoint);
+-			// bitmapData3.copyPixels(this, rect, destPoint);
++			bitmapData3.copyPixels(this, rect, destPoint);
+ 		}
+ 
+-		// KMD var lastBitmap = filter.__applyFilter(bitmapData2, this, sourceRect, destPoint);
+-		var lastBitmap = filter.__applyFilter(bitmapData2, sourceBitmapData, sourceRect, destPoint);
+-		
++		var lastBitmap = filter.__applyFilter(bitmapData2, this, sourceRect, destPoint);
++
+ 		if (filter.__preserveObject)
+ 		{
+ 			lastBitmap.draw(bitmapData3, null, null);
+@@ -887,7 +884,7 @@
+ 		_colorTransform.__copyFrom(source.__worldColorTransform);
+ 		_colorTransform.__invert();
+ 
+-		if (!readable && Lib.current != null && Lib.current.stage != null && Lib.current.stage.context3D != null)
++		if (!readable && Lib.current.stage.context3D != null)
+ 		{
+ 			if (__textureContext == null)
+ 			{
+@@ -926,43 +923,33 @@
+ 		else
+ 		{
+ 			#if ((js && html5) || lime_cairo)
+-			// KMD
+ 			if (colorTransform != null)
+ 			{
+ 				var bounds = Rectangle.__pool.get();
+ 				var boundsMatrix = Matrix.__pool.get();
+ 
+-				if (matrix != null) {
+-					boundsMatrix.concat(matrix);
+-				}
+-
+ 				source.__getBounds(bounds, boundsMatrix);
+ 
+ 				var width:Int = Math.ceil(bounds.width);
+ 				var height:Int = Math.ceil(bounds.height);
+ 
+-				// boundsMatrix.tx = -bounds.x;
+-				// boundsMatrix.ty = -bounds.y;
++				boundsMatrix.tx = -bounds.x;
++				boundsMatrix.ty = -bounds.y;
+ 
+ 				var copy = new BitmapData(width, height, true, 0);
+-				copy.draw(source, boundsMatrix, null, null, null, true);
+-				
++				copy.draw(source, boundsMatrix);
++
+ 				copy.colorTransform(copy.rect, colorTransform);
+ 				copy.__renderTransform.identity();
+-
+ 				copy.__renderTransform.tx = bounds.x;
+ 				copy.__renderTransform.ty = bounds.y;
+-				copy.__renderTransform.concat(source.__renderTransform);				
++				copy.__renderTransform.concat(source.__renderTransform);
+ 				copy.__worldAlpha = source.__worldAlpha;
+ 				copy.__worldColorTransform.__copyFrom(source.__worldColorTransform);
+ 				source = copy;
+ 
+-				if (matrix != null) {
+-					transform.concat(matrix.invert());
+-				}
+-
+ 				Rectangle.__pool.release(bounds);
+-				Matrix.__pool.release(boundsMatrix);				
++				Matrix.__pool.release(boundsMatrix);
+ 			}
+ 
+ 			#if (js && html5)
+@@ -1142,7 +1129,7 @@
+ 
+ 		if (Std.is(compressor, PNGEncoderOptions))
+ 		{
+-			byteArray.writeBytes(ByteArray.fromBytes(image.encode(PNG, 100)));
++			byteArray.writeBytes(ByteArray.fromBytes(image.encode(PNG)));
+ 			return byteArray;
+ 		}
+ 		else if (Std.is(compressor, JPEGEncoderOptions))

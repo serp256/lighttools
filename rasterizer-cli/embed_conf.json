@@ -1,0 +1,233 @@
+{
+
+
+    "AncientStudyTree" :
+    {
+        "include" : "AncientStudyTree.swf"
+    },
+
+    "BottomPanel" :
+    {
+        "include" : "BottomPanel.swf",
+        "symbols" :
+        [
+            {
+                "include" : "/eSkins.*/",
+                "exclude" : [ "eSkins.InviteFriendIcon", "eSkins.InviteFriendIcon2" ]
+            }
+        ]
+    },
+
+    "Collection" :
+    {
+        "include" : "Collection.swf",
+        "symbols" :
+        [
+            {
+                "include" : "/.*/",
+                "exclude" : [ "eSkins.AskWichButton" ]
+            }
+        ]
+    },
+
+    "FruitStudyTree" :
+    {
+        "include" : "FruitStudyTree.swf"
+    },
+
+    "Gift" :
+    {
+        "include" : "Gift.swf",
+        "symbols" :
+        [
+            {
+                "include" : "/.*/",
+                "exclude" : [ "eSkins.ToWishlistButton", "eSkins.WishlistIcon" ]
+            }
+        ]
+
+    },
+
+    "Gold" :
+    {
+        "include" : "Gold.swf",
+        "animated" : false
+    },
+
+    "Lab" :
+    {
+        "include" : "Lab.swf"
+    },
+
+    "MoneyDialog" :
+    {
+        "include" : "MoneyDialog.swf",
+        "animated" : false
+    },
+
+    "Quests" :
+    {
+        "include" : "Quests.swf",
+        "symbols" :
+        [
+            {
+                "include" : "/.*/",
+                "exclude" :
+                [ 
+                    "eSkins.QGreyTargetIcon", 
+                    "eSkins.QLineBg", 
+                    "eSkins.QLineOpenBt",
+                    "eSkins.QGreenTargetIcon", 
+                    "eSkins.QLineComplete", 
+                    "eSkins.QuestTabSelected", 
+                    "eSkins.QLineSelect", 
+                    "eSkins.QuestTab", 
+                    "eSkins.BtQuestSkin", 
+                    "eSkins.StoryButton", 
+                    "eSkins.StorylineIcon", 
+                    "eSkins.QLineCloseBt", 
+                    "eSkins.NewQuestClip2", 
+                    "eSkins.BlueBg", 
+                    "eSkins.QTargetIconPanel", 
+                    "eSkins.SeparatorQTarget", 
+                    "eSkins.ProgressQuestClip", 
+                    "eSkins.NewQuestClip", 
+                    "eSkins.ToQuestIcon", 
+                    "eSkins.BtAllQuestSkin", 
+                    "eSkins.BlueSeparator", 
+                    "eSkins.QLineBorder", 
+                    "eSkins.QBlueTargetIcon"
+                ]
+            }
+        ]
+    },
+
+    "SeaStudyTree" :
+    {
+        "include" : "SeaStudyTree.swf"
+    },
+
+    "Shop" :
+    {
+        "include" : "Shop.swf",
+        "no-merge" : "true",
+        "symbols" :
+        [
+            {
+                "include" : "/.*/",
+                "exclude" : 
+                [
+                    "eSkins.energy",
+                    "eSkins.gold",
+                    "eSkins.TabBuildingIcon",
+                    "eSkins.TabExpansionIcon",
+                    "eSkins.TabSeedbedIcon",
+                    "eSkins.TabDecorIcon",
+                    "eSkins.TabRareIcon",
+                    "eSkins.TabBoostIcon",
+                    "eSkins.baks",
+                    "eSkins.exp",
+                    "eSkins.food",
+                    "eSkins.BestsellerBg",
+                    "eSkins.TabSpecialsIcon",
+                    "eSkins.timber",
+                    "eSkins.TabAnimalIcon"
+                ]
+            }
+        ]
+    },
+
+    "StudyTree" :
+    {
+        "include" : "StudyTree.swf"
+    },
+
+    "Take" :
+    {
+        "include" : "Take.swf",
+        "symbols" :
+        [
+            {
+                "include" : "/eSkins.*/"
+            }
+        ]
+    },
+
+    "TopPanel" :
+    {
+        "include" : "TopPanel.swf",
+        "symbols" :
+        [
+            {
+                "include" : "/.*/",
+                "exclude" :
+                [
+                    "eSkins.clan_gold",
+                    "eSkins.clan_exp",
+                    "eSkins.crypto_gold",
+                    "eSkins.clan_energy"
+                ]
+            }
+        ]
+    },
+
+    "UI" :
+    {
+        "include" : "UI.swf",
+        "pack-mode" : "fsep",
+        "symbols" : 
+        [
+            {
+                "include" : 
+                [
+                    "eSkins.WOArrowGreen",
+                    "eSkins.WOArrow",
+                    "eSkins.ScrollThumb"
+                ],
+                
+                "animated" : "false"
+            },
+
+            {
+                "include" : "/eSkins.*/",
+                "exclude" :
+                [
+                    "eSkins.RaidEnergyTrack",
+                    "eSkins.StashMenuIcon",
+                    "eSkins.AddBtIcon",
+                    "eSkins.BtOrangeBg",
+                    "eSkins.BtGreenBg2",
+                    "eSkins.WOPBTrack",
+                    "eSkins.WOPBGlare",
+                    "eSkins.QuestDialogBg",
+                    "eSkins.BtChildFastWish",
+                    "eSkins.BlueWoodBg2",
+                    "eSkins.BlueBg2",
+                    "eSkins.LoadClip",
+                    "eSkins.TaleMyEndingFPanel",
+                    "eSkins.YellowArrow",
+                    "eSkins.TabShadow",
+                    "eSkins.AchvPbTrack",
+                    "eSkins.BtGreenBg",
+                    "eSkins.BestChoice",
+                    "eSkins.StoryCloud",
+                    "eSkins.StoryImgBg",
+                    "eSkins.BtRedBg",
+                    "eSkins.QuestPanelBg",
+                    "eSkins.AchvPbThumb",
+                    "eSkins.WOPBThumb",
+                    "eSkins.AchvUndone",
+                    "eSkins.BtBlueBg",
+                    "eSkins.AchvDone"
+                ]
+                
+            }
+        ]
+    },
+
+    "Warehouse" :
+    {
+        "include" : "Warehouse.swf"
+    }
+    
+}
