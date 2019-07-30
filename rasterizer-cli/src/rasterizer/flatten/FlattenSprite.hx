@@ -187,7 +187,7 @@ class FlattenSprite extends Sprite implements IFlatten {
 		// trace('Scaled matrix $mtx');
 
 		var rect = getTransformedBounds(obj.getRect(obj), mtx);
-        
+	
 		// trace('Object rect ${obj.getRect(obj)} - Bitmap rect $rect');
 		
 		rect.width = rect.width < 1 ? 1 : rect.width;
@@ -333,7 +333,17 @@ class FlattenSprite extends Sprite implements IFlatten {
 		mtx.concat(matrix);
 
         if (container != null) {
-        			    
+
+			// если так не сделать, то у MC не будет чайлдов.
+			if (Std.is(container, format.swf.instance.MovieClip)) {
+				var mc : format.swf.instance.MovieClip = cast container;
+				if (mc.scale9BitmapGrid != null) {
+					mc.scale9BitmapGrid = null;
+				}
+			}
+
+			// trace("Container with " + container.numChildren + " > " + cast (container, MovieClip).scale9Grid);    
+					
 	    	var customName = ! (~/^instance[\d]+$/.match(obj.name));
 	
 		    filters = filters.concat(obj.filters);
@@ -359,6 +369,8 @@ class FlattenSprite extends Sprite implements IFlatten {
             
 			return;
         } 
+
+		// trace("Object > " + obj);    
 		
 		// mtx.scale(__scale, __scale);
 		// scale передаем в applyMatrix, такой хак для того, чтобы работало на cairo

@@ -45,17 +45,19 @@ class FlattenImage extends BitmapData implements IFlatten {
 	 */
 	public override function generateFilterRect(sourceRect:Rectangle, filter:BitmapFilter):Rectangle {
 		if (Std.is(filter, GlowFilter)) {
-			var f : GlowFilter = cast filter;
+			var f : GlowFilter = cast filter;			
 			var rect = sourceRect.clone();
-			rect.inflate(f.blurX, f.blurY);
+			if (!f.inner) {				
+				rect.inflate(f.blurX / 2, f.blurY / 2);
+			}
 			return rect;
 		}
 
 
 		if (Std.is(filter, BlurFilter)) {
-			var f : BlurFilter = cast filter;
-			var rect = sourceRect.clone();
-			rect.inflate(f.blurX, f.blurY);
+			var f : BlurFilter = cast filter;			
+			var rect = sourceRect.clone();			
+			rect.inflate(f.blurX / 2, f.blurY / 2);
 			return rect;
 		}
 
