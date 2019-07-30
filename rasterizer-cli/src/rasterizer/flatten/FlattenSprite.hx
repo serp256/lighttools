@@ -346,7 +346,10 @@ class FlattenSprite extends Sprite implements IFlatten {
 					
 	    	var customName = ! (~/^instance[\d]+$/.match(obj.name));
 	
-		    filters = filters.concat(obj.filters);
+		    // filters = filters.concat(obj.filters);
+			if (obj.filters != null) {
+				filters = obj.filters.concat(filters);
+			}			
     
             if (container.numChildren == 0 && customName) {
                 mtx.scale(__scale, __scale);
