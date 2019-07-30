@@ -1,0 +1,372 @@
+{
+
+    "Skins_Ach" : 
+    {
+        "include" : "/^Ach.*/",
+        "pack-mode" : "fsep"
+    },
+
+    "Skins_BaksBonus" : 
+    {
+        "include" : "/^BaksBonus.*/"
+    },
+
+    "Skins_BaksClip" : 
+    {
+        "include" : "BaksClips.swf",
+        "animated" : false        
+    },
+
+    "Skins_Clan" : 
+    {
+        "include" : "/^Clan.*/",
+        "pack-mode" : "fsep"
+    },
+
+    "Skins_CryptoGoldClip" : 
+    {
+        "include" : "Crypto_goldClips.swf",
+        "pack-mode" : "fsep"
+    },
+
+    "Skins_DailyBonus" : 
+    {
+        "include" : "/^DailyBonus.*/",
+        "exclude" : "DailyBonusDigits.swf"
+    },
+
+    "Skins_DoubleGold" : 
+    {
+        "include" : "/^DoubleGold.*/"
+    },
+
+    "Skins_EAreas" : 
+    {
+        "include" : "expansionAreas.swf",
+        "animated" : false,
+        "pack-mode" : "fsep"
+    },
+
+    "Skins_FirstPreload" : 
+    {
+        "include" : "/^FirstPreload.*/",
+        "pack-mode" : "fsep"
+    },
+
+    "Skins_Gold" : 
+    {
+        "include" : "/^Gold.*/",
+        "symbols" : 
+        [
+            {
+                "include" : "/^Skins.GoldClip[0-9]$/",
+                "animated" : false
+            },
+
+            {
+                "include" : "/.*/"
+            }
+        ]                
+    },
+
+    "Skins_Q" : 
+    {
+        "include" : "/^Q.*/",
+        "pack-mode" : "fsep"        
+    },
+
+    "Skins_Share" : 
+    {
+        "include" : "/^Share.*/",
+        "pack-mode" : "fsep"        
+    },
+
+    "Skins_SpaceIcons" : 
+    {
+        "include" : "SpaceIcons.swf"
+    },
+
+    "Skins_Trade" : 
+    {
+        "include" : ["/^td_.*/", "Trade.swf", "TradeMap.swf" ]
+    },
+
+
+    "Skins_cs" : 
+    {
+        "include" : "/^cs_.*/",
+        "pack-mode" : "fsep"        
+    },
+
+    "Skins_ct" : 
+    {
+        "include" : "/^ct_.*/",
+        "max-tx-size" : "512"
+    },
+
+    "Skins_cu" : 
+    {
+        "include" : "/^cu_.*/"
+    },
+
+    "Skins_en" : 
+    {
+        "include" : "/^en_.*/",
+        "pack-mode" : "fsep"        
+    },
+
+    "Skins_fbl" : 
+    {
+        "include" : "/^fbl_.*/",
+        "animated" : false   
+    },
+
+    "Skins_fc" : 
+    {
+        "include" : "/^fc_.*/",
+        "pack-mode" : "fsep"        
+    },
+
+    "Skins_fr" : 
+    {
+        "include" : "/^fr_.*/",
+        "animated" : false,
+        "pack-mode" : "fsep"        
+    },
+
+    "Skins_gb_box" : 
+    {
+        "include" : "/^gb_box_.*/",
+        "pack-mode" : "fsep"        
+    },
+
+    "Skins_ge" : 
+    {
+        "include" : "/^ge_.*/",
+        "pack-mode" : "fsep"        
+    },
+
+    "Skins_mod" : 
+    {
+        "include" : "/^mod_.*/",
+        "animated" : false
+    },
+
+    "Skins_ra" : 
+    {
+        "include" : "/^ra_.*/",
+        "animated" : false,
+        "pack-mode" : "fsep"        
+    },
+
+    "Skins_rd" : 
+    {
+        "include" : "/^rd_.*/",
+        "pack-mode" : "fsep"        
+    },
+
+    "Skins_rr" : 
+    {
+        "include" : "/^rr_.*/",
+        "animated" : false,
+        "pack-mode" : "fsep"        
+    },
+
+    "Skins_st_collection" : 
+    {
+        "include" : "/^st_collection_.*/",
+        "pack-mode" : "fsep"        
+
+    },
+
+    "Skins_sw" : 
+    {
+        "include" : "/^sw_.*/",
+        "pack-mode" : "fsep"        
+    },
+
+    "Skins_take_cf_clan" : 
+    {
+        "include" : "/^take_cf_clan_.*/",
+        "pack-mode" : "fsep"        
+    },
+
+    "Skins_take_clan" : 
+    {
+        "include" : "/^take_clan_.*/",
+        "pack-mode" : "fsep"        
+    },
+
+    "Skins_take_fr" : 
+    {
+        "include" : "/^take_fr_.*/",
+        "pack-mode" : "fsep"        
+    },
+
+    "Skins_take_ra_a-f" : 
+    {
+        "include" : "/^take_ra_[a-f].*/",
+        "pack-mode" : "fsep"
+    },
+
+    "Skins_take_ra_g-z" : 
+    {
+        "include" : "/^take_ra_[g-z].*/",
+        "pack-mode" : "fsep"
+    },
+
+    "Skins_take_rr" : 
+    {
+        "include" : "/^take_rr_.*/",
+        "pack-mode" : "fsep"
+    },
+
+    "Skins_take_sd" : 
+    {
+        "include" : "/^take_sd_.*/",
+        "pack-mode" : "fsep"
+    },
+
+    "Skins_tl" : 
+    {
+        "include" : "/^tl_.*/",
+        "animated" : false,
+        "pack-mode" : "fsep"
+    },
+
+    "Skins_wn" : 
+    {
+        "include" : "/^wn_.*/",
+        "pack-mode" : "fsep"
+    },
+
+    "SkinsIcons" : 
+    {
+        "animated" : false,
+        "pack-mode" : "fsep",        
+        "include" :
+        [
+            "BaksLogo.swf",
+            "BarnIcons.swf",
+            "BirthdayImg.swf",
+            "BirthdayLogo.swf",
+            "BoostsIcon.swf",
+            "BoostsLogo.swf",
+            "BottomWindowSnow.swf",
+            "BrownBg.swf",
+            "BtRadioIcon.swf",
+            "CatBonusEnergy.swf",
+            "CatFeedSign.swf",
+            "ChildSkills.swf",
+            "ClonerIcons.swf",
+            "ComingSoon.swf",
+            "ComingSoonEn.swf",
+            "Crypto_goldBonus1Icon.swf",
+            "Crypto_goldBonus2Icon.swf",
+            "Crypto_goldLogo.swf",
+            "CurrentQuestBonus.swf",
+            "DogFeedSign.swf",
+            "DoubleCryptoIcon.swf",
+            "EmptyClanEmblem.swf",
+            "EventOfferIcon.swf",
+            "FinalBonusQuestIcon.swf",
+            "FishingLogo.swf",
+            "GalaxyLogo.swf",
+            "GoToClanIcon.swf",
+            "GoodsRemind.swf",
+            "LetterIcon.swf",
+            "LevelEventIcon.swf",
+            "LikeGameIcon.swf",
+            "ManIcon.swf",
+            "MedalDigits.swf",
+            "MobileIcon.swf",
+            "NewsLogo.swf",
+            "NoGameFriendStatus.swf",
+            "OTFeedSecondHyGoat.swf",
+            "OfferElixirIcon.swf",
+            "OkActionIcon.swf",
+            "OkGameFridayIcon.swf",
+            "OldCollectIcon.swf",
+            "PLevilIcon.swf",
+            "PandoraLogo.swf",
+            "PaymentCards.swf",
+            "PremShopIcon.swf",
+            "PrizeCoffer.swf",
+            "PrizeItemBg.swf",
+            "RaidTimeBg.swf",
+            "RandomFriendIcon2.swf",
+            "RatingIcon.swf",
+            "RatingPrizeIcon.swf",
+            "RepairIcon.swf",
+            "ResearchCenterLogo.swf",
+            "SaleNumBg.swf",
+            "SaleTimeIcon.swf",
+            "Sharemn_alien.swf",
+            "Sharemn_bigfoot.swf",
+            "Sharemn_tree.swf",
+            "Sharemn_wolf.swf",
+            "ShopLabelRus.swf",
+            "SocialTankOffer.swf",
+            "SpaceModules.swf",
+            "SpecialOffer.swf",
+            "SpecialOffer_2.swf",
+            "SpecialOfferen.swf",
+            "SpecialOfferen_2.swf",
+            "StudentPostIcon.swf",
+            "StudyImages.swf",
+            "SuitcaseCard.swf",
+            "SuitcaseLogo.swf",
+            "TCOpenGiftIcon.swf",
+            "ToBoothIcon.swf",
+            "ToContractIcon.swf",
+            "TopWindowSnow.swf",
+            "TutMsgPanel.swf",
+            "UIArrow.swf",
+            "UltimaIcons.swf",
+            "UpdateStudyBg.swf",
+            "X3RedIcon.swf",
+            "ZzzFriendStatus.swf",
+            "big_gold_mine_up.swf",
+            "bt_arrow_port.swf",
+            "cf_clan_box1.swf",
+            "cf_clan_box2.swf",
+            "cf_clan_box3.swf",
+            "cf_clan_box4.swf",
+            "childOfferIcon.swf",
+            "clan_cofferIcon.swf",
+            "examKnowledgeIcon.swf",
+            "examLogicIcon.swf",
+            "examMusicIcon.swf",
+            "examSportIcon.swf",
+            "exchange_icon.swf",
+            "fa_growcenterLogo.swf",
+            "lock_skins.swf",
+            "pr_fb_sale.swf",
+            "pr_ok_card.swf",
+            "presents_ge_xmasGifts.swf",
+            "q_allQuests.swf",
+            "rucksack_icon.swf",
+            "se_pack1.swf",
+            "se_pack2.swf",
+            "se_pack3.swf",
+            "se_pack4.swf",
+            "se_pack5.swf",
+            "se_pack6.swf",
+            "se_pack7.swf",
+            "special_offer_Icon.swf",
+            "subscription1Icon.swf",
+            "thanksDay2Icon.swf",
+            "thanksDayIcon.swf",
+            "villageIcons.swf",
+            "vkLikeSolution.swf",
+            "vkShareSolution.swf"
+        ]
+    },
+
+    "Default" : 
+    {        
+        "exclude" : [ "DailyBonusDigits.swf", "/^card_.*/", "ShopLabelEng.swf" ],
+        "pack-mode" : "fsep"
+    }
+
+}
