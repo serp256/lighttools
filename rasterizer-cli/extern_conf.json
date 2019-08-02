@@ -72,7 +72,8 @@
     "Skins_Q" : 
     {
         "include" : "/^Q.*/",
-        "pack-mode" : "fsep"        
+        "exclude" : ["/^Q.* \\.swf/", "QTMakeXmasPig.swf"],
+        "pack-mode" : "fsep"
     },
 
     "Skins_Share" : 
@@ -85,11 +86,7 @@
     {
         "include" : "SpaceIcons.swf"
     },
-
-    "Skins_Trade" : 
-    {
-        "include" : ["/^td_.*/", "Trade.swf", "TradeMap.swf" ]
-    },
+    
 
 
     "Skins_cs" : 
@@ -363,9 +360,28 @@
         ]
     },
 
+
+    "Skins_Trade" : 
+    {
+        "__comment" : "Нужно оставлять только один файл _path.swf, так как там пересекаются имена MapPoint",
+        "include" : ["/^td_.*/", "Trade.swf", "TradeMap.swf" ],
+        "exclude" : 
+        [
+            "td_trading8march_path.swf",
+            "td_tradingChild_path.swf",
+            "td_tradingJapan_path.swf",
+            "td_tradingScience_path.swf",
+            "td_tradingSeptember_path.swf",
+            "td_tradingSpa_path.swf",
+            "td_tradingTheatre_path.swf",
+            "__td_tradingTribes_path.swf"
+        ]
+    },
+
+
     "Default" : 
     {        
-        "exclude" : [ "DailyBonusDigits.swf", "/^card_.*/", "ShopLabelEng.swf" ],
+        "exclude" : [ "DailyBonusDigits.swf", "/^card_.*/", "ShopLabelEng.swf", "/^td_.*/" ],
         "pack-mode" : "fsep"
     }
 

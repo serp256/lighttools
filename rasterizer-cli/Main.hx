@@ -140,6 +140,14 @@ class Main {
             __processDefaultPack();
         }
 
+        __writePackerScript(rest);
+    }
+
+
+    /*
+     *
+     */
+    private function __writePackerScript(packer : Dynamic) {
         var template = new Template(haxe.Resource.getString("packerScriptTemplate"));
         
         var packs = [];        
@@ -151,10 +159,9 @@ class Main {
             packs.push({ "pack" : p });            
         }
 
-        var contents = template.execute( {'PACKS' : packs, 'RESPACKER' : rest });
+        var contents = template.execute( {'PACKS' : packs, 'RESPACKER' : packer });
         File.saveContent(Path.join([ output, "packer.sh" ]), contents);
     }
-
 
     /*
      *
@@ -166,8 +173,8 @@ class Main {
             __usedFiles[file] = 1; // нужны, чтобы определить к каким файлам в конце применить default профиль
         }
 
-        __engine.exportPack(pack);
-        __processedPacks.push(pack);
+        __engine.exportPack(pack);        
+        __processedPacks.push(pack);        
     }
 
 
@@ -176,7 +183,11 @@ class Main {
      */
     private function __processDefaultPack() {
         var packdata : DynamicAccess<Dynamic> = __config[__defaultSectionName];        
+        #if (haxe_ver < "4.0.0")        
+        var include = __allFiles.filter(function (file) return !__usedFiles.exists(file));        
+        #else
         var include = __allFiles.filter(file -> !__usedFiles.exists(file));
+        #end
         packdata["include"] = include;
         __processPack(__defaultSectionName, packdata);
     }
@@ -246,11 +257,21 @@ class Main {
      *
      */
     private inline function __readAllFiles() {
-        try {                        
+        try {       
+            #if (haxe_ver < "4.0.0")                   
+
+            for (entry in FileSystem.readDirectory(input).filter(function (e) return e.endsWith(".swf") && !FileSystem.isDirectory(Path.join([input, e]))) ) {
+                trace('Read entry $entry');
+                __allFiles.push(entry);
+            }
+            
+            #else
+
             for (entry in FileSystem.readDirectory(input).filter(e -> e.endsWith(".swf") && !FileSystem.isDirectory(Path.join([input, e]))) ) {
                 trace('Read entry $entry');
                 __allFiles.push(entry);
             }
+            #end
         } catch (e : Dynamic) {
             exitWithError("Failed to read input directory: " + e);               
         }

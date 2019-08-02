@@ -1,23 +1,25 @@
 -main Main
 -resource packer.mtt@packerScriptTemplate
 -cpp _build
+
+-lib lime:dev
+
 -cp /Users/kmd/haxelib/openfl/8,9,1/scripts
 -cp /Users/kmd/haxelib/openfl/8,9,1/src
--cp /Users/kmd/haxelib/lime/7,3,0/src
+#-cp /Users/kmd/haxelib/lime/7,3,0/src
 -cp src
--lib lime
--L lime
+
 -lib format
 -lib tink_cli
--L format
+-lib format
 -D lime-cairo
 -D lime-cffi
 -D optional-cffi
 -D openfl
--lib hxcpp-debugger
+-D openfl_disable_cacheasbitmap
+#-lib hxcpp-debugger
 #-lib hxcpp-debug-server
--debug
--D HXCPP_DEBUGGER
+#-debug
+#-D HXCPP_DEBUGGER
 --remap flash:openfl
 --no-inline
---verbose

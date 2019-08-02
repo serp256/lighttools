@@ -60,28 +60,17 @@ class FlattenMovieClip extends Sprite implements IFlatten {
 
 		var clip : MovieClip = cast obj;
 		clip.recStop();
-		/*
-		clip.recNextFrame();
-		clip.recNextFrame();
-		clip.recNextFrame();
-		clip.recNextFrame();
-		clip.recNextFrame();
-		clip.recNextFrame();
-		clip.recNextFrame();
-		clip.recNextFrame();
-		clip.recNextFrame();
-		clip.recNextFrame();
-		*/
+
+		
 		for (i in 1...clip.totalFrames + 1) {
 			var frame = new FlattenSprite();
 			frame.swf = swf;
 			frame.fromDisplayObject(clip, scale, tag);			
 			frame.label = clip.currentLabel;
-			__frames.push(frame);
-
-			// trace('Flatten frame [$i] = ' + frame.children.length + " Object has " + clip.numChildren);
+			__frames.push(frame);			
 			clip.recNextFrame();
 		}
+		
 
 		__currentFrame = 0;
 		return this;

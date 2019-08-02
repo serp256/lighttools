@@ -148,7 +148,11 @@ class Pack {
      */
     private function __filterFiles(files : Array<String>) {
         var filter = new StringFilter(__data.get("include"), __data.get("exclude"));
-        __files = files.filter(f -> filter.includes(f));
+        #if (haxe_ver < "4.0.0")
+        __files = files.filter(function (f) return filter.includes(f));
+        #else
+        __files = files.filter(f -> filter.includes(f));        
+        #end
     }
 
     /*

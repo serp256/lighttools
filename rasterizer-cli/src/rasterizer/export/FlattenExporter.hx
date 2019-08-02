@@ -9,14 +9,33 @@ import rasterizer.flatten.FlattenSprite;
 import rasterizer.flatten.IFlatten;
 
 import haxe.crypto.Sha1;
-
 import haxe.io.Path;
+
+import lime.graphics.Image;
+import lime._internal.format.PNG;
 
 class FlattenExporter extends BaseExporter implements IExporter {
 
 	public function new() {
 	}
 
+	/*
+	 *
+	 */
+	private function writeFlattenImage(img : FlattenImage, dir : Path) : String {							
+		var binary = img.encode(img.rect, new PNGEncoderOptions(false));
+		var hash = Sha1.encode(binary.toString());
+		var file = Path.join([ dir.toString(), '${hash}.png' ]);
+		if (!FileSystem.exists(file)) {
+			File.saveBytes(file, binary);
+		}
+		return file;
+	}
+
+
+	/*
+	 *  Осталось тут разобраться, почему русурсы не освобождаются
+	 */
 	private function exportSprite(obj:FlattenSprite, className:String, dir : Path = null, write : Bool = true) : Dynamic {
 		
 		var meta : Dynamic = { type:'sprite' };
@@ -29,18 +48,9 @@ class FlattenExporter extends BaseExporter implements IExporter {
 		for (child in obj.children) {
 
 			if (Std.is(child, FlattenImage)) {
-				
-				var img : FlattenImage = cast child;
-				var binary = img.encode(img.rect, new PNGEncoderOptions(false));			
-				var hash = Sha1.encode(binary.toString());
-				var file = Path.join([ dir.toString(), '${hash}.png' ]);
-
-				if (!FileSystem.exists(file)) {
-					File.saveBytes(file, binary);
-				}
-
-				children.push({ name : img.name, x : img.matrix.tx, y : img.matrix.ty, type : "image", file : Path.withoutDirectory(file) });
-
+				var img : FlattenImage = cast child;	
+				var file = writeFlattenImage(img, dir); 
+				children.push({ name : img.name, x : img.matrix.tx, y : img.matrix.ty, type : "image", file : Path.withoutDirectory(file) });			
 			} else {				
 				var box:FlattenSprite = cast child;
 				children.push({ name : box.name, x : box.transform.matrix.tx, y : box.transform.matrix.ty, type : "box"	});
@@ -86,19 +96,11 @@ class FlattenExporter extends BaseExporter implements IExporter {
 		
 		} else {
 			
-			var meta : Dynamic = { type : "sprite" };			
-			var img : FlattenImage = cast obj;
-			
-			var binary = img.encode(img.rect, new PNGEncoderOptions(false));			
-			var hash = Sha1.encode(binary.toString());
-			var file = Path.join([ dir.toString(), '${hash}.png' ]);
+			var meta : Dynamic = { type : "sprite" };									
+			var img : FlattenImage = cast obj;					
+			var file = writeFlattenImage(img, dir);
 
-			if (!FileSystem.exists(file)) {
-				File.saveBytes(file, binary);
-			}
-			
-			meta.children = [{ name : img.name, x : img.matrix.tx, y : img.matrix.ty, type : 'image', file : Path.withoutDirectory(file) }];
-			
+			meta.children = [{ name : img.name, x : img.matrix.tx, y : img.matrix.ty, type : 'image', file : Path.withoutDirectory(file) }];					
 			writeMeta(dir, meta);
 		}
 		return this;

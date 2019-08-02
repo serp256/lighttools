@@ -41,7 +41,7 @@ class SWFClass {
 			return new Bitmap(cast tag);
 		}
 
-		if (Std.is (tag, SWFTimelineContainer)) {
+		if (Std.is (tag, SWFTimelineContainer)) {			
 			return new MovieClip (cast tag);
 		}
 

@@ -1,6 +1,6 @@
 CLI версия растеризатора на Haxe
-Lime 7.3.0 (7.5.0 - на запускается бинарик, зависит от системы)
-Openfl 8.9.0
+Lime 7.5.0 (с фиксом) - взять с https://github.com/fixman81/lime.git ветка png-encode-memleak-fix
+Openfl 8.9.1
 
 Пример запуска:
 _build/Main-debug --input ~/Devel/farm/client_haxe/assets/embed/ --output output --config embed_conf.json respacker.native

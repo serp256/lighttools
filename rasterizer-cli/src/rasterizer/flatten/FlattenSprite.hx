@@ -119,15 +119,11 @@ class FlattenSprite extends Sprite implements IFlatten {
 			objLayer.copyPixels(obj, srcRect, new Point( Std.int((filterRect.width - srcRect.width) / 2), Std.int((filterRect.height - srcRect.height) / 2)));
 			
 			finalRect = finalRect.union(filterRect);
-			// trace('Filter rect $filterRect sourceRect : $srcRect  finalRect: $finalRect');
-
-
+			
             // filterLayer.applyFilter(obj, srcRect, new Point(-filterRect.x, -filterRect.y), filter);			
 			filterLayer.applyFilter(objLayer, filterRect, new Point(0, 0), filter);			
-			// trace("Applied");
 			objLayer.dispose();
             obj.dispose();
-			// trace("Disposed");
             obj = filterLayer;
         }
 
@@ -179,17 +175,9 @@ class FlattenSprite extends Sprite implements IFlatten {
 	 *
 	 */
     private function applyMatrix(obj : DisplayObject, mtx : Matrix, scale : Float, color : ColorTransform) : FlattenImage {
-
-		// trace('Object matrix ${obj.transform.matrix} - Passed matrix $mtx - Scale = $scale');
-
 		mtx.scale(scale, scale);
-
-		// trace('Scaled matrix $mtx');
-
 		var rect = getTransformedBounds(obj.getRect(obj), mtx);
 	
-		// trace('Object rect ${obj.getRect(obj)} - Bitmap rect $rect');
-		
 		rect.width = rect.width < 1 ? 1 : rect.width;
         rect.height = rect.height < 1 ? 1 : rect.height;
 
@@ -203,9 +191,9 @@ class FlattenSprite extends Sprite implements IFlatten {
 
 		obj.scaleX = scale;		
 		obj.scaleY = scale;
-
-        objBmpData.drawWithQuality(obj, m, color, null, null, true, flash.display.StageQuality.BEST);
-        objBmpData.matrix = new Matrix(1, 0, 0, 1, rect.x, rect.y);
+	
+        objBmpData.drawWithQuality(obj, m, color, null, null, true, flash.display.StageQuality.BEST);		
+        objBmpData.matrix = new Matrix(1, 0, 0, 1, Math.round(rect.x), Math.round(rect.y));
         objBmpData.name = obj.name;
 
 		obj.scaleX = oldsx;		
@@ -332,7 +320,7 @@ class FlattenSprite extends Sprite implements IFlatten {
 		var mtx = obj.transform.matrix.clone();
 		mtx.concat(matrix);
 
-        if (container != null) {
+	    if (container != null) {
 
 			// если так не сделать, то у MC не будет чайлдов.
 			if (Std.is(container, format.swf.instance.MovieClip)) {
@@ -342,11 +330,8 @@ class FlattenSprite extends Sprite implements IFlatten {
 				}
 			}
 
-			// trace("Container with " + container.numChildren + " > " + cast (container, MovieClip).scale9Grid);    
 					
 	    	var customName = ! (~/^instance[\d]+$/.match(obj.name));
-	
-		    // filters = filters.concat(obj.filters);
 			if (obj.filters != null) {
 				filters = obj.filters.concat(filters);
 			}			
@@ -372,12 +357,7 @@ class FlattenSprite extends Sprite implements IFlatten {
             
 			return;
         } 
-
-		// trace("Object > " + obj);    
-		
-		// mtx.scale(__scale, __scale);
 		// scale передаем в applyMatrix, такой хак для того, чтобы работало на cairo
-
 		var layer = applyFilters(applyMatrix(obj, mtx, __scale, clr), filters);
         __flattenChildren.push(layer);
 
@@ -767,9 +747,18 @@ class FlattenSprite extends Sprite implements IFlatten {
 				continue;
 			}
 			var img : FlattenImage = cast child;
+			img.disposeImage();
 			img.dispose();
 		}
 		
+		__flattenChildren = null;		
+		__masks = null;
+		__masked = null;
+		__namedMasks = null;
+		while (numChildren > 0) {
+			removeChildAt(0);
+		}
+	
 	}
 
 
@@ -780,6 +769,7 @@ class FlattenSprite extends Sprite implements IFlatten {
 		while (numChildren > 0) {
 			removeChildAt(0);
 		}
+		
 		
 		for (child in __flattenChildren) {						
 			
@@ -792,6 +782,7 @@ class FlattenSprite extends Sprite implements IFlatten {
 			bmp.transform.matrix = img.matrix;
 			addChild(bmp);
 		}
+		
 
 	}
 

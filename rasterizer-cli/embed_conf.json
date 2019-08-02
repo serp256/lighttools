@@ -113,25 +113,34 @@
         "no-merge" : "true",
         "symbols" :
         [
+
             {
-                "include" : "/.*/",
-                "exclude" : 
-                [
-                    "eSkins.energy",
-                    "eSkins.gold",
+                "include" : 
+                [                    
                     "eSkins.TabBuildingIcon",
                     "eSkins.TabExpansionIcon",
                     "eSkins.TabSeedbedIcon",
                     "eSkins.TabDecorIcon",
                     "eSkins.TabRareIcon",
                     "eSkins.TabBoostIcon",
+                    "eSkins.TabAnimalIcon",
+                    "eSkins.TabSpecialsIcon"
+                ],
+
+                "scale" : "1.15"
+            },
+
+
+            {
+                "include" : "/.*/",
+                "exclude" : 
+                [
+                    "eSkins.energy",
+                    "eSkins.gold",
                     "eSkins.baks",
                     "eSkins.exp",
                     "eSkins.food",
-                    "eSkins.BestsellerBg",
-                    "eSkins.TabSpecialsIcon",
-                    "eSkins.timber",
-                    "eSkins.TabAnimalIcon"
+                    "eSkins.timber"                    
                 ]
             }
         ]
@@ -227,7 +236,17 @@
 
     "Warehouse" :
     {
-        "include" : "Warehouse.swf"
+        "include" : "Warehouse.swf",
+        "symbols" :
+        [
+          {
+            "include" : "/eSkins.*/",
+            "exclude" : "eSkins.GiftIcon"
+          }
+        ]
     }
     
 }
+
+
+

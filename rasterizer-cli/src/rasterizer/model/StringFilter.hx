@@ -83,13 +83,21 @@ class StringFilter {
     public function includes(value : String) : Bool {
 
         // исключаем файл
+        #if (haxe_ver < "4.0.0")
+        var excl = __exclude_re.exists(function (re) return re.match(value));
+        #else
         var excl = __exclude_re.exists(re -> re.match(value));
+        #end
         if (excl || (__exclude.length > 0 && __exclude.indexOf(value) != -1)) {
             return false;
         }            
 
         // влючаем файл
+        #if (haxe_ver < "4.0.0")
+        var inc = __include_re.exists(function (re) return re.match(value));
+        #else
         var inc = __include_re.exists(re -> re.match(value));
+        #end
         if (inc || (__include.length > 0 && __include.indexOf(value) != -1)) {
             return true;
         }            
