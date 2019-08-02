@@ -381,7 +381,7 @@
 
     "Default" : 
     {        
-        "exclude" : [ "DailyBonusDigits.swf", "/^card_.*/", "ShopLabelEng.swf", "/^td_.*/" ],
+        "exclude" : [ "FirstSession.swf", "DailyBonusDigits.swf", "/^card_.*/", "ShopLabelEng.swf", "/^td_.*/" ],
         "pack-mode" : "fsep"
     }
 
