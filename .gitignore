@@ -6,3 +6,6 @@ eit
 .idea
 *.iml
 .DS_store
+rasterizer-cli/_build
+rasterizer-cli/output-extern
+rasterizer-cli/output-embed
