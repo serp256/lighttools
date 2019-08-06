@@ -61,7 +61,7 @@ class Engine {
         for (file in pack.files) {                
             var ipath = Path.join([ inputDir.toString(), file ]);
             var bytes = File.getBytes(ipath);
-            var swf = new SWF(bytes);
+            var swf = new SWFRoot(bytes);
             trace(file);
             
             for (className in swf.symbols.keys()) {    
@@ -71,7 +71,7 @@ class Engine {
                     continue;
                 }
                 trace('Exporting symbol $className');
-                exportSymbol(swf.data, className, tagId, opts.animated, opts.scale, new haxe.io.Path(opath));
+                exportSymbol(swf, className, tagId, opts.animated, opts.scale, new haxe.io.Path(opath));
             }                            
         }
     }

@@ -98,13 +98,22 @@ class FlattenSprite extends Sprite implements IFlatten {
 		__namedMasks = new Map();
 	}
 
+	private static var  dbgcounter = 1;
+
+	private static function writeFlattenImage(img : FlattenImage, file : String) : Void {
+		var binary = img.encode(img.rect, new PNGEncoderOptions(false));
+		File.saveBytes(file, binary);
+	}
 	
 	
 	/*
 	 *
 	 */
 	private function applyFilters(obj : FlattenImage, filters : Array<BitmapFilter>) : FlattenImage {		
-		
+
+		var saved = lime.system.CFFI.enabled;
+		lime.system.CFFI.enabled = false;
+
         var finalRect = new Rectangle(0, 0, obj.width, obj.height);
         var m = obj.matrix;
 		var name = obj.name;
@@ -116,12 +125,17 @@ class FlattenSprite extends Sprite implements IFlatten {
 			var objLayer    = new FlattenImage(Std.int(filterRect.width), Std.int(filterRect.height), true, 0x00000000); 
 			var filterLayer = new FlattenImage(Std.int(filterRect.width), Std.int(filterRect.height), true, 0x00000000);
 
-			objLayer.copyPixels(obj, srcRect, new Point( Std.int((filterRect.width - srcRect.width) / 2), Std.int((filterRect.height - srcRect.height) / 2)));
-			
+			objLayer.copyPixels(obj, srcRect, new Point( Std.int((filterRect.width - srcRect.width) / 2), Std.int((filterRect.height - srcRect.height) / 2)));		
 			finalRect = finalRect.union(filterRect);
 			
             // filterLayer.applyFilter(obj, srcRect, new Point(-filterRect.x, -filterRect.y), filter);			
 			filterLayer.applyFilter(objLayer, filterRect, new Point(0, 0), filter);			
+/*
+			writeFlattenImage(obj, 'OBJ_${dbgcounter}.png');
+			writeFlattenImage(objLayer, 'OBJ_COPY_${dbgcounter}.png');
+			writeFlattenImage(filterLayer, 'FILTERED_${dbgcounter}.png');
+			dbgcounter++;
+*/
 			objLayer.dispose();
             obj.dispose();
             obj = filterLayer;
@@ -130,6 +144,7 @@ class FlattenSprite extends Sprite implements IFlatten {
         m.translate(finalRect.x, finalRect.y);
         obj.matrix = m;
 		obj.name = name;
+		lime.system.CFFI.enabled = saved;
         return obj;
     }
 
@@ -232,7 +247,11 @@ class FlattenSprite extends Sprite implements IFlatten {
 		masked.threshold(mask, srcRect, dstPnt, '==', 0x00000000, 0x00000000, 0xff000000);
 
 		var maskedFinal = new FlattenImage(Std.int(intersection.width), Std.int(intersection.height), true, 0x00000000);        
+
+		var saved = lime.system.CFFI.enabled;
+		lime.system.CFFI.enabled = false;
 		maskedFinal.copyPixels(masked, new Rectangle(dstPnt.x, dstPnt.y, intersection.width, intersection.height), new Point(0, 0));
+		lime.system.CFFI.enabled = saved;
 
         if (disposeMask) {
             __flattenChildren.splice(__flattenChildren.indexOf(mask), 1);
@@ -358,7 +377,7 @@ class FlattenSprite extends Sprite implements IFlatten {
 			return;
         } 
 		// scale передаем в applyMatrix, такой хак для того, чтобы работало на cairo
-		var layer = applyFilters(applyMatrix(obj, mtx, __scale, clr), filters);
+		var layer = applyFilters(applyMatrix(obj, mtx, __scale, clr), filters);		
         __flattenChildren.push(layer);
 
 	    if (name != null) {

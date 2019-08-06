@@ -241,7 +241,7 @@
         [
           {
             "include" : "/eSkins.*/",
-            "exclude" : "eSkins.GiftIcon"
+            "exclude" : [ "eSkins.GiftIcon", "eSkins.emblem_Icon" ]
           }
         ]
     }

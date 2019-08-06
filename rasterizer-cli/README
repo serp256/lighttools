@@ -1,9 +1,21 @@
 CLI версия растеризатора на Haxe
-Lime 7.5.0 (с фиксом) - взять с https://github.com/fixman81/lime.git ветка png-encode-memleak-fix
-Openfl 8.9.1
 
-Пример запуска:
-_build/Main-debug --input ~/Devel/farm/client_haxe/assets/embed/ --output output --config embed_conf.json respacker.native
+Lime 7.3.0 patched https://github.com/fixman81/lime.git ветка cli-rasterizer
+OpenFL 8.9.0 patched https://github.com/fixman81/openfl.git ветка rasterizer
+
+После clone и checkout надо зайти в каталог, где лежат lime и openfl и сделать следующее
+
+haxelib dev lime lime
+haxelib dev openfl openfl
+
+После этого можно билдить растеризатор (haxe build.hxml)
+
+Далее надо убрать девел версии
+
+haxelib dev lime
+haxelib dev openfl
+
+
 
 
 

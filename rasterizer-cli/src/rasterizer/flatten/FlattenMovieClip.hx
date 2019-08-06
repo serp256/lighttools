@@ -60,8 +60,6 @@ class FlattenMovieClip extends Sprite implements IFlatten {
 
 		var clip : MovieClip = cast obj;
 		clip.recStop();
-
-		
 		for (i in 1...clip.totalFrames + 1) {
 			var frame = new FlattenSprite();
 			frame.swf = swf;
