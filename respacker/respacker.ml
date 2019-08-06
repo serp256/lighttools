@@ -16,6 +16,7 @@ value (=*=) k v = k =|= string_of_int v;
 
 
 value npot = ref False;
+value no_merge = ref False;
 value alpha = ref False;
 value use_atlases = ref True;
 
@@ -37,15 +38,22 @@ value rec process_children dirname children =
       | _ ->
         let name = 
           try 
-              let name = jstring (List.assoc "name" child) in
+              let name = jstring (List.assoc "name" child) in              
               match Str.string_match nreg name 0 with
               [ True -> None
               | False -> Some name 
               ]
           with [ Not_found -> None ] in
+          
+        let allowEmpty = match name with 
+        [ Some _ -> True
+        | None -> False
+        ] 
+        in
+        
         let id = 
           match ctype with
-          [ "image" -> (push_child_image dirname child)
+          [ "image" -> (push_child_image dirname child allowEmpty)
           | "clip" | "sprite" -> process_dir (dirname // (jstring (List.assoc "dir" child)))
           | _ -> assert False
           ]
@@ -65,11 +73,13 @@ and process_dir dirname = (* найти мету в этой директори�
   let () = printf "process directory: %s\n%!" dirname in
   let mobj = jobject (Ojson.from_file (dirname // "meta.json") ) in
   match jstring (List.assoc "type" mobj) with
-  [ "image" -> push_child_image dirname mobj
+  [ "image" -> push_child_image dirname mobj False
   | "sprite" -> 
       let children = process_children dirname (List.assoc "children" mobj) in
       match children with
-      [ Some children -> Some (push_item (`sprite children))
+      [ Some children -> 
+          let () = printf "pushed %d children\n%!" (DynArray.length children) in
+          Some (push_item (`sprite children))
       | None -> None
       ]
   | "clip" ->
@@ -312,8 +322,10 @@ type fmt = [ FPng | FPvr | FPlx of string ];
 value do_work isXml pack_mode fmt indir suffix outdir =
 (
   Printf.printf "DOWORK: %s -> %s[%s]\n%!" indir outdir suffix;
+  
   Array.iter begin fun fl ->
     let dirname = indir // fl in
+    let () = Printf.printf "DIR = %s\n" dirname in 
     let (name,item_id) = 
       if Sys.is_directory dirname
       then 
@@ -327,7 +339,13 @@ value do_work isXml pack_mode fmt indir suffix outdir =
     in
     DynArray.add exports (name,item_id)
   end (Sys.readdir indir);
-  merge_images();
+
+
+if (not !no_merge) then
+  merge_images()
+else ();
+
+
 (*   print_endline "images merged"; *)
   optimize_sprites();
 (*   print_endline "sprites and clips optmized"; *)
@@ -388,7 +406,9 @@ value do_work isXml pack_mode fmt indir suffix outdir =
         List.fold_left begin fun res (wholly,images) ->
           match wholly with
           [ True -> 
+            let () = Printf.printf "Started LAYOUT\n" in 
             let (page,rest) = TextureLayout.layout_page ~tsize images in
+            let () = Printf.printf "Finished LAYOUT\n" in 
             let () = assert (rest = []) in
             [ page :: res ]
           | False ->
@@ -852,13 +872,15 @@ value () =
         ("-npot",Arg.Set npot, "Not power of 2");
         ("-alpha",Arg.Set alpha, "Save as alpha");
         ("-skip-atlases",Arg.Clear use_atlases, "Dont use atlases");
-        ("-min-diff", Arg.Set_int TextureLayout.min_diff, "diff ")
+        ("-min-diff", Arg.Set_int TextureLayout.min_diff, "diff ");
+        ("-no-merge", Arg.Set no_merge, "Don't merge images")
       ] 
       (fun id -> libs.val := [id :: !libs]) "usage msg";
     match !libs with
     [ [] -> failwith "need some libs"
     | libs -> 
       (
+        
         List.iter begin fun lib ->
           let outd = !outdir // lib in
           (
@@ -874,7 +896,9 @@ value () =
             Unix.mkdir outd 0o755;
           )
         end libs;
+        
         TextureLayout.rotate.val := False;
+
         let fmt = 
           match !pvr with
           [ True -> 
@@ -889,7 +913,9 @@ value () =
               ]
           ]
         in
+        
         Array.iter begin fun profile ->
+        
           List.iter begin fun lib ->
             let indir = !indir // profile // lib in
             if Sys.file_exists indir
@@ -900,17 +926,24 @@ value () =
                     List.assoc profile !p_maxt_sizes
                   with [ Not_found -> !maxt_size ] in
                 TextureLayout.max_size.val := maxt_size;
-                let suffix = match profile with [ "default" -> "" | _ -> profile ]
+                
+                let suffix = match profile with [ "default" -> "" | _ -> profile ]                
                 and outdir = !outdir // lib in
+
                 do_work !xml !pack_mode fmt indir suffix outdir;
+
                 (* нужно за собой прибраца *)
                 Hashtbl.clear images;
                 DynArray.clear items;
                 DynArray.clear exports;
+                
               )
             else ()
+        
           end libs
+        
         end (Sys.readdir !indir);
+        
       )
     ]
   );

@@ -67,6 +67,44 @@ value exports: DynArray.t (string*int) = DynArray.create ();
 
 exception Not_equal;
 
+
+
+value dump_items () = 
+(
+  Printf.printf "TOTAL ITEMS %d\n" (DynArray.length items);
+
+  let dump_child child = 
+    match child with
+    [ `chld (id, _, pos)   ->    Printf.printf "\t\tChild type: image [id : %d]\n" id
+    | `box _ ->  Printf.printf "\t\tChild type: box\n"
+    ]
+  in 
+
+  let dump_item item =
+  (  
+    Printf.printf "Item id %d [Deleted : %B]\n" item.item_id item.deleted;
+    match item.item with
+    [ `image texinfo ->
+        Printf.printf "\tType: image\n"
+
+    | `sprite children  -> 
+        (
+          Printf.printf "\tType: sprite\n";
+          DynArray.iter dump_child children;
+        )
+        
+    | `clip _   ->
+        Printf.printf "\tType: clip\n"
+    ]
+    
+  )  
+  in DynArray.iter dump_item items;  
+  
+);
+
+
+
+
 value compare_images img1 img2 = 
   match img1 with
   [ Images.Rgba32 i1 ->
@@ -172,14 +210,19 @@ value push_image (img: [= `image of Images.t | `path of string])  =
   with [ Finded id -> id ];
 
 
-value push_child_image  dirname mobj = 
+value push_child_image dirname mobj allowEmpty = 
+  (* нельзя скипать пустые картинки, если у них есть имя! *) 
   let path = dirname // (jstring (List.assoc "file" mobj)) in
   let img = load_image path in
   try
-    Utils.image_iter begin fun _ _ {Color.alpha=alpha;_}  ->
-      if alpha > 1 then raise Exit else ()
-    end img;
-    None
+    if (allowEmpty) then
+      raise Exit
+    else (    
+      Utils.image_iter begin fun _ _ {Color.alpha=alpha;_}  ->
+        if alpha > 1 then raise Exit else ()
+      end img;
+      None
+    )
   with [ Exit -> Some (push_image (`image img)) ];
 
 value getpos jsinfo = {x= jnumber (List.assoc "x" jsinfo);y=jnumber (List.assoc "y" jsinfo)};
