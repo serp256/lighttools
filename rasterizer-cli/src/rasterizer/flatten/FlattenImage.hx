@@ -49,6 +49,7 @@ class FlattenImage extends BitmapData implements IFlatten {
 			var rect = sourceRect.clone();
 
 			if (f.inner) {								
+				// вообще глоу внтурнеиий не работает
 				// trace('INNER RECT $sourceRect => $rect (bx = ${f.blurX} by = ${f.blurY})');		
 				// Бывает так, что внутренний блюр больше ширины или высоты, тогда растеризатор выдает segfault
 				f.blurX = Math.min(f.blurX, rect.width);

@@ -118,8 +118,21 @@ class FlattenSprite extends Sprite implements IFlatten {
         var m = obj.matrix;
 		var name = obj.name;
 
+		var i = 1;
+
 		for (filter in filters) {
 		
+			// trace('Applying filter $filter $i / ${filters.length} [$dbgcounter]');
+			// i++;
+			// не применяем inner glow
+			if (Std.is(filter, openfl.filters.GlowFilter)) {
+				var filter : openfl.filters.GlowFilter = cast filter;
+				if (filter.inner || filter.knockout) {
+					trace('Skipped inner glow filter');
+					continue;
+				}
+			}
+
             var srcRect = new Rectangle(0, 0, obj.width, obj.height);            			
 			var filterRect  = obj.generateFilterRect(srcRect, filter);			
 			var objLayer    = new FlattenImage(Std.int(filterRect.width), Std.int(filterRect.height), true, 0x00000000); 
@@ -129,13 +142,14 @@ class FlattenSprite extends Sprite implements IFlatten {
 			finalRect = finalRect.union(filterRect);
 			
             // filterLayer.applyFilter(obj, srcRect, new Point(-filterRect.x, -filterRect.y), filter);			
+			// writeFlattenImage(obj, 'debug/OBJ_${dbgcounter}.png');
+			// writeFlattenImage(objLayer, 'debug/OBJ_COPY_${dbgcounter}.png');
+
 			filterLayer.applyFilter(objLayer, filterRect, new Point(0, 0), filter);			
-/*
-			writeFlattenImage(obj, 'OBJ_${dbgcounter}.png');
-			writeFlattenImage(objLayer, 'OBJ_COPY_${dbgcounter}.png');
-			writeFlattenImage(filterLayer, 'FILTERED_${dbgcounter}.png');
-			dbgcounter++;
-*/
+
+			// writeFlattenImage(filterLayer, 'debug/FILTERED_${dbgcounter}.png');
+			// dbgcounter++;
+
 			objLayer.dispose();
             obj.dispose();
             obj = filterLayer;
