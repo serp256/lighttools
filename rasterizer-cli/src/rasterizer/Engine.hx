@@ -20,6 +20,8 @@ import rasterizer.flatten.FlattenSprite;
 import rasterizer.export.IExporter;
 import rasterizer.export.FlattenExporter;
 
+import rasterizer.model.BuildCache;
+
 import haxe.io.Path;
 
 
@@ -30,48 +32,71 @@ class Engine {
 
     public var outputDir(default, null) : Path;
 
-    public var inputDir(default, null)  : Path;
+    public var inputDir(default, null)  : Path;        
+
+    public var buildCache(default, null) : BuildCache;
+
 
     /*
      * Добавить опции растеризации
      */    
-    public function new(inputDir : String, outputDir : String) {
+    public function new(inputDir : String, outputDir : String, cacheFile : String) {
         this.outputDir = new Path(outputDir);
         this.inputDir = new Path(inputDir);
+        buildCache = new BuildCache(inputDir, cacheFile);
     }
 
 
     
     /*
-     * Растеризует все символы в SWF файле
+     * 
      */
     public function exportPack(pack : Pack) {
-        var opath = Path.join([ outputDir.toString(), pack.name ]);
+        var opath = Path.join([ outputDir.toString(), pack.dir ]);
+        
+        // флаг, показывающий, что надо все файлы пака растеризовать заново
+        var rebuildPack = false;
 
         if (FileSystem.exists(opath) && !FileSystem.isDirectory(opath)) {
             Main.exitWithError("Output path exists and it's not a directory");
         } 
         
-        if (FileSystem.exists(opath)) {
-            Main.clearDirectory(opath);
-        } else {
+        if (!FileSystem.exists(opath)) {
+            rebuildPack = true;
             FileSystem.createDirectory(opath);
+        } else {
+            rebuildPack = buildCache.shouldRebuildPack(pack);
         }
 
+        if (rebuildPack) {
+            Main.clearDirectory(opath);
+        }
+
+        buildCache.updatePack(pack);
+
         for (file in pack.files) {                
-            var ipath = Path.join([ inputDir.toString(), file ]);
-            var bytes = File.getBytes(ipath);
-            var swf = new SWFRoot(bytes);
-            trace(file);
             
-            for (className in swf.symbols.keys()) {    
-                var tagId = swf.symbols.get(className);
-                var opts = pack.symbolOptions(className);
-                if (opts == null) {
-                    continue;
+            if (rebuildPack || buildCache.shouldRebuildFile(file, pack.name)) {
+            
+               var ipath = Path.join([ inputDir.toString(), file ]);
+               var bytes = File.getBytes(ipath);
+               var crc = haxe.crypto.Crc32.make(bytes);
+               var swf = new SWFRoot(bytes);
+               
+               trace(file);
+               
+               for (className in swf.symbols.keys()) {    
+                   var tagId = swf.symbols.get(className);
+                   var opts = pack.symbolOptions(className);
+                   if (opts == null) {
+                       continue;
+                   }
+                   trace('Exporting symbol $className');
+                   exportSymbol(swf, className, tagId, opts.animated, opts.scale, new haxe.io.Path(opath));
                 }
-                trace('Exporting symbol $className');
-                exportSymbol(swf, className, tagId, opts.animated, opts.scale, new haxe.io.Path(opath));
+
+                buildCache.updateFile(file, pack.name, crc);
+                
             }                            
         }
     }

@@ -28,12 +28,16 @@ class Pack {
     public var name(default, null) : String;
 
     public var nomerge(default, null) : Bool;
+
+    public var dir(get, null) : String;
     
     private var __files : Array<String>;
 
     private var __data : DynamicAccess<Dynamic>;
     
     private var __symbolsFilters : Array<StringFilter>;
+
+    private var __dir : String;
     
 
 
@@ -47,6 +51,10 @@ class Pack {
         this.name = packname;                        
         this.animated = getBool(packdata, "animated", true);        
         this.scale = getFloat(packdata, "scale", 1.0);
+
+        if (packdata.exists("dir")) {
+            __dir = packdata["dir"];
+        }
 
         // Флаги для respacker
         packmode = packdata["pack-mode"];
@@ -66,6 +74,15 @@ class Pack {
     }
 
 
+    /*
+     *
+     */
+    private function get_dir() : String {
+        if (__dir == null || __dir == "") {
+            return name;
+        }
+        return __dir;
+    }
 
     /*
      *

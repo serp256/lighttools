@@ -41,6 +41,7 @@ import flash.utils.Dictionary;
 import rasterizer.flatten.FlattenImage;
 import rasterizer.flatten.IFlatten;
 import rasterizer.model.SWFClass;
+import rasterizer.InnerGlowFilter;
 
 
 
@@ -126,10 +127,14 @@ class FlattenSprite extends Sprite implements IFlatten {
 			// i++;
 			// не применяем inner glow
 			if (Std.is(filter, openfl.filters.GlowFilter)) {
-				var filter : openfl.filters.GlowFilter = cast filter;
-				if (filter.inner || filter.knockout) {
-					trace('Skipped inner glow filter');
+				var filter2 : openfl.filters.GlowFilter = cast filter;
+				if (filter2.knockout) {
+					trace('Skipped inner knockout glow filter');
 					continue;
+				} 
+
+				if (filter2.inner) {
+					filter = new InnerGlowFilter(filter2.color, filter2.alpha, filter2.blurX, filter2.blurY, filter2.strength, filter2.quality);
 				}
 			}
 

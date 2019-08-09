@@ -109,6 +109,7 @@
     "Skins_en" : 
     {
         "include" : "/^en_.*/",
+        "exclude" : "en_inc_max1.swf",
         "pack-mode" : "fsep"        
     },
 
@@ -381,6 +382,7 @@
 
     "Default" : 
     {        
+        "dir" : "SkinsAnimated",
         "exclude" : [ "FirstSession.swf", "DailyBonusDigits.swf", "/^card_.*/", "ShopLabelEng.swf", "/^td_.*/" ],
         "pack-mode" : "fsep"
     }

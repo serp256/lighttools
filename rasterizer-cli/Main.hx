@@ -8,6 +8,7 @@ import haxe.io.Path;
 import haxe.Json;
 import haxe.DynamicAccess;
 import rasterizer.model.Pack;
+import rasterizer.model.BuildCache;
 
 using Lambda;
 using StringTools;
@@ -109,6 +110,8 @@ class Main {
     private var __processedPacks : Array<Pack>;
 
 
+
+
     @:defaultCommand
     public function run(rest : Dynamic) {        
         
@@ -120,7 +123,9 @@ class Main {
         __readConfigFile();
         __readAllFiles();
 
-        __engine = new Engine(input, Path.join([ output, "rasterized", "default" ]));
+        __engine = new Engine(input, Path.join([ output, "rasterized", "default" ]),  Path.join([ output, "build.cch" ]));
+        
+
 
         // процессим паки
         for (packname in __config.keys()) {
@@ -139,6 +144,8 @@ class Main {
         if (__defaultSectionName != null) {
             __processDefaultPack();
         }
+
+        __engine.buildCache.save();
 
         __writePackerScript(rest);
     }
@@ -283,7 +290,8 @@ class Main {
      * DANGER!
      */
     public static function removeDirectory(dir : String) {
-        throw new openfl.errors.Error("Not implemented");
+        clearDirectory(dir);
+        FileSystem.deleteDirectory(dir);
     }
 
     /*
@@ -291,7 +299,15 @@ class Main {
      * DANGER!
      */
     public static function clearDirectory(dir : String) {
-        throw new openfl.errors.Error("Not implemented");
+        var items = FileSystem.readDirectory(dir);
+        for (item in items) {
+            var path = haxe.io.Path.join([dir, item]);
+            if (FileSystem.isDirectory(path)) {
+                removeDirectory(path);
+            } else {
+                FileSystem.deleteFile(path);
+            }
+        }
     }
 
 

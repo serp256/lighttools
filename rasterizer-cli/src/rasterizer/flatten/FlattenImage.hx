@@ -17,7 +17,7 @@ class FlattenImage extends BitmapData implements IFlatten {
 	
 	public var name = "";
 	public var matrix = new Matrix();
-	
+
 	/*
 	 *
 	 */
@@ -61,7 +61,14 @@ class FlattenImage extends BitmapData implements IFlatten {
 
 			return rect;
 		}
-
+		
+		if (Std.is(filter, rasterizer.InnerGlowFilter)) {
+			var rect = sourceRect.clone();
+			var f : rasterizer.InnerGlowFilter = cast filter;		
+			f.blurX = Math.min(f.blurX, rect.width);
+			f.blurY = Math.min(f.blurY, rect.height);
+			return rect;
+		}
 
 		if (Std.is(filter, BlurFilter)) {
 			var f : BlurFilter = cast filter;			

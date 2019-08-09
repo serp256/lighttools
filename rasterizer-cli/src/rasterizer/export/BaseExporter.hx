@@ -18,7 +18,7 @@ class BaseExporter implements IExporter {
 
 		if (FileSystem.exists(path)) {
 			if (FileSystem.isDirectory(path)) {
-				FileSystem.deleteDirectory(path);
+				Main.removeDirectory(path);
 			} else {
 				FileSystem.deleteFile(path);
 			}
@@ -27,6 +27,7 @@ class BaseExporter implements IExporter {
 		FileSystem.createDirectory(path);		
 		return new Path(Path.addTrailingSlash(path));
 	}
+
 
 
 	/*
