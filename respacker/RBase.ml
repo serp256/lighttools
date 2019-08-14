@@ -49,17 +49,32 @@ end;(*}}}*)
 
 
 type pos = {x:float;y:float};
+
+type mask = option string;
+
 type texinfo = {page:mutable int; tx:mutable int;ty:mutable int; width: int;height:int};
-type img = (int * option string * pos);
+
+type img = (int * option string * pos * mask);
+
 type child = [= `chld of img | `box of (pos * string) ];
+
 type children = DynArray.t child;
+
 type clipcmd = [ ClpPlace of (int * (int * option string * pos)) | ClpClear of (int*int) | ClpChange of (int * list [= `posX of float | `posY of float | `move of int]) ];
+
 type frame = {children:children; commands: mutable option (DynArray.t clipcmd); label: option string; duration: mutable int};
+
 type item = [= `image of texinfo | `sprite of children | `clip of DynArray.t frame ];
+
 type iteminfo = {item_id:int; item:item; deleted: mutable bool};
 
 value images = Hashtbl.create 11;
+
 value items : DynArray.t iteminfo = DynArray.create ();
+
+(* name -> id, для того, чтобы разрезолвить маски *)
+value names = Hashtbl.create 50;
+
 value exports: DynArray.t (string*int) = DynArray.create ();
 
 
@@ -75,7 +90,7 @@ value dump_items () =
 
   let dump_child child = 
     match child with
-    [ `chld (id, _, pos)   ->    Printf.printf "\t\tChild type: image [id : %d]\n" id
+    [ `chld (id, _, pos, _)   ->    Printf.printf "\t\tChild type: image [id : %d]\n" id
     | `box _ ->  Printf.printf "\t\tChild type: box\n"
     ]
   in 
@@ -177,7 +192,7 @@ value push_item item =
   with [ Not_found -> push_new_item item ];
 
 
-exception Finded of int;
+exception Found of int;
 
 
 value push_new_image img = 
@@ -203,17 +218,18 @@ value push_image (img: [= `image of Images.t | `path of string])  =
   try
     Hashtbl.iter begin fun id img' ->
       if compare_images img img'
-      then raise (Finded id)
+      then raise (Found id)
       else ()
     end images;
     push_new_image img;
-  with [ Finded id -> id ];
+  with [ Found id -> id ];
 
 
 value push_child_image dirname mobj allowEmpty = 
   (* нельзя скипать пустые картинки, если у них есть имя! *) 
   let path = dirname // (jstring (List.assoc "file" mobj)) in
-  let img = load_image path in
+  let img  = load_image path in
+  let name = jstring (List.assoc "name" mobj) in
   try
     if (allowEmpty) then
       raise Exit
@@ -223,7 +239,14 @@ value push_child_image dirname mobj allowEmpty =
       end img;
       None
     )
-  with [ Exit -> Some (push_image (`image img)) ];
+  with 
+  [ Exit -> 
+    let id = push_image (`image img) in 
+    (
+      Hashtbl.add names name id;
+      Some (id)
+    )
+  ];
 
 value getpos jsinfo = {x= jnumber (List.assoc "x" jsinfo);y=jnumber (List.assoc "y" jsinfo)};
 

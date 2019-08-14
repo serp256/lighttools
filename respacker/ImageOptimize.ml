@@ -25,11 +25,13 @@ value isImagesIntersect (id1,(x1,y1)) (id2,(x2,y2)) =
 exception Next;
 
 value totalUsage id =
-  let foldChilds cnt childs = DynArray.fold_left (fun cnt child -> match child with [ `chld (id', _, _) when id = id' -> cnt + 1 | _ -> cnt ]) cnt childs in
-    DynArray.fold_left (fun cnt item ->
+
+  let foldChilds cnt childs = DynArray.fold_left (fun cnt child -> match child with [ `chld (id', _, _, _) when id = id' -> cnt + 1 | _ -> cnt ]) cnt childs in
+
+  DynArray.fold_left (fun cnt item ->
       match item.item with
       [ `image _ -> cnt
-      | `sprite childs -> foldChilds cnt childs
+      | `sprite children -> foldChilds cnt children
       | `clip frames -> DynArray.fold_left (fun cnt frame -> foldChilds cnt frame.children) cnt frames
       ]
     ) 0 items;
@@ -43,7 +45,7 @@ value rec usageFrom address id = (* сделать енум *)
         if numChildren > i
         then
           match DynArray.get children i with
-          [ `chld (id',_,pos) when id' = id -> (i,pos)
+          [ `chld (id',_,pos,_) when id' = id -> (i,pos)
           | _ -> findChildren (i+1)
           ]
         else raise Next
@@ -113,13 +115,13 @@ value nextChild ?(offset=1) (_,el) =
     if DynArray.length frame.children > cNum + offset
     then
       match DynArray.get frame.children (cNum + offset) with
-      [ `chld (id,_,pos) -> Some (id,pos)
+      [ `chld (id,_,pos,_) -> Some (id,pos)
       | _ -> None
       ]
     else None
   | `sprite children cNum when DynArray.length children > cNum + offset -> 
       match DynArray.get children (cNum + offset) with
-      [ `chld (id,_,pos) -> Some (id,pos)
+      [ `chld (id,_,pos,_) -> Some (id,pos)
       | _ -> None 
       ]
   | _ -> None
@@ -134,7 +136,7 @@ value string_of_address (id,el) =
 value remove_unused_images () = 
   let imgUsage = HSet.create 11 in
   (
-    let add_children = DynArray.iter (fun [ `chld (id,_,_) -> HSet.add imgUsage id | _ -> ()]) in
+    let add_children = DynArray.iter (fun [ `chld (id,_,_,_) -> HSet.add imgUsage id | _ -> ()]) in
     for i = 0 to DynArray.length items - 1 do
       match (DynArray.get items i).item with
       [ `sprite children -> add_children children
@@ -160,27 +162,36 @@ value remove_unused_images () =
 value do_merge_images () = 
   let has_changes = ref False in begin
   let alredySeen = HSet.create 1 in
+
   let rec mergeChildren makeAddr (children:children)  = 
     let i = ref 0 in
     while !i < DynArray.length children - 1 do
       match DynArray.get children !i with
-      [ `chld (id1,None,pos1) ->
+      [ `chld (id1,None,pos1,_) ->
         match  (DynArray.get items id1).item with
         [ `image texInfo1 when not (HSet.mem alredySeen id1) ->
           let () = HSet.add alredySeen id1 in
           match DynArray.get children (!i + 1) with
-          [ `chld (id2,None,pos2) ->
+          [ `chld (id2,None,pos2,_) ->
             match (DynArray.get items id2).item with
             [ `image texInfo2 ->
               let rect1 = Rectangle.create pos1.x pos1.y (float texInfo1.width) (float texInfo1.height)
               and rect2 = Rectangle.create pos2.x pos2.y (float texInfo2.width) (float texInfo2.height) in
+              
+(*              let () = Printf.printf "fineded intersect images: [%s] and [%s] \n" (string_of_address (makeAddr !i)) (string_of_address (makeAddr (!i+1))) in *)
+
+              let () = Printf.printf "Rect_1 (%s) Rect_2 (%s)\n" (RBase.Rectangle.to_string rect1) (RBase.Rectangle.to_string rect2) in
+              
               if not (Rectangle.isIntersect rect1 rect2)
               then ()
               else
-(*                 let () = Printf.printf "fineded intersect images: [%s] and [%s] \n" (string_of_address (makeAddr !i)) (string_of_address (makeAddr (!i+1))) in *)
+                 let () = Printf.printf "fineded intersect images: [%s] and [%s] \n" (string_of_address (makeAddr !i)) (string_of_address (makeAddr (!i+1))) in
                 let dx = pos1.x -. pos2.x
                 and dy = pos1.y -. pos2.y in
+
                 let usage = usageFrom (makeAddr (!i+2)) id1 in
+(*                let usage = usageFrom (makeAddr (!i)) id1 in  *)
+
                 let rec findAll res = (*{{{*)
                   match Enum.get usage with
                   [ Some ((addr,pos) as r) ->
@@ -216,7 +227,7 @@ value do_merge_images () =
                           if !i + offset + 1 < cNum 
                           then
                             match DynArray.get children (!i + offset + 1) with
-                            [ `chld (id,_,pos) ->
+                            [ `chld (id,_,pos,_) ->
                               match (DynArray.get items id).item with
                               [ `image texInfo ->
                                 let rect' = Rectangle.create pos.x pos.y (float texInfo.width) (float texInfo.height) in
@@ -269,7 +280,7 @@ value do_merge_images () =
                           let imgs = 
                             Array.init (maxOffset + 1) begin fun offset -> 
                               match DynArray.get children (!i + offset) with
-                              [ `chld (id,_,pos) ->
+                              [ `chld (id,_,pos,_) ->
     (*                             let () = Printf.printf "get image: %d\n%!" id in *)
                                 let img = 
           (*                         try *)
@@ -316,7 +327,7 @@ value do_merge_images () =
                               Hashtbl.replace images id1 (Images.Rgba32 gimg);
                               DynArray.set items id1 {item_id=id1;item=`image {(texInfo1) with width = gwidth; height = gheight};deleted=False};
                               DynArray.delete_range children !i (maxOffset+1);
-                              DynArray.insert children !i (`chld (id1,None,{x=rect.(0);y=rect.(1)})); (* FIXME: label skipped *)
+                              DynArray.insert children !i (`chld (id1,None,{x=rect.(0);y=rect.(1)},None)); (* FIXME: label skipped *)
                               let dx = pos1.x -. rect.(0)
                               and dy = pos1.y -. rect.(1) in
                               (* А теперь все вхождения пореплейсить нахуй *)
@@ -326,13 +337,13 @@ value do_merge_images () =
                                 [ `sprite children cNum ->
                                   (
                                     DynArray.delete_range children cNum (maxOffset + 1);
-                                    DynArray.insert children cNum (`chld (id1,None,gpos)); (* FIXME: fix label *)
+                                    DynArray.insert children cNum (`chld (id1,None,gpos,None)); (* FIXME: fix label *)
                                   )
                                 | `clip frames fNum cNum ->
                                     let frame = DynArray.get frames fNum in
                                     (
                                       DynArray.delete_range frame.children cNum (maxOffset + 1);
-                                      DynArray.insert frame.children cNum (`chld (id1,None,gpos));
+                                      DynArray.insert frame.children cNum (`chld (id1,None,gpos,None));
                                     )
                                 ]
                               end places;
@@ -356,7 +367,8 @@ value do_merge_images () =
   for i = 0 to (DynArray.length items - 1) do
     let el = DynArray.get items i in
     match el.item with
-    [ `sprite children -> mergeChildren (fun cNum -> (el.item_id,`sprite children cNum)) children
+    [ `sprite children -> 
+        mergeChildren (fun cNum -> (el.item_id,`sprite children cNum)) children
     | `clip frames ->
         let makeAddr fNum cNum = (el.item_id,`clip frames fNum cNum) in
         for fi = 0 to DynArray.length frames - 1 do

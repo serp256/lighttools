@@ -30,12 +30,24 @@ value nreg = Str.regexp "^instance[0-9]+$";
 value rec process_children dirname children = 
   let lst = 
     List.filter_map begin fun child ->
+
       let child = jobject child in
       let ctype =  jstring (List.assoc "type" child) in
       let pos = getpos child in
+      
       match ctype with
       [ "box" -> Some (`box (pos,jstring (List.assoc "name" child)))
       | _ ->
+
+
+        let mask = 
+          try
+            let mask = jstring (List.assoc "mask" child) in
+            let () = eprintf "Has mask %s\n" mask 
+            in Some mask
+          with [ Not_found -> None ] 
+        in
+        
         let name = 
           try 
               let name = jstring (List.assoc "name" child) in              
@@ -59,7 +71,7 @@ value rec process_children dirname children =
           ]
         in
         match id with
-        [ Some id -> Some (`chld (id,name,pos))
+        [ Some id -> Some (`chld (id,name,pos,mask))
         | None  -> None
         ]
       ]
@@ -119,7 +131,7 @@ and process_dir dirname = (* найти мету в этой директори�
 value optimize_sprites () = 
   DEFINE optimize =
     match DynArray.get children 0 with
-    [ `chld (id,_,pos) when pos.x = 0. && pos.y = 0. -> 
+    [ `chld (id,_,pos,_) when pos.x = 0. && pos.y = 0. -> 
       (
         DynArray.set exports i (name,id);
         item.deleted := True;
@@ -161,7 +173,7 @@ value group_images_by_symbols () =
         let imgs = 
           DynArray.fold_left begin fun res child ->
             match child with
-            [ `chld (id,_,_) ->
+            [ `chld (id,_,_,_) ->
               match (DynArray.get items id).item with
               [ `image _ -> [ (id,Hashtbl.find images id) :: res ]
               | _ -> assert False
@@ -177,7 +189,7 @@ value group_images_by_symbols () =
           DynArray.fold_left begin fun (wholly,res) frame ->
             let res = 
               DynArray.fold_left begin fun res -> fun
-                [ `chld (id,_,_) ->
+                [ `chld (id,_,_,_) ->
                   match (DynArray.get items id).item with
                   [ `image _ -> [ (id,Hashtbl.find images id) :: res ]
                   | _ -> assert False
@@ -243,9 +255,9 @@ value dublicate_symbol_images imgs =
       | `sprite children -> 
           DynArray.iteri begin fun i child ->
             match child with
-            [ `chld (id,pos,label) when id = img_id ->
+            [ `chld (id,label,pos,mask) when id = img_id ->
               match (DynArray.get items id).item with
-              [ `image _ -> DynArray.set children i (`chld (new_img_id,pos,label))
+              [ `image _ -> DynArray.set children i (`chld (new_img_id,label,pos,mask))
               | _ -> assert False
               ]
             | _ -> ()
@@ -254,9 +266,9 @@ value dublicate_symbol_images imgs =
       | `clip frames -> 
           DynArray.iter begin fun frame ->
             DynArray.iteri begin fun i -> fun
-              [ `chld (id,pos,label) when id = img_id ->
+              [ `chld (id,label,pos,mask) when id = img_id ->
                 match (DynArray.get items id).item with
-                [ `image _ -> DynArray.set frame.children i (`chld (new_img_id,pos,label))
+                [ `image _ -> DynArray.set frame.children i (`chld (new_img_id,label,pos,mask))
                 | _ -> assert False
                 ]
               | _ -> ()
@@ -428,7 +440,7 @@ else ();
     ]
   in
 (*   let () = print_endline "textures created" in *)
-  let pageOfImg (id, _, _) =
+  let pageOfImg (id, _, _, _) =
     match (DynArray.get items (DynArray.index_of (fun i -> i.item_id = id) items)).item with
     [ `image texinf -> texinf.page
     | _ -> assert False
@@ -436,10 +448,10 @@ else ();
   in
 
   let group_children = 
-    if not !use_atlases 
-    then fun children ->  ((DynArray.to_list children) :> (list [= child | `atlas of list img ]))
+    if not !use_atlases then 
+      fun children ->  ((DynArray.to_list children) :> (list [= child | `atlas of list img ]))
     else
-    fun children ->
+      fun children ->
       let qchld = Stack.create () in
       (
         DynArray.iter begin fun 
@@ -468,17 +480,23 @@ else ();
           | `box _ as b -> Stack.push b qchld
           ]
         end children;
+        
         let res = RefList.empty () in
-        (
+        (          
+
           Stack.iter begin fun 
             [ `atlas els -> RefList.push res (`atlas (List.rev els))
             | _ as el -> RefList.push res el
             ]
           end qchld;
+          
           RefList.to_list res;
-        )
+        )        
       )
+      
   in
+  
+  
   (* отсортировать items чтобы все картинки были в начале *)
   let sitems = sorted_items () in
   match isXml with
@@ -493,14 +511,26 @@ else ();
       List.iter (fun imgname -> (Xmlm.output xmlout (`El_start (("","texture"),["file" =|= imgname])); Xmlm.output xmlout `El_end)) textures;
       Xmlm.output xmlout `El_end;
       Xmlm.output xmlout (`El_start (("","items"),[]));(* write items {{{ *)
-      let write_child (id,name,pos) =
+      let write_child (id,name,pos,mask) =
         (
           let attrs = [ "id" =*= id; "posX" =.= pos.x; "posY" =.= pos.y ] in
           let attrs = match name with [ Some n -> [ "name" =|= n :: attrs ] | None -> attrs ] in
+          let attrs = match mask with 
+            [ Some m -> 
+                try 
+                  let id = Hashtbl.find names m 
+                  in [ "mask" =*= id :: attrs ]
+                with [ Not_found -> attrs ]
+            | None -> attrs
+            ]
+          in
+
           Xmlm.output xmlout (`El_start (("","child"),attrs));
           Xmlm.output xmlout `El_end
         )
       in
+
+
       let write_sprite_children children = 
         List.iter begin fun 
           [ `chld params -> write_child params
@@ -518,6 +548,8 @@ else ();
           ]
         end (group_children children)
       in
+
+
       Array.iter begin fun 
         [ {item_id=id;item;deleted=False} -> (*{{{*)
           match item with
@@ -536,12 +568,14 @@ else ();
               Xmlm.output xmlout (`El_start (("","item"),[ "id" =*= id :: attributes ]));
               Xmlm.output xmlout `El_end;
             )
+
           | `sprite children ->
             (
               Xmlm.output xmlout (`El_start (("","item"),[ "id" =*= id ; "type" =|= "sprite" ]));
-              write_sprite_children children;
+             write_sprite_children children;
               Xmlm.output xmlout `El_end;
             )
+
           | `clip frames when is_simple_clip frames ->
               (
                 Xmlm.output xmlout (`El_start (("","item"),[ "id" =*= id ; "type" =|= "iclip" ]));
@@ -551,7 +585,7 @@ else ();
                     let attrs = match frame.label with [ Some l -> [ "label" =|= l :: attrs ] | None -> attrs ] in
                     let imgattrs = 
                       match DynArray.get frame.children 0 with 
-                      [ `chld (id,_,pos) -> [ "img" =*= id; "posX" =.= pos.x; "posY" =.= pos.y ]
+                      [ `chld (id,_,pos,_) -> [ "img" =*= id; "posX" =.= pos.x; "posY" =.= pos.y ]
                       | _ -> assert False
                       ]
                     in
@@ -677,15 +711,18 @@ else ();
         end 0 items 
       in
       IO.write_ui16 binout cnt_items;
-      let write_child (id,name,pos) =
+      let write_child (id,name,pos,mask) =
         (
           IO.write_ui16 binout id;
           IO.write_double binout pos.x;
           IO.write_double binout pos.y;
-          write_name name;
+          write_name name;          
         )
       in
+
+      
       let write_sprite_children children = 
+        let () = eprintf "Write sprite children\n" in
         let children = group_children children in
         let () = write_un_byte binout (List.length children) in
         List.iter begin fun 
@@ -710,15 +747,31 @@ else ();
           ]
         end children
       in
+  
+      
+      
       let write_children children = 
         let () = write_un_byte binout (DynArray.length children) in
         DynArray.iter begin fun 
-          [ `chld (id,name,pos) ->
+          [ `chld (id,name,pos,mask) ->
             (
               IO.write_ui16 binout id;
               IO.write_double binout pos.x;
               IO.write_double binout pos.y;
               write_name name;
+
+              match mask with
+              [ Some m ->
+                  try
+                    let id = Hashtbl.find names m in 
+                    (                      
+                      IO.write_byte binout 1;
+                      IO.write_ui16 binout id
+                    )
+                  with [ Not_found -> IO.write_byte binout 0 ]
+              | None -> IO.write_byte binout 0 ]
+    
+
             )
           | `box (pos,name)-> assert False
           ]
@@ -753,7 +806,7 @@ else ();
                   IO.write_byte binout frame.duration;
                   write_option_string frame.label;
                   match DynArray.get frame.children 0 with
-                  [ `chld (id,name,pos) -> 
+                  [ `chld (id,name,pos,_) -> 
                     (
                       IO.write_ui16 binout id;
                       IO.write_double binout pos.x;

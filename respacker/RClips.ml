@@ -16,11 +16,11 @@ value make_clip_commands () =
           (
             for c = 0 to len - 1 do
               match DynArray.get frame.children c with
-              [ `chld ((id,_,pos) as child) ->
+              [ `chld ((id,name,pos,_) as child) ->
                 try
-                  let pidx = DynArray.index_of (fun [ `chld (id',_,pos) -> id' = id | _ -> assert False ]) !pchildren  in
+                  let pidx = DynArray.index_of (fun [ `chld (id',_,pos,_) -> id' = id | _ -> assert False ]) !pchildren  in
                   match DynArray.get !pchildren pidx with
-                  [ `chld (_,_,pos') ->
+                  [ `chld (_,_,pos',_) ->
                     let changes = if pidx <> 0 then [ `move c ] else [] in
                     let changes = if pos.x <> pos'.x then [ `posX pos.x :: changes ] else changes in
                     let changes = if pos.y <> pos'.y then [ `posY pos.y :: changes ] else changes in
@@ -33,7 +33,7 @@ value make_clip_commands () =
                     )
                   | _ -> assert False
                   ]
-                with [ Not_found -> DynArray.add commands (ClpPlace (c,child)) ]
+                with [ Not_found -> DynArray.add commands (ClpPlace (c, (id, name, pos) )) ]
               | _ -> prerr_endline "boxes not supported in clips yeat"
               ]
             done;
