@@ -25,6 +25,7 @@ open RBase;
 open ImageOptimize;
 open RClips;
 
+(* value nreg = Str.regexp "^(instance|mask|masked)[0-9]+$"; *)
 value nreg = Str.regexp "^instance[0-9]+$";
 
 value rec process_children dirname children = 
@@ -42,8 +43,8 @@ value rec process_children dirname children =
 
         let mask = 
           try
-            let mask = jstring (List.assoc "mask" child) in
-            let () = eprintf "Has mask %s\n" mask 
+            let mask = jstring (List.assoc "mask" child)
+(*          in  let () = eprintf "Has mask %s\n" mask  *)
             in Some mask
           with [ Not_found -> None ] 
         in
@@ -611,10 +612,20 @@ else ();
                     (
                       Xmlm.output xmlout (`El_start (("","commands"),[]));
                       DynArray.iter begin fun
-                        [ ClpPlace (idx,(id,name,pos)) ->
+                        [ ClpPlace (idx,(id,name,pos,mask)) ->
                           (
                             let attrs = [ "idx" =*= idx; "id" =*= id; "posX" =.= pos.x; "posY" =.= pos.y ] in
                             let attrs = match name with [ Some n -> [ "name" =|= n :: attrs ] | None -> attrs ] in
+                            let attrs = match mask with 
+                              [ Some m ->         
+                                 try 
+                                  let id = Hashtbl.find names m 
+                                  in [ "mask" =*= id :: attrs ]
+                                with [ Not_found -> attrs ]
+                              | None -> attrs
+                              ]
+                            in
+                            
                             Xmlm.output xmlout (`El_start (("","place"),attrs));
                             Xmlm.output xmlout `El_end;
                           )
@@ -769,7 +780,8 @@ else ();
                       IO.write_ui16 binout id
                     )
                   with [ Not_found -> IO.write_byte binout 0 ]
-              | None -> IO.write_byte binout 0 ]
+              | None -> IO.write_byte binout 0 
+              ]
     
 
             )
@@ -834,7 +846,7 @@ else ();
                       IO.write_byte binout 1;
                       IO.write_ui16 binout (DynArray.length commands);
                       DynArray.iter begin fun
-                        [ ClpPlace (idx,(id,name,pos)) ->
+                        [ ClpPlace (idx,(id,name,pos,mask)) ->
                           (
                             IO.write_byte binout 0;
                             IO.write_ui16 binout idx;
@@ -842,6 +854,19 @@ else ();
                             write_name name;
                             IO.write_double binout pos.x;
                             IO.write_double binout pos.y;
+                            
+                            match mask with
+                            [ Some m ->
+                              try
+                                let id = Hashtbl.find names m in 
+                                (                      
+                                  IO.write_byte binout 1;
+                                  IO.write_ui16 binout id
+                                )
+                              with [ Not_found -> IO.write_byte binout 0 ]
+                            | None -> IO.write_byte binout 0 
+                            ];
+                            
                           )
                         | ClpClear from count ->
                           (
