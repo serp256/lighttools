@@ -192,7 +192,9 @@
     "Skins_take_clan" : 
     {
         "include" : "/^take_clan_.*/",
-        "pack-mode" : "fsep"        
+        "pack-mode" : "fsep",
+        "keep-masks" : true,
+        "no-merge" : true
     },
 
     "Skins_take_fr" : 
@@ -204,32 +206,44 @@
     "Skins_take_ra_a-f" : 
     {
         "include" : "/^take_ra_[a-f].*/",
-        "pack-mode" : "fsep"
+        "pack-mode" : "fsep",
+        "keep-masks" : true,
+        "no-merge" : true
+
     },
 
     "Skins_take_ra_g-z" : 
     {
         "include" : "/^take_ra_[g-z].*/",
-        "pack-mode" : "fsep"
+        "pack-mode" : "fsep",
+        "keep-masks" : true,
+        "no-merge" : true
+
     },
 
     "Skins_take_rr" : 
     {
         "include" : "/^take_rr_.*/",
-        "pack-mode" : "fsep"
+        "pack-mode" : "fsep",
+        "keep-masks" : true,
+        "no-merge" : true
     },
 
     "Skins_take_sd" : 
     {
         "include" : "/^take_sd_.*/",
-        "pack-mode" : "fsep"
+        "pack-mode" : "fsep",
+        "keep-masks" : true,
+        "no-merge" : true
     },
 
     "Skins_tl" : 
     {
         "include" : "/^tl_.*/",
-        "animated" : false,
-        "pack-mode" : "fsep"
+        "pack-mode" : "fsep",
+        "keep-masks" : true,
+        "no-merge" : true
+
     },
 
     "Skins_wn" : 

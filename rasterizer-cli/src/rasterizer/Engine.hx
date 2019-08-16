@@ -92,7 +92,7 @@ class Engine {
                        continue;
                    }
                    trace('Exporting symbol $className');
-                   exportSymbol(swf, className, tagId, opts.animated, opts.scale, new haxe.io.Path(opath));
+                   exportSymbol(swf, className, tagId, opts.animated, opts.scale, pack.preserveTagMasks, new haxe.io.Path(opath));
                 }
 
                 buildCache.updateFile(file, pack.name, crc);
@@ -106,7 +106,7 @@ class Engine {
     /*
      *
      */
-    public function exportSymbol(swf : SWFRoot, className : String, tagId : Int, animated : Bool, scale : Float, dir : Path) : Void {
+    public function exportSymbol(swf : SWFRoot, className : String, tagId : Int, animated : Bool, scale : Float, preserveTagMasks : Bool, dir : Path) : Void {
         var symbol = swf.getCharacter(tagId);        
         var cls = new SWFClass(swf, symbol, className, null);                
         var instance = cls.createInstance();
@@ -121,7 +121,8 @@ class Engine {
                 flatten.swf = swf;
             } else {
                 flatten = new FlattenMovieClip();
-                var flatten : FlattenMovieClip = cast flatten;
+                var flatten : FlattenMovieClip = cast flatten;                
+                flatten.preserveTagMasks = preserveTagMasks;
                 flatten.swf = swf;                
             }
         } else {            

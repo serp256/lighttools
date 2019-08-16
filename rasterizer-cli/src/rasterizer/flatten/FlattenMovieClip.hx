@@ -30,6 +30,9 @@ class FlattenMovieClip extends Sprite implements IFlatten {
 
 	public var swf : SWFRoot;
 
+	// если этот флаг выставлен, то мы не применяем маски, а записываем их в мету
+	public var preserveTagMasks : Bool;
+
 
 	/*
 	 *
@@ -62,6 +65,7 @@ class FlattenMovieClip extends Sprite implements IFlatten {
 		clip.recStop();
 		for (i in 1...clip.totalFrames + 1) {
 			var frame = new FlattenSprite();
+			frame.preserveTagMasks = preserveTagMasks;
 			frame.swf = swf;
 			frame.fromDisplayObject(clip, scale, tag);			
 			frame.label = clip.currentLabel;

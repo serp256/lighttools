@@ -45,7 +45,7 @@ import rasterizer.InnerGlowFilter;
 
 
 
-
+using StringTools;
 
 
 @:access(flash.display.DisplayObject)
@@ -85,6 +85,9 @@ class FlattenSprite extends Sprite implements IFlatten {
 
 
 	public var children(get, null) : Array<IFlatten>;
+
+	// если этот флаг выставлен, то мы не применяем маски, а записываем их в мету
+	public var preserveTagMasks : Bool;
 
 
 	/*
@@ -212,6 +215,8 @@ class FlattenSprite extends Sprite implements IFlatten {
 		mtx.scale(scale, scale);
 		var rect = getTransformedBounds(obj.getRect(obj), mtx);
 	
+		// trace('GOT BOUNDS $rect SCALE = $scale OBJECT SCALE = ${obj.scaleX}');
+
 		rect.width = rect.width < 1 ? 1 : rect.width;
         rect.height = rect.height < 1 ? 1 : rect.height;
 
@@ -220,16 +225,23 @@ class FlattenSprite extends Sprite implements IFlatten {
         var m:Matrix = mtx.clone();		
         m.translate(-rect.x, -rect.y);
 
+		// trace('Drawing with matrix $m');
+
 		var oldsx = obj.scaleX;
 		var oldsy = obj.scaleY;
 
-		obj.scaleX = scale;		
-		obj.scaleY = scale;
+		obj.scaleX *= scale;		
+		obj.scaleY *= scale;
 	
         objBmpData.drawWithQuality(obj, m, color, null, null, true, flash.display.StageQuality.BEST);		
+
+		// writeFlattenImage(objBmpData, 'DEBUG_${dbgcounter}.png');
+		// dbgcounter++;
+
         objBmpData.matrix = new Matrix(1, 0, 0, 1, Math.round(rect.x), Math.round(rect.y));
         objBmpData.name = obj.name;
 
+	
 		obj.scaleX = oldsx;		
 		obj.scaleY = oldsy;
 
@@ -287,21 +299,6 @@ class FlattenSprite extends Sprite implements IFlatten {
     }
 		
 
-	/*
-	 *
-	 */
-    private function applyMasks() {
-        for (obj in __masked.keys()) {
-            try {
-                var objmask = __masks[__masked[obj]];
-                if (objmask == null) {
-                    continue;
-                }
-                applyMask(objmask, obj);
-            } catch (e:ArgumentError) {
-            }
-        }
-    }
 
 	/*
 	 *
@@ -369,7 +366,8 @@ class FlattenSprite extends Sprite implements IFlatten {
 			}
 
 					
-	    	var customName = ! (~/^instance[\d]+$/.match(obj.name));
+			var customName = ! (obj.name.startsWith("instance") || obj.name.startsWith("masked") || obj.name.startsWith("mask"));
+
 			if (obj.filters != null) {
 				filters = obj.filters.concat(filters);
 			}			
@@ -682,15 +680,25 @@ class FlattenSprite extends Sprite implements IFlatten {
 	 */
 	public function applyTagMasks() {
 		for (obj in __tagMasked.keys()) {
+			var obj : FlattenImage = cast obj;
             try {
-                var objmask = __tagMasks[__tagMasked[obj]];
+                var objmask : FlattenImage = cast __tagMasks[__tagMasked[obj]];
                 if (objmask == null) {
                     continue;
                 }
-                applyMask(cast objmask, cast obj, false);
+				
+				if (preserveTagMasks) {
+					obj.mask = objmask.name;
+				} else {
+                	applyMask(objmask, obj, false);
+				}
             } catch (e:ArgumentError) {
             }			
         }
+
+		if (preserveTagMasks) {
+			return;
+		}
 
 		var list:Array<IFlatten> = [];
 		for (m in __tagMasks) {
@@ -699,6 +707,7 @@ class FlattenSprite extends Sprite implements IFlatten {
 			}
 		}
 
+
 		for (m in list) {		
 			var idx = __flattenChildren.indexOf(m);
 			__flattenChildren.splice(idx, 1);
@@ -706,6 +715,30 @@ class FlattenSprite extends Sprite implements IFlatten {
 		}
 	}
 
+
+
+	/*
+	 *
+	 */
+    private function applyMasks() {
+        for (obj in __masked.keys()) {
+            try {
+                var objmask : FlattenImage = __masks[__masked[obj]];
+                if (objmask == null) {
+                    continue;
+                }
+
+				if (preserveTagMasks) {
+					obj.mask = objmask.name;
+				} else {
+                	applyMask(objmask, obj);
+				}
+
+                // applyMask(objmask, obj);
+            } catch (e:ArgumentError) {
+            }
+        }
+    }
 
 
 	/*
@@ -728,9 +761,11 @@ class FlattenSprite extends Sprite implements IFlatten {
 			defineTagMasks(tags, clip);
 		}
 		
-        applyMasks();
+		// никаких named masks
+        // applyMasks();
         applyTagMasks();
         
+		/*
 		var i = 0;
         while (i < __flattenChildren.length) {
             
@@ -761,6 +796,7 @@ class FlattenSprite extends Sprite implements IFlatten {
             __flattenChildren.splice(__flattenChildren.indexOf(maskForAll), 1);
             maskForAll.dispose();
         }
+		*/
 
         return this;
     }

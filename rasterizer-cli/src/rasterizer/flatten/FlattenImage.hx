@@ -17,6 +17,7 @@ class FlattenImage extends BitmapData implements IFlatten {
 	
 	public var name = "";
 	public var matrix = new Matrix();
+	public var mask : String = null;
 
 	/*
 	 *

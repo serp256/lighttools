@@ -29,6 +29,8 @@ class Pack {
 
     public var nomerge(default, null) : Bool;
 
+    public var preserveTagMasks(default, null) : Bool;
+
     public var dir(get, null) : String;
     
     private var __files : Array<String>;
@@ -51,6 +53,7 @@ class Pack {
         this.name = packname;                        
         this.animated = getBool(packdata, "animated", true);        
         this.scale = getFloat(packdata, "scale", 1.0);
+        this.preserveTagMasks = getBool(packdata, "keep-masks", false);        
 
         if (packdata.exists("dir")) {
             __dir = packdata["dir"];

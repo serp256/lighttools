@@ -50,7 +50,11 @@ class FlattenExporter extends BaseExporter implements IExporter {
 			if (Std.is(child, FlattenImage)) {
 				var img : FlattenImage = cast child;	
 				var file = writeFlattenImage(img, dir); 
-				children.push({ name : img.name, x : img.matrix.tx, y : img.matrix.ty, type : "image", file : Path.withoutDirectory(file) });			
+				var meta : Dynamic = { name : img.name, x : img.matrix.tx, y : img.matrix.ty, type : "image", file : Path.withoutDirectory(file) };
+				if (img.mask != null) {
+					meta.mask = img.mask;
+				}
+				children.push(meta);
 			} else {				
 				var box:FlattenSprite = cast child;
 				children.push({ name : box.name, x : box.transform.matrix.tx, y : box.transform.matrix.ty, type : "box"	});
@@ -101,6 +105,9 @@ class FlattenExporter extends BaseExporter implements IExporter {
 			var file = writeFlattenImage(img, dir);
 
 			meta.children = [{ name : img.name, x : img.matrix.tx, y : img.matrix.ty, type : 'image', file : Path.withoutDirectory(file) }];					
+			if (img.mask != null) {
+				Reflect.setField(meta.children[0], "mask", img.mask);
+			}
 			writeMeta(dir, meta);
 		}
 		return this;

@@ -8,9 +8,11 @@ OpenFL 8.9.0 patched https://github.com/fixman81/openfl.git ветка rasterize
 haxelib dev lime lime
 haxelib dev openfl openfl
 
+после этого делаем lime rebuild macos (linux), чтобы пересобрать lime.ndll
+
 После этого можно билдить растеризатор (haxe build.hxml)
 
-Далее надо убрать девел версии
+Далее, после растеризации, надо убрать девел версии.
 
 haxelib dev lime
 haxelib dev openfl
